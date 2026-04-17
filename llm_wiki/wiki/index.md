@@ -30,6 +30,7 @@ See [log.md](log.md) for chronological activity.
 - [상세·리뷰 플로우](topics/event-detail-review-flow.md) — 상세 → 북마크 → 캘린더 → 리뷰
 - [업로더 플로우](topics/uploader-flow.md) — 이벤트 등록·관리 화면
 - [관리자 플로우](topics/admin-flow.md) — 승인·반려·라벨 부여
+- [UI 아키텍처 (구현본)](topics/ui-architecture.md) — rail + overlay panel, Tailwind v4 토큰 매핑
 
 ## Entities
 <!-- People, orgs, products, projects. One file per entity in wiki/entities/. -->

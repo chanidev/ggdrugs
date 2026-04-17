@@ -88,3 +88,27 @@ Phase 1 무결성 보강. `apps/bff/prisma/schema.prisma`가 표현 못한 DDL v
   - "쇼핑몰" 언어가 아닌 "도시 지도/여행 가이드" 언어 — v5.0의 예약·결제 부재 결정과 정합.
 - **SAFE**: map+list 분할, Pretendard, filter pill chip.
 - **RISK**: 단일 버밀리언 액센트 / editorial tracking -0.02em display / "종이 위에 놓인" shadow.
+
+## 2026-04-17T15:30  build  Phase 1 foundation — config 패키지 + BFF + 웹 스캐폴드
+Phase 1 실제 코드 착수. 이전까지는 스키마·문서만 있었고 이번 세션에 **앱이 처음으로 기동**.
+- **`@ggdrugs/config`** — zod 기반 env 스키마. 9개 그룹(core/db/redis/qdrant/s3/openai/external/session/serviceUrls) + `loadEnv()` + `loadPartial()`. 프로덕션 키 강제 검증. 커밋 `339bb07`.
+- **BFF `@ggdrugs/bff`** — Express 5 + pino + Prisma Client. `GET /health` 가 `SELECT 1` 로 DB ping. dev 서버 tsx watch 모드. dotenv-cli 로 루트 `.env` 주입. 커밋 `339bb07`.
+- **Prisma 마이그레이션**: 초기 baseline + CHECK/트리거 마이그레이션 2건 적용. 베이스라인은 `prisma db push` 후 `prisma migrate resolve --applied` 로 기록. Postgres 호스트 포트 5432 → **5433** (시스템 Postgres 충돌 회피). `event_categories` 4종 시드 완료. 커밋 `a60f907`.
+- **Web `@ggdrugs/web`** — Vite 6 + React 19 + Tailwind v4 + Pretendard (jsdelivr CDN). DESIGN.md 토큰 전체를 `@theme` 블록으로 등록, 다크 모드는 `:root` CSS variable swap 방식(`@theme`은 `@media` 안에서 재정의 불가). `/api/*` → `localhost:3000` 프록시. 커밋 범위 다수.
+- **Kakao Maps 통합**: `react-kakao-maps-sdk` + `useKakaoLoader`. 서울 시청 중심 zoom 8. 3가지 fallback Notice(MissingKey/LoaderError/Loading). `VITE_KAKAO_MAP_JS_KEY` (공개) + `KAKAO_REST_API_KEY` (서버 전용) 분리.
+- **설정 버그 픽스 2건**:
+  1. Vite 가 `apps/web/.env` 를 찾아서 모노레포 루트 `.env` 를 못 읽던 문제 → `vite.config.ts` 에 `envDir: '../..'` 로 해결. 커밋 `e142718`.
+  2. Kakao 개발자 콘솔에서 "카카오맵" 제품 서비스가 비활성화되어 있어 `403 NotAuthorizedError: App(맵테스트) disabled OPEN_MAP_AND_LOCAL service` → 사용자가 콘솔에서 활성화 후 해소.
+
+## 2026-04-17T16:30  refactor  메인 페이지 UI — 사이드바 3회 이터레이션
+초안 → 카드 엔트리 → 라우트 기반 → **확장 패널(rail + overlay)** 로 수렴.
+- 사용자 피드백 1: 카드 2장 중복 탭 제거, 테이블 행으로 나열, 클릭 시 페이지 전환. → 라우트 기반 구현(`/filter`, `/list`, `/chat`) + `SidebarSubHeader` 공통 back 헤더. 커밋 `d77f8b2`.
+- 사용자 피드백 2: 페이지 전환이 아니라 **확장 패널**(accordion). + 지도 하단 **ChatDock 복원**. + 사이드바 너비 축소. → 인라인 accordion + Fragment 반환. 커밋 `01fb785`.
+- 사용자 피드백 3: 확장 패널은 rail **오른쪽으로 나와야** 함 (사이드바 아래가 아님). → rail(aside 220px) + panel(section 360px) 좌→우 2컬럼 구조. 커밋 `15c6db1`.
+- 사용자 피드백 4: 확장 패널 뜰 때 **지도 크기 유지**, overlay 로. → panel 을 `absolute` 포지셔닝으로 바꿔 flex flow 밖으로 꺼냄, `shadow-lg` 로 부양감. 커밋 `565eb83`.
+- 최종 레이아웃 (A_200 메인 페이지):
+  - **Header (h-14)**: GGdrugs 로고 + 탭(탐색/예정 이벤트) + 로그인 버튼.
+  - **Rail (w-220px)**: h3 "이벤트 찾기" + 3행 divider 메뉴(필터/전체목록/채팅). 활성 행은 좌측 accent 세로 스트라이프 + 버밀리언 타이틀/화살표 + accent-bg 배경.
+  - **Overlay Panel (w-360px, absolute left-220)**: rail 클릭 시 나타남, shadow-lg 로 지도 위 부양. 상단 `×` 닫기. 채팅 행은 예시 쿼리 3개 보여주고 실 입력은 하단 ChatDock.
+  - **Map (flex-1)**: Kakao Maps 정상 로드 (envDir + 콘솔 서비스 활성화 후). 서울 중심 + 더미 마커 3 (종로·강남·관악).
+  - **ChatDock (shrink-0)**: 지도 바로 아래. 입력창 + 검색 CTA. LLM 연동 전 no-op.

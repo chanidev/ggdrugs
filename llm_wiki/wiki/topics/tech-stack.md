@@ -59,6 +59,24 @@ GGdrugs의 확정 기술 스택. 요구사항정의서 v5.0 Ⅴ장 6절 "기술 
 - **로깅**: Pino (Node), structlog (Python) 후보. PII 마스킹 유틸 필요 (CLAUDE.md §6-3).
 - **세션 vs JWT 전략**: `.env.example`에 둘 다 선언 — 역할 확정 필요.
 
+## Phase 1 실구현 상태 (2026-04-17 기준)
+
+**구동 중인 것**:
+- Docker Compose 데이터 레이어 4종 (postgres:5433 / qdrant:6333 / redis:6379 / minio:9000-9001) — healthy.
+- `@ggdrugs/config` (zod env 검증) — 빌드·동작 확인.
+- `@ggdrugs/bff` (Express 5 + pino + Prisma 5.22, Node 22) — `GET /health` 정상.
+- `@ggdrugs/web` (Vite 6 + React 19 + Tailwind 4 + Pretendard) — 메인 페이지 shell + Kakao Maps 실제 렌더.
+- Prisma 마이그레이션 2건 적용: baseline(22 앱 테이블) + CHECK 제약 26건 + `fn_set_updated_at()` 트리거 8건.
+
+**확정된 추가 선택**:
+- 로깅: **Pino** (dev는 `pino-pretty` transport).
+- 환경변수 로딩: `dotenv-cli` 로 BFF 스크립트에서 루트 `.env` 주입. web 은 Vite `envDir: '../..'` 로 동일 루트 읽음.
+- TypeScript 5.9 / tsx 4 (dev watch).
+
+**미결정 유지**: 큐(BullMQ)·품질도구·세션/JWT·TanStack Query·폼 라이브러리.
+
+자세한 UI 구조는 [ui-architecture.md](ui-architecture.md) 참조.
+
 ## Open questions / contradictions
 
 1. BFF ↔ LLM 서비스의 DB write 책임 분담 명확화 필요 — LLM 서비스가 `chat_messages`, `search_logs` 직접 write 할지 BFF를 경유할지.
