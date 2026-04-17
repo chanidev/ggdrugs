@@ -68,10 +68,10 @@ export function Sidebar() {
         </nav>
       </aside>
 
-      {/* 확장 패널 — rail 오른쪽 */}
+      {/* 확장 패널 — rail 오른쪽에 overlay. 지도 크기 유지. */}
       {open !== null && activeSection && (
         <section
-          className="flex w-[360px] shrink-0 flex-col border-r border-(--color-border) bg-(--color-surface)"
+          className="absolute bottom-0 left-[220px] top-0 z-20 flex w-[360px] flex-col border-r border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg)"
           aria-label={`${activeSection.title} 상세`}
         >
           <PanelHeader title={activeSection.title} onClose={() => setOpen(null)} />
