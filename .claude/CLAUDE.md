@@ -19,15 +19,20 @@
 
 ## 2. 현재 단계
 
-**Phase 0 — 환경 셋업 단계.** 아직 애플리케이션 코드는 없다. 현재 다음을 수행 중이다:
+**Phase 0 — 환경 셋업 완료 (2026-04-17).** 아직 애플리케이션 코드는 없지만 로컬 인프라는 전부 기동 가능:
 
 - [x] 모노레포 디렉터리 스켈레톤
-- [x] Docker Compose 로컬 오케스트레이션
+- [x] Docker Compose 로컬 오케스트레이션 (postgres+postgis, qdrant v1.13, redis, minio)
 - [x] CLAUDE.md 등재
-- [ ] Git 초기화 및 첫 커밋
-- [ ] .env.example 파일 정의
+- [x] Git 초기화 및 첫 커밋 (main 브랜치, `03579bf`)
+- [x] .env.example 파일 정의 (.env는 .gitignore 처리)
+- [x] MinIO 버킷 4종 생성 (approval-docs, review-photos, event-posters, user-photos)
+- [x] PostgreSQL extensions 활성화 (postgis, pg_trgm, unaccent, citext)
 
-**Phase 1 진입 조건**: 요구사항정의서 v5.0 최종 확정 + 이벤트 성향 라벨 도메인 확정.
+**Phase 1 진입 조건**:
+- [x] 요구사항정의서 v5.0 최종 확정 (ADR 0001로 DDL 정합성 해소)
+- [ ] 이벤트 성향 라벨 도메인 확정 (event_vibes 마스터 시드 데이터)
+- [ ] OpenAI API 키 (팀 공용 조직 계정) 확보 (ADR 0002 운영 항목)
 
 ---
 

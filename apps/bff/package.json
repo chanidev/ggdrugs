@@ -1,0 +1,35 @@
+{
+  "name": "@ggdrugs/bff",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GGdrugs BFF — REST API, Prisma ORM, 인증/권한",
+  "type": "module",
+  "scripts": {
+    "prisma:format": "prisma format",
+    "prisma:validate": "dotenv -e ../../.env -- prisma validate",
+    "prisma:generate": "dotenv -e ../../.env -- prisma generate",
+    "prisma:migrate:dev": "dotenv -e ../../.env -- prisma migrate dev",
+    "prisma:migrate:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "prisma:studio": "dotenv -e ../../.env -- prisma studio",
+    "dev": "dotenv -e ../../.env -- tsx watch src/server.ts",
+    "start": "dotenv -e ../../.env -- node dist/server.js",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ggdrugs/config": "workspace:*",
+    "@prisma/client": "^5.22.0",
+    "express": "^5.2.1",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24",
+    "dotenv-cli": "^11.0.0",
+    "pino-pretty": "^13.1.3",
+    "prisma": "^5.22.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,520 @@
+// GGdrugs Prisma 스키마 — DDL v4 (ADR 0001 반영)
+//
+// 주의:
+// - CHECK 제약은 Prisma가 표현하지 못하므로, 초기 마이그레이션 SQL을 수동으로 보강한다.
+// - search_logs / chat_messages 파티셔닝은 Phase 1에서는 미적용. 볼륨 증가 시 별도 마이그레이션으로 전환.
+// - updated_at 자동 갱신 트리거(fn_set_updated_at)는 마이그레이션 SQL에서 생성.
+//
+// 명명 규칙:
+// - Prisma 모델: PascalCase
+// - 필드: camelCase (@map으로 snake_case 컬럼에 매핑)
+// - 테이블: snake_case (@@map)
+
+generator client {
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "windows", "debian-openssl-3.0.x"]
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [postgis, pg_trgm, unaccent, citext]
+}
+
+// =============================================================
+// 1. REGIONS
+// =============================================================
+model Region {
+  regionId     BigInt   @id @default(autoincrement()) @map("region_id")
+  sidoName     String   @map("sido_name")    @db.VarChar(30)
+  sigunguName  String?  @map("sigungu_name") @db.VarChar(30)
+  dongName     String?  @map("dong_name")    @db.VarChar(30)
+  fullAddress  String   @map("full_address") @db.VarChar(100)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  users  User[]
+  events Event[]
+
+  @@index([sidoName], map: "idx_regions_sido")
+  @@index([sidoName, sigunguName], map: "idx_regions_sigungu")
+  @@map("regions")
+}
+
+// =============================================================
+// 2. USERS  (ADR 0001 #2: active_role 추가)
+// =============================================================
+model User {
+  userId            BigInt    @id @default(autoincrement()) @map("user_id")
+  socialUid         String    @map("social_uid")     @db.VarChar(255)
+  authProvider      String    @map("auth_provider")  @db.VarChar(20) // google | kakao
+  nickname          String    @db.VarChar(50)
+  gender            String?   @db.Char(1) // M | F | null
+  dateOfBirth       DateTime? @map("date_of_birth")  @db.Date
+  regionId          BigInt?   @map("region_id")
+  activeRole        String    @default("user") @map("active_role") @db.VarChar(20) // user | uploader  (ADR 0001 #2)
+  isNotificationOn  Boolean   @default(false) @map("is_notification_on")
+  isDeleted         Boolean   @default(false) @map("is_deleted")
+  lastLoggedInAt    DateTime? @map("last_logged_in_at") @db.Timestamptz
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+
+  region             Region?              @relation(fields: [regionId], references: [regionId])
+  uploaderProfile    UploaderProfile?
+  adminProfile       AdminProfile?
+  vibeAssignments    EventVibeAssignment[]
+  approvalLogs       ApprovalLog[]
+  bookmarks          Bookmark[]
+  reviews            Review[]
+  notifications      Notification[]
+  subscriptions      EventSubscription[]
+  searchLogs         SearchLog[]
+  chatSessions       ChatSession[]
+  photoAlbums        PhotoAlbum[]
+  tasteProfiles      UserTasteProfile[]
+
+  @@unique([authProvider, socialUid], map: "uq_users_social")
+  @@index([authProvider, socialUid], map: "idx_users_provider_uid")
+  @@index([regionId], map: "idx_users_region")
+  @@index([createdAt], map: "idx_users_created")
+  @@map("users")
+}
+
+// =============================================================
+// 3. UPLOADER_PROFILES  (ADR 0001 #1: revision_requested 추가)
+// =============================================================
+model UploaderProfile {
+  uploaderId       BigInt    @id @default(autoincrement()) @map("uploader_id")
+  userId           BigInt    @unique @map("user_id")
+  organizationName String    @map("organization_name") @db.VarChar(100)
+  contactPhone     String    @map("contact_phone")     @db.VarChar(20)
+  contactEmail     String    @map("contact_email")     @db.VarChar(255)
+  approvalStatus   String    @default("pending") @map("approval_status") @db.VarChar(20)
+  // pending | approved | revision_requested | rejected  (ADR 0001 #1 대칭 적용)
+  approvedAt       DateTime? @map("approved_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user   User    @relation(fields: [userId], references: [userId])
+  events Event[]
+
+  @@index([approvalStatus], map: "idx_uploader_status")
+  @@map("uploader_profiles")
+}
+
+// =============================================================
+// 3b. ADMIN_PROFILES  (ADR 0001 #3: 신설)
+// =============================================================
+model AdminProfile {
+  adminId    BigInt   @id @default(autoincrement()) @map("admin_id")
+  userId     BigInt   @unique @map("user_id")
+  department String?  @db.VarChar(100)
+  scope      String   @default("full") @map("scope") @db.VarChar(30) // full | content_only | uploader_review_only
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([isActive], map: "idx_admin_active")
+  @@map("admin_profiles")
+}
+
+// =============================================================
+// 4. EVENT_CATEGORIES
+// =============================================================
+model EventCategory {
+  categoryId   BigInt   @id @default(autoincrement()) @map("category_id")
+  categoryCode String   @unique @map("category_code") @db.VarChar(30) // festival | expo | symposium | conference
+  displayName  String   @map("display_name")   @db.VarChar(50)
+  sortOrder    Int      @default(0) @map("sort_order") @db.SmallInt
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  events Event[]
+
+  @@map("event_categories")
+}
+
+// =============================================================
+// 5. EVENTS  (ADR 0001 #1/#4: approval_status rename + expected_companion rename)
+// =============================================================
+model Event {
+  eventId                     BigInt    @id @default(autoincrement()) @map("event_id")
+  uploaderId                  BigInt?   @map("uploader_id")
+  categoryId                  BigInt    @map("category_id")
+  regionId                    BigInt    @map("region_id")
+  sourceType                  String    @map("source_type")          @db.VarChar(20)  // crawled | uploaded
+  crawlOrigin                 String?   @map("crawl_origin")         @db.VarChar(50)
+  externalSourceId            String?   @map("external_source_id")   @db.VarChar(100)
+  title                       String    @db.VarChar(200)
+  description                 String?   @db.Text
+  addressDetail               String?   @map("address_detail")       @db.VarChar(255)
+  latitude                    Decimal?  @db.Decimal(10, 7)
+  longitude                   Decimal?  @db.Decimal(10, 7)
+  startDate                   DateTime  @map("start_date")           @db.Date
+  endDate                     DateTime  @map("end_date")             @db.Date
+  operatingHours              String?   @map("operating_hours")      @db.VarChar(100)
+  targetAudience              String?   @map("target_audience")      @db.VarChar(100)
+  admissionFee                String?   @map("admission_fee")        @db.VarChar(100)
+  expectedCompanionPrimary    String?   @map("expected_companion_primary")   @db.VarChar(20)
+  expectedCompanionSecondary  String?   @map("expected_companion_secondary") @db.VarChar(20)
+  posterImageUrl              String?   @map("poster_image_url")     @db.VarChar(500)
+  approvalStatus              String    @default("pending") @map("approval_status") @db.VarChar(20)
+  // pending | approved | revision_requested | rejected  (ADR 0001 #1)
+  phase                       String    @default("upcoming") @map("phase") @db.VarChar(20)
+  // upcoming | ongoing | ended
+  bookmarkCount               Int       @default(0) @map("bookmark_count")
+  avgRating                   Decimal   @default(0) @map("avg_rating") @db.Decimal(3, 2)
+  reviewCount                 Int       @default(0) @map("review_count")
+  isDeleted                   Boolean   @default(false) @map("is_deleted")
+  approvedAt                  DateTime? @map("approved_at")         @db.Timestamptz
+  createdAt                   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt                   DateTime? @map("deleted_at")          @db.Timestamptz
+
+  uploader           UploaderProfile?       @relation(fields: [uploaderId], references: [uploaderId])
+  category           EventCategory          @relation(fields: [categoryId], references: [categoryId])
+  region             Region                 @relation(fields: [regionId], references: [regionId])
+  vibeAssignments    EventVibeAssignment[]
+  approvalDocuments  ApprovalDocument[]
+  approvalLogs       ApprovalLog[]
+  bookmarks          Bookmark[]
+  reviews            Review[]
+  notifications      Notification[]
+  articleMappings    EventArticleMapping[]
+  photoAlbums        PhotoAlbum[]
+
+  @@unique([crawlOrigin, externalSourceId], map: "uq_events_external")
+  @@index([regionId, categoryId, startDate, phase], map: "idx_events_filter")
+  @@index([phase, startDate], map: "idx_events_phase")
+  @@index([approvalStatus, createdAt], map: "idx_events_approval")
+  @@index([uploaderId], map: "idx_events_uploader")
+  @@index([latitude, longitude], map: "idx_events_geo")
+  @@index([startDate, endDate], map: "idx_events_dates")
+  @@map("events")
+}
+
+// =============================================================
+// 6. EVENT_VIBES  (ADR 0001 #5: rename from event_tendency_labels)
+// =============================================================
+model EventVibe {
+  vibeId     BigInt   @id @default(autoincrement()) @map("vibe_id")
+  vibeName   String   @unique @map("vibe_name")   @db.VarChar(50)
+  vibeGroup  String   @map("vibe_group")  @db.VarChar(30) // mood | activity | theme
+  isActive   Boolean  @default(true) @map("is_active")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  assignments EventVibeAssignment[]
+
+  @@map("event_vibes")
+}
+
+// =============================================================
+// 7. EVENT_VIBE_ASSIGNMENTS  (ADR 0001 #5: rename)
+// =============================================================
+model EventVibeAssignment {
+  assignmentId BigInt   @id @default(autoincrement()) @map("assignment_id")
+  eventId      BigInt   @map("event_id")
+  vibeId       BigInt   @map("vibe_id")
+  assignedBy   BigInt   @map("assigned_by") // 관리자 user_id
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  event      Event     @relation(fields: [eventId], references: [eventId])
+  vibe       EventVibe @relation(fields: [vibeId], references: [vibeId])
+  assignedByUser User  @relation(fields: [assignedBy], references: [userId])
+
+  @@unique([eventId, vibeId], map: "uq_event_vibe")
+  @@index([eventId], map: "idx_vibe_assign_event")
+  @@index([vibeId], map: "idx_vibe_assign_vibe")
+  @@map("event_vibe_assignments")
+}
+
+// =============================================================
+// 8. APPROVAL_DOCUMENTS
+// =============================================================
+model ApprovalDocument {
+  documentId       BigInt   @id @default(autoincrement()) @map("document_id")
+  eventId          BigInt   @map("event_id")
+  filePath         String   @map("file_path")         @db.VarChar(500)
+  originalFilename String   @map("original_filename") @db.VarChar(255)
+  mimeType         String   @map("mime_type")         @db.VarChar(30) // image/jpeg | image/png
+  fileSizeBytes    Int      @map("file_size_bytes")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  event Event @relation(fields: [eventId], references: [eventId])
+
+  @@index([eventId], map: "idx_approval_docs_event")
+  @@map("approval_documents")
+}
+
+// =============================================================
+// 9. APPROVAL_LOGS  (ADR 0001 #1: action enum 정리)
+// =============================================================
+model ApprovalLog {
+  logId     BigInt   @id @default(autoincrement()) @map("log_id")
+  eventId   BigInt   @map("event_id")
+  adminId   BigInt   @map("admin_id") // user_id
+  action    String   @db.VarChar(20) // approved | revision_requested | rejected
+  reason    String?  @db.Text
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  event Event @relation(fields: [eventId], references: [eventId])
+  admin User  @relation(fields: [adminId], references: [userId])
+
+  @@index([eventId, createdAt(sort: Desc)], map: "idx_approval_logs_event")
+  @@index([adminId, createdAt(sort: Desc)], map: "idx_approval_logs_admin")
+  @@map("approval_logs")
+}
+
+// =============================================================
+// 10. BOOKMARKS
+// =============================================================
+model Bookmark {
+  bookmarkId BigInt   @id @default(autoincrement()) @map("bookmark_id")
+  userId     BigInt   @map("user_id")
+  eventId    BigInt   @map("event_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user  User  @relation(fields: [userId], references: [userId])
+  event Event @relation(fields: [eventId], references: [eventId])
+
+  @@unique([userId, eventId], map: "uq_bookmark")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_bookmarks_user")
+  @@index([eventId], map: "idx_bookmarks_event")
+  @@map("bookmarks")
+}
+
+// =============================================================
+// 11. REVIEWS
+// =============================================================
+model Review {
+  reviewId   BigInt    @id @default(autoincrement()) @map("review_id")
+  userId     BigInt    @map("user_id")
+  eventId    BigInt    @map("event_id")
+  body       String    @db.Text
+  rating     Int       @db.SmallInt
+  sentiment  String?   @db.VarChar(10) // positive | negative | neutral
+  isDeleted  Boolean   @default(false) @map("is_deleted")
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+
+  user   User          @relation(fields: [userId], references: [userId])
+  event  Event         @relation(fields: [eventId], references: [eventId])
+  photos ReviewPhoto[]
+
+  @@unique([userId, eventId], map: "uq_review_per_event")
+  @@index([eventId, createdAt(sort: Desc)], map: "idx_reviews_event")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_reviews_user")
+  @@index([eventId, sentiment], map: "idx_reviews_sentiment")
+  @@map("reviews")
+}
+
+// =============================================================
+// 11b. REVIEW_PHOTOS  (ADR 0001 #6: 신설)
+// =============================================================
+model ReviewPhoto {
+  reviewPhotoId    BigInt   @id @default(autoincrement()) @map("review_photo_id")
+  reviewId         BigInt   @map("review_id")
+  filePath         String   @map("file_path")         @db.VarChar(500)
+  originalFilename String   @map("original_filename") @db.VarChar(255)
+  mimeType         String   @map("mime_type")         @db.VarChar(30)
+  fileSizeBytes    Int      @map("file_size_bytes")
+  sortOrder        Int      @default(0) @map("sort_order") @db.SmallInt
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  review Review @relation(fields: [reviewId], references: [reviewId], onDelete: Cascade)
+
+  @@index([reviewId, sortOrder], map: "idx_review_photos_review")
+  @@map("review_photos")
+}
+
+// =============================================================
+// 12. NOTIFICATIONS
+// =============================================================
+model Notification {
+  notificationId BigInt    @id @default(autoincrement()) @map("notification_id")
+  userId         BigInt    @map("user_id")
+  eventId        BigInt?   @map("event_id")
+  title          String    @db.VarChar(100)
+  message        String    @db.Text
+  scheduledAt    DateTime  @map("scheduled_at") @db.Timestamptz
+  isSent         Boolean   @default(false) @map("is_sent")
+  sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  user  User   @relation(fields: [userId], references: [userId])
+  event Event? @relation(fields: [eventId], references: [eventId])
+
+  @@index([scheduledAt], map: "idx_notif_pending")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_notif_user")
+  @@map("notifications")
+}
+
+// =============================================================
+// 12b. EVENT_SUBSCRIPTIONS  (ADR 0001 #7: 신설, A_203 조건 기반 알림)
+// =============================================================
+model EventSubscription {
+  subscriptionId BigInt   @id @default(autoincrement()) @map("subscription_id")
+  userId         BigInt   @map("user_id")
+  regionIds      BigInt[] @map("region_ids")
+  periodMonths   Int?     @map("period_months") @db.SmallInt // 3 | 6 | null(전체)
+  isActive       Boolean  @default(true) @map("is_active")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId, isActive], map: "idx_subs_user_active")
+  @@map("event_subscriptions")
+}
+
+// =============================================================
+// 13. SEARCH_LOGS  (파티셔닝은 Phase 3+ 로 연기)
+// =============================================================
+model SearchLog {
+  logId        BigInt   @id @default(autoincrement()) @map("log_id")
+  userId       BigInt   @map("user_id")
+  searchType   String   @map("search_type") @db.VarChar(10) // filter | chat
+  searchParams Json     @default("{}") @map("search_params") @db.JsonB
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_search_logs_user")
+  @@map("search_logs")
+}
+
+// =============================================================
+// 14. CHAT_SESSIONS
+// =============================================================
+model ChatSession {
+  sessionId BigInt    @id @default(autoincrement()) @map("session_id")
+  userId    BigInt    @map("user_id")
+  isActive  Boolean   @default(true) @map("is_active")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  endedAt   DateTime? @map("ended_at") @db.Timestamptz
+
+  user     User          @relation(fields: [userId], references: [userId])
+  messages ChatMessage[]
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_chat_sessions_user")
+  @@map("chat_sessions")
+}
+
+// =============================================================
+// 15. CHAT_MESSAGES  (파티셔닝 연기)
+// =============================================================
+model ChatMessage {
+  messageId  BigInt   @id @default(autoincrement()) @map("message_id")
+  sessionId  BigInt   @map("session_id")
+  senderType String   @map("sender_type") @db.VarChar(10) // user | assistant
+  body       String   @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  session ChatSession @relation(fields: [sessionId], references: [sessionId])
+
+  @@index([sessionId, createdAt], map: "idx_chat_msg_session")
+  @@map("chat_messages")
+}
+
+// =============================================================
+// 16. NEWS_ARTICLES
+// =============================================================
+model NewsArticle {
+  articleId       BigInt    @id @default(autoincrement()) @map("article_id")
+  sourceName      String    @default("donga") @map("source_name") @db.VarChar(30)
+  authorName      String?   @map("author_name")      @db.VarChar(50)
+  articleCategory String?   @map("article_category") @db.VarChar(50)
+  title           String    @db.VarChar(300)
+  originalUrl     String    @unique @map("original_url") @db.VarChar(500)
+  contentBody     String?   @map("content_body") @db.Text
+  summary         String?   @db.Text
+  metadata        Json      @default("{}") @db.JsonB
+  publishedAt     DateTime? @map("published_at") @db.Timestamptz
+  crawledAt       DateTime  @default(now()) @map("crawled_at") @db.Timestamptz
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  eventMappings EventArticleMapping[]
+
+  @@index([publishedAt(sort: Desc)], map: "idx_articles_published")
+  @@index([sourceName, publishedAt(sort: Desc)], map: "idx_articles_source")
+  @@map("news_articles")
+}
+
+// =============================================================
+// 17. EVENT_ARTICLE_MAPPINGS
+// =============================================================
+model EventArticleMapping {
+  mappingId      BigInt   @id @default(autoincrement()) @map("mapping_id")
+  eventId        BigInt   @map("event_id")
+  articleId      BigInt   @map("article_id")
+  relevanceScore Decimal  @default(0) @map("relevance_score") @db.Decimal(5, 4)
+  matchedAt      DateTime @default(now()) @map("matched_at") @db.Timestamptz
+
+  event   Event       @relation(fields: [eventId], references: [eventId])
+  article NewsArticle @relation(fields: [articleId], references: [articleId])
+
+  @@unique([eventId, articleId], map: "uq_event_article")
+  @@index([eventId, relevanceScore(sort: Desc)], map: "idx_event_article_event")
+  @@index([articleId], map: "idx_event_article_article")
+  @@map("event_article_mappings")
+}
+
+// =============================================================
+// 18. PHOTO_ALBUMS
+// =============================================================
+model PhotoAlbum {
+  albumId   BigInt   @id @default(autoincrement()) @map("album_id")
+  userId    BigInt   @map("user_id")
+  eventId   BigInt?  @map("event_id")
+  albumName String   @map("album_name") @db.VarChar(100)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user   User    @relation(fields: [userId], references: [userId])
+  event  Event?  @relation(fields: [eventId], references: [eventId])
+  photos Photo[]
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_albums_user")
+  @@index([eventId], map: "idx_albums_event")
+  @@map("photo_albums")
+}
+
+// =============================================================
+// 19. PHOTOS
+// =============================================================
+model Photo {
+  photoId          BigInt    @id @default(autoincrement()) @map("photo_id")
+  albumId          BigInt    @map("album_id")
+  filePath         String    @map("file_path")         @db.VarChar(500)
+  originalFilename String    @map("original_filename") @db.VarChar(255)
+  aiTags           Json      @default("{}") @map("ai_tags") @db.JsonB
+  takenAt          DateTime? @map("taken_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+
+  album PhotoAlbum @relation(fields: [albumId], references: [albumId])
+
+  @@index([albumId, createdAt(sort: Desc)], map: "idx_photos_album")
+  @@map("photos")
+}
+
+// =============================================================
+// 20. USER_TASTE_PROFILES
+// =============================================================
+model UserTasteProfile {
+  profileId      BigInt   @id @default(autoincrement()) @map("profile_id")
+  userId         BigInt   @map("user_id")
+  tasteDimension String   @map("taste_dimension") @db.VarChar(30)
+  tasteValue     String   @map("taste_value")     @db.VarChar(30)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@unique([userId, tasteDimension], map: "uq_user_taste")
+  @@index([userId], map: "idx_taste_user")
+  @@map("user_taste_profiles")
+}

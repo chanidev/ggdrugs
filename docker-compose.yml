@@ -23,7 +23,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ggdrugs_dev}
       POSTGRES_DB: ${POSTGRES_DB:-ggdrugs}
     ports:
-      - "5432:5432"
+      # 호스트 5432는 시스템 Postgres가 선점할 수 있어 5433으로 노출
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/db/init:/docker-entrypoint-initdb.d:ro
