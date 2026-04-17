@@ -44,7 +44,9 @@ export const serviceUrlsSchema = z.object({
 });
 
 export const externalApiSchema = z.object({
-  KAKAO_MAPS_API_KEY: optionalKey,
+  /** Kakao Maps JavaScript 키 — 브라우저에 노출되는 공개 키. VITE_ 접두어로 web에 주입. */
+  VITE_KAKAO_MAP_JS_KEY: optionalKey,
+  /** Kakao REST API 키 — 서버 전용 (지오코딩·로컬 검색). BFF에서만 사용. */
   KAKAO_REST_API_KEY: optionalKey,
   GOOGLE_OAUTH_CLIENT_ID: optionalKey,
   GOOGLE_OAUTH_CLIENT_SECRET: optionalKey,
@@ -88,7 +90,7 @@ export type FullEnv = z.infer<typeof fullSchema>;
  * dev에서는 optional이지만 NODE_ENV=production일 때 빈 문자열이면 loadEnv가 throw.
  */
 export const productionRequiredKeys = [
-  'KAKAO_MAPS_API_KEY',
+  'VITE_KAKAO_MAP_JS_KEY',
   'KAKAO_REST_API_KEY',
   'GOOGLE_OAUTH_CLIENT_ID',
   'GOOGLE_OAUTH_CLIENT_SECRET',

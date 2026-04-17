@@ -1,10 +1,14 @@
 /**
- * EventList — placeholder. Phase 2에서 GET /events API 연결.
- * 현재는 더미 3건으로 디자인 토큰 검증.
+ * EventList — 이벤트 카드 목록.
+ * Phase 2에서 GET /events API 연동. 현재는 더미 3건으로 디자인 토큰 검증.
  */
+
+type CategoryKey = 'all' | 'festival' | 'expo' | 'symposium' | 'conference';
+
 const DUMMY_EVENTS = [
   {
     id: 1,
+    category: 'festival' as const,
     title: '서울 빛초롱 축제 2026',
     region: '서울 종로구',
     dateRange: '2026-05-03 ~ 2026-05-18',
@@ -14,6 +18,7 @@ const DUMMY_EVENTS = [
   },
   {
     id: 2,
+    category: 'expo' as const,
     title: '코리아 콘텐츠 박람회',
     region: '서울 강남구',
     dateRange: '2026-05-12 ~ 2026-05-14',
@@ -23,6 +28,7 @@ const DUMMY_EVENTS = [
   },
   {
     id: 3,
+    category: 'symposium' as const,
     title: 'AI 윤리 심포지움',
     region: '서울 관악구',
     dateRange: '2026-04-20',
@@ -34,10 +40,26 @@ const DUMMY_EVENTS = [
 
 type Event = (typeof DUMMY_EVENTS)[number];
 
-export function EventList() {
+export function EventList({
+  categoryFilter = 'all',
+}: {
+  categoryFilter?: CategoryKey;
+}) {
+  const events = DUMMY_EVENTS.filter(
+    (e) => categoryFilter === 'all' || e.category === categoryFilter,
+  );
+
+  if (events.length === 0) {
+    return (
+      <div className="flex flex-1 items-center justify-center p-8 text-body-sm text-(--color-text-subtle)">
+        해당 카테고리에 이벤트가 없어요.
+      </div>
+    );
+  }
+
   return (
     <ul className="min-h-0 flex-1 overflow-y-auto divide-y divide-(--color-border)">
-      {DUMMY_EVENTS.map((event) => (
+      {events.map((event) => (
         <EventCard key={event.id} event={event} />
       ))}
     </ul>

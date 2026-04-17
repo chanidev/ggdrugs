@@ -57,7 +57,7 @@ export function HealthBadge() {
 
   return (
     <div
-      className={`absolute bottom-[84px] left-6 rounded-full px-3 py-1 text-caption font-medium tabular shadow-(--shadow-sm) ${tone}`}
+      className={`pointer-events-none absolute bottom-4 left-4 z-10 rounded-full px-3 py-1 text-caption font-medium tabular shadow-(--shadow-sm) ${tone}`}
       role="status"
       aria-live="polite"
     >
