@@ -1,14 +1,16 @@
-import { Outlet } from 'react-router';
 import { Header } from './Header';
+import { Sidebar } from './Sidebar';
 import { SeoulMap } from '../components/SeoulMap';
+import { ChatDock } from '../components/ChatDock';
 import { HealthBadge } from '../components/HealthBadge';
 
 /**
- * AppShell — 모든 라우트의 공통 레이아웃.
+ * AppShell — A_200 메인 페이지 레이아웃.
  *
- * DESIGN.md §Layout: 60:40 map:sidebar.
- * - Sidebar(좌): <Outlet /> — 현재 라우트 컴포넌트 렌더 (IdleMenu/FilterSearchPanel/FullListPanel/ChatPanel).
- * - Map(우): 모든 라우트에서 지속 렌더 (페이지 전환에 Kakao Maps 재초기화 비용 회피).
+ * DESIGN.md §Layout:
+ * - 좌: Sidebar (accordion 3행: 필터/전체목록/채팅)
+ * - 우: 지도 (SeoulMap) + 하단 ChatDock (A_201 자연어 검색 입력)
+ * - 사이드바는 좁게 유지하여 지도 영역을 크게.
  */
 export function AppShell() {
   return (
@@ -16,14 +18,17 @@ export function AppShell() {
       <Header />
       <div className="flex min-h-0 flex-1">
         <aside
-          className="flex w-[40%] min-w-[360px] max-w-[520px] flex-col border-r border-(--color-border) bg-(--color-surface)"
+          className="flex w-[28%] min-w-[300px] max-w-[400px] flex-col border-r border-(--color-border) bg-(--color-surface)"
           aria-label="이벤트 탐색 사이드바"
         >
-          <Outlet />
+          <Sidebar />
         </aside>
-        <main className="relative min-w-0 flex-1">
-          <SeoulMap />
-          <HealthBadge />
+        <main className="relative flex min-w-0 flex-1 flex-col">
+          <div className="relative min-h-0 flex-1">
+            <SeoulMap />
+            <HealthBadge />
+          </div>
+          <ChatDock />
         </main>
       </div>
     </div>

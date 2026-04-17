@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { EventList } from './EventList';
-import { SidebarSubHeader } from '../layout/SidebarSubHeader';
 
 /**
  * FullListPanel — A_300 전체목록 조회.
@@ -23,7 +22,6 @@ export function FullListPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      <SidebarSubHeader title="전체목록 조회" />
       <div className="flex shrink-0 flex-wrap gap-2 border-b border-(--color-border) p-4">
         {CATEGORIES.map((c) => {
           const isActive = selected === c.key;

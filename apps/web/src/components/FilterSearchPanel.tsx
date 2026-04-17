@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { EventList } from './EventList';
-import { SidebarSubHeader } from '../layout/SidebarSubHeader';
 
 /**
  * FilterSearchPanel — A_202 필터 검색.
@@ -36,7 +35,6 @@ export function FilterSearchPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      <SidebarSubHeader title="필터 검색" />
       <div className="shrink-0 space-y-3 border-b border-(--color-border) p-4">
         <div className="flex flex-wrap items-center gap-2">
           {FILTERS.map((f) => {
