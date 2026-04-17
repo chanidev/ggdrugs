@@ -12,6 +12,7 @@ build/
 .next/
 .turbo/
 **/.vite/
+*.tsbuildinfo
 
 # Env
 .env
