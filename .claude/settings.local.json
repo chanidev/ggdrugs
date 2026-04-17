@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show:*)",
+      "Bash(pip install:*)",
+      "Bash(python:*)",
+      "Bash(PYTHONIOENCODING=utf-8 python:*)",
+      "Bash(timeout 30)",
+      "Bash(tasklist)",
+      "Bash(taskkill //F //PID 16932)",
+      "Bash(taskkill //F //PID 28648)",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(start:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(pip --version)",
+      "Bash(/c/Users/user/AppData/Roaming/Python/Python314/Scripts/graphify.exe --version)",
+      "Bash(/c/Users/user/AppData/Roaming/Python/Python314/Scripts/graphify.exe install:*)",
+      "Bash(/c/Users/user/AppData/Roaming/Python/Python314/Scripts/graphify.exe --help)",
+      "Bash(/c/Users/user/AppData/Roaming/Python/Python314/Scripts/graphify.exe claude:*)",
+      "Bash(/c/Users/user/AppData/Roaming/Python/Python314/Scripts/graphify.exe hook:*)",
+      "Bash(/c/Users/user/AppData/Roaming/Python/Python314/Scripts/graphify.exe update:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(bun --version)",
+      "Bash(git --version)",
+      "Bash(npm install *)",
+      "Bash(git clone *)",
+      "Bash(ls ~/.claude/skills/gstack/setup*)",
+      "Bash(./setup)",
+      "Bash(docker compose *)"
+    ]
+  }
+}
