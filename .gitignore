@@ -43,3 +43,6 @@ llm_wiki/graphify-out/memory/
 # Misc
 *.log
 coverage/
+# User screenshots (ad-hoc, not project assets)
+image.png
+screenshot*.png
