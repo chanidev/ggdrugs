@@ -26,7 +26,13 @@
       "Bash(git clone *)",
       "Bash(ls ~/.claude/skills/gstack/setup*)",
       "Bash(./setup)",
-      "Bash(docker compose *)"
+      "Bash(docker compose *)",
+      "Bash(corepack pnpm *)",
+      "Bash(docker exec ggdrugs-postgres psql -U ggdrugs -d ggdrugs -c ' *)",
+      "Bash(MSYS_NO_PATHCONV=1 docker cp C:/Users/user/Desktop/real_Project/apps/bff/scripts/verify-constraints.sql ggdrugs-postgres:/tmp/verify-constraints.sql)",
+      "Bash(MSYS_NO_PATHCONV=1 docker exec ggdrugs-postgres psql -U ggdrugs -d ggdrugs -f /tmp/verify-constraints.sql)",
+      "Bash(docker exec ggdrugs-postgres psql -U ggdrugs -d ggdrugs -A -t -c ' *)",
+      "Bash(curl -s http://localhost:3000/health)"
     ]
   }
 }
