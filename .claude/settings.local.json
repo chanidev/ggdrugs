@@ -49,7 +49,9 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/list)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/chat)",
       "Bash(curl -s \"http://localhost:5173/node_modules/.vite/deps/react-kakao-maps-sdk.js?v=placeholder\" -o /dev/null -w \"%{http_code}\\\\n\")",
-      "Bash(curl -s \"http://localhost:5173/@vite/env\")"
+      "Bash(curl -s \"http://localhost:5173/@vite/env\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code} · redirected to %{redirect_url}\\\\n\" \"https://dapi.kakao.com/v2/maps/sdk.js?appkey=de572fdeba656a65706e27aa1909ed46&autoload=false&libraries=services,clusterer\" -H \"Referer: http://localhost:5173/\")",
+      "Bash(curl -s \"https://dapi.kakao.com/v2/maps/sdk.js?appkey=de572fdeba656a65706e27aa1909ed46&autoload=false&libraries=services,clusterer\" -H \"Referer: http://localhost:5173/\")"
     ]
   }
 }

@@ -76,15 +76,33 @@ function MissingKeyNotice() {
 }
 
 function LoaderErrorNotice({ error }: { error: unknown }) {
-  const msg = error instanceof Error ? error.message : String(error);
+  let msg: string;
+  let scriptSrc: string | null = null;
+  if (error instanceof Event) {
+    const target = error.target as HTMLScriptElement | null;
+    scriptSrc = target?.src ?? null;
+    msg = scriptSrc
+      ? `스크립트 로드 실패: ${scriptSrc}`
+      : '스크립트 로드 실패 (event target 없음)';
+  } else if (error instanceof Error) {
+    msg = error.message;
+  } else {
+    msg = String(error);
+  }
   return (
     <NoticeBox tone="error">
       <p className="font-semibold">지도 로드 실패</p>
       <p className="text-body-sm text-(--color-text-muted)">{msg}</p>
-      <p className="text-body-sm text-(--color-text-muted)">
-        Kakao 개발자 콘솔의 "허용 도메인"에 <code>http://localhost:5173</code>{' '}
-        추가했는지 확인.
-      </p>
+      <ul className="ml-4 list-disc space-y-1 text-body-sm text-(--color-text-muted)">
+        <li>
+          Kakao 개발자 콘솔의 앱이 <b>JavaScript 키</b>인지 확인 (REST API 키 X)
+        </li>
+        <li>
+          허용 도메인에 <code>http://localhost:5173</code> 등록 확인
+        </li>
+        <li>브라우저 F12 → Network 탭에서 sdk.js 요청 status 확인</li>
+        <li>광고 차단기 / 확장프로그램 차단 여부 확인</li>
+      </ul>
     </NoticeBox>
   );
 }
