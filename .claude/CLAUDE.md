@@ -155,6 +155,15 @@ chore(infra): bump postgres image to 15.6
 
 ---
 
+## 8-1. Design System
+
+UI·시각 결정을 하기 전에 **반드시 [`DESIGN.md`](../DESIGN.md)를 먼저 읽는다**.
+
+- 모든 폰트·색·간격·라운드·모션 결정이 정의되어 있음.
+- 새 UI를 만들 때 DESIGN.md에 없는 선택이 필요하면, 먼저 DESIGN.md를 개정한 뒤 구현한다 (코드에만 몰래 추가 금지).
+- QA/리뷰 시 DESIGN.md 기준으로 편차를 flag한다.
+- 금지 패턴: 보라 그라디언트, 3-column icon grid, 뚱뚱한 pill 버튼, gradient CTA, stock photo hero, 서체 fallback이 깨진 Inter/Roboto 한글 혼용.
+
 ## 9. 응답 스타일 가이드 (찬의 작업 방식 반영)
 
 - 대화형·반복적 진행을 선호한다. 한 번에 모든 것을 만들지 말고, 단계마다 검증 가능한 단위로 끊어서 제시한다.
