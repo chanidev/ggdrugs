@@ -1,8 +1,9 @@
-import express, { type Express, type Request, type Response } from 'express';
+import express, { type Express, type Request, type Response, type NextFunction } from 'express';
 import { pinoHttp } from 'pino-http';
 import { logger } from './logger.js';
 import { prisma } from './prisma.js';
 import { env } from './env.js';
+import { listEvents } from './routes/events.js';
 
 export function createApp(): Express {
   const app = express();
@@ -24,6 +25,17 @@ export function createApp(): Express {
 
   app.get('/', (_req, res) => {
     res.json({ service: 'ggdrugs-bff', status: 'running' });
+  });
+
+  app.get('/events', (req: Request, res: Response, next: NextFunction) => {
+    listEvents(req, res).catch(next);
+  });
+
+  // Error handler — 일관된 JSON 에러 응답
+  app.use((err: unknown, req: Request, res: Response, _next: NextFunction) => {
+    const msg = err instanceof Error ? err.message : 'internal error';
+    req.log?.error({ err }, 'unhandled error');
+    if (!res.headersSent) res.status(500).json({ error: msg });
   });
 
   return app;
