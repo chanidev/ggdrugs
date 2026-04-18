@@ -21,12 +21,13 @@ export const PERIODS: FilterKey[] = [
   { k: 'month', l: '이번 달' },
 ];
 
+// BFF enum: solo|couple|friend|family  (ADR 0001 #4 expected_companion enum)
+// 'biz' 는 BFF enum 에 없어 드롭. 필요 시 요구사항 개정 후 enum 추가.
 export const COMPANIONS: FilterKey[] = [
   { k: 'solo', l: '혼자' },
   { k: 'couple', l: '연인' },
   { k: 'family', l: '가족' },
-  { k: 'friends', l: '친구' },
-  { k: 'biz', l: '동료/업무' },
+  { k: 'friend', l: '친구' },
 ];
 
 export const TYPES: FilterKey[] = [

@@ -97,3 +97,32 @@ export async function fetchEventsStats(signal?: AbortSignal): Promise<EventsStat
   if (!res.ok) throw new Error(`GET /events/stats ${res.status}`);
   return (await res.json()) as EventsStatsResponse;
 }
+
+export interface RegionItem {
+  regionId: string;
+  sido: string;
+  sigungu: string | null;
+  fullAddress: string;
+}
+
+export async function fetchRegions(signal?: AbortSignal): Promise<RegionItem[]> {
+  const init: RequestInit = signal ? { signal } : {};
+  const res = await fetch(`${BFF_URL}/regions`, init);
+  if (!res.ok) throw new Error(`GET /regions ${res.status}`);
+  const data = (await res.json()) as { items: RegionItem[] };
+  return data.items;
+}
+
+export interface VibeItem {
+  vibeId: string;
+  name: string;
+  group: string; // mood | activity | theme
+}
+
+export async function fetchVibes(signal?: AbortSignal): Promise<VibeItem[]> {
+  const init: RequestInit = signal ? { signal } : {};
+  const res = await fetch(`${BFF_URL}/vibes`, init);
+  if (!res.ok) throw new Error(`GET /vibes ${res.status}`);
+  const data = (await res.json()) as { items: VibeItem[] };
+  return data.items;
+}
