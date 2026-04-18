@@ -4,108 +4,62 @@
   "graph": {
     "hyperedges": [
       {
-        "id": "alle_rename_target_set",
-        "label": "Alle rename target set (files needing GGdrugs\u2192Alle edits)",
+        "id": "alle_rename_landing",
+        "label": "Alle rebrand landing (files edited for GGdrugs\u2192Alle rename)",
         "nodes": [
-          "alle_rename_target_index_html",
-          "alle_rename_target_Header",
-          "alle_rename_target_package_json",
-          "alle_rename_target_readme",
-          "alle_rename_target_design_md",
-          "existing_web_index_html",
-          "existing_web_Header_tsx",
-          "existing_web_package_json",
-          "existing_readme_md",
-          "existing_design_md"
+          "README_alle_title",
+          "apps_web_README_alle",
+          "claude_CLAUDE_alle_rebrand",
+          "DESIGN_brand_section",
+          "Header_Header"
         ],
         "relation": "participate_in",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "llm_wiki\\raw\\design_handoff_alle_brand\\README.md"
+        "confidence": "INFERRED",
+        "confidence_score": 0.85,
+        "source_file": "README.md"
       },
       {
-        "id": "alle_line_monogram_triad",
-        "label": "Line Monogram 3-element composition (frame + A stroke + vermilion crossbar)",
+        "id": "logo_component_svg_wiring",
+        "label": "Logo component \u2194 SVG asset \u2194 brand spec wiring",
         "nodes": [
-          "alle_logo_line_monogram",
-          "alle_logo_spec_viewbox",
-          "alle_logo_currentcolor_rule",
-          "alle_logo_crossbar_accent",
-          "alle_logo_no_fill"
-        ],
-        "relation": "form",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "llm_wiki\\raw\\design_handoff_alle_brand\\README.md"
-      },
-      {
-        "id": "alle_asset_component_pipeline",
-        "label": "Logo asset \u2192 React component wiring (SVG 3-pack + LogoMark/LogoLockup)",
-        "nodes": [
-          "alle_asset_logo_mark_svg",
-          "alle_asset_favicon_svg",
-          "alle_asset_logo_lockup_svg",
-          "alle_component_logo_tsx",
-          "alle_component_LogoMark",
-          "alle_component_LogoLockup"
+          "Logo_LogoMark",
+          "public_logo_mark_svg",
+          "DESIGN_logo_line_monogram",
+          "DESIGN_brand_impl_refs"
         ],
         "relation": "implement",
         "confidence": "INFERRED",
         "confidence_score": 0.9,
-        "source_file": "llm_wiki\\raw\\design_handoff_alle_brand\\README.md"
+        "source_file": "apps/web/src/components/brand/Logo.tsx"
       },
       {
-        "id": "alle_logo_family",
-        "label": "Alle Line Monogram Family",
+        "id": "alle_brand_system_full",
+        "label": "Alle Brand System community \u2014 logo + wordmark + voice + impl refs",
         "nodes": [
-          "logo_mark_svg",
-          "favicon_svg",
-          "logo_lockup_svg"
+          "DESIGN_logo_line_monogram",
+          "DESIGN_wordmark",
+          "DESIGN_voice_tagline",
+          "DESIGN_logo_usage_rules",
+          "DESIGN_brand_impl_refs",
+          "alle_brand_system_community"
+        ],
+        "relation": "form",
+        "confidence": "INFERRED",
+        "confidence_score": 0.9,
+        "source_file": "DESIGN.md"
+      },
+      {
+        "id": "alle_served_asset_trio",
+        "label": "Alle Brand Assets Served by Vite",
+        "nodes": [
+          "web_public_logo_mark",
+          "web_public_favicon",
+          "web_public_logo_lockup"
         ],
         "relation": "form",
         "confidence": "EXTRACTED",
         "confidence_score": 0.95,
-        "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-mark.svg"
-      },
-      {
-        "id": "alle_color_palette",
-        "label": "Alle Brand Color Palette",
-        "nodes": [
-          "color_ink_1a1a1a",
-          "color_orange_e8562d",
-          "color_muted_999999"
-        ],
-        "relation": "form",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-mark.svg"
-      },
-      {
-        "id": "alle_mark_geometry",
-        "label": "Line Monogram Geometry (Frame + Apex + Crossbar)",
-        "nodes": [
-          "logo_mark_frame_rect",
-          "logo_mark_apex_path",
-          "logo_mark_crossbar_line"
-        ],
-        "relation": "form",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-mark.svg"
-      },
-      {
-        "id": "alle_typography_stack",
-        "label": "Alle Lockup Typography (Pretendard + JetBrains Mono)",
-        "nodes": [
-          "typeface_pretendard",
-          "typeface_jetbrains_mono",
-          "wordmark_alle_text",
-          "locale_seoul_text"
-        ],
-        "relation": "form",
-        "confidence": "EXTRACTED",
-        "confidence_score": 1.0,
-        "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-lockup.svg"
+        "source_file": "apps/web/public/logo-mark.svg"
       }
     ]
   },
@@ -115,7 +69,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\app.ts",
       "source_location": "L1",
-      "community": 9,
+      "community": 10,
       "norm_label": "app.ts",
       "id": "apps_bff_src_app_ts"
     },
@@ -124,7 +78,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\app.ts",
       "source_location": "L33",
-      "community": 9,
+      "community": 10,
       "norm_label": "createapp()",
       "id": "app_createapp"
     },
@@ -133,7 +87,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\env.ts",
       "source_location": "L1",
-      "community": 9,
+      "community": 10,
       "norm_label": "env.ts",
       "id": "apps_bff_src_env_ts"
     },
@@ -142,7 +96,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\logger.ts",
       "source_location": "L1",
-      "community": 9,
+      "community": 10,
       "norm_label": "logger.ts",
       "id": "apps_bff_src_logger_ts"
     },
@@ -151,7 +105,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\prisma.ts",
       "source_location": "L1",
-      "community": 9,
+      "community": 10,
       "norm_label": "prisma.ts",
       "id": "apps_bff_src_prisma_ts"
     },
@@ -160,7 +114,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\server.ts",
       "source_location": "L1",
-      "community": 9,
+      "community": 10,
       "norm_label": "server.ts",
       "id": "apps_bff_src_server_ts"
     },
@@ -178,7 +132,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L1",
-      "community": 9,
+      "community": 10,
       "norm_label": "events.ts",
       "id": "apps_bff_src_routes_events_ts"
     },
@@ -187,7 +141,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L32",
-      "community": 9,
+      "community": 10,
       "norm_label": "parsecsv()",
       "id": "events_parsecsv"
     },
@@ -196,7 +150,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L40",
-      "community": 9,
+      "community": 10,
       "norm_label": "parsebigintcsv()",
       "id": "events_parsebigintcsv"
     },
@@ -205,7 +159,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L53",
-      "community": 9,
+      "community": 10,
       "norm_label": "parseintclamp()",
       "id": "events_parseintclamp"
     },
@@ -214,7 +168,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L59",
-      "community": 9,
+      "community": 10,
       "norm_label": "parseperiod()",
       "id": "events_parseperiod"
     },
@@ -223,7 +177,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L83",
-      "community": 9,
+      "community": 10,
       "norm_label": "listevents()",
       "id": "events_listevents"
     },
@@ -232,7 +186,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\vite.config.ts",
       "source_location": "L1",
-      "community": 27,
+      "community": 34,
       "norm_label": "vite.config.ts",
       "id": "apps_web_vite_config_ts"
     },
@@ -241,7 +195,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\main.tsx",
       "source_location": "L1",
-      "community": 28,
+      "community": 35,
       "norm_label": "main.tsx",
       "id": "apps_web_src_main_tsx"
     },
@@ -250,7 +204,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\vite-env.d.ts",
       "source_location": "L1",
-      "community": 29,
+      "community": 36,
       "norm_label": "vite-env.d.ts",
       "id": "apps_web_src_vite_env_d_ts"
     },
@@ -259,7 +213,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\ChatDock.tsx",
       "source_location": "L1",
-      "community": 18,
+      "community": 24,
       "norm_label": "chatdock.tsx",
       "id": "apps_web_src_components_chatdock_tsx"
     },
@@ -268,7 +222,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\ChatDock.tsx",
       "source_location": "L7",
-      "community": 18,
+      "community": 24,
       "norm_label": "chatdock()",
       "id": "chatdock_chatdock"
     },
@@ -277,7 +231,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\EventList.tsx",
       "source_location": "L1",
-      "community": 30,
+      "community": 37,
       "norm_label": "eventlist.tsx",
       "id": "apps_web_src_components_eventlist_tsx"
     },
@@ -286,7 +240,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L1",
-      "community": 14,
+      "community": 18,
       "norm_label": "filtersearchpanel.tsx",
       "id": "apps_web_src_components_filtersearchpanel_tsx"
     },
@@ -295,7 +249,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L22",
-      "community": 14,
+      "community": 18,
       "norm_label": "toggle()",
       "id": "filtersearchpanel_toggle"
     },
@@ -304,7 +258,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L31",
-      "community": 14,
+      "community": 18,
       "norm_label": "clear()",
       "id": "filtersearchpanel_clear"
     },
@@ -313,7 +267,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\FullListPanel.tsx",
       "source_location": "L1",
-      "community": 19,
+      "community": 25,
       "norm_label": "fulllistpanel.tsx",
       "id": "apps_web_src_components_fulllistpanel_tsx"
     },
@@ -322,7 +276,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\FullListPanel.tsx",
       "source_location": "L20",
-      "community": 19,
+      "community": 25,
       "norm_label": "fulllistpanel()",
       "id": "fulllistpanel_fulllistpanel"
     },
@@ -331,7 +285,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\HealthBadge.tsx",
       "source_location": "L1",
-      "community": 20,
+      "community": 26,
       "norm_label": "healthbadge.tsx",
       "id": "apps_web_src_components_healthbadge_tsx"
     },
@@ -340,7 +294,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\HealthBadge.tsx",
       "source_location": "L12",
-      "community": 20,
+      "community": 26,
       "norm_label": "healthbadge()",
       "id": "healthbadge_healthbadge"
     },
@@ -349,7 +303,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\SeoulMap.tsx",
       "source_location": "L1",
-      "community": 31,
+      "community": 38,
       "norm_label": "seoulmap.tsx",
       "id": "apps_web_src_components_seoulmap_tsx"
     },
@@ -358,7 +312,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\layout\\AppShell.tsx",
       "source_location": "L1",
-      "community": 21,
+      "community": 27,
       "norm_label": "appshell.tsx",
       "id": "apps_web_src_layout_appshell_tsx"
     },
@@ -367,7 +321,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\layout\\AppShell.tsx",
       "source_location": "L17",
-      "community": 21,
+      "community": 27,
       "norm_label": "appshell()",
       "id": "appshell_appshell"
     },
@@ -376,7 +330,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\layout\\Header.tsx",
       "source_location": "L1",
-      "community": 15,
+      "community": 19,
       "norm_label": "header.tsx",
       "id": "apps_web_src_layout_header_tsx"
     },
@@ -384,8 +338,8 @@
       "label": "Header()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\layout\\Header.tsx",
-      "source_location": "L5",
-      "community": 15,
+      "source_location": "L7",
+      "community": 19,
       "norm_label": "header()",
       "id": "header_header"
     },
@@ -393,8 +347,8 @@
       "label": "TabLink()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\layout\\Header.tsx",
-      "source_location": "L33",
-      "community": 15,
+      "source_location": "L29",
+      "community": 19,
       "norm_label": "tablink()",
       "id": "header_tablink"
     },
@@ -403,7 +357,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\layout\\Sidebar.tsx",
       "source_location": "L1",
-      "community": 22,
+      "community": 28,
       "norm_label": "sidebar.tsx",
       "id": "apps_web_src_layout_sidebar_tsx"
     },
@@ -412,7 +366,7 @@
       "file_type": "code",
       "source_file": "apps\\web\\src\\layout\\Sidebar.tsx",
       "source_location": "L41",
-      "community": 22,
+      "community": 28,
       "norm_label": "toggle()",
       "id": "sidebar_toggle"
     },
@@ -421,7 +375,7 @@
       "file_type": "code",
       "source_file": "packages\\config\\src\\index.ts",
       "source_location": "L1",
-      "community": 11,
+      "community": 13,
       "norm_label": "index.ts",
       "id": "packages_config_src_index_ts"
     },
@@ -430,7 +384,7 @@
       "file_type": "code",
       "source_file": "packages\\config\\src\\index.ts",
       "source_location": "L10",
-      "community": 11,
+      "community": 13,
       "norm_label": "envvalidationerror",
       "id": "index_envvalidationerror"
     },
@@ -439,7 +393,7 @@
       "file_type": "code",
       "source_file": "packages\\config\\src\\index.ts",
       "source_location": "L12",
-      "community": 11,
+      "community": 13,
       "norm_label": ".constructor()",
       "id": "index_envvalidationerror_constructor"
     },
@@ -448,7 +402,7 @@
       "file_type": "code",
       "source_file": "packages\\config\\src\\index.ts",
       "source_location": "L31",
-      "community": 11,
+      "community": 13,
       "norm_label": "loadenv()",
       "id": "index_loadenv"
     },
@@ -457,7 +411,7 @@
       "file_type": "code",
       "source_file": "packages\\config\\src\\index.ts",
       "source_location": "L62",
-      "community": 11,
+      "community": 13,
       "norm_label": "loadpartial()",
       "id": "index_loadpartial"
     },
@@ -466,7 +420,7 @@
       "file_type": "code",
       "source_file": "packages\\config\\src\\schema.ts",
       "source_location": "L1",
-      "community": 11,
+      "community": 13,
       "norm_label": "schema.ts",
       "id": "packages_config_src_schema_ts"
     },
@@ -531,7 +485,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "bff env schema (merged)",
       "id": "env_bffSchema"
     },
@@ -713,7 +667,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 32,
+      "community": 39,
       "norm_label": "vite config (react + tailwind + bff proxy)",
       "id": "vite_config"
     },
@@ -752,7 +706,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "vite_kakao_map_js_key env typing",
       "id": "web_viteEnv"
     },
@@ -856,7 +810,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "seoulmap (kakao maps)",
       "id": "web_SeoulMap"
     },
@@ -921,7 +875,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "loadenv (full validation)",
       "id": "config_loadEnv"
     },
@@ -934,7 +888,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "loadpartial (per-service schema)",
       "id": "config_loadPartial"
     },
@@ -947,7 +901,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "envvalidationerror",
       "id": "config_EnvValidationError"
     },
@@ -960,7 +914,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "coreschema (node_env, log_level)",
       "id": "config_coreSchema"
     },
@@ -973,7 +927,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "databaseschema (database_url + postgres creds)",
       "id": "config_databaseSchema"
     },
@@ -986,7 +940,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "redisschema",
       "id": "config_redisSchema"
     },
@@ -999,7 +953,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "qdrantschema",
       "id": "config_qdrantSchema"
     },
@@ -1012,7 +966,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "s3schema (minio buckets x4)",
       "id": "config_s3Schema"
     },
@@ -1025,7 +979,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "serviceurlsschema (bff/llm/web)",
       "id": "config_serviceUrlsSchema"
     },
@@ -1038,7 +992,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "externalapischema (kakao/google)",
       "id": "config_externalApiSchema"
     },
@@ -1051,7 +1005,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "openaischema",
       "id": "config_openaiSchema"
     },
@@ -1064,7 +1018,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "sessionschema (session/jwt secrets)",
       "id": "config_sessionSchema"
     },
@@ -1077,7 +1031,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "fullschema (all merged)",
       "id": "config_fullSchema"
     },
@@ -1090,7 +1044,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "productionrequiredkeys",
       "id": "config_productionRequiredKeys"
     },
@@ -1103,7 +1057,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 33,
+      "community": 40,
       "norm_label": "graphify rule: read graph_report first",
       "id": "doc_graphify_rule"
     },
@@ -1116,7 +1070,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 34,
+      "community": 41,
       "norm_label": "gstack workflow think\u2192plan\u2192build\u2192review\u2192test\u2192ship\u2192reflect",
       "id": "doc_gstack_workflow"
     },
@@ -1155,7 +1109,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 23,
+      "community": 29,
       "norm_label": "vermilion single accent (#e8562d)",
       "id": "design_color_vermilion"
     },
@@ -1181,7 +1135,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "signature \u2014 \u1111\u1175\u11ab \u110f\u1173\u11af\u1105\u1165\u1109\u1173\u1110\u1165 \u1107\u116e\u11ab\u1112\u1162 \u110b\u1162\u1102\u1175\u1106\u1166\u110b\u1175\u1109\u1167\u11ab",
       "id": "design_signature_pin_cluster"
     },
@@ -1194,7 +1148,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 8,
       "norm_label": "map pin component tokens",
       "id": "design_map_pin_token"
     },
@@ -1220,7 +1174,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 23,
+      "community": 29,
       "norm_label": "\u1100\u1167\u11af\u110c\u1165\u11bc: \u1107\u1165\u1106\u1175\u11af\u1105\u1175\u110b\u1165\u11ab \u1103\u1161\u11ab\u1109\u1162\u11a8 accent \u1100\u1173\u11ab\u1100\u1165",
       "id": "design_decision_vermilion_rationale"
     },
@@ -1233,7 +1187,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "llm wiki + graphify setup guide",
       "id": "llm_wiki_setup_guide"
     },
@@ -1246,7 +1200,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "graphifyy pip package",
       "id": "setup_graphifyy_package"
     },
@@ -1259,7 +1213,7 @@
       "captured_at": null,
       "author": "Andrej Karpathy",
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "karpathy llm wiki pattern",
       "id": "setup_karpathy_llm_wiki"
     },
@@ -1272,7 +1226,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "claude.md auto-load hook",
       "id": "setup_claudemd_autoload"
     },
@@ -1584,7 +1538,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "llm wiki readme",
       "id": "llm_wiki_readme"
     },
@@ -1597,7 +1551,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "llm wiki schema",
       "id": "llm_wiki_schema"
     },
@@ -1610,7 +1564,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "llm wiki \u1109\u1161\u110b\u116d\u11bc\u1107\u1165\u11b8",
       "id": "llm_wiki_usage"
     },
@@ -1623,7 +1577,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "three-layer architecture (raw/wiki/schema)",
       "id": "llm_wiki_three_layer"
     },
@@ -1636,7 +1590,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "wiki invariants (raw append-only, 1:1 sources)",
       "id": "llm_wiki_invariants"
     },
@@ -1688,7 +1642,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 12,
       "norm_label": "llm wiki raw/ readme",
       "id": "llm_wiki_raw_readme"
     },
@@ -2182,7 +2136,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "admin flow",
       "id": "admin_flow_topic"
     },
@@ -2195,7 +2149,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "event approval queue",
       "id": "admin_flow_approval_queue"
     },
@@ -2208,7 +2162,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "a_700 dual-tab structure",
       "id": "admin_flow_a700_tabs"
     },
@@ -2221,7 +2175,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "llm delegation guardrail (claude.md \u00a76-4)",
       "id": "admin_flow_llm_guardrail"
     },
@@ -2247,7 +2201,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "decision #1: on_hold \u2192 revision_requested",
       "id": "adr0001_d1_revision_requested"
     },
@@ -2260,7 +2214,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "decision #2: users.active_role column",
       "id": "adr0001_d2_active_role"
     },
@@ -2273,7 +2227,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "decision #3: admin_profiles table",
       "id": "adr0001_d3_admin_profiles"
     },
@@ -2299,7 +2253,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "decision #5: event_vibes rename",
       "id": "adr0001_d5_event_vibes"
     },
@@ -2312,7 +2266,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "decision #6: review_photos table",
       "id": "adr0001_d6_review_photos"
     },
@@ -2325,7 +2279,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 16,
+      "community": 20,
       "norm_label": "decision #7: event_subscriptions table",
       "id": "adr0001_d7_event_subscriptions"
     },
@@ -2429,7 +2383,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "users table",
       "id": "db_users_table"
     },
@@ -2442,7 +2396,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "uploader_profiles table",
       "id": "db_uploader_profiles"
     },
@@ -2455,7 +2409,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "admin_profiles table (new)",
       "id": "db_admin_profiles"
     },
@@ -2468,7 +2422,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "events table",
       "id": "db_events_table"
     },
@@ -2481,7 +2435,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "event_vibes table",
       "id": "db_event_vibes"
     },
@@ -2494,7 +2448,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "event_vibe_assignments table",
       "id": "db_event_vibe_assignments"
     },
@@ -2507,7 +2461,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "approval_logs table",
       "id": "db_approval_logs"
     },
@@ -2520,7 +2474,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "approval_documents table",
       "id": "db_approval_documents"
     },
@@ -2533,7 +2487,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "review_photos table (new)",
       "id": "db_review_photos"
     },
@@ -2546,7 +2500,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 16,
+      "community": 20,
       "norm_label": "event_subscriptions table (new)",
       "id": "db_event_subscriptions"
     },
@@ -2559,7 +2513,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "reviews table",
       "id": "db_reviews"
     },
@@ -2572,7 +2526,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 16,
+      "community": 20,
       "norm_label": "notifications table",
       "id": "db_notifications"
     },
@@ -2585,7 +2539,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 35,
+      "community": 42,
       "norm_label": "chat_messages table",
       "id": "db_chat_messages"
     },
@@ -2598,7 +2552,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 43,
       "norm_label": "search_logs table",
       "id": "db_search_logs"
     },
@@ -2624,7 +2578,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "event detail & review flow",
       "id": "event_detail_review_flow_topic"
     },
@@ -2637,7 +2591,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "a_400 event detail page",
       "id": "usecase_a400"
     },
@@ -2650,7 +2604,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "a_500 mypage calendar",
       "id": "usecase_a500"
     },
@@ -2663,7 +2617,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "a_501 event review writing",
       "id": "usecase_a501"
     },
@@ -2676,7 +2630,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "gg-review-001 (post-end activation)",
       "id": "gg_review_001"
     },
@@ -2702,7 +2656,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "approval_status enum",
       "id": "approval_status_enum"
     },
@@ -2715,7 +2669,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "phase enum (upcoming/ongoing/ended)",
       "id": "phase_enum"
     },
@@ -2806,7 +2760,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "filter: event_vibe",
       "id": "filter_event_vibe"
     },
@@ -2819,7 +2773,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "main page flow",
       "id": "main_page_flow_topic"
     },
@@ -2832,7 +2786,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "a_200 main page",
       "id": "usecase_a200"
     },
@@ -2845,7 +2799,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "roles & active_role",
       "id": "roles_active_role_topic"
     },
@@ -2858,7 +2812,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "role: user",
       "id": "role_user"
     },
@@ -2871,7 +2825,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "role: uploader",
       "id": "role_uploader"
     },
@@ -2884,7 +2838,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "role: admin",
       "id": "role_admin"
     },
@@ -2897,7 +2851,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "1-account multi-role toggle model",
       "id": "role_toggle_model"
     },
@@ -2910,7 +2864,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "gg-role-001 toggle button",
       "id": "gg_role_001"
     },
@@ -3027,7 +2981,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "kakao maps / kakao rest api",
       "id": "tech_kakao_maps"
     },
@@ -3066,7 +3020,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "term: event",
       "id": "term_event"
     },
@@ -3092,7 +3046,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 11,
       "norm_label": "term: event_vibe",
       "id": "term_event_vibe"
     },
@@ -3131,7 +3085,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "term: active_role",
       "id": "term_active_role"
     },
@@ -3144,7 +3098,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 44,
       "norm_label": "term: period",
       "id": "term_period"
     },
@@ -3157,7 +3111,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "ui architecture (current)",
       "id": "ui_architecture_topic"
     },
@@ -3170,7 +3124,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "rail + overlay panel layout",
       "id": "ui_rail_overlay_layout"
     },
@@ -3196,7 +3150,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "seoulmap component",
       "id": "ui_seoulmap"
     },
@@ -3209,7 +3163,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "sidebar component (rail + overlay)",
       "id": "ui_sidebar"
     },
@@ -3222,7 +3176,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "tailwind v4 @theme token registration",
       "id": "ui_tailwind_v4_theme"
     },
@@ -3235,7 +3189,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "vite envdir='../..' monorepo root",
       "id": "ui_vite_envdir"
     },
@@ -3248,7 +3202,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 6,
       "norm_label": "rationale: overlay instead of route switch",
       "id": "ui_overlay_rationale"
     },
@@ -3261,7 +3215,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "uploader flow",
       "id": "uploader_flow_topic"
     },
@@ -3274,7 +3228,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "a_600 uploader promotion",
       "id": "usecase_a600"
     },
@@ -3287,7 +3241,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "a_601 uploader main page",
       "id": "usecase_a601"
     },
@@ -3300,7 +3254,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "a_602 event upload",
       "id": "usecase_a602"
     },
@@ -3313,7 +3267,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "use cases index (a_100~a_700)",
       "id": "use_cases_index_topic"
     },
@@ -3326,7 +3280,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "a_100 signup",
       "id": "usecase_a100"
     },
@@ -3339,7 +3293,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "a_101 login",
       "id": "usecase_a101"
     },
@@ -3378,7 +3332,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "a_203 upcoming events",
       "id": "usecase_a203"
     },
@@ -3391,7 +3345,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "a_300 full list",
       "id": "usecase_a300"
     },
@@ -3404,7 +3358,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 0,
       "norm_label": "a_700 admin approval",
       "id": "usecase_a700"
     },
@@ -3508,7 +3462,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "llm: review sentiment analysis",
       "id": "svc_llm_sentiment"
     },
@@ -3547,7 +3501,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "web domain configuration panel",
       "id": "image_web_domain_config"
     },
@@ -3560,7 +3514,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "registered domain: http://localhost:9999 (primary / \u1100\u1175\u1107\u1169\u11ab)",
       "id": "image_domain_localhost_9999"
     },
@@ -3573,7 +3527,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "registered domain: http://localhost:5173 (vite dev server)",
       "id": "image_domain_localhost_5173"
     },
@@ -3586,7 +3540,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "primary domain badge (\u1100\u1175\u1107\u1169\u11ab)",
       "id": "image_primary_domain_badge"
     },
@@ -3599,7 +3553,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "domain-only registration rule (paths stripped, e.g. https://www.example.com/mypage \u2192 https://example.com)",
       "id": "image_domain_path_rule"
     },
@@ -3612,7 +3566,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 12,
+      "community": 14,
       "norm_label": "kakao developers app platform/web domain settings (inferred)",
       "id": "image_kakao_developers_app_settings"
     },
@@ -3625,7 +3579,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u1111\u1173\u11af\u1105\u1169\u110b\u116e \u110b\u116a\u110b\u1175\u110b\u1165\u1111\u1173\u1105\u1166\u110b\u1175\u11b7 \u110e\u1169\u110b\u1161\u11ab (\u110c\u1165\u11ab\u110e\u1166 \u1106\u116e\u11ab\u1109\u1165)",
       "id": "choan_wireframe_document"
     },
@@ -3638,7 +3592,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175 (\u110c\u1175\u1103\u1169 \u1100\u1175\u1107\u1169\u11ab \u1112\u116a\u1106\u1167\u11ab)",
       "id": "choan_screen_1_main"
     },
@@ -3651,7 +3605,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "2-1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110c\u1165\u11ab\u110e\u1166\u1106\u1169\u11a8\u1105\u1169\u11a8\u1107\u1169\u1100\u1175_\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_2_1_region_list"
     },
@@ -3664,7 +3618,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "2-2. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110c\u1165\u11ab\u110e\u1166\u1106\u1169\u11a8\u1105\u1169\u11a8\u1107\u1169\u1100\u1175_\u110c\u1175\u110b\u1167\u11a8\u1106\u1167\u11bc \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_2_2_region_detail"
     },
@@ -3677,7 +3631,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "2-3. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110c\u1165\u11ab\u110e\u1166\u1106\u1169\u11a8\u1105\u1169\u11a8\u1107\u1169\u1100\u1175_\u110c\u1175\u110b\u1167\u11a8\u1106\u1167\u11bc \u110f\u1173\u11af\u1105\u1175\u11a8 \u1112\u116e \u110c\u1175\u1103\u1169 \u1107\u1172",
       "id": "choan_screen_2_3_region_map"
     },
@@ -3690,7 +3644,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "3-1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1111\u1175\u11af\u1110\u1165\u1109\u116e\u11ab\u110b\u1171_\u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_3_1_filter"
     },
@@ -3703,7 +3657,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "3-2. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1111\u1175\u11af\u1110\u1165\u1109\u116e\u11ab\u110b\u1171_\u1100\u1167\u11af\u1100\u116a \u1106\u1169\u11a8\u1105\u1169\u11a8",
       "id": "choan_screen_3_2_filter_results"
     },
@@ -3716,7 +3670,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "3-3. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1111\u1175\u11af\u1110\u1165\u1109\u116e\u11ab\u110b\u1171_\u1100\u1167\u11af\u1100\u116a \u1109\u1161\u11bc\u1109\u1166 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_3_3_filter_detail"
     },
@@ -3729,7 +3683,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_4_1_chat_search"
     },
@@ -3742,7 +3696,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-2. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u1105\u1169\u1100\u1173\u110b\u1175\u11ab \u1112\u116e",
       "id": "choan_screen_4_2_chat_after"
     },
@@ -3755,7 +3709,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-3. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u1106\u1169\u11a8\u1105\u1169\u11a8 \u1107\u1169\u1100\u1175",
       "id": "choan_screen_4_3_chat_list"
     },
@@ -3768,7 +3722,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-4. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u110c\u1175\u1103\u1169 \u1107\u1169\u1100\u1175",
       "id": "choan_screen_4_4_chat_map"
     },
@@ -3781,7 +3735,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "5. \u1105\u1169\u1100\u1173\u110b\u1175\u11ab \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_5_login"
     },
@@ -3794,7 +3748,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_6_my_page"
     },
@@ -3807,7 +3761,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6-1. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175_\u1105\u1175\u1107\u1172 \u1106\u1169\u110b\u1161\u1107\u1169\u1100\u1175 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_6_1_bookmarks"
     },
@@ -3820,7 +3774,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6-2. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175_\u1109\u1165\u11af\u110c\u1165\u11bc \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_6_2_settings"
     },
@@ -3833,7 +3787,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6-3. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175_\u1109\u1165\u11af\u110c\u1165\u11bc_\u1105\u1169\u1100\u1173\u110b\u1161\u110b\u116e\u11ba \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_6_3_logout"
     },
@@ -3846,7 +3800,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-1. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u110b\u1167\u11a8\u1112\u1161\u11af \u1107\u116e\u110b\u1167\u1107\u1161\u11ae\u1100\u1175",
       "id": "choan_screen_7_1_uploader_role_toggle"
     },
@@ -3859,7 +3813,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-2. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_2_uploader_main"
     },
@@ -3872,7 +3826,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-3. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1103\u1173\u11bc\u1105\u1169\u11a8 \u1106\u1169\u11a8\u1105\u1169\u11a8 \u1107\u1169\u1100\u1175",
       "id": "choan_screen_7_3_uploader_register"
     },
@@ -3885,7 +3839,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-4. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1100\u116a\u11ab\u1105\u1175 \u1111\u1166\u110b\u1175\u110c\u1175 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_7_4_uploader_registered"
     },
@@ -3898,7 +3852,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-5. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u110b\u1165\u11b8\u1105\u1169\u1103\u1173 \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_5_uploader_approval"
     },
@@ -3911,7 +3865,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7. \u1100\u116a\u11ab\u1105\u1175\u110c\u1161 \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_admin_page"
     },
@@ -3924,7 +3878,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-2. \u1100\u116a\u11ab\u1105\u1175\u110c\u1161 \u1111\u1166\u110b\u1175\u110c\u1175_\u1109\u1173\u11bc\u110b\u1175\u11ab/\u1107\u1161\u11ab\u1105\u1167 \u1100\u116a\u11ab\u1105\u1167\u11ab \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_2_admin_review"
     },
@@ -3937,7 +3891,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110f\u1161\u110f\u1161\u110b\u1169 \u110c\u1175\u1103\u1169 \u1107\u1172 (\u1112\u1162\u11bc\u110c\u1165\u11bc\u1100\u116e\u110b\u1167\u11a8 \u1105\u1166\u110b\u1175\u110b\u1165)",
       "id": "choan_component_map_view"
     },
@@ -3950,7 +3904,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110c\u1161\u110b\u1167\u11ab\u110b\u1165 \u110e\u1162\u1110\u1175\u11bc \u1100\u1165\u11b7\u1109\u1162\u11a8 \u110b\u1175\u11b8\u1105\u1167\u11a8\u110e\u1161\u11bc",
       "id": "choan_component_chat_search_bar"
     },
@@ -3963,7 +3917,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u1111\u1175\u11af\u1110\u1165 \u1111\u1162\u1102\u1165\u11af (5\u110c\u1169\u11bc \u1111\u1175\u11af\u1110\u1165)",
       "id": "choan_component_filter_panel"
     },
@@ -3976,7 +3930,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110c\u1175\u110b\u1167\u11a8 \u1106\u1169\u11a8\u1105\u1169\u11a8 \u1109\u1161\u110b\u1175\u1103\u1173 \u1111\u1162\u1102\u1165\u11af",
       "id": "choan_component_region_list_panel"
     },
@@ -3989,7 +3943,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1161\u11bc\u1109\u1166 \u110f\u1161\u1103\u1173",
       "id": "choan_component_event_detail_card"
     },
@@ -4002,7 +3956,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "\u1111\u1173\u11af\u1105\u1169\u110b\u116e: \u110b\u1175\u11af\u1107\u1161\u11ab \u1109\u1161\u110b\u116d\u11bc\u110c\u1161 (\u110c\u1175\u1103\u1169 \u2192 \u1100\u1165\u11b7\u1109\u1162\u11a8 \u2192 \u1109\u1161\u11bc\u1109\u1166 \u2192 \u1107\u116e\u11a8\u1106\u1161\u110f\u1173)",
       "id": "choan_flow_general_user"
     },
@@ -4015,7 +3969,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "\u1111\u1173\u11af\u1105\u1169\u110b\u116e: \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 (\u110b\u1167\u11a8\u1112\u1161\u11af \u1107\u116e\u110b\u1167 \u2192 \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1103\u1173\u11bc\u1105\u1169\u11a8 \u2192 \u1109\u1173\u11bc\u110b\u1175\u11ab \u1103\u1162\u1100\u1175)",
       "id": "choan_flow_uploader"
     },
@@ -4028,7 +3982,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "\u1111\u1173\u11af\u1105\u1169\u110b\u116e: \u1100\u116a\u11ab\u1105\u1175\u110c\u1161 (\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1173\u11bc\u110b\u1175\u11ab/\u1107\u1161\u11ab\u1105\u1167/\u1105\u1161\u1107\u1166\u11af \u1107\u116e\u110b\u1167)",
       "id": "choan_flow_admin"
     },
@@ -4037,7 +3991,7 @@
       "file_type": "code",
       "source_file": "apps\\bff\\src\\app.ts",
       "source_location": "L13",
-      "community": 9,
+      "community": 10,
       "norm_label": "cors()",
       "id": "app_cors"
     },
@@ -4050,7 +4004,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "createapp (express factory)",
       "id": "bff_app_createApp"
     },
@@ -4063,7 +4017,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "cors middleware (bff)",
       "id": "bff_app_cors"
     },
@@ -4076,7 +4030,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "root endpoint service name 'ggdrugs-bff'",
       "id": "bff_app_root_service_name"
     },
@@ -4089,7 +4043,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "get /health endpoint (bff)",
       "id": "bff_app_health_endpoint"
     },
@@ -4440,7 +4394,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 24,
+      "community": 30,
       "norm_label": "do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)",
       "id": "alle_donotedit_package_name"
     },
@@ -4453,7 +4407,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "do-not-edit: db schema, env keys, internal identifiers",
       "id": "alle_donotedit_internal_ids"
     },
@@ -4505,7 +4459,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 24,
+      "community": 30,
       "norm_label": "rationale: skip repo/package rename to avoid full-repo churn",
       "id": "alle_rationale_no_repo_rename"
     },
@@ -4700,7 +4654,7 @@
       "captured_at": "2026-04",
       "author": "GGudrugs' Team",
       "contributor": null,
-      "community": 17,
+      "community": 21,
       "norm_label": "db \u1109\u1165\u11af\u1100\u1168 \u1106\u1167\u11bc\u1109\u1166\u1109\u1165 v3 (2026-04)",
       "id": "db_v3_title"
     },
@@ -4726,7 +4680,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 13,
+      "community": 15,
       "norm_label": "db v3: 20 tables (regions, users, uploader_profiles, events, ...)",
       "id": "db_v3_tables_20"
     },
@@ -4739,7 +4693,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 31,
       "norm_label": "db v3 term: event_tendency_labels (renamed to event_vibes in adr 0001)",
       "id": "db_v3_event_tendency_labels"
     },
@@ -4752,7 +4706,7 @@
       "captured_at": "2026-04",
       "author": "\uc7a5\uc6d0\ud300",
       "contributor": null,
-      "community": 17,
+      "community": 21,
       "norm_label": "\u110b\u116d\u1100\u116e\u1109\u1161\u1112\u1161\u11bc\u110c\u1165\u11bc\u110b\u1174\u1109\u1165 v5.0 (\u110c\u1161\u11bc\u110b\u116f\u11ab\u1110\u1175\u11b7, 2026-04)",
       "id": "req_v5_title"
     },
@@ -4778,7 +4732,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 25,
+      "community": 32,
       "norm_label": "v5.0 changes: +a_203, +a_501, +\u110b\u116d\u11bc\u110b\u1165\u110c\u1175\u11b8, filter-term unification, \u2212ai video",
       "id": "req_v5_changes"
     },
@@ -4791,7 +4745,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 25,
+      "community": 32,
       "norm_label": "filter terminology: \u110c\u1175\u110b\u1167\u11a8/\u1100\u1175\u1100\u1161\u11ab/\u110b\u1175\u11ab\u110b\u116f\u11ab\u1100\u116e\u1109\u1165\u11bc/\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110c\u1169\u11bc\u1105\u1172/\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1165\u11bc\u1112\u1163\u11bc",
       "id": "req_v5_filters"
     },
@@ -4804,7 +4758,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 31,
       "norm_label": "term: event_vibe (event vibe labels, admin-assigned)",
       "id": "req_v5_event_vibe"
     },
@@ -4817,7 +4771,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 38,
+      "community": 45,
       "norm_label": "term: companion_type {\u1112\u1169\u11ab\u110c\u1161, \u110b\u1167\u11ab\u110b\u1175\u11ab, \u110e\u1175\u11ab\u1100\u116e, \u1100\u1161\u110c\u1169\u11a8}",
       "id": "req_v5_companion_type"
     },
@@ -4830,7 +4784,7 @@
       "captured_at": "2026-04-18",
       "author": null,
       "contributor": null,
-      "community": 39,
+      "community": 46,
       "norm_label": "god node: ui \u1111\u1173\u11af\u1105\u1169\u110b\u116e \u110b\u116a\u110b\u1175\u110b\u1165\u1111\u1173\u1105\u1166\u110b\u1175\u11b7 \u110e\u1169\u110b\u1161\u11ab (23 edges)",
       "id": "report_god_node_ui_wireframe"
     },
@@ -4843,7 +4797,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 17,
+      "community": 21,
       "norm_label": "god node: adr 0001 ddl v3 \u2194 terminology v5 (18 edges)",
       "id": "report_god_node_adr_0001"
     },
@@ -4869,7 +4823,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "alle logo mark (line monogram)",
       "id": "logo_mark_svg"
     },
@@ -4882,7 +4836,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "alle favicon (bolder stroke variant)",
       "id": "favicon_svg"
     },
@@ -4895,7 +4849,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "alle logo lockup (mark + wordmark + locale)",
       "id": "logo_lockup_svg"
     },
@@ -4908,7 +4862,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "84x84 square viewbox grid",
       "id": "logo_mark_viewbox_84"
     },
@@ -4921,7 +4875,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "rounded square frame (rx=2, 78x78 inset 3px)",
       "id": "logo_mark_frame_rect"
     },
@@ -4934,7 +4888,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "a-apex path (m22 64 l42 22 l62 64)",
       "id": "logo_mark_apex_path"
     },
@@ -4947,7 +4901,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "orange crossbar accent (x1=30 x2=54 y=48)",
       "id": "logo_mark_crossbar_line"
     },
@@ -4960,7 +4914,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "ink black #1a1a1a (primary stroke)",
       "id": "color_ink_1a1a1a"
     },
@@ -4973,7 +4927,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "alle orange #e8562d (accent crossbar)",
       "id": "color_orange_e8562d"
     },
@@ -4986,7 +4940,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "muted gray #999999 (locale tag)",
       "id": "color_muted_999999"
     },
@@ -4999,7 +4953,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "stroke width 2 / 2.5 (mark + lockup)",
       "id": "stroke_width_2_mark"
     },
@@ -5012,7 +4966,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "stroke width 3 / 3.5 (favicon bolder)",
       "id": "stroke_width_3_favicon"
     },
@@ -5025,7 +4979,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "wordmark 'alle' (pretendard 700, 40px, tracking -1.5)",
       "id": "wordmark_alle_text"
     },
@@ -5038,7 +4992,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "locale tag 'seoul' (jetbrains mono 500, 14px, tracking 2)",
       "id": "locale_seoul_text"
     },
@@ -5051,7 +5005,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "pretendard variable (wordmark typeface)",
       "id": "typeface_pretendard"
     },
@@ -5064,7 +5018,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "jetbrains mono (locale typeface)",
       "id": "typeface_jetbrains_mono"
     },
@@ -5077,7 +5031,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "lockup viewbox 260x84 (horizontal composition)",
       "id": "lockup_viewbox_260x84"
     },
@@ -5090,9 +5044,556 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 8,
+      "community": 9,
       "norm_label": "round linecap/linejoin (soft terminals)",
       "id": "stroke_linecap_round"
+    },
+    {
+      "label": "Logo.tsx",
+      "file_type": "code",
+      "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
+      "source_location": "L1",
+      "community": 22,
+      "norm_label": "logo.tsx",
+      "id": "apps_web_src_components_brand_logo_tsx"
+    },
+    {
+      "label": "LogoMark()",
+      "file_type": "code",
+      "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
+      "source_location": "L8",
+      "community": 22,
+      "norm_label": "logomark()",
+      "id": "logo_logomark"
+    },
+    {
+      "label": "LogoLockup()",
+      "file_type": "code",
+      "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
+      "source_location": "L45",
+      "community": 22,
+      "norm_label": "logolockup()",
+      "id": "logo_logolockup"
+    },
+    {
+      "label": "LogoMark (Line Monogram SVG component)",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "logomark (line monogram svg component)",
+      "id": "Logo_LogoMark"
+    },
+    {
+      "label": "LogoLockup (mark + Alle + SEOUL)",
+      "file_type": "code",
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "logolockup (mark + alle + seoul)",
+      "id": "Logo_LogoLockup"
+    },
+    {
+      "label": "Header (top bar with logo and tabs)",
+      "file_type": "code",
+      "source_file": "apps/web/src/layout/Header.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "header (top bar with logo and tabs)",
+      "id": "Header_Header"
+    },
+    {
+      "label": "TabLink (nav tab anchor)",
+      "file_type": "code",
+      "source_file": "apps/web/src/layout/Header.tsx",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "tablink (nav tab anchor)",
+      "id": "Header_TabLink"
+    },
+    {
+      "label": "DESIGN.md Brand section",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "## Brand",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "design.md brand section",
+      "id": "DESIGN_brand_section"
+    },
+    {
+      "label": "Logo spec \u2014 Line Monogram (frame + A + vermilion crossbar)",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "### Logo \u2014 Line Monogram",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "logo spec \u2014 line monogram (frame + a + vermilion crossbar)",
+      "id": "DESIGN_logo_line_monogram"
+    },
+    {
+      "label": "Logo usage rules (Do/Don't, favicon stroke variant)",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "### \uc0ac\uc6a9 \uaddc\uce59",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "logo usage rules (do/don't, favicon stroke variant)",
+      "id": "DESIGN_logo_usage_rules"
+    },
+    {
+      "label": "Wordmark spec \u2014 Alle Pretendard 700 / SEOUL JetBrains Mono 500",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "### Wordmark",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "wordmark spec \u2014 alle pretendard 700 / seoul jetbrains mono 500",
+      "id": "DESIGN_wordmark"
+    },
+    {
+      "label": "Brand implementation references (Logo.tsx + public SVGs + handoff)",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "### \uad6c\ud604 \ucc38\uc870",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "brand implementation references (logo.tsx + public svgs + handoff)",
+      "id": "DESIGN_brand_impl_refs"
+    },
+    {
+      "label": "Brand voice + tagline (editorial, travel-guide paper map + Korean editorial)",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "## Brand",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "brand voice + tagline (editorial, travel-guide paper map + korean editorial)",
+      "id": "DESIGN_voice_tagline"
+    },
+    {
+      "label": "WHY: single vermilion accent (avoid AI slop, Korean traditional color, red-pin memorability)",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "Decisions Log 2026-04-17",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "why: single vermilion accent (avoid ai slop, korean traditional color, red-pin memorability)",
+      "id": "DESIGN_rationale_vermilion_single_accent"
+    },
+    {
+      "label": "WHY: stroke-only + currentColor so logo works on any surface and auto-inverts in dark mode",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "### Logo \u2014 Line Monogram",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "why: stroke-only + currentcolor so logo works on any surface and auto-inverts in dark mode",
+      "id": "DESIGN_rationale_currentcolor_inherit"
+    },
+    {
+      "label": "WHY: 24px min size \u2014 strokes blur below that, fallback to vermilion dot",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "### Logo \u2014 Line Monogram",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "why: 24px min size \u2014 strokes blur below that, fallback to vermilion dot",
+      "id": "DESIGN_rationale_min_24px"
+    },
+    {
+      "label": "WHY: Pretendard single family \u2014 Inter/Roboto breaks Noto Sans KR fallback weight/spacing",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "## Typography",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "why: pretendard single family \u2014 inter/roboto breaks noto sans kr fallback weight/spacing",
+      "id": "DESIGN_rationale_pretendard_single_family"
+    },
+    {
+      "label": "README \u2014 Alle title + internal ggdrugs identifiers disclaimer",
+      "file_type": "document",
+      "source_file": "README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "readme \u2014 alle title + internal ggdrugs identifiers disclaimer",
+      "id": "README_alle_title"
+    },
+    {
+      "label": "apps/web/README \u2014 Alle frontend overview",
+      "file_type": "document",
+      "source_file": "apps/web/README.md",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "apps/web/readme \u2014 alle frontend overview",
+      "id": "apps_web_README_alle"
+    },
+    {
+      "label": "CLAUDE.md \u2014 Alle rebrand naming rule (product Alle / internal ggdrugs)",
+      "file_type": "document",
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "top matter",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "claude.md \u2014 alle rebrand naming rule (product alle / internal ggdrugs)",
+      "id": "claude_CLAUDE_alle_rebrand"
+    },
+    {
+      "label": "CLAUDE.md \u00a78-1 Design System \u2014 must read DESIGN.md before UI work",
+      "file_type": "document",
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a78-1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "claude.md \u00a78-1 design system \u2014 must read design.md before ui work",
+      "id": "claude_CLAUDE_design_section"
+    },
+    {
+      "label": "CLAUDE.md forbidden UI patterns (purple gradient, pill buttons, gradient CTA, stock hero)",
+      "file_type": "document",
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a78-1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "claude.md forbidden ui patterns (purple gradient, pill buttons, gradient cta, stock hero)",
+      "id": "claude_CLAUDE_forbidden_patterns"
+    },
+    {
+      "label": "Three roles: user / uploader / admin with active_role toggle",
+      "file_type": "document",
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a71, \u00a75-1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 33,
+      "norm_label": "three roles: user / uploader / admin with active_role toggle",
+      "id": "claude_CLAUDE_roles_uploader_admin"
+    },
+    {
+      "label": "Terminology \u2014 event/event_type/event_vibe/companion_type/expected_companion",
+      "file_type": "document",
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a75-1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 16,
+      "norm_label": "terminology \u2014 event/event_type/event_vibe/companion_type/expected_companion",
+      "id": "claude_CLAUDE_terminology_event"
+    },
+    {
+      "label": "Event state machine (pending \u2192 approved \u2192 ended / rejected / revision_requested)",
+      "file_type": "document",
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a75-2",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 16,
+      "norm_label": "event state machine (pending \u2192 approved \u2192 ended / rejected / revision_requested)",
+      "id": "claude_CLAUDE_event_state_machine"
+    },
+    {
+      "label": "Filter 5 fixed \u2014 region/period/companion/event_type/event_vibe",
+      "file_type": "document",
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a75-3",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 23,
+      "norm_label": "filter 5 fixed \u2014 region/period/companion/event_type/event_vibe",
+      "id": "claude_CLAUDE_filter_5"
+    },
+    {
+      "label": "apps/web/public/logo-mark.svg (raw Line Monogram asset)",
+      "file_type": "image",
+      "source_file": "apps/web/public/logo-mark.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "apps/web/public/logo-mark.svg (raw line monogram asset)",
+      "id": "public_logo_mark_svg"
+    },
+    {
+      "label": "apps/web/public/logo-lockup.svg (raw lockup asset)",
+      "file_type": "image",
+      "source_file": "apps/web/public/logo-lockup.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "apps/web/public/logo-lockup.svg (raw lockup asset)",
+      "id": "public_logo_lockup_svg"
+    },
+    {
+      "label": "apps/web/public/favicon.svg (thicker-stroke variant)",
+      "file_type": "image",
+      "source_file": "apps/web/public/favicon.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "apps/web/public/favicon.svg (thicker-stroke variant)",
+      "id": "public_favicon_svg"
+    },
+    {
+      "label": "A_203 \uc608\uc815 \uc774\ubca4\ud2b8 \uc870\ud68c \u2014 new upcoming-events tab",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "A_203",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 23,
+      "norm_label": "a_203 \u110b\u1168\u110c\u1165\u11bc \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110c\u1169\u1112\u116c \u2014 new upcoming-events tab",
+      "id": "req_v5_usecase_A_203"
+    },
+    {
+      "label": "A_501 \uc774\ubca4\ud2b8 \ub9ac\ubdf0 \uc791\uc131 \u2014 new review flow (wireframe 6-1)",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "A_501",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 17,
+      "norm_label": "a_501 \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1105\u1175\u1107\u1172 \u110c\u1161\u11a8\u1109\u1165\u11bc \u2014 new review flow (wireframe 6-1)",
+      "id": "req_v5_usecase_A_501"
+    },
+    {
+      "label": "\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c \u2164. \uc6a9\uc5b4\uc9d1 \u2014 canonical column/enum names",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "\u2164. \uc6a9\uc5b4\uc9d1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 16,
+      "norm_label": "\u110b\u116d\u1100\u116e\u1109\u1161\u1112\u1161\u11bc\u110c\u1165\u11bc\u110b\u1174\u1109\u1165 v. \u110b\u116d\u11bc\u110b\u1165\u110c\u1175\u11b8 \u2014 canonical column/enum names",
+      "id": "req_v5_terminology_V"
+    },
+    {
+      "label": "WHY: AI video generation removed in v5.0",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "\u2160.2 / \uac1c\uc815 \uc774\ub825",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 16,
+      "norm_label": "why: ai video generation removed in v5.0",
+      "id": "req_v5_rationale_no_ai_video"
+    },
+    {
+      "label": "WHY: filter 5 unified \u2014 region/period/companion/type/vibe (prevent ad-hoc filters)",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "\u2160.2 / v5.0 \uac1c\uc815",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 23,
+      "norm_label": "why: filter 5 unified \u2014 region/period/companion/type/vibe (prevent ad-hoc filters)",
+      "id": "req_v5_rationale_filter5_unification"
+    },
+    {
+      "label": "events table \u2014 unified crawled + uploaded via source_type",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md",
+      "source_location": "\u00a75 events",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 17,
+      "norm_label": "events table \u2014 unified crawled + uploaded via source_type",
+      "id": "db_spec_events_table"
+    },
+    {
+      "label": "event_tendency_labels \u2014 vibe master table",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md",
+      "source_location": "\u00a76",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 16,
+      "norm_label": "event_tendency_labels \u2014 vibe master table",
+      "id": "db_spec_event_tendency_labels"
+    },
+    {
+      "label": "users + uploader_profiles 1:1 \u2014 single-account multi-role",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md",
+      "source_location": "\u00a72, \u00a73",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 33,
+      "norm_label": "users + uploader_profiles 1:1 \u2014 single-account multi-role",
+      "id": "db_spec_users_uploader_profiles"
+    },
+    {
+      "label": "WHY: soft delete on users/events/reviews for recovery + partial index perf",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md",
+      "source_location": "Appendix 1",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 17,
+      "norm_label": "why: soft delete on users/events/reviews for recovery + partial index perf",
+      "id": "db_spec_rationale_soft_delete"
+    },
+    {
+      "label": "WHY: single events table + source_type \u2014 avoids dual query paths",
+      "file_type": "document",
+      "source_file": "graphify-out/converted/DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md",
+      "source_location": "Appendix 6",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 17,
+      "norm_label": "why: single events table + source_type \u2014 avoids dual query paths",
+      "id": "db_spec_rationale_unified_events"
+    },
+    {
+      "label": "Alle Brand System (existing community)",
+      "file_type": "document",
+      "source_file": "DESIGN.md",
+      "source_location": "## Brand",
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 7,
+      "norm_label": "alle brand system (existing community)",
+      "id": "alle_brand_system_community"
+    },
+    {
+      "label": "Alle Logo Mark (served, apps/web/public/)",
+      "file_type": "image",
+      "source_file": "apps/web/public/logo-mark.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 47,
+      "norm_label": "alle logo mark (served, apps/web/public/)",
+      "id": "web_public_logo_mark"
+    },
+    {
+      "label": "Alle Favicon (served, apps/web/public/)",
+      "file_type": "image",
+      "source_file": "apps/web/public/favicon.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 48,
+      "norm_label": "alle favicon (served, apps/web/public/)",
+      "id": "web_public_favicon"
+    },
+    {
+      "label": "Alle Logo Lockup (served, apps/web/public/)",
+      "file_type": "image",
+      "source_file": "apps/web/public/logo-lockup.svg",
+      "source_location": null,
+      "source_url": null,
+      "captured_at": null,
+      "author": null,
+      "contributor": null,
+      "community": 49,
+      "norm_label": "alle logo lockup (served, apps/web/public/)",
+      "id": "web_public_logo_lockup"
     }
   ],
   "links": [
@@ -5472,7 +5973,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\layout\\Header.tsx",
-      "source_location": "L5",
+      "source_location": "L7",
       "weight": 1.0,
       "_src": "apps_web_src_layout_header_tsx",
       "_tgt": "header_header",
@@ -5484,7 +5985,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\layout\\Header.tsx",
-      "source_location": "L33",
+      "source_location": "L29",
       "weight": 1.0,
       "_src": "apps_web_src_layout_header_tsx",
       "_tgt": "header_tablink",
@@ -11167,112 +11668,582 @@
       "_tgt": "typeface_jetbrains_mono",
       "source": "locale_seoul_text",
       "target": "typeface_jetbrains_mono"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
+      "source_location": "L8",
+      "weight": 1.0,
+      "_src": "apps_web_src_components_brand_logo_tsx",
+      "_tgt": "logo_logomark",
+      "confidence_score": 1.0,
+      "source": "apps_web_src_components_brand_logo_tsx",
+      "target": "logo_logomark"
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
+      "source_location": "L45",
+      "weight": 1.0,
+      "_src": "apps_web_src_components_brand_logo_tsx",
+      "_tgt": "logo_logolockup",
+      "confidence_score": 1.0,
+      "source": "apps_web_src_components_brand_logo_tsx",
+      "target": "logo_logolockup"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": "line 52",
+      "weight": 1.0,
+      "_src": "Logo_LogoLockup",
+      "_tgt": "Logo_LogoMark",
+      "source": "Logo_LogoMark",
+      "target": "Logo_LogoLockup"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": "JSDoc line 5",
+      "weight": 1.0,
+      "_src": "Logo_LogoMark",
+      "_tgt": "DESIGN_logo_line_monogram",
+      "source": "Logo_LogoMark",
+      "target": "DESIGN_logo_line_monogram"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### \uad6c\ud604 \ucc38\uc870",
+      "weight": 1.0,
+      "_src": "DESIGN_brand_impl_refs",
+      "_tgt": "Logo_LogoMark",
+      "source": "Logo_LogoMark",
+      "target": "DESIGN_brand_impl_refs"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "Logo_LogoMark",
+      "_tgt": "public_logo_mark_svg",
+      "source": "Logo_LogoMark",
+      "target": "public_logo_mark_svg"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": null,
+      "weight": 0.9,
+      "_src": "Logo_LogoMark",
+      "_tgt": "public_favicon_svg",
+      "source": "Logo_LogoMark",
+      "target": "public_favicon_svg"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "Logo_LogoMark",
+      "_tgt": "alle_brand_system_community",
+      "source": "Logo_LogoMark",
+      "target": "alle_brand_system_community"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/layout/Header.tsx",
+      "source_location": "line 11",
+      "weight": 1.0,
+      "_src": "Header_Header",
+      "_tgt": "Logo_LogoLockup",
+      "source": "Logo_LogoLockup",
+      "target": "Header_Header"
+    },
+    {
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": "JSDoc line 42",
+      "weight": 1.0,
+      "_src": "Logo_LogoLockup",
+      "_tgt": "DESIGN_wordmark",
+      "source": "Logo_LogoLockup",
+      "target": "DESIGN_wordmark"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### \uad6c\ud604 \ucc38\uc870",
+      "weight": 1.0,
+      "_src": "DESIGN_brand_impl_refs",
+      "_tgt": "Logo_LogoLockup",
+      "source": "Logo_LogoLockup",
+      "target": "DESIGN_brand_impl_refs"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "Logo_LogoLockup",
+      "_tgt": "public_logo_lockup_svg",
+      "source": "Logo_LogoLockup",
+      "target": "public_logo_lockup_svg"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "apps/web/src/components/brand/Logo.tsx",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "Logo_LogoLockup",
+      "_tgt": "alle_brand_system_community",
+      "source": "Logo_LogoLockup",
+      "target": "alle_brand_system_community"
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "apps/web/src/layout/Header.tsx",
+      "source_location": "lines 13-14",
+      "weight": 1.0,
+      "_src": "Header_Header",
+      "_tgt": "Header_TabLink",
+      "source": "Header_Header",
+      "target": "Header_TabLink"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "## Brand",
+      "weight": 1.0,
+      "_src": "DESIGN_logo_line_monogram",
+      "_tgt": "DESIGN_brand_section",
+      "source": "DESIGN_brand_section",
+      "target": "DESIGN_logo_line_monogram"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### Wordmark",
+      "weight": 1.0,
+      "_src": "DESIGN_wordmark",
+      "_tgt": "DESIGN_brand_section",
+      "source": "DESIGN_brand_section",
+      "target": "DESIGN_wordmark"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "## Brand",
+      "weight": 1.0,
+      "_src": "DESIGN_voice_tagline",
+      "_tgt": "DESIGN_brand_section",
+      "source": "DESIGN_brand_section",
+      "target": "DESIGN_voice_tagline"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "Decisions Log",
+      "weight": 1.0,
+      "_src": "DESIGN_rationale_vermilion_single_accent",
+      "_tgt": "DESIGN_brand_section",
+      "source": "DESIGN_brand_section",
+      "target": "DESIGN_rationale_vermilion_single_accent"
+    },
+    {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a78-1",
+      "weight": 1.0,
+      "_src": "claude_CLAUDE_design_section",
+      "_tgt": "DESIGN_brand_section",
+      "source": "DESIGN_brand_section",
+      "target": "claude_CLAUDE_design_section"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a78-1",
+      "weight": 0.8,
+      "_src": "claude_CLAUDE_forbidden_patterns",
+      "_tgt": "DESIGN_brand_section",
+      "source": "DESIGN_brand_section",
+      "target": "claude_CLAUDE_forbidden_patterns"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "top matter",
+      "weight": 1.0,
+      "_src": "claude_CLAUDE_alle_rebrand",
+      "_tgt": "DESIGN_brand_section",
+      "source": "DESIGN_brand_section",
+      "target": "claude_CLAUDE_alle_rebrand"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "DESIGN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "DESIGN_brand_section",
+      "_tgt": "alle_brand_system_community",
+      "source": "DESIGN_brand_section",
+      "target": "alle_brand_system_community"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### \uc0ac\uc6a9 \uaddc\uce59",
+      "weight": 1.0,
+      "_src": "DESIGN_logo_usage_rules",
+      "_tgt": "DESIGN_logo_line_monogram",
+      "source": "DESIGN_logo_line_monogram",
+      "target": "DESIGN_logo_usage_rules"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### Logo",
+      "weight": 1.0,
+      "_src": "DESIGN_rationale_currentcolor_inherit",
+      "_tgt": "DESIGN_logo_line_monogram",
+      "source": "DESIGN_logo_line_monogram",
+      "target": "DESIGN_rationale_currentcolor_inherit"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### Logo",
+      "weight": 1.0,
+      "_src": "DESIGN_rationale_min_24px",
+      "_tgt": "DESIGN_logo_line_monogram",
+      "source": "DESIGN_logo_line_monogram",
+      "target": "DESIGN_rationale_min_24px"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "## Typography",
+      "weight": 1.0,
+      "_src": "DESIGN_rationale_pretendard_single_family",
+      "_tgt": "DESIGN_wordmark",
+      "source": "DESIGN_wordmark",
+      "target": "DESIGN_rationale_pretendard_single_family"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### \uad6c\ud604 \ucc38\uc870",
+      "weight": 1.0,
+      "_src": "DESIGN_brand_impl_refs",
+      "_tgt": "public_logo_mark_svg",
+      "source": "DESIGN_brand_impl_refs",
+      "target": "public_logo_mark_svg"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### \uad6c\ud604 \ucc38\uc870",
+      "weight": 1.0,
+      "_src": "DESIGN_brand_impl_refs",
+      "_tgt": "public_logo_lockup_svg",
+      "source": "DESIGN_brand_impl_refs",
+      "target": "public_logo_lockup_svg"
+    },
+    {
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "DESIGN.md",
+      "source_location": "### \uad6c\ud604 \ucc38\uc870",
+      "weight": 1.0,
+      "_src": "DESIGN_brand_impl_refs",
+      "_tgt": "public_favicon_svg",
+      "source": "DESIGN_brand_impl_refs",
+      "target": "public_favicon_svg"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "DESIGN.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "DESIGN_voice_tagline",
+      "_tgt": "claude_CLAUDE_alle_rebrand",
+      "source": "DESIGN_voice_tagline",
+      "target": "claude_CLAUDE_alle_rebrand"
+    },
+    {
+      "relation": "semantically_similar_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "README.md",
+      "source_location": null,
+      "weight": 1.0,
+      "_src": "README_alle_title",
+      "_tgt": "DESIGN_voice_tagline",
+      "source": "DESIGN_voice_tagline",
+      "target": "README_alle_title"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "README.md",
+      "source_location": "top matter",
+      "weight": 1.0,
+      "_src": "README_alle_title",
+      "_tgt": "claude_CLAUDE_alle_rebrand",
+      "source": "README_alle_title",
+      "target": "claude_CLAUDE_alle_rebrand"
+    },
+    {
+      "relation": "conceptually_related_to",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "apps/web/README.md",
+      "source_location": "top matter",
+      "weight": 1.0,
+      "_src": "apps_web_README_alle",
+      "_tgt": "README_alle_title",
+      "source": "README_alle_title",
+      "target": "apps_web_README_alle"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a71",
+      "weight": 1.0,
+      "_src": "claude_CLAUDE_roles_uploader_admin",
+      "_tgt": "db_spec_users_uploader_profiles",
+      "source": "claude_CLAUDE_roles_uploader_admin",
+      "target": "db_spec_users_uploader_profiles"
+    },
+    {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a75-1",
+      "weight": 1.0,
+      "_src": "claude_CLAUDE_terminology_event",
+      "_tgt": "req_v5_terminology_V",
+      "source": "claude_CLAUDE_terminology_event",
+      "target": "req_v5_terminology_V"
+    },
+    {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a75-2",
+      "weight": 1.0,
+      "_src": "claude_CLAUDE_event_state_machine",
+      "_tgt": "req_v5_terminology_V",
+      "source": "claude_CLAUDE_event_state_machine",
+      "target": "req_v5_terminology_V"
+    },
+    {
+      "relation": "cites",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": ".claude/CLAUDE.md",
+      "source_location": "\u00a75-3",
+      "weight": 1.0,
+      "_src": "claude_CLAUDE_filter_5",
+      "_tgt": "req_v5_rationale_filter5_unification",
+      "source": "claude_CLAUDE_filter_5",
+      "target": "req_v5_rationale_filter5_unification"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "A_203",
+      "weight": 1.0,
+      "_src": "req_v5_usecase_A_203",
+      "_tgt": "claude_CLAUDE_filter_5",
+      "source": "claude_CLAUDE_filter_5",
+      "target": "req_v5_usecase_A_203"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "A_501",
+      "weight": 1.0,
+      "_src": "req_v5_usecase_A_501",
+      "_tgt": "db_spec_events_table",
+      "source": "req_v5_usecase_A_501",
+      "target": "db_spec_events_table"
+    },
+    {
+      "relation": "shares_data_with",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "\u2164.2",
+      "weight": 1.0,
+      "_src": "req_v5_terminology_V",
+      "_tgt": "db_spec_event_tendency_labels",
+      "source": "req_v5_terminology_V",
+      "target": "db_spec_event_tendency_labels"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "INFERRED",
+      "confidence_score": 0.6,
+      "source_file": "graphify-out/converted/\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md",
+      "source_location": "\u2160.2",
+      "weight": 0.8,
+      "_src": "req_v5_rationale_no_ai_video",
+      "_tgt": "req_v5_terminology_V",
+      "source": "req_v5_terminology_V",
+      "target": "req_v5_rationale_no_ai_video"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "graphify-out/converted/DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md",
+      "source_location": "Appendix 1",
+      "weight": 1.0,
+      "_src": "db_spec_rationale_soft_delete",
+      "_tgt": "db_spec_events_table",
+      "source": "db_spec_events_table",
+      "target": "db_spec_rationale_soft_delete"
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "graphify-out/converted/DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md",
+      "source_location": "Appendix 6",
+      "weight": 1.0,
+      "_src": "db_spec_rationale_unified_events",
+      "_tgt": "db_spec_events_table",
+      "source": "db_spec_events_table",
+      "target": "db_spec_rationale_unified_events"
     }
   ],
   "hyperedges": [
     {
-      "id": "alle_rename_target_set",
-      "label": "Alle rename target set (files needing GGdrugs\u2192Alle edits)",
+      "id": "alle_rename_landing",
+      "label": "Alle rebrand landing (files edited for GGdrugs\u2192Alle rename)",
       "nodes": [
-        "alle_rename_target_index_html",
-        "alle_rename_target_Header",
-        "alle_rename_target_package_json",
-        "alle_rename_target_readme",
-        "alle_rename_target_design_md",
-        "existing_web_index_html",
-        "existing_web_Header_tsx",
-        "existing_web_package_json",
-        "existing_readme_md",
-        "existing_design_md"
+        "README_alle_title",
+        "apps_web_README_alle",
+        "claude_CLAUDE_alle_rebrand",
+        "DESIGN_brand_section",
+        "Header_Header"
       ],
       "relation": "participate_in",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "llm_wiki\\raw\\design_handoff_alle_brand\\README.md"
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "README.md"
     },
     {
-      "id": "alle_line_monogram_triad",
-      "label": "Line Monogram 3-element composition (frame + A stroke + vermilion crossbar)",
+      "id": "logo_component_svg_wiring",
+      "label": "Logo component \u2194 SVG asset \u2194 brand spec wiring",
       "nodes": [
-        "alle_logo_line_monogram",
-        "alle_logo_spec_viewbox",
-        "alle_logo_currentcolor_rule",
-        "alle_logo_crossbar_accent",
-        "alle_logo_no_fill"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "llm_wiki\\raw\\design_handoff_alle_brand\\README.md"
-    },
-    {
-      "id": "alle_asset_component_pipeline",
-      "label": "Logo asset \u2192 React component wiring (SVG 3-pack + LogoMark/LogoLockup)",
-      "nodes": [
-        "alle_asset_logo_mark_svg",
-        "alle_asset_favicon_svg",
-        "alle_asset_logo_lockup_svg",
-        "alle_component_logo_tsx",
-        "alle_component_LogoMark",
-        "alle_component_LogoLockup"
+        "Logo_LogoMark",
+        "public_logo_mark_svg",
+        "DESIGN_logo_line_monogram",
+        "DESIGN_brand_impl_refs"
       ],
       "relation": "implement",
       "confidence": "INFERRED",
       "confidence_score": 0.9,
-      "source_file": "llm_wiki\\raw\\design_handoff_alle_brand\\README.md"
+      "source_file": "apps/web/src/components/brand/Logo.tsx"
     },
     {
-      "id": "alle_logo_family",
-      "label": "Alle Line Monogram Family",
+      "id": "alle_brand_system_full",
+      "label": "Alle Brand System community \u2014 logo + wordmark + voice + impl refs",
       "nodes": [
-        "logo_mark_svg",
-        "favicon_svg",
-        "logo_lockup_svg"
+        "DESIGN_logo_line_monogram",
+        "DESIGN_wordmark",
+        "DESIGN_voice_tagline",
+        "DESIGN_logo_usage_rules",
+        "DESIGN_brand_impl_refs",
+        "alle_brand_system_community"
+      ],
+      "relation": "form",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "DESIGN.md"
+    },
+    {
+      "id": "alle_served_asset_trio",
+      "label": "Alle Brand Assets Served by Vite",
+      "nodes": [
+        "web_public_logo_mark",
+        "web_public_favicon",
+        "web_public_logo_lockup"
       ],
       "relation": "form",
       "confidence": "EXTRACTED",
       "confidence_score": 0.95,
-      "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-mark.svg"
-    },
-    {
-      "id": "alle_color_palette",
-      "label": "Alle Brand Color Palette",
-      "nodes": [
-        "color_ink_1a1a1a",
-        "color_orange_e8562d",
-        "color_muted_999999"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-mark.svg"
-    },
-    {
-      "id": "alle_mark_geometry",
-      "label": "Line Monogram Geometry (Frame + Apex + Crossbar)",
-      "nodes": [
-        "logo_mark_frame_rect",
-        "logo_mark_apex_path",
-        "logo_mark_crossbar_line"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-mark.svg"
-    },
-    {
-      "id": "alle_typography_stack",
-      "label": "Alle Lockup Typography (Pretendard + JetBrains Mono)",
-      "nodes": [
-        "typeface_pretendard",
-        "typeface_jetbrains_mono",
-        "wordmark_alle_text",
-        "locale_seoul_text"
-      ],
-      "relation": "form",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "llm_wiki/raw/design_handoff_alle_brand/assets/logo-lockup.svg"
+      "source_file": "apps/web/public/logo-mark.svg"
     }
   ]
 }
