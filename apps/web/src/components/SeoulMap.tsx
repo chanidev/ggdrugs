@@ -1,14 +1,42 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  Map,
+  Map as KakaoMap,
   MapMarker,
   MarkerClusterer,
+  Polygon,
   useKakaoLoader,
   CustomOverlayMap,
 } from 'react-kakao-maps-sdk';
-import { fetchEvents, type BffEventItem, type EventListQuery } from '../lib/api';
+import {
+  fetchEvents,
+  fetchRegions,
+  type BffEventItem,
+  type EventListQuery,
+  type RegionItem,
+} from '../lib/api';
 import { Icon } from './Icon';
+
+/** GeoJSON 데이터 타입 (필요한 서브셋만). southkorea/seoul-maps 형식. */
+interface SeoulGuFeature {
+  type: 'Feature';
+  properties: { name: string; [k: string]: unknown };
+  geometry: { type: 'Polygon' | 'MultiPolygon'; coordinates: number[][][] | number[][][][] };
+}
+interface SeoulGuGeoJson {
+  type: 'FeatureCollection';
+  features: SeoulGuFeature[];
+}
+
+/** GeoJSON Polygon 의 외곽 링 → Kakao path. MultiPolygon 이면 첫 외곽 링만 사용. */
+function geojsonToKakaoPath(geom: SeoulGuFeature['geometry']): { lat: number; lng: number }[] {
+  const ring =
+    geom.type === 'Polygon'
+      ? (geom.coordinates as number[][][])[0]
+      : (geom.coordinates as number[][][][])[0]?.[0];
+  if (!ring) return [];
+  return ring.map(([lng, lat]) => ({ lat: lat!, lng: lng! }));
+}
 
 /**
  * SeoulMap — Kakao Maps 기반 서울 이벤트 지도.
@@ -67,6 +95,36 @@ export function SeoulMap({
 
   const [pins, setPins] = useState<Pin[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [geojson, setGeojson] = useState<SeoulGuGeoJson | null>(null);
+  const [regions, setRegions] = useState<RegionItem[]>([]);
+
+  // lookups (geojson + regions) — 페이지당 1회.
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch('/data/seoul-gu.geojson', { signal: ctrl.signal })
+      .then((r) => r.json() as Promise<SeoulGuGeoJson>)
+      .then(setGeojson)
+      .catch(() => {
+        // 경계 데이터 없어도 지도 자체는 동작 — 조용히 skip.
+      });
+    fetchRegions(ctrl.signal)
+      .then(setRegions)
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, []);
+
+  // 선택된 regionId → sigungu name → Kakao path.
+  const highlightedGu = useMemo(() => {
+    if (!geojson || !filter?.regionIds?.length || regions.length === 0) return [];
+    const nameById = new Map(regions.map((r) => [r.regionId, r.sigungu ?? '']));
+    const names = new Set(
+      filter.regionIds.map((id) => nameById.get(id)).filter((n): n is string => !!n),
+    );
+    if (names.size === 0) return [];
+    return geojson.features
+      .filter((f) => names.has(f.properties.name))
+      .map((f) => ({ name: f.properties.name, path: geojsonToKakaoPath(f.geometry) }));
+  }, [geojson, regions, filter?.regionIds]);
 
   // 필터 없으면 기본값: 진행중+예정. 필터 있으면 해당 쿼리 + limit 500.
   const query = useMemo<EventListQuery>(
@@ -109,13 +167,25 @@ export function SeoulMap({
 
   return (
     <div className="relative h-full w-full">
-      <Map
+      <KakaoMap
         center={SEOUL_CENTER}
         level={DEFAULT_LEVEL}
         style={{ width: '100%', height: '100%' }}
         aria-label="서울 이벤트 지도"
         onClick={() => onSelectEvent?.(null)}
       >
+        {highlightedGu.map((gu) => (
+          <Polygon
+            key={gu.name}
+            path={gu.path}
+            strokeWeight={3}
+            strokeColor="#E8562D"
+            strokeOpacity={0.9}
+            strokeStyle="solid"
+            fillColor="#E8562D"
+            fillOpacity={0.08}
+          />
+        ))}
         <MarkerClusterer averageCenter minLevel={6} disableClickZoom={false}>
           {pins.map((p) => (
             <MapMarker
@@ -135,7 +205,7 @@ export function SeoulMap({
             />
           </CustomOverlayMap>
         )}
-      </Map>
+      </KakaoMap>
       <StatusBadge count={pins.length} error={fetchError} />
     </div>
   );
