@@ -25,12 +25,35 @@ export interface NormalizedEvent {
   posterImageUrl: string | null;
 }
 
+function todayUtcMidnight(): Date {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
 export function computePhase(start: Date, end: Date): 'upcoming' | 'ongoing' | 'ended' {
-  const today = new Date();
-  const todayUtc = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
-  if (todayUtc < start) return 'upcoming';
-  if (todayUtc > end) return 'ended';
+  const today = todayUtcMidnight();
+  if (today < start) return 'upcoming';
+  if (today > end) return 'ended';
   return 'ongoing';
+}
+
+/**
+ * Forward-looking 필터: endDate >= 오늘 인 이벤트만 통과 (진행중 + 예정).
+ * 이미 종료된 이벤트는 초기 backfill 로 DB 에 보관돼 있고, 이후 재수집 대상에서 제외.
+ * 배치 주기적 실행 비용(네트워크 + upsert) 절감 목적.
+ */
+export function isForwardLooking(startDate: Date, endDate: Date): boolean {
+  return endDate >= todayUtcMidnight();
+  // startDate 는 필요 없음 — endDate 기준만으로 진행중(start<today<=end) + 예정(start>today) 모두 포함.
+}
+
+/** YYYYMMDD 형식의 오늘 날짜 — TourAPI 등 URL 쿼리용. */
+export function todayYmd(): string {
+  const t = todayUtcMidnight();
+  const y = t.getUTCFullYear();
+  const m = String(t.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(t.getUTCDate()).padStart(2, '0');
+  return `${y}${m}${d}`;
 }
 
 /**

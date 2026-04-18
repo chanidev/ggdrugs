@@ -1,7 +1,9 @@
 import { env } from '../env.js';
 import { logger } from '../logger.js';
 import {
+  isForwardLooking,
   parseYmd,
+  todayYmd,
   upsertCrawledEvent,
   type IngestResult,
   type NormalizedEvent,
@@ -11,7 +13,8 @@ import {
  * TourAPI (한국관광공사) 축제 크롤 ingest.
  *
  * - 엔드포인트: KorService2/searchFestival2 (contentTypeId=15 축제공연행사)
- * - 대상: 서울(areaCode=1), eventStartDate=20240101 이후 전체
+ * - 대상: 서울(areaCode=1), eventStartDate=오늘 이후 (forward-looking 전용)
+ *   초기 backfill 은 수동 실행 시 `--full` 옵션 고려 대상. 현재 일일 배치는 오늘 기준.
  * - TOUR_API_KEY 는 공공데이터포털 발급값이 이미 URL-인코딩돼 있어서 URLSearchParams
  *   로 재인코딩하면 이중 인코딩됨. 쿼리 문자열을 수동 조립.
  */
@@ -20,7 +23,6 @@ const BASE_URL = 'https://apis.data.go.kr/B551011/KorService2/searchFestival2';
 const CRAWL_ORIGIN = 'tourapi-festival';
 const PAGE_SIZE = 100;
 const MOBILE_APP = 'alle';
-const EVENT_START_DATE_FLOOR = '20240101';
 
 interface TourApiItem {
   contentid: string;
@@ -45,7 +47,7 @@ interface TourApiResponse {
   };
 }
 
-async function fetchPage(pageNo: number): Promise<{ items: TourApiItem[]; total: number }> {
+async function fetchPage(pageNo: number, eventStartDate: string): Promise<{ items: TourApiItem[]; total: number }> {
   if (!env.TOUR_API_KEY) throw new Error('TOUR_API_KEY is not set');
   const qs = [
     `serviceKey=${env.TOUR_API_KEY}`,
@@ -56,7 +58,7 @@ async function fetchPage(pageNo: number): Promise<{ items: TourApiItem[]; total:
     `numOfRows=${PAGE_SIZE}`,
     `pageNo=${pageNo}`,
     'areaCode=1',
-    `eventStartDate=${EVENT_START_DATE_FLOOR}`,
+    `eventStartDate=${eventStartDate}`,
   ].join('&');
 
   const res = await fetch(`${BASE_URL}?${qs}`, { headers: { Accept: 'application/json' } });
@@ -97,8 +99,11 @@ function toNormalized(item: TourApiItem): NormalizedEvent | null {
   };
 }
 
-export async function runTourapiIngest(): Promise<IngestResult> {
-  const log = logger.child({ job: 'tourapi-ingest' });
+/**
+ * @param eventStartDate YYYYMMDD 문자열. 기본값은 오늘 (forward-looking). 전체 backfill 원하면 '20240101' 등 명시.
+ */
+export async function runTourapiIngest(eventStartDate: string = todayYmd()): Promise<IngestResult> {
+  const log = logger.child({ job: 'tourapi-ingest', floor: eventStartDate });
   const result: IngestResult = { fetched: 0, upserted: 0, skipped: 0, errors: 0 };
 
   if (!env.TOUR_API_KEY) {
@@ -111,7 +116,7 @@ export async function runTourapiIngest(): Promise<IngestResult> {
   while (true) {
     let page: Awaited<ReturnType<typeof fetchPage>>;
     try {
-      page = await fetchPage(pageNo);
+      page = await fetchPage(pageNo, eventStartDate);
     } catch (err) {
       log.error({ pageNo, err: err instanceof Error ? err.message : String(err) }, 'fetch failed');
       result.errors += 1;
@@ -122,7 +127,7 @@ export async function runTourapiIngest(): Promise<IngestResult> {
 
     for (const raw of page.items) {
       const ev = toNormalized(raw);
-      if (!ev) {
+      if (!ev || !isForwardLooking(ev.startDate, ev.endDate)) {
         result.skipped += 1;
         continue;
       }

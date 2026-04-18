@@ -3,6 +3,7 @@ import { env } from '../env.js';
 import { logger } from '../logger.js';
 import {
   extractSeoulGu,
+  isForwardLooking,
   isSeoulAddress,
   parseYmd,
   upsertCrawledEvent,
@@ -155,7 +156,7 @@ export async function runKcisaIngest(): Promise<IngestResult> {
 
     for (const raw of page.items) {
       const ev = toNormalized(raw);
-      if (!ev) {
+      if (!ev || !isForwardLooking(ev.startDate, ev.endDate)) {
         result.skipped += 1;
         continue;
       }

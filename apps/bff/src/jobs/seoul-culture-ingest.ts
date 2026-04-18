@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
 import {
+  isForwardLooking,
   parseYmd,
   upsertCrawledEvent,
   type EventCategoryCode,
@@ -18,6 +19,8 @@ import {
  * - 외부 고유 ID 가 없어서 sha1(title|strtdate|place) 로 external_source_id 생성.
  * - LOT/LAT 필드 값을 범위로 자동 판별 (Seoul API 가 관례적으로 뒤섞어 넣음).
  * - CODENAME 에 박람회/심포지움/컨퍼런스 키워드 있으면 해당 카테고리로, 아니면 festival.
+ * - API 가 서버사이드 날짜 필터를 지원 안 하므로 전체 페치 후 isForwardLooking 로 필터.
+ *   이미 끝난 이벤트는 초기 backfill 이 DB 에 보관 중 → 여기선 새로 upsert 하지 않음.
  */
 
 const BASE = 'http://openapi.seoul.go.kr:8088';
@@ -139,7 +142,7 @@ export async function runSeoulCultureIngest(): Promise<IngestResult> {
 
     for (const raw of page.items) {
       const ev = toNormalized(raw);
-      if (!ev) {
+      if (!ev || !isForwardLooking(ev.startDate, ev.endDate)) {
         result.skipped += 1;
         continue;
       }
