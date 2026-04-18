@@ -1,4 +1,4 @@
-# Design System — GGdrugs
+# Design System — Alle
 
 > 모든 UI/시각 결정은 이 문서를 **유일한 근거**로 삼는다. 이 문서에 없는 결정이 필요하면 먼저 여기에 추가한 뒤 구현한다. (CLAUDE.md §9 참조 — 찬의 대화형 진행 방식과 정합.)
 
@@ -8,6 +8,39 @@
 - **Who**: 서울 거주·방문 일반 사용자(기본 액터) + 업로더(축제 기획·기관) + 관리자(큐레이터).
 - **Space**: civic/cultural discovery. 이벤트는 **상거래 대상이 아닌 도시 이벤트 맵**으로 표현 (v5.0에서 예약·결제 기능 제거 — `llm_wiki/wiki/topics/event-detail-review-flow.md` 참조).
 - **Project type**: hybrid web app — 지도 중심 discovery + 채팅 검색(A_201) + 개인 캘린더/리뷰(A_500/A_501) + 업로더/관리자 대시보드.
+
+## Brand
+
+- **서비스명**: Alle
+- **부제 (lockup)**: SEOUL
+- **보이스**: 에디토리얼, 여행 가이드의 종이 지도 감성 + 한국 편집부 감성.
+- **태그라인**: 서울의 축제·박람회·심포지움·컨퍼런스를 지도 위에서.
+
+### Logo — Line Monogram
+
+- 정사각 액자 + A 획 + **버밀리언 크로스바**의 3요소 구조.
+- **획만 사용** — fill 없음. 레이아웃 어디에 놓여도 배경을 먹지 않음.
+- 마크 viewBox `84×84`, 프레임 `rect 3/3 78 78 rx 2`, A `M22 64 L42 22 L62 64`, crossbar `30,48 → 54,48`.
+- 액자·A는 `currentColor` (다크모드에서 자동 반전), 크로스바는 **항상 `var(--color-accent)`**.
+- 최소 사용 크기 **24px**. 그 이하에서는 획이 뭉개지므로 색 원(버밀리언 dot)으로 대체 가능.
+
+### 사용 규칙
+
+- **Don't**: 액자 제거하고 A만 쓰기, fill 채우기, 기울이기, 회전, 두 번째 액센트 색 얹기, 그림자.
+- **Do**: `currentColor` 기반 색 상속, dark surface에서는 `--color-text: #F0EFEA` 로 자동 반전, 배경 `--color-surface` 또는 `--color-bg` 위에 얹기.
+- 파비콘은 stroke-width를 2→3, 2.5→3.5로 늘린 전용 variant 사용.
+
+### Wordmark
+
+- **워드마크**: `Alle` — Pretendard Variable 700, tracking `-0.015em` (text-h3 기준).
+- **서브**: `SEOUL` — JetBrains Mono 500, tracking `0.2em`, 크기 12px, 색 `--color-text-subtle`, 마크 오른쪽 8px 갭 + 워드마크 오른쪽 8px 갭.
+- 표기 순서: `[마크] [Alle] [SEOUL]`. 모바일에서 `SEOUL`은 `hidden sm:inline`로 드롭 가능.
+
+### 구현 참조
+
+- React 컴포넌트: `apps/web/src/components/brand/Logo.tsx` (`<LogoMark />`, `<LogoLockup />`).
+- 원본 에셋: `apps/web/public/{logo-mark,favicon,logo-lockup}.svg`.
+- 핸드오프 원문: `llm_wiki/raw/design_handoff_alle_brand/README.md`.
 
 ## Aesthetic Direction
 

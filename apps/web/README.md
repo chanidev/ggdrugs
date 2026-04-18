@@ -1,6 +1,6 @@
 # apps/web
 
-GGdrugs 프론트엔드. React + Vite 기반. Kakao Maps로 이벤트 지도 뷰를, LLM 채팅 UI를 제공한다.
+Alle 프론트엔드. React + Vite 기반. Kakao Maps로 이벤트 지도 뷰를, LLM 채팅 UI를 제공한다.
 
 ## 책임 (CLAUDE.md §4)
 

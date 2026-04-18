@@ -2,7 +2,7 @@
   "name": "@ggdrugs/web",
   "version": "0.1.0",
   "private": true,
-  "description": "GGdrugs — React 19 + Vite + Tailwind 4 프론트엔드",
+  "description": "Alle — React 19 + Vite + Tailwind 4 프론트엔드 (서울 이벤트·이슈 지도)",
   "type": "module",
   "scripts": {
     "dev": "vite",

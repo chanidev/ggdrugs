@@ -2,7 +2,7 @@
   "name": "@ggdrugs/bff",
   "version": "0.1.0",
   "private": true,
-  "description": "GGdrugs BFF — REST API, Prisma ORM, 인증/권한",
+  "description": "Alle BFF — REST API, Prisma ORM, 인증/권한",
   "type": "module",
   "scripts": {
     "prisma:format": "prisma format",

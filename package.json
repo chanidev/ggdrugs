@@ -2,7 +2,7 @@
   "name": "ggdrugs",
   "private": true,
   "version": "0.0.0",
-  "description": "GGdrugs — 자연어 처리 기반 이벤트·이슈 지도 검색 서비스",
+  "description": "Alle — 자연어 처리 기반 이벤트·이슈 지도 검색 서비스 (서울)",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "build": "pnpm -r --filter=./packages/** --filter=./apps/** build",

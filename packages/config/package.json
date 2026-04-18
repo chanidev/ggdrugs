@@ -2,7 +2,7 @@
   "name": "@ggdrugs/config",
   "version": "0.1.0",
   "private": true,
-  "description": "GGdrugs 공용 환경변수 스키마와 런타임 설정 로더",
+  "description": "Alle 공용 환경변수 스키마와 런타임 설정 로더",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
