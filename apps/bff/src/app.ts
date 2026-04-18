@@ -5,9 +5,35 @@ import { prisma } from './prisma.js';
 import { env } from './env.js';
 import { listEvents } from './routes/events.js';
 
+// CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
+// Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
+const ALLOWED_ORIGINS = new Set<string>([env.WEB_URL]);
+logger.info({ allowedOrigins: [...ALLOWED_ORIGINS] }, 'CORS allowed origins');
+
+function cors(req: Request, res: Response, next: NextFunction) {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.has(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    res.setHeader(
+      'Access-Control-Allow-Headers',
+      req.headers['access-control-request-headers'] ?? 'Content-Type,Authorization',
+    );
+    res.setHeader('Access-Control-Max-Age', '600');
+  }
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  next();
+}
+
 export function createApp(): Express {
   const app = express();
 
+  app.use(cors);
   app.use(pinoHttp({ logger }));
   app.use(express.json({ limit: '1mb' }));
 
