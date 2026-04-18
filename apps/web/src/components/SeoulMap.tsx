@@ -78,10 +78,13 @@ function toPin(item: BffEventItem): Pin | null {
 
 export function SeoulMap({
   filter,
+  highlightRegionIds,
   selectedEventId,
   onSelectEvent,
 }: {
   filter?: EventListQuery | null;
+  /** 필터 chip 클릭 즉시 발행되는 지역 id 목록 — 폴리곤 하이라이트용 (mapFilter 와 분리). */
+  highlightRegionIds?: string[];
   selectedEventId?: string | null;
   onSelectEvent?: (id: string | null) => void;
 }) {
@@ -114,17 +117,17 @@ export function SeoulMap({
   }, []);
 
   // 선택된 regionId → sigungu name → Kakao path.
+  // highlightRegionIds 우선 (chip 클릭 즉시), 없으면 filter.regionIds (이전 호환) fallback.
   const highlightedGu = useMemo(() => {
-    if (!geojson || !filter?.regionIds?.length || regions.length === 0) return [];
+    const ids = highlightRegionIds?.length ? highlightRegionIds : filter?.regionIds;
+    if (!geojson || !ids?.length || regions.length === 0) return [];
     const nameById = new Map(regions.map((r) => [r.regionId, r.sigungu ?? '']));
-    const names = new Set(
-      filter.regionIds.map((id) => nameById.get(id)).filter((n): n is string => !!n),
-    );
+    const names = new Set(ids.map((id) => nameById.get(id)).filter((n): n is string => !!n));
     if (names.size === 0) return [];
     return geojson.features
       .filter((f) => names.has(f.properties.name))
       .map((f) => ({ name: f.properties.name, path: geojsonToKakaoPath(f.geometry) }));
-  }, [geojson, regions, filter?.regionIds]);
+  }, [geojson, regions, highlightRegionIds, filter?.regionIds]);
 
   // 필터 없으면 기본값: 진행중+예정. 필터 있으면 해당 쿼리 + limit 500.
   const query = useMemo<EventListQuery>(

@@ -72,11 +72,14 @@ function computePeriodRange(key: string): Range | null {
 export function FilterSearchPanel({
   onApplied,
   onReset,
+  onRegionSelectionChange,
 }: {
   /** 적용 시 상위(AppShell) 에 전체 쿼리 전달 — 지도 핀 refetch 에 사용. */
   onApplied?: (query: EventListQuery) => void;
   /** 초기화 시 상위 지도 필터 해제. */
   onReset?: () => void;
+  /** 지역 chip 클릭 즉시 발행 — 지도 폴리곤 하이라이트 (적용 대기 X). */
+  onRegionSelectionChange?: (regionIds: string[]) => void;
 }) {
   const navigate = useNavigate();
   const [regions, setRegions] = useState<RegionItem[]>([]);
@@ -125,6 +128,12 @@ export function FilterSearchPanel({
       });
       setApplied(false);
     };
+
+  // 지역 chip 이 바뀔 때마다 상위(지도 폴리곤) 에 즉시 broadcast.
+  useEffect(() => {
+    onRegionSelectionChange?.(Array.from(region));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [region]);
 
   const totalActive = region.size + (period ? 1 : 0) + companion.size + type.size + vibe.size;
 

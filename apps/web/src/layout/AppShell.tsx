@@ -32,6 +32,8 @@ export function AppShell() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [dockCollapsed, setDockCollapsed] = useState(false);
   const [mapFilter, setMapFilter] = useState<EventListQuery | null>(null);
+  // 지도 폴리곤 하이라이트는 chip 클릭에 즉시 반응 — 핀 재-fetch(mapFilter) 와 분리.
+  const [highlightRegionIds, setHighlightRegionIds] = useState<string[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   const toggleSection = (key: SidebarSection) =>
@@ -61,7 +63,11 @@ export function AppShell() {
           {open === 'filter' && (
             <FilterSearchPanel
               onApplied={(q) => setMapFilter(q)}
-              onReset={() => setMapFilter(null)}
+              onReset={() => {
+                setMapFilter(null);
+                setHighlightRegionIds([]);
+              }}
+              onRegionSelectionChange={setHighlightRegionIds}
             />
           )}
           {open === 'list' && <FullListPanel activeEventId={selectedEventId} />}
@@ -79,6 +85,7 @@ export function AppShell() {
           <div className="relative min-h-0 flex-1">
             <SeoulMap
               filter={mapFilter}
+              highlightRegionIds={highlightRegionIds}
               selectedEventId={selectedEventId}
               onSelectEvent={setSelectedEventId}
             />
