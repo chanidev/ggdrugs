@@ -22,7 +22,7 @@ import { prisma } from '../prisma.js';
 //   - approval_status = 'approved'
 //   - is_deleted = false
 //
-// 정렬: start_date ASC, event_id ASC
+// 정렬: end_date DESC (→ 진행중·예정이 먼저, 오래 전 종료는 뒤로), start_date ASC tie-break
 // =============================================================
 
 const COMPANION_ENUM = new Set(['solo', 'couple', 'friend', 'family']);
@@ -124,7 +124,7 @@ export async function listEvents(req: Request, res: Response) {
     prisma.event.count({ where }),
     prisma.event.findMany({
       where,
-      orderBy: [{ startDate: 'asc' }, { eventId: 'asc' }],
+      orderBy: [{ endDate: 'desc' }, { startDate: 'asc' }, { eventId: 'asc' }],
       skip: (page - 1) * limit,
       take: limit,
       select: {

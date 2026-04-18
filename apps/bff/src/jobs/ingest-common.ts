@@ -34,15 +34,17 @@ export function computePhase(start: Date, end: Date): 'upcoming' | 'ongoing' | '
 }
 
 /**
- * YYYYMMDD 또는 YYYY-MM-DD 문자열을 UTC midnight Date 로 파싱.
+ * 날짜 문자열을 UTC midnight Date 로 파싱. 앞쪽 8자리 숫자를 YYYYMMDD 로 간주.
+ * 지원 포맷: "20260813", "2026-08-13", "2026-08-13 00:00:00.0", "2026.08.13" 등.
  */
 export function parseYmd(s: string | undefined | null): Date | null {
   if (!s) return null;
   const digits = s.replace(/[^0-9]/g, '');
-  if (digits.length !== 8) return null;
+  if (digits.length < 8) return null;
   const y = Number(digits.slice(0, 4));
   const m = Number(digits.slice(4, 6));
   const d = Number(digits.slice(6, 8));
+  if (y < 1900 || y > 2100 || m < 1 || m > 12 || d < 1 || d > 31) return null;
   const dt = new Date(Date.UTC(y, m - 1, d));
   return Number.isNaN(dt.getTime()) ? null : dt;
 }
