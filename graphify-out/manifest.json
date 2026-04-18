@@ -1,5 +1,5 @@
 {
-  "apps\\bff\\src\\app.ts": 1776497002.6134055,
+  "apps\\bff\\src\\app.ts": 1776499683.5048158,
   "apps\\bff\\src\\env.ts": 1776391522.244284,
   "apps\\bff\\src\\logger.ts": 1776391526.5194864,
   "apps\\bff\\src\\prisma.ts": 1776391530.0766542,
@@ -28,14 +28,16 @@
   "docs\\decisions\\0001-ddl-v3-vs-terminology-v5-reconciliation.md": 1776387857.5343194,
   "docs\\decisions\\0002-stack-decisions.md": 1776388794.8788817,
   "docs\\requirements\\README.md": 1776387023.3906727,
+  "graphify-out\\GRAPH_REPORT.md": 1776500524.314807,
   "infra\\db\\migrations\\README.md": 1776387013.3481286,
   "infra\\docker\\README.md": 1776387006.2319148,
   "llm_wiki\\README.md": 1776127616.6986408,
   "llm_wiki\\schema.md": 1776128478.1955624,
   "llm_wiki\\\uc0ac\uc6a9\ubc95.md": 1776129326.3972054,
-  "graphify-out\\converted\\DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md": 1776497677.9532733,
+  "graphify-out\\converted\\DB_\uc124\uacc4_\uba85\uc138\uc11c_v3_c653fe26.md": 1776500539.0824816,
   "llm_wiki\\raw\\README.md": 1776355752.0,
-  "graphify-out\\converted\\\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md": 1776497678.1057115,
+  "graphify-out\\converted\\\uc7a5\uc6d0\ud300_\uc694\uad6c\uc0ac\ud56d\uc815\uc758\uc11c_5\ucc28_81ea2fb0.md": 1776500539.220059,
+  "llm_wiki\\raw\\design_handoff_alle_brand\\README.md": 1776499887.0,
   "llm_wiki\\wiki\\index.md": 1776398260.7084057,
   "llm_wiki\\wiki\\lint-report.md": 1776390066.2792213,
   "llm_wiki\\wiki\\log.md": 1776398169.4257426,
@@ -60,6 +62,9 @@
   "packages\\config\\README.md": 1776390908.807764,
   "packages\\shared-types\\README.md": 1776386993.0692852,
   "services\\llm\\README.md": 1776388868.353225,
-  "image.png": 1776397017.3375547,
-  "llm_wiki\\raw\\\ucd08\uc548.png": 1776385029.311812
+  "image.png": 1776500429.920358,
+  "llm_wiki\\raw\\\ucd08\uc548.png": 1776385029.311812,
+  "llm_wiki\\raw\\design_handoff_alle_brand\\assets\\favicon.svg": 1776499887.0,
+  "llm_wiki\\raw\\design_handoff_alle_brand\\assets\\logo-lockup.svg": 1776499887.0,
+  "llm_wiki\\raw\\design_handoff_alle_brand\\assets\\logo-mark.svg": 1776499887.0
 }

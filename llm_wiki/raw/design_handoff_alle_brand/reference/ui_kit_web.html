@@ -1,0 +1,915 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>alle — 서울 이벤트·이슈 지도</title>
+<link rel="icon" href="../../assets/favicon.svg">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<style>
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css");
+@import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
+
+:root {
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --bg: #FAFAF7; --surface: #FFFFFF; --surface-alt: #F5F5F0; --surface-warm: #F7F2EC;
+  --text: #1A1A1A; --text-muted: #666666; --text-subtle: #999999;
+  --border: #EAEAEA; --border-hover: #D4D4D4; --border-strong: #1A1A1A;
+  --accent: #E8562D; --accent-hover: #D44A22; --accent-bg: #FCEEE8; --accent-deep: #8C3318;
+  --success: #2C8A4A; --warning: #D79B00; --error: #B8362A; --info: #3A6EA5;
+  --radius-sm: 4px; --radius-md: 8px; --radius-lg: 12px; --radius-xl: 16px; --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --shadow-pin: 0 2px 8px rgba(232,86,45,0.35);
+  --ease-out: cubic-bezier(0,0,0.2,1);
+  --ease-in: cubic-bezier(0.4,0,1,1);
+  --ease-inout: cubic-bezier(0.4,0,0.2,1);
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+.tabular { font-feature-settings: "tnum" 1; }
+.mono { font-family: var(--font-mono); }
+
+/* ───── Layout shell ───── */
+.gg-app { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+.gg-header {
+  display:flex;align-items:center;justify-content:space-between;
+  height:60px;flex-shrink:0;padding:0 24px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+}
+.gg-brand { display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text); }
+.gg-brand-mark {
+  width:32px;height:32px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.gg-brand-mark svg { width:100%;height:100%;display:block; }
+.gg-brand-name { font-size:18px;font-weight:700;letter-spacing:-0.01em; }
+.gg-brand-sub  { font-size:11px;color:var(--text-subtle);font-family:var(--font-mono);letter-spacing:0.12em;text-transform:uppercase;margin-left:6px;font-weight:500; }
+.gg-header-nav { display:flex;gap:2px;margin-left:32px; }
+.gg-tab { padding:6px 12px;border-radius:var(--radius-md);font-size:14px;font-weight:500;color:var(--text-muted);text-decoration:none;transition:background 180ms,color 180ms; }
+.gg-tab:hover { background:var(--surface-alt);color:var(--text); }
+.gg-tab-active { background:var(--accent-bg);color:var(--accent); }
+.gg-header-right { display:flex;align-items:center;gap:12px; }
+.gg-search-mini { display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;background:var(--surface-alt);border-radius:var(--radius-md);color:var(--text-muted);font-size:13px;width:220px;cursor:text; }
+.gg-search-mini kbd { margin-left:auto;font-family:var(--font-mono);font-size:11px;color:var(--text-subtle);background:var(--surface);padding:1px 5px;border-radius:3px;border:1px solid var(--border); }
+
+.gg-body { display:flex;flex:1;min-height:0;position:relative; }
+
+/* ───── Left rail ───── */
+.gg-rail { width:236px;flex-shrink:0;display:flex;flex-direction:column;background:var(--surface);border-right:1px solid var(--border); }
+.gg-rail-eyebrow { padding:18px 20px 4px;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-subtle); }
+.gg-rail-title { margin:0;padding:0 20px 16px;font-size:22px;font-weight:700;letter-spacing:-0.02em; }
+.gg-rail-subtitle { margin:0;padding:0 20px 18px;font-size:13px;color:var(--text-muted);line-height:1.55;border-bottom:1px solid var(--border); }
+.gg-rail-list { list-style:none;margin:0;padding:0; }
+.gg-rail-list > li + li { border-top:1px solid var(--border); }
+.gg-rail-row { position:relative;display:flex;align-items:center;gap:12px;width:100%;padding:16px 20px;background:transparent;border:none;text-align:left;cursor:pointer;font-family:inherit;transition:background 180ms; }
+.gg-rail-row:hover { background:var(--surface-alt); }
+.gg-rail-row-active { background:var(--accent-bg); }
+.gg-rail-indicator { position:absolute;left:0;top:10px;bottom:10px;width:3px;border-radius:0 2px 2px 0;background:var(--accent); }
+.gg-rail-icon { width:36px;height:36px;flex-shrink:0;border-radius:var(--radius-md);background:var(--surface-alt);display:flex;align-items:center;justify-content:center;color:var(--text-muted);transition:background 180ms,color 180ms; }
+.gg-rail-row-active .gg-rail-icon { background:var(--surface);color:var(--accent); }
+.gg-rail-row-title { margin:0 0 1px;font-size:15px;font-weight:600;letter-spacing:-0.01em;color:var(--text); }
+.gg-rail-row-active .gg-rail-row-title { color:var(--accent); }
+.gg-rail-row-desc { margin:0;font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+
+.gg-rail-stats { margin-top:auto;border-top:1px solid var(--border);padding:18px 20px; }
+.gg-rail-stats-eyebrow { font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-subtle);margin-bottom:10px; }
+.gg-rail-stat { display:flex;justify-content:space-between;align-items:baseline;padding:6px 0; }
+.gg-rail-stat + .gg-rail-stat { border-top:1px dashed var(--border); }
+.gg-rail-stat-label { font-size:13px;color:var(--text-muted); }
+.gg-rail-stat-value { font-size:15px;font-weight:600;color:var(--text); }
+.gg-rail-stat-value .accent { color:var(--accent); }
+
+/* ───── Overlay panel ───── */
+.gg-panel {
+  position:absolute;left:236px;top:0;bottom:0;width:380px;z-index:20;
+  display:flex;flex-direction:column;background:var(--surface);
+  border-right:1px solid var(--border);box-shadow:var(--shadow-lg);
+  animation:gg-in 280ms var(--ease-out);
+}
+@keyframes gg-in { from { transform:translateX(-12px);opacity:0;} to { transform:translateX(0);opacity:1;} }
+.gg-panel-header { display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;padding:20px 20px 14px;border-bottom:1px solid var(--border); }
+.gg-panel-eyebrow { font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--accent);margin-bottom:4px; }
+.gg-panel-title { margin:0;font-size:18px;font-weight:700;letter-spacing:-0.015em; }
+.gg-panel-close { width:32px;height:32px;border:none;background:transparent;border-radius:var(--radius-md);color:var(--text-muted);font-size:20px;line-height:1;cursor:pointer;transition:background 180ms,color 180ms; }
+.gg-panel-close:hover { background:var(--surface-alt);color:var(--text); }
+.gg-panel-body { flex:1;min-height:0;display:flex;flex-direction:column; }
+
+/* ───── Filter section ───── */
+.gg-filter-block { padding:16px 20px;border-bottom:1px solid var(--border); }
+.gg-filter-block-title { font-size:12px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-subtle);margin:0 0 10px; }
+.gg-chip-row { display:flex;flex-wrap:wrap;gap:6px; }
+.gg-chip {
+  height:30px;padding:0 12px;border-radius:var(--radius-full);
+  border:1px solid var(--border);background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;
+  transition:background 180ms,color 180ms,border-color 180ms;
+}
+.gg-chip:hover { border-color:var(--border-hover); }
+.gg-chip-active { background:var(--accent-bg);color:var(--accent);border-color:var(--accent); }
+.gg-chip-count { color:var(--text-subtle);font-weight:500;margin-left:4px; }
+.gg-chip-active .gg-chip-count { color:var(--accent); }
+
+.gg-period-row { display:flex;gap:6px; }
+.gg-period-row .gg-chip { flex:1;text-align:center; }
+
+.gg-apply-bar { display:flex;align-items:center;gap:10px;padding:14px 20px;background:var(--surface);border-top:1px solid var(--border); }
+.gg-apply-summary { flex:1;font-size:13px;color:var(--text-muted); }
+.gg-apply-summary strong { color:var(--text);font-weight:600; }
+
+/* ───── Buttons ───── */
+.gg-btn { display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 16px;border-radius:var(--radius-md);font-family:inherit;font-size:14px;font-weight:500;border:none;cursor:pointer;transition:background 180ms,color 180ms,border-color 180ms; }
+.gg-btn-primary { background:var(--accent);color:#fff;height:40px; }
+.gg-btn-primary:hover:not(:disabled) { background:var(--accent-hover); }
+.gg-btn-primary:disabled { opacity:0.4;cursor:not-allowed; }
+.gg-btn-secondary { background:var(--surface);color:var(--text);border:1px solid var(--border);height:40px; }
+.gg-btn-secondary:hover { background:var(--surface-alt);border-color:var(--border-hover); }
+.gg-btn-ghost { background:transparent;color:var(--text-muted);height:34px;padding:0 10px; }
+.gg-btn-ghost:hover { color:var(--text);background:var(--surface-alt); }
+.gg-btn-sm { height:32px;padding:0 12px;font-size:13px; }
+
+/* ───── Inputs ───── */
+.gg-input { width:100%;height:40px;padding:0 12px;border:1px solid var(--border);border-radius:var(--radius-md);background:var(--surface);color:var(--text);font-family:inherit;font-size:14px; }
+.gg-input::placeholder { color:var(--text-subtle); }
+.gg-input:focus { outline:2px solid var(--accent-bg);border-color:var(--accent); }
+
+/* ───── Result list / Event card ───── */
+.gg-result-bar { display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface-alt);border-bottom:1px solid var(--border); }
+.gg-result-count { font-size:13px;color:var(--text-muted); }
+.gg-result-count strong { color:var(--text);font-weight:600; }
+.gg-sort { display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-muted);cursor:pointer; }
+
+.gg-event-list { flex:1;min-height:0;overflow-y:auto;list-style:none;margin:0;padding:0; }
+.gg-event-list > li + li { border-top:1px solid var(--border); }
+.gg-event-card { display:flex;gap:14px;padding:16px 20px;cursor:pointer;transition:background 180ms; }
+.gg-event-card:hover { background:var(--surface-alt); }
+.gg-event-card-active { background:var(--accent-bg); }
+.gg-event-card-active:hover { background:var(--accent-bg); }
+
+.gg-poster { flex-shrink:0;width:64px;height:80px;border-radius:var(--radius-md);overflow:hidden;position:relative;background:var(--surface-warm); }
+.gg-poster-svg { width:100%;height:100%;display:block; }
+.gg-poster-tag { position:absolute;left:0;bottom:0;right:0;font-family:var(--font-mono);font-size:9px;letter-spacing:0.04em;color:#fff;background:rgba(26,26,26,0.65);padding:2px 4px;text-align:center; }
+
+.gg-event-body { flex:1;min-width:0; }
+.gg-event-row { display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px; }
+.gg-event-title { margin:0;font-size:16px;font-weight:600;letter-spacing:-0.01em;line-height:1.3;text-wrap:pretty; }
+.gg-event-meta { display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 4px;font-size:13px;color:var(--text-muted); }
+.gg-event-meta-sep { color:var(--text-subtle); }
+.gg-event-meta-dot { width:3px;height:3px;border-radius:50%;background:var(--text-subtle); }
+.gg-event-tags { display:flex;gap:5px;flex-wrap:wrap;margin-top:8px; }
+.gg-tag { padding:2px 8px;border-radius:var(--radius-full);background:var(--surface-alt);color:var(--text-muted);font-size:11px; }
+.gg-event-card-active .gg-tag { background:var(--surface); }
+
+/* ───── Badges ───── */
+.gg-badge { display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--radius-sm);font-size:11px;font-weight:600;letter-spacing:0.02em;flex-shrink:0; }
+.gg-badge-accent { background:var(--accent);color:#fff; }
+.gg-badge-info   { background:rgba(58,110,165,0.12);color:var(--info); }
+.gg-badge-subtle { background:var(--surface-alt);color:var(--text-subtle); }
+.gg-badge-dot { width:6px;height:6px;border-radius:50%;background:currentColor; }
+
+/* ───── Map ───── */
+.gg-main { flex:1;min-width:0;display:flex;flex-direction:column; position:relative; }
+.gg-map-wrap { flex:1;min-height:0;position:relative;background:var(--surface-warm); }
+.gg-map { position:absolute;inset:0; }
+.gg-map-svg { width:100%;height:100%;display:block; }
+
+.gg-map-controls { position:absolute;top:20px;right:20px;z-index:4;display:flex;flex-direction:column;gap:10px; }
+.gg-map-zoom { display:flex;flex-direction:column;background:var(--surface);border-radius:var(--radius-md);box-shadow:var(--shadow-md);overflow:hidden; }
+.gg-map-zoom button { width:38px;height:38px;border:none;background:var(--surface);color:var(--text);font-size:18px;line-height:1;cursor:pointer; }
+.gg-map-zoom button + button { border-top:1px solid var(--border); }
+.gg-map-zoom button:hover { background:var(--surface-alt);color:var(--accent); }
+
+.gg-map-locate { width:38px;height:38px;border:none;border-radius:var(--radius-md);background:var(--surface);box-shadow:var(--shadow-md);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center; }
+.gg-map-locate:hover { color:var(--accent); }
+
+.gg-map-legend {
+  position:absolute;bottom:20px;left:20px;z-index:4;
+  background:var(--surface);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);
+  padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--text-muted);
+}
+.gg-map-legend-title { font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-subtle);margin-bottom:2px; }
+.gg-map-legend-row { display:flex;align-items:center;gap:8px; }
+.gg-map-legend-pin { width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:var(--shadow-pin); }
+.gg-map-legend-cluster { width:14px;height:14px;border-radius:50%;background:var(--accent);color:#fff;font-size:9px;font-weight:600;display:flex;align-items:center;justify-content:center; }
+
+.gg-map-attrib {
+  position:absolute;bottom:8px;right:12px;z-index:3;
+  font-size:11px;color:var(--text-subtle);font-family:var(--font-mono);
+  background:rgba(255,255,255,0.7);padding:2px 6px;border-radius:3px;
+}
+
+.gg-map-popup {
+  position:absolute;z-index:5;background:var(--surface);
+  border-radius:var(--radius-lg);box-shadow:var(--shadow-lg);
+  padding:14px;width:280px;animation:gg-in 180ms var(--ease-out);
+}
+.gg-map-popup-arrow {
+  position:absolute;left:-7px;top:38px;width:14px;height:14px;
+  background:var(--surface);transform:rotate(45deg);
+  box-shadow:-2px 2px 4px rgba(0,0,0,0.05);
+}
+
+/* ───── Floating chat dock (overlays map) ───── */
+.gg-dock {
+  position:absolute;left:50%;bottom:24px;transform:translateX(-50%);
+  width:min(820px, calc(100% - 48px));
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius-xl);
+  box-shadow:var(--shadow-lg);
+  padding:14px 18px 16px;
+  z-index:7;
+  transition:transform 280ms var(--ease-out), opacity 220ms var(--ease-out);
+}
+.gg-dock-handle {
+  position:absolute;left:50%;top:-1px;transform:translate(-50%,-100%);
+  display:inline-flex;align-items:center;gap:8px;
+  height:36px;padding:0 16px 0 14px;
+  background:var(--surface);
+  border:1px solid var(--border);border-bottom:none;
+  border-radius:var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow:0 -4px 12px rgba(0,0,0,0.05);
+  font-family:inherit;font-size:13px;font-weight:500;color:var(--text);
+  cursor:pointer;
+}
+.gg-dock-handle:hover { color:var(--accent); }
+.gg-dock-handle-pulse { width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(232,86,45,0.6);animation:pulse 1.6s var(--ease-out) infinite; }
+.gg-dock-handle-chev { color:var(--text-subtle);transition:transform 220ms var(--ease-out); }
+.gg-dock-collapsed .gg-dock-handle-chev { transform:rotate(180deg); }
+.gg-dock-inner { max-width:100%;margin:0; }
+
+/* Collapsible region: messages + suggestions hide; input row stays visible */
+.gg-dock-collapsible {
+  overflow:hidden;
+  max-height:600px;opacity:1;
+  transition:max-height 280ms var(--ease-out), opacity 200ms var(--ease-out), margin 200ms var(--ease-out);
+}
+.gg-dock-collapsed .gg-dock-collapsible {
+  max-height:0;opacity:0;margin-bottom:0 !important;pointer-events:none;
+}
+.gg-dock-eyebrow {
+  display:flex;align-items:center;gap:8px;margin-bottom:8px;
+  font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-subtle);
+}
+.gg-dock-eyebrow-pulse { width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(232,86,45,0.6);animation:pulse 1.6s var(--ease-out) infinite; }
+@keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(232,86,45,0.6);} 80%,100% { box-shadow:0 0 0 8px rgba(232,86,45,0);} }
+
+.gg-dock-suggestions { display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px; }
+.gg-suggestion {
+  padding:6px 11px;border-radius:var(--radius-full);
+  background:var(--surface-alt);border:1px solid transparent;
+  color:var(--text-muted);font-family:inherit;font-size:13px;cursor:pointer;
+  transition:background 180ms,color 180ms,border-color 180ms;
+}
+.gg-suggestion:hover { background:var(--surface);border-color:var(--accent);color:var(--accent); }
+
+.gg-dock-row { display:flex;gap:10px;align-items:center; }
+.gg-dock-input-wrap { flex:1;position:relative; }
+.gg-dock-input {
+  width:100%;height:48px;padding:0 16px 0 44px;
+  border:1px solid var(--border);border-radius:var(--radius-lg);
+  background:var(--surface);color:var(--text);
+  font-family:inherit;font-size:15px;
+  transition:border-color 180ms,box-shadow 180ms;
+}
+.gg-dock-input::placeholder { color:var(--text-subtle); }
+.gg-dock-input:focus { outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--accent-bg); }
+.gg-dock-icon { position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--text-subtle); }
+
+.gg-dock-messages {
+  display:flex;flex-direction:column;gap:8px;
+  max-height:160px;overflow-y:auto;margin-bottom:10px;
+  padding:10px 14px;background:var(--surface-alt);border-radius:var(--radius-lg);
+}
+.gg-msg { display:flex; }
+.gg-msg-user { justify-content:flex-end; }
+.gg-msg-bubble { display:inline-block;max-width:80%;padding:8px 12px;border-radius:var(--radius-lg);font-size:14px;line-height:1.5;text-wrap:pretty; }
+.gg-msg-user .gg-msg-bubble { background:var(--accent);color:#fff;border-bottom-right-radius:4px; }
+.gg-msg-assistant .gg-msg-bubble { background:var(--surface);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px; }
+
+/* ───── Empty / helper ───── */
+.gg-empty { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;color:var(--text-subtle);font-size:13px;text-align:center;gap:8px; }
+.gg-empty-icon { width:40px;height:40px;border-radius:50%;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;color:var(--text-subtle); }
+.gg-empty-title { color:var(--text-muted);font-weight:500;font-size:14px; }
+
+/* ───── Chat-help section ───── */
+.gg-chat-hero { padding:20px;background:var(--surface-warm);border-bottom:1px solid var(--border); }
+.gg-chat-hero-title { margin:0 0 6px;font-size:17px;font-weight:600;letter-spacing:-0.01em; }
+.gg-chat-hero-desc { margin:0;font-size:13px;line-height:1.55;color:var(--text-muted); }
+.gg-chat-examples { padding:16px 20px;display:flex;flex-direction:column;gap:8px; }
+.gg-chat-example { text-align:left;padding:12px 14px;border-radius:var(--radius-md);background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:14px;cursor:pointer;line-height:1.45;transition:border-color 180ms,background 180ms; }
+.gg-chat-example:hover { border-color:var(--accent);background:var(--accent-bg);color:var(--accent); }
+.gg-chat-example-q { display:block;font-weight:500; }
+.gg-chat-example-hint { display:block;font-size:11px;color:var(--text-subtle);font-family:var(--font-mono);letter-spacing:0.02em;margin-top:3px; }
+.gg-chat-example:hover .gg-chat-example-hint { color:var(--accent); }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" data-presets="react">
+/* ─────────────────  data  ───────────────── */
+const SECTIONS = [
+  { key:'filter', title:'필터 검색', description:'5개 축으로 좁히기', icon:'filter' },
+  { key:'list',   title:'전체목록 조회', description:'카테고리별 인덱스', icon:'list' },
+  { key:'chat',   title:'채팅방 검색', description:'자연어로 묻기', icon:'chat' },
+];
+const REGIONS    = [{k:'jongno',l:'종로'},{k:'gangnam',l:'강남'},{k:'mapo',l:'마포'},{k:'yongsan',l:'용산'},{k:'seongbuk',l:'성북'},{k:'guanak',l:'관악'}];
+const PERIODS    = [{k:'today',l:'오늘'},{k:'weekend',l:'이번 주말'},{k:'week',l:'이번 주'},{k:'month',l:'이번 달'}];
+const COMPANIONS = [{k:'solo',l:'혼자'},{k:'couple',l:'연인'},{k:'family',l:'가족'},{k:'friends',l:'친구'},{k:'biz',l:'동료/업무'}];
+const TYPES      = [{k:'festival',l:'축제'},{k:'expo',l:'박람회'},{k:'symposium',l:'심포지움'},{k:'conference',l:'컨퍼런스'}];
+const VIBES      = [{k:'edu',l:'교육형'},{k:'exp',l:'체험형'},{k:'net',l:'네트워킹'},{k:'act',l:'활동적'},{k:'quiet',l:'조용한'}];
+
+const CATEGORIES = [
+  { key:'all', label:'전체', count:42 },
+  { key:'festival', label:'축제', count:18 },
+  { key:'expo', label:'박람회', count:11 },
+  { key:'symposium', label:'심포지움', count:7 },
+  { key:'conference', label:'컨퍼런스', count:6 },
+];
+
+const DUMMY_EVENTS = [
+  { id:1, category:'festival',   poster:'#E8562D', title:'서울 빛초롱 축제 2026', region:'종로구 청계천로', dateRange:'2026.05.03 — 05.18', vibes:['체험형','가족','야간'], phase:'upcoming' },
+  { id:2, category:'expo',       poster:'#1A1A1A', title:'코리아 콘텐츠 박람회', region:'강남구 코엑스 D홀', dateRange:'2026.05.12 — 05.14', vibes:['네트워킹','업무'],   phase:'ongoing' },
+  { id:3, category:'symposium',  poster:'#3A6EA5', title:'AI 윤리 심포지움',     region:'관악구 서울대 호암관', dateRange:'2026.04.20',         vibes:['교육형'],            phase:'ended' },
+  { id:4, category:'conference', poster:'#2C8A4A', title:'Seoul Frontend Conference', region:'영등포구 더 케이 호텔', dateRange:'2026.06.08 — 06.09', vibes:['네트워킹','교육형'], phase:'upcoming' },
+  { id:5, category:'festival',   poster:'#D79B00', title:'한강 달빛 야시장',     region:'용산구 반포한강공원',  dateRange:'2026.05.17 — 09.28', vibes:['활동적','체험형'],   phase:'upcoming' },
+  { id:6, category:'expo',       poster:'#8C3318', title:'서울 디자인 페스티벌', region:'마포구 문화비축기지',  dateRange:'2026.05.25 — 05.28', vibes:['교육형','체험형'],   phase:'upcoming' },
+];
+
+const PHASE = {
+  upcoming: { label:'예정', tone:'info' },
+  ongoing:  { label:'진행중', tone:'accent' },
+  ended:    { label:'종료', tone:'subtle' },
+};
+
+const SUGGESTIONS = [
+  '이번 주말 가족이랑',
+  '강남 AI 컨퍼런스',
+  '혼자 가도 좋은',
+  '야간에 열리는 축제',
+];
+
+const CHAT_EXAMPLES = [
+  { q:'이번 주말 가족이랑 볼만한 축제 알려줘', hint:'기간 + 인원구성 + 종류 자동 매핑' },
+  { q:'강남에서 이번 달 AI 컨퍼런스',          hint:'지역 + 기간 + 종류 + 키워드' },
+  { q:'혼자 가도 좋은 교육형 이벤트',          hint:'인원구성 + 성향 매핑' },
+];
+
+/* ─────────────────  icons (lucide subset, 1.5px stroke)  ───────────────── */
+const Icon = ({ name, size = 18, color = 'currentColor' }) => {
+  const props = { width:size, height:size, viewBox:'0 0 24 24', fill:'none', stroke:color, strokeWidth:1.5, strokeLinecap:'round', strokeLinejoin:'round' };
+  switch(name){
+    case 'filter':   return <svg {...props}><path d="M3 6h18M6 12h12M10 18h4"/></svg>;
+    case 'list':     return <svg {...props}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>;
+    case 'chat':     return <svg {...props}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+    case 'arrow':    return <svg {...props}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
+    case 'close':    return <svg {...props}><path d="M18 6L6 18M6 6l12 12"/></svg>;
+    case 'search':   return <svg {...props}><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>;
+    case 'send':     return <svg {...props}><path d="m22 2-7 20-4-9-9-4 20-7z"/></svg>;
+    case 'plus':     return <svg {...props}><path d="M12 5v14M5 12h14"/></svg>;
+    case 'minus':    return <svg {...props}><path d="M5 12h14"/></svg>;
+    case 'locate':   return <svg {...props}><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>;
+    case 'sparkles': return <svg {...props}><path d="M12 3l1.6 4.8L18 9.4l-4.4 1.6L12 16l-1.6-5L6 9.4l4.4-1.6z"/></svg>;
+    case 'inbox':    return <svg {...props}><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.5 5.5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z"/></svg>;
+    default: return null;
+  }
+};
+
+/* ─────────────────  Header  ───────────────── */
+function Header() {
+  return (
+    <header className="gg-header">
+      <div style={{display:'flex',alignItems:'center',gap:0}}>
+        <a href="#" className="gg-brand">
+          <div className="gg-brand-mark">
+            <svg viewBox="0 0 84 84" fill="none">
+              <rect x="3" y="3" width="78" height="78" rx="2" fill="none" stroke="currentColor" strokeWidth="2"/>
+              <path d="M22 64 L42 22 L62 64" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+              <line x1="30" y1="48" x2="54" y2="48" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <div className="gg-brand-name">Alle<span className="gg-brand-sub">Seoul</span></div>
+          </div>
+        </a>
+        <nav className="gg-header-nav">
+          <a href="#" className="gg-tab gg-tab-active">탐색</a>
+          <a href="#" className="gg-tab">예정 이벤트</a>
+          <a href="#" className="gg-tab">내 캘린더</a>
+        </nav>
+      </div>
+      <div className="gg-header-right">
+        <div className="gg-search-mini"><Icon name="search" size={14}/><span>이벤트·장소 검색</span><kbd>⌘K</kbd></div>
+        <button className="gg-btn gg-btn-secondary gg-btn-sm">로그인</button>
+      </div>
+    </header>
+  );
+}
+
+/* ─────────────────  Sidebar  ───────────────── */
+function Sidebar({ open, onToggle }) {
+  return (
+    <aside className="gg-rail">
+      <div className="gg-rail-eyebrow">Discovery · A_200</div>
+      <h2 className="gg-rail-title">이벤트를 찾는<br/>서울의 방법</h2>
+      <p className="gg-rail-subtitle">지도 위 핀과 채팅, 필터로 축제·박람회·심포지움·컨퍼런스를 탐색하세요.</p>
+      <nav>
+        <ul className="gg-rail-list">
+          {SECTIONS.map(s => (
+            <li key={s.key}>
+              <button type="button" aria-pressed={open === s.key} onClick={() => onToggle(s.key)}
+                className={`gg-rail-row ${open === s.key ? 'gg-rail-row-active' : ''}`}>
+                {open === s.key && <span aria-hidden className="gg-rail-indicator" />}
+                <div className="gg-rail-icon"><Icon name={s.icon}/></div>
+                <div style={{minWidth:0,flex:1}}>
+                  <p className="gg-rail-row-title">{s.title}</p>
+                  <p className="gg-rail-row-desc">{s.description}</p>
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="gg-rail-stats">
+        <div className="gg-rail-stats-eyebrow">현재 지도 위</div>
+        <div className="gg-rail-stat"><span className="gg-rail-stat-label">전체 이벤트</span><span className="gg-rail-stat-value tabular">42</span></div>
+        <div className="gg-rail-stat"><span className="gg-rail-stat-label">진행중</span><span className="gg-rail-stat-value tabular"><span className="accent">8</span></span></div>
+        <div className="gg-rail-stat"><span className="gg-rail-stat-label">이번 주 시작</span><span className="gg-rail-stat-value tabular">12</span></div>
+      </div>
+    </aside>
+  );
+}
+
+/* ─────────────────  Phase badge  ───────────────── */
+function PhaseBadge({ phase }) {
+  const p = PHASE[phase] || PHASE.upcoming;
+  const cls = p.tone === 'accent' ? 'gg-badge-accent' : p.tone === 'info' ? 'gg-badge-info' : 'gg-badge-subtle';
+  return <span className={`gg-badge ${cls}`}>{p.tone === 'accent' && <span className="gg-badge-dot"/>}{p.label}</span>;
+}
+
+/* ─────────────────  Poster (placeholder)  ───────────────── */
+function Poster({ event }) {
+  const initials = event.title.replace(/[^A-Za-z가-힣]/g,'').slice(0,2);
+  return (
+    <div className="gg-poster" style={{background:event.poster}}>
+      <svg className="gg-poster-svg" viewBox="0 0 64 80">
+        <text x="50%" y="48%" textAnchor="middle" dominantBaseline="middle"
+          fontFamily="Pretendard Variable, sans-serif" fontWeight="700" fontSize="22"
+          fill="rgba(255,255,255,0.94)" letterSpacing="-1">{initials}</text>
+        <line x1="0" y1="62" x2="64" y2="62" stroke="rgba(255,255,255,0.2)"/>
+      </svg>
+      <span className="gg-poster-tag">{TYPES.find(t => t.k === event.category)?.l ?? ''}</span>
+    </div>
+  );
+}
+
+/* ─────────────────  Event card / list  ───────────────── */
+function EventCard({ event, active, onClick }) {
+  return (
+    <li className={`gg-event-card ${active ? 'gg-event-card-active' : ''}`} onClick={onClick}>
+      <Poster event={event} />
+      <div className="gg-event-body">
+        <div className="gg-event-row">
+          <h3 className="gg-event-title">{event.title}</h3>
+          <PhaseBadge phase={event.phase} />
+        </div>
+        <p className="gg-event-meta">
+          <span>{event.region}</span>
+        </p>
+        <p className="gg-event-meta tabular">
+          <span>{event.dateRange}</span>
+        </p>
+        <div className="gg-event-tags">
+          {event.vibes.map(v => <span key={v} className="gg-tag">{v}</span>)}
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function EventList({ categoryFilter = 'all', activeId, onSelect }) {
+  const events = DUMMY_EVENTS.filter(e => categoryFilter === 'all' || e.category === categoryFilter);
+  if (events.length === 0) {
+    return (
+      <div className="gg-empty">
+        <div className="gg-empty-icon"><Icon name="inbox" size={20}/></div>
+        <div className="gg-empty-title">아직 결과가 없어요</div>
+        <div>다른 카테고리를 선택해보세요.</div>
+      </div>
+    );
+  }
+  return (
+    <>
+      <div className="gg-result-bar">
+        <div className="gg-result-count"><strong className="tabular">{events.length}</strong>개의 이벤트</div>
+        <div className="gg-sort">최신순 <Icon name="arrow" size={12}/></div>
+      </div>
+      <ul className="gg-event-list">
+        {events.map(e => <EventCard key={e.id} event={e} active={e.id === activeId} onClick={() => onSelect && onSelect(e.id)} />)}
+      </ul>
+    </>
+  );
+}
+
+/* ─────────────────  Filter panel  ───────────────── */
+function ChipGroup({ items, value, onToggle, multi = true }) {
+  return (
+    <div className="gg-chip-row">
+      {items.map(it => {
+        const active = multi ? value.has(it.k) : value === it.k;
+        return (
+          <button key={it.k} type="button" aria-pressed={active}
+            className={`gg-chip ${active ? 'gg-chip-active' : ''}`}
+            onClick={() => onToggle(it.k)}>
+            {it.l}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function FilterSearchPanel({ onApply }) {
+  const [region, setRegion]       = React.useState(new Set());
+  const [period, setPeriod]       = React.useState(null);
+  const [companion, setCompanion] = React.useState(new Set());
+  const [type, setType]           = React.useState(new Set());
+  const [vibe, setVibe]           = React.useState(new Set());
+  const [applied, setApplied]     = React.useState(false);
+
+  const toggleSet = (setter) => (k) => { setter(prev => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n; }); setApplied(false); };
+
+  const totalActive = region.size + (period ? 1 : 0) + companion.size + type.size + vibe.size;
+  const reset = () => { setRegion(new Set()); setPeriod(null); setCompanion(new Set()); setType(new Set()); setVibe(new Set()); setApplied(false); };
+
+  return (
+    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+      <div style={{flex:1,minHeight:0,overflowY:'auto'}}>
+        <div className="gg-filter-block">
+          <div className="gg-filter-block-title">지역 <span className="gg-chip-count">({region.size || '전체'})</span></div>
+          <ChipGroup items={REGIONS} value={region} onToggle={toggleSet(setRegion)} />
+        </div>
+        <div className="gg-filter-block">
+          <div className="gg-filter-block-title">기간</div>
+          <div className="gg-period-row">
+            {PERIODS.map(p => (
+              <button key={p.k} type="button" aria-pressed={period === p.k}
+                className={`gg-chip ${period === p.k ? 'gg-chip-active' : ''}`}
+                onClick={() => { setPeriod(period === p.k ? null : p.k); setApplied(false); }}>
+                {p.l}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="gg-filter-block">
+          <div className="gg-filter-block-title">인원구성</div>
+          <ChipGroup items={COMPANIONS} value={companion} onToggle={toggleSet(setCompanion)} />
+        </div>
+        <div className="gg-filter-block">
+          <div className="gg-filter-block-title">종류</div>
+          <ChipGroup items={TYPES} value={type} onToggle={toggleSet(setType)} />
+        </div>
+        <div className="gg-filter-block" style={{borderBottom:'none'}}>
+          <div className="gg-filter-block-title">성향</div>
+          <ChipGroup items={VIBES} value={vibe} onToggle={toggleSet(setVibe)} />
+        </div>
+      </div>
+      <div className="gg-apply-bar">
+        <div className="gg-apply-summary">
+          {totalActive === 0
+            ? <>필터를 선택하면 <strong>적용</strong>할 수 있어요</>
+            : <><strong className="tabular">{totalActive}</strong>개 조건 선택됨</>
+          }
+        </div>
+        {totalActive > 0 && <button type="button" onClick={reset} className="gg-btn gg-btn-ghost">초기화</button>}
+        <button type="button" disabled={totalActive === 0} onClick={() => { setApplied(true); onApply && onApply(); }} className="gg-btn gg-btn-primary gg-btn-sm">
+          적용 <Icon name="arrow" size={14}/>
+        </button>
+      </div>
+      {applied && (
+        <div style={{maxHeight:'45%',overflowY:'auto',borderTop:'1px solid var(--border)'}}>
+          <EventList />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────  Full list panel  ───────────────── */
+function FullListPanel() {
+  const [selected, setSelected] = React.useState('all');
+  return (
+    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+      <div style={{flexShrink:0,padding:'12px 20px',borderBottom:'1px solid var(--border)',display:'flex',gap:6,flexWrap:'wrap'}}>
+        {CATEGORIES.map(c => (
+          <button key={c.key} type="button" aria-pressed={selected === c.key} onClick={() => setSelected(c.key)}
+            className={`gg-chip ${selected === c.key ? 'gg-chip-active' : ''}`}>
+            {c.label}<span className="gg-chip-count tabular">{c.count}</span>
+          </button>
+        ))}
+      </div>
+      <EventList categoryFilter={selected} />
+    </div>
+  );
+}
+
+/* ─────────────────  Chat help panel  ───────────────── */
+function ChatHelpPanel({ onPick }) {
+  return (
+    <div style={{display:'flex',flexDirection:'column',height:'100%'}}>
+      <div className="gg-chat-hero">
+        <h3 className="gg-chat-hero-title">자연어로 물어보세요</h3>
+        <p className="gg-chat-hero-desc">하단 입력창에 일상 언어로 질문하면, LLM이 5개 필터(지역·기간·인원구성·종류·성향)를 자동으로 매핑해서 좁혀 드립니다.</p>
+      </div>
+      <div className="gg-chat-examples">
+        {CHAT_EXAMPLES.map(ex => (
+          <button key={ex.q} type="button" onClick={() => onPick(ex.q)} className="gg-chat-example">
+            <span className="gg-chat-example-q">"{ex.q}"</span>
+            <span className="gg-chat-example-hint">→ {ex.hint}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────  Overlay panel shell  ───────────────── */
+function OverlayPanel({ open, onClose, children }) {
+  if (!open) return null;
+  const section = SECTIONS.find(s => s.key === open);
+  if (!section) return null;
+  return (
+    <section className="gg-panel">
+      <div className="gg-panel-header">
+        <div>
+          <div className="gg-panel-eyebrow">{open === 'filter' ? 'Filter · 5축' : open === 'list' ? 'Index' : 'LLM Search'}</div>
+          <h3 className="gg-panel-title">{section.title}</h3>
+        </div>
+        <button type="button" onClick={onClose} className="gg-panel-close" aria-label="닫기"><Icon name="close" size={18}/></button>
+      </div>
+      <div className="gg-panel-body">{children}</div>
+    </section>
+  );
+}
+
+/* ─────────────────  Map  ───────────────── */
+const PINS = [
+  { id:1, x:340, y:200 }, { id:2, x:520, y:300 }, { id:3, x:330, y:430 }, { id:4, x:230, y:340 }, { id:5, x:400, y:300 }, { id:6, x:260, y:260 },
+];
+const CLUSTERS = [{ id:'c1', x:620, y:200, n:8 }, { id:'c2', x:160, y:240, n:5 }, { id:'c3', x:640, y:430, n:12 }];
+
+function SeoulMap({ selectedPin, onSelect }) {
+  return (
+    <div className="gg-map">
+      <svg className="gg-map-svg" viewBox="0 0 800 540" preserveAspectRatio="xMidYMid slice">
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#EAE5DC" strokeWidth="1"/>
+          </pattern>
+          <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+            <circle cx="2" cy="2" r="0.6" fill="#D9D3C5"/>
+          </pattern>
+          <filter id="softshadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#E8562D" floodOpacity="0.35"/>
+          </filter>
+          <filter id="cardshadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodColor="#000" floodOpacity="0.10"/>
+          </filter>
+        </defs>
+
+        {/* base */}
+        <rect width="800" height="540" fill="#F7F2EC"/>
+        <rect width="800" height="540" fill="url(#dots)"/>
+
+        {/* Seoul silhouette */}
+        <path d="M70,260 Q110,130 260,120 Q380,90 470,140 Q570,110 670,170 Q750,220 710,330 Q730,430 600,450 Q470,470 380,450 Q260,440 175,410 Q80,380 70,260 Z"
+              fill="#FAFAF7" stroke="#D9D3C5" strokeWidth="1.5"/>
+
+        {/* district seams (subtle) */}
+        <path d="M260,140 L300,260 M380,110 L370,260 L410,420 M470,150 L500,300 L520,440 M580,170 L580,330 M170,300 L380,310 M170,360 L600,360"
+              fill="none" stroke="#E5DFD0" strokeWidth="1" strokeDasharray="3 4"/>
+
+        {/* Han river */}
+        <path d="M40,360 Q200,300 360,340 Q520,380 760,320"
+              fill="none" stroke="#CFE0E9" strokeWidth="22" strokeLinecap="round"/>
+        <path d="M40,360 Q200,300 360,340 Q520,380 760,320"
+              fill="none" stroke="#B8D2DF" strokeWidth="1" strokeLinecap="round" opacity="0.6"/>
+        <text x="450" y="332" fontFamily="Pretendard Variable, sans-serif" fontSize="11" fill="#7B98A6" letterSpacing="2">한 강 · HAN RIVER</text>
+
+        {/* district labels */}
+        <g fontFamily="Pretendard Variable, sans-serif" fontSize="11" fill="#999" fontWeight="500">
+          <text x="190" y="200">은평</text>
+          <text x="290" y="220">종로</text>
+          <text x="420" y="220">성북</text>
+          <text x="540" y="230">노원</text>
+          <text x="200" y="320">마포</text>
+          <text x="350" y="370" fill="#666" fontWeight="600">용산</text>
+          <text x="470" y="380" fill="#666" fontWeight="600">강남</text>
+          <text x="600" y="370">송파</text>
+          <text x="280" y="430">관악</text>
+          <text x="420" y="440">서초</text>
+          <text x="120" y="380">강서</text>
+        </g>
+
+        {/* compass */}
+        <g transform="translate(60,60)">
+          <circle r="20" fill="#fff" stroke="#E5DFD0"/>
+          <path d="M0,-12 L4,2 L0,-2 L-4,2 Z" fill="var(--accent)" stroke="none"/>
+          <path d="M0,12 L4,-2 L0,2 L-4,-2 Z" fill="#999" stroke="none"/>
+          <text y="-26" textAnchor="middle" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#999">N</text>
+        </g>
+
+        {/* scale bar */}
+        <g transform="translate(60,500)" fontFamily="JetBrains Mono, monospace" fontSize="9" fill="#999">
+          <line x1="0" y1="0" x2="80" y2="0" stroke="#666" strokeWidth="1.5"/>
+          <line x1="0" y1="-3" x2="0" y2="3" stroke="#666"/>
+          <line x1="80" y1="-3" x2="80" y2="3" stroke="#666"/>
+          <text x="0" y="14">0</text>
+          <text x="80" y="14" textAnchor="end">5km</text>
+        </g>
+
+        {/* clusters */}
+        {CLUSTERS.map(c => (
+          <g key={c.id} style={{cursor:'pointer'}} filter="url(#softshadow)">
+            <circle cx={c.x} cy={c.y} r="22" fill="#fff" stroke="var(--accent)" strokeWidth="2"/>
+            <circle cx={c.x} cy={c.y} r="17" fill="var(--accent)"/>
+            <text x={c.x} y={c.y+5} textAnchor="middle" fontFamily="Pretendard Variable, sans-serif" fontWeight="700" fontSize="14" fill="#fff">{c.n}</text>
+          </g>
+        ))}
+
+        {/* pins */}
+        {PINS.map(p => {
+          const sel = selectedPin === p.id; const scale = sel ? 1.18 : 1;
+          return (
+            <g key={p.id}
+               transform={`translate(${p.x - 16*scale} ${p.y - 38*scale}) scale(${scale})`}
+               style={{cursor:'pointer',transition:'transform 280ms cubic-bezier(0,0,0.2,1)'}}
+               onClick={() => onSelect(p.id)}>
+              <g filter="url(#softshadow)">
+                <path d="M16 2 C 7.7 2 2 7.7 2 15.5 C 2 23.5 10 30 16 38 C 22 30 30 23.5 30 15.5 C 30 7.7 24.3 2 16 2 Z"
+                      fill="var(--accent)"/>
+                <circle cx="16" cy="15" r="5" fill="#fff"/>
+              </g>
+            </g>
+          );
+        })}
+      </svg>
+
+      {/* Pin popup */}
+      {selectedPin != null && (() => {
+        const pin = PINS.find(p => p.id === selectedPin); if (!pin) return null;
+        const ev = DUMMY_EVENTS.find(e => e.id === pin.id); if (!ev) return null;
+        return (
+          <div className="gg-map-popup" style={{
+            left: Math.min(pin.x + 28, 580),
+            top: Math.max(pin.y - 60, 16),
+          }}>
+            <div className="gg-map-popup-arrow"/>
+            <div style={{display:'flex',gap:12,alignItems:'flex-start'}}>
+              <Poster event={ev}/>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:8,marginBottom:4}}>
+                  <div style={{fontSize:14,fontWeight:600,letterSpacing:'-0.01em',lineHeight:1.3}}>{ev.title}</div>
+                  <PhaseBadge phase={ev.phase}/>
+                </div>
+                <div style={{fontSize:12,color:'var(--text-muted)'}}>{ev.region}</div>
+                <div style={{fontSize:12,color:'var(--text-muted)',fontFeatureSettings:'"tnum" 1',marginBottom:8}}>{ev.dateRange}</div>
+                <button className="gg-btn gg-btn-primary gg-btn-sm" style={{width:'100%'}}>상세 보기 <Icon name="arrow" size={13}/></button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* controls */}
+      <div className="gg-map-controls">
+        <div className="gg-map-zoom">
+          <button type="button" aria-label="확대"><Icon name="plus" size={16}/></button>
+          <button type="button" aria-label="축소"><Icon name="minus" size={16}/></button>
+        </div>
+        <button type="button" className="gg-map-locate" aria-label="현위치"><Icon name="locate" size={16}/></button>
+      </div>
+
+      {/* legend */}
+      <div className="gg-map-legend">
+        <div className="gg-map-legend-title">범례</div>
+        <div className="gg-map-legend-row"><span className="gg-map-legend-pin"/>개별 이벤트</div>
+        <div className="gg-map-legend-row"><span className="gg-map-legend-cluster">N</span>지역 클러스터</div>
+      </div>
+
+      <div className="gg-map-attrib">Kakao Maps · Mock</div>
+    </div>
+  );
+}
+
+/* ─────────────────  Chat dock  ───────────────── */
+function ChatDock({ value, onChange, onSubmit, messages, collapsed, onToggle }) {
+  return (
+    <form className={`gg-dock ${collapsed ? 'gg-dock-collapsed' : ''}`}
+          onSubmit={(e) => { e.preventDefault(); if (value.trim()) onSubmit(value.trim()); }}>
+      <button type="button" className="gg-dock-handle" onClick={onToggle} aria-expanded={!collapsed}>
+        <span className="gg-dock-handle-pulse"/>
+        {collapsed ? '추천·기록 펼치기' : '추천·기록 접기'}{messages.length > 0 && ` · ${messages.length}`}
+        <svg className="gg-dock-handle-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div className="gg-dock-inner">
+        <div className="gg-dock-collapsible">
+          {messages.length > 0 && (
+            <div className="gg-dock-messages">
+              {messages.map((m, i) => (
+                <div key={i} className={`gg-msg gg-msg-${m.role}`}>
+                  <span className="gg-msg-bubble">{m.text}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="gg-dock-eyebrow">
+            채팅 검색 · A_201 <span style={{color:'var(--text-subtle)',marginLeft:'auto',textTransform:'none',letterSpacing:0}}>LLM이 5개 필터로 자동 매핑</span>
+          </div>
+          <div className="gg-dock-suggestions">
+            {SUGGESTIONS.map(s => (
+              <button key={s} type="button" className="gg-suggestion" onClick={() => onChange(s + ' ')}>{s}</button>
+            ))}
+          </div>
+        </div>
+        <div className="gg-dock-row">
+          <div className="gg-dock-input-wrap">
+            <span className="gg-dock-icon"><Icon name="sparkles" size={16}/></span>
+            <input
+              type="text" value={value} onChange={(e) => onChange(e.target.value)}
+              placeholder='"이번 주말 가족이랑 볼만한 축제"'
+              className="gg-dock-input"
+            />
+          </div>
+          <button type="submit" disabled={!value.trim()} className="gg-btn gg-btn-primary" style={{height:48,padding:'0 20px'}}>
+            <Icon name="send" size={15}/> 검색
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
+
+/* ─────────────────  App  ───────────────── */
+function App() {
+  const [open, setOpen]               = React.useState('filter');
+  const [chatValue, setChatValue]     = React.useState('');
+  const [messages, setMessages]       = React.useState([]);
+  const [selectedPin, setSelectedPin] = React.useState(null);
+  const [activeEvent, setActiveEvent] = React.useState(null);
+  const [dockCollapsed, setDockCollapsed] = React.useState(false);
+
+  const toggle = (key) => setOpen(prev => prev === key ? null : key);
+
+  const handleSubmit = (text) => {
+    const n = [...messages, { role:'user', text }];
+    setMessages(n);
+    setChatValue('');
+    if (dockCollapsed) setDockCollapsed(false);
+    setTimeout(() => setMessages([...n, {
+      role:'assistant',
+      text:`"${text}" → 종로구·강남구 일대에서 관련 이벤트 ${Math.floor(2+Math.random()*4)}건을 찾았어요. 지도 위 핀을 눌러 자세히 보세요.`
+    }]), 600);
+  };
+
+  return (
+    <div className="gg-app">
+      <Header />
+      <div className="gg-body">
+        <Sidebar open={open} onToggle={toggle} />
+        <OverlayPanel open={open} onClose={() => setOpen(null)}>
+          {open === 'filter' && <FilterSearchPanel/>}
+          {open === 'list'   && <FullListPanel/>}
+          {open === 'chat'   && <ChatHelpPanel onPick={(q) => { setOpen(null); setChatValue(q); }} />}
+        </OverlayPanel>
+        <main className="gg-main">
+          <div className="gg-map-wrap">
+            <SeoulMap selectedPin={selectedPin} onSelect={(id) => setSelectedPin(selectedPin === id ? null : id)} />
+            <ChatDock
+              value={chatValue}
+              onChange={setChatValue}
+              onSubmit={handleSubmit}
+              messages={messages}
+              collapsed={dockCollapsed}
+              onToggle={() => setDockCollapsed(c => !c)}
+            />
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
