@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { REGIONS, PERIODS, COMPANIONS, TYPES, VIBES, type FilterKey } from '../data/mock';
+import { REGIONS, PERIODS, COMPANIONS, TYPES, VIBES, DUMMY_EVENTS, type FilterKey } from '../data/mock';
+import { fromMockEvent } from '../lib/event-display';
 import { Icon } from './Icon';
 import { EventList } from './EventList';
 
@@ -109,7 +110,7 @@ export function FilterSearchPanel() {
 
       {applied && (
         <div className="flex max-h-[45%] min-h-0 flex-col border-t border-(--color-border)">
-          <EventList />
+          <EventList items={DUMMY_EVENTS.map(fromMockEvent)} />
         </div>
       )}
     </div>

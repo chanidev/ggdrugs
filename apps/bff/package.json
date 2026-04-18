@@ -14,7 +14,8 @@
     "dev": "dotenv -e ../../.env -- tsx watch src/server.ts",
     "start": "dotenv -e ../../.env -- node dist/server.js",
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "ingest:tourapi": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts"
   },
   "dependencies": {
     "@ggdrugs/config": "workspace:*",

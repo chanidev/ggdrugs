@@ -50,6 +50,8 @@ export const externalApiSchema = z.object({
   KAKAO_REST_API_KEY: optionalKey,
   GOOGLE_OAUTH_CLIENT_ID: optionalKey,
   GOOGLE_OAUTH_CLIENT_SECRET: optionalKey,
+  /** 한국관광공사 TourAPI 2.0 인증키 — 배치 ingest 에서 사용. 공공데이터포털 발급값(이미 URL-인코딩됨). */
+  TOUR_API_KEY: optionalKey,
 });
 
 export const openaiSchema = z.object({
@@ -95,4 +97,5 @@ export const productionRequiredKeys = [
   'GOOGLE_OAUTH_CLIENT_ID',
   'GOOGLE_OAUTH_CLIENT_SECRET',
   'OPENAI_API_KEY',
+  'TOUR_API_KEY',
 ] as const satisfies ReadonlyArray<keyof FullEnv>;
