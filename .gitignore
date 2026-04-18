@@ -45,6 +45,10 @@ llm_wiki/graphify-out/memory/
 
 # Graphify runtime cache (project root, regenerable)
 graphify-out/cache/
+# 서브디렉터리(apps/packages/services 등)에서 graphify 실행 시 생기는 stray 산출물
+apps/**/graphify-out/
+packages/**/graphify-out/
+services/**/graphify-out/
 
 # Misc
 *.log
