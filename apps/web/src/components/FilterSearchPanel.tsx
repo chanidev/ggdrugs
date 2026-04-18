@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { PERIODS, COMPANIONS, TYPES } from '../data/mock';
 import {
   fetchEvents,
@@ -68,6 +69,7 @@ function computePeriodRange(key: string): Range | null {
 }
 
 export function FilterSearchPanel() {
+  const navigate = useNavigate();
   const [regions, setRegions] = useState<RegionItem[]>([]);
   const [vibes, setVibes] = useState<VibeItem[]>([]);
   const [lookupError, setLookupError] = useState<string | null>(null);
@@ -244,6 +246,7 @@ export function FilterSearchPanel() {
             items={items}
             loading={listState.loading}
             error={listState.error}
+            onSelect={(id) => navigate(`/events/${id}`)}
             totalLabel={
               listState.data ? `${listState.data.total.toLocaleString()}개의 결과` : undefined
             }

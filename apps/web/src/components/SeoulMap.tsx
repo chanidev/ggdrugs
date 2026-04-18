@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import {
   Map,
   MapMarker,
@@ -7,6 +8,7 @@ import {
   CustomOverlayMap,
 } from 'react-kakao-maps-sdk';
 import { fetchEvents, type BffEventItem } from '../lib/api';
+import { Icon } from './Icon';
 
 /**
  * SeoulMap — Kakao Maps 기반 서울 이벤트 지도.
@@ -47,6 +49,7 @@ function toPin(item: BffEventItem): Pin | null {
 }
 
 export function SeoulMap() {
+  const navigate = useNavigate();
   const appkey = import.meta.env.VITE_KAKAO_MAP_JS_KEY as string | undefined;
 
   const [loading, error] = useKakaoLoader({
@@ -102,7 +105,11 @@ export function SeoulMap() {
         </MarkerClusterer>
         {selected && (
           <CustomOverlayMap position={{ lat: selected.lat, lng: selected.lng }} yAnchor={1.2}>
-            <PinPopup pin={selected} onClose={() => setSelected(null)} />
+            <PinPopup
+              pin={selected}
+              onClose={() => setSelected(null)}
+              onOpen={() => navigate(`/events/${selected.id}`)}
+            />
           </CustomOverlayMap>
         )}
       </Map>
@@ -111,7 +118,15 @@ export function SeoulMap() {
   );
 }
 
-function PinPopup({ pin, onClose }: { pin: Pin; onClose: () => void }) {
+function PinPopup({
+  pin,
+  onClose,
+  onOpen,
+}: {
+  pin: Pin;
+  onClose: () => void;
+  onOpen: () => void;
+}) {
   const phaseLabel = pin.phase === 'ongoing' ? '진행중' : pin.phase === 'upcoming' ? '예정' : '종료';
   const tone =
     pin.phase === 'ongoing'
@@ -120,7 +135,7 @@ function PinPopup({ pin, onClose }: { pin: Pin; onClose: () => void }) {
         ? 'bg-[rgba(58,110,165,0.12)] text-(--color-info)'
         : 'bg-(--color-surface-alt) text-(--color-text-subtle)';
   return (
-    <div className="w-[280px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-3.5 shadow-(--shadow-lg)">
+    <div className="relative w-[280px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-3.5 shadow-(--shadow-lg)">
       <div className="mb-1.5 flex items-start justify-between gap-2">
         <h3 className="line-clamp-2 text-[14px] font-semibold leading-[1.3] tracking-[-0.01em]">
           {pin.title}
@@ -129,7 +144,14 @@ function PinPopup({ pin, onClose }: { pin: Pin; onClose: () => void }) {
           {phaseLabel}
         </span>
       </div>
-      <p className="tabular m-0 text-[12px] text-(--color-text-muted)">{pin.dateRange}</p>
+      <p className="tabular m-0 mb-3 text-[12px] text-(--color-text-muted)">{pin.dateRange}</p>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
+      >
+        상세 보기 <Icon name="arrow" size={13} />
+      </button>
       <button
         type="button"
         onClick={onClose}

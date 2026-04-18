@@ -126,3 +126,19 @@ export async function fetchVibes(signal?: AbortSignal): Promise<VibeItem[]> {
   const data = (await res.json()) as { items: VibeItem[] };
   return data.items;
 }
+
+export interface BffEventDetail extends BffEventItem {
+  description: string | null;
+  addressDetail: string | null;
+  source: { type: string; crawlOrigin: string; externalId: string };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function fetchEventDetail(id: string, signal?: AbortSignal): Promise<BffEventDetail> {
+  const init: RequestInit = signal ? { signal } : {};
+  const res = await fetch(`${BFF_URL}/events/${encodeURIComponent(id)}`, init);
+  if (res.status === 404) throw new Error('NOT_FOUND');
+  if (!res.ok) throw new Error(`GET /events/${id} ${res.status}`);
+  return (await res.json()) as BffEventDetail;
+}

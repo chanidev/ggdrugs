@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import {
   fetchEvents,
   fetchEventsStats,
@@ -18,6 +19,7 @@ type SelectedKey = string; // 'all' | category code (ex. 'festival')
  *  - 리스트: /events?eventTypes=<code> (선택 시) 재호출.
  */
 export function FullListPanel() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState<EventsStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedKey>('all');
@@ -103,6 +105,7 @@ export function FullListPanel() {
         items={items}
         loading={listState.loading}
         error={listState.error}
+        onSelect={(id) => navigate(`/events/${id}`)}
         totalLabel={
           listState.data ? `${listState.data.total.toLocaleString()}개의 이벤트` : undefined
         }

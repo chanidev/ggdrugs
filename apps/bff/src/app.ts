@@ -5,6 +5,7 @@ import { prisma } from './prisma.js';
 import { env } from './env.js';
 import { listEvents } from './routes/events.js';
 import { eventsStats } from './routes/events-stats.js';
+import { getEventDetail } from './routes/event-detail.js';
 import { listRegions, listVibes } from './routes/lookups.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
@@ -60,6 +61,9 @@ export function createApp(): Express {
   });
   app.get('/events/stats', (req: Request, res: Response, next: NextFunction) => {
     eventsStats(req, res).catch(next);
+  });
+  app.get('/events/:id', (req: Request, res: Response, next: NextFunction) => {
+    getEventDetail(req, res).catch(next);
   });
   app.get('/regions', (req: Request, res: Response, next: NextFunction) => {
     listRegions(req, res).catch(next);

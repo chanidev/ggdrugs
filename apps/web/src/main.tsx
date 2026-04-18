@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router';
 import { AppShell } from './layout/AppShell';
+import { EventDetailPage } from './pages/EventDetailPage';
 import './styles/index.css';
 
 const rootEl = document.getElementById('root');
@@ -12,6 +13,7 @@ createRoot(rootEl).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<AppShell />} />
+        <Route path="/events/:id" element={<EventDetailPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
