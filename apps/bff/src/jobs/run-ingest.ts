@@ -21,7 +21,9 @@ import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
 
 const which = (process.argv[2] ?? 'all').toLowerCase();
-const tourapiFloor = process.argv[3]; // YYYYMMDD optional
+const tourapiFloor = process.argv[3]; // YYYYMMDD optional (tourapi 전용)
+// `--backfill` 이 아무 위치에 있으면 seoul-culture 를 전체(종료 포함) 재분류 모드로.
+const seoulBackfill = process.argv.slice(2).includes('--backfill');
 
 async function main() {
   const results: Record<string, unknown> = {};
@@ -29,7 +31,7 @@ async function main() {
     results.tourapi = await runTourapiIngest(tourapiFloor);
   }
   if (which === 'seoul-culture' || which === 'seoul' || which === 'all')
-    results['seoul-culture'] = await runSeoulCultureIngest();
+    results['seoul-culture'] = await runSeoulCultureIngest({ includePast: seoulBackfill });
   if (which === 'kcisa' || which === 'all') results.kcisa = await runKcisaIngest();
 
   logger.info(results, 'manual ingest completed');

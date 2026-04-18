@@ -10,7 +10,15 @@ import { prisma } from '../prisma.js';
  *  - computePhase: today 기준 upcoming/ongoing/ended.
  */
 
-export type EventCategoryCode = 'festival' | 'expo' | 'symposium' | 'conference';
+export type EventCategoryCode =
+  | 'festival'
+  | 'expo'
+  | 'symposium'
+  | 'conference'
+  | 'exhibition'
+  | 'performance'
+  | 'education'
+  | 'movie';
 
 export interface NormalizedEvent {
   externalSourceId: string;
@@ -149,6 +157,9 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
   const regionId = await resolveSeoulRegionId(ev.addressText);
   if (!regionId) throw new Error('region resolution failed');
 
+  // update 절에 categoryId·regionId 도 포함 — 분류 로직 개선 후 재ingest 시 기존 row 도 교정.
+  // 관리자가 수동 재분류한 행은 별도 'manual_override' 필드가 생기기 전까진 덮어쓰기 허용.
+
   const data = {
     categoryId,
     regionId,
@@ -189,6 +200,8 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
       endDate: data.endDate,
       posterImageUrl: data.posterImageUrl,
       phase: data.phase,
+      categoryId: data.categoryId,
+      regionId: data.regionId,
     },
   });
 }

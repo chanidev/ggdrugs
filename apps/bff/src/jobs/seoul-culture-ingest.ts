@@ -56,11 +56,32 @@ function makeExternalId(row: SeoulEventRow): string {
   return createHash('sha1').update(src).digest('hex').slice(0, 32);
 }
 
+/**
+ * Seoul API CODENAME → 내부 카테고리 매핑.
+ *
+ * 실 분포 (샘플 1,000):
+ *   교육/체험 36% · 전시/미술 16% · 클래식 16% · 콘서트 6% · 연극 4%
+ *   국악 4% · 독주/독창회 3% · 뮤지컬/오페라 3% · 무용 2% · 영화 2% · 축제-* 7%
+ *
+ * 우선순위 순서가 중요: 특수 키워드를 먼저 매칭.
+ */
 function classifyCategory(codename: string | undefined): EventCategoryCode {
   if (!codename) return 'festival';
+  // 고정 키워드 (행사 포맷)
   if (/박람회/.test(codename)) return 'expo';
   if (/심포지(엄|움)/.test(codename)) return 'symposium';
   if (/컨퍼런스|컨퍼렌스|포럼/.test(codename)) return 'conference';
+  // 축제 포맷: "축제-문화/예술", "축제-기타" 등
+  if (/축제/.test(codename)) return 'festival';
+  // 전시 계열
+  if (/전시|미술/.test(codename)) return 'exhibition';
+  // 공연 계열: 클래식 / 콘서트 / 연극 / 국악 / 독주 / 독창 / 뮤지컬 / 오페라 / 무용
+  if (/클래식|콘서트|연극|국악|독주|독창|뮤지컬|오페라|무용/.test(codename)) return 'performance';
+  // 영화
+  if (/영화/.test(codename)) return 'movie';
+  // 교육·체험
+  if (/교육|체험/.test(codename)) return 'education';
+  // 기타는 festival (원본 데이터에서 "기타" 카테고리 몇 % 존재)
   return 'festival';
 }
 
@@ -117,8 +138,12 @@ function toNormalized(row: SeoulEventRow): NormalizedEvent | null {
   };
 }
 
-export async function runSeoulCultureIngest(): Promise<IngestResult> {
-  const log = logger.child({ job: 'seoul-culture-ingest' });
+/**
+ * @param options.includePast true 면 forward-looking 필터 해제 — 전체(종료 포함) backfill/재분류 용.
+ *                            일일 배치에서는 기본 false (진행중+예정만).
+ */
+export async function runSeoulCultureIngest(options: { includePast?: boolean } = {}): Promise<IngestResult> {
+  const log = logger.child({ job: 'seoul-culture-ingest', includePast: !!options.includePast });
   const result: IngestResult = { fetched: 0, upserted: 0, skipped: 0, errors: 0 };
 
   if (!env.SEOUL_OPEN_API_KEY) {
@@ -142,7 +167,11 @@ export async function runSeoulCultureIngest(): Promise<IngestResult> {
 
     for (const raw of page.items) {
       const ev = toNormalized(raw);
-      if (!ev || !isForwardLooking(ev.startDate, ev.endDate)) {
+      if (!ev) {
+        result.skipped += 1;
+        continue;
+      }
+      if (!options.includePast && !isForwardLooking(ev.startDate, ev.endDate)) {
         result.skipped += 1;
         continue;
       }

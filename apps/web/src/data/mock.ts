@@ -30,11 +30,17 @@ export const COMPANIONS: FilterKey[] = [
   { k: 'friend', l: '친구' },
 ];
 
+// 이벤트 종류 enum — BFF event_categories.category_code 와 1:1.
+// 추가 카테고리는 DB 시드 migration 이 선행돼야 함 (20260418180000_expand_event_categories).
 export const TYPES: FilterKey[] = [
   { k: 'festival', l: '축제' },
   { k: 'expo', l: '박람회' },
   { k: 'symposium', l: '심포지움' },
   { k: 'conference', l: '컨퍼런스' },
+  { k: 'exhibition', l: '전시' },
+  { k: 'performance', l: '공연' },
+  { k: 'education', l: '교육/체험' },
+  { k: 'movie', l: '영화' },
 ];
 
 export const VIBES: FilterKey[] = [

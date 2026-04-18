@@ -27,7 +27,16 @@ import { prisma } from '../prisma.js';
 // =============================================================
 
 const COMPANION_ENUM = new Set(['solo', 'couple', 'friend', 'family']);
-const EVENT_TYPE_ENUM = new Set(['festival', 'expo', 'symposium', 'conference']);
+const EVENT_TYPE_ENUM = new Set([
+  'festival',
+  'expo',
+  'symposium',
+  'conference',
+  'exhibition',
+  'performance',
+  'education',
+  'movie',
+]);
 const PERIOD_ENUM = new Set(['3m', '6m', 'all', 'custom']);
 const PHASE_ENUM = new Set(['upcoming', 'ongoing', 'ended']);
 
