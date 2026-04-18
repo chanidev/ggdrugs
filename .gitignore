@@ -36,6 +36,9 @@ venv/
 .DS_Store
 Thumbs.db
 
+# Claude Code local settings
+.claude/settings.local.json
+
 # Graphify cache (LLM Wiki)
 llm_wiki/graphify-out/cache/
 llm_wiki/graphify-out/memory/
