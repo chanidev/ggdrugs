@@ -45,6 +45,7 @@
   --color-bg: #fafaf7;
   --color-surface: #ffffff;
   --color-surface-alt: #f5f5f0;
+  --color-surface-warm: #f7f2ec;
 
   --color-text: #1a1a1a;
   --color-text-muted: #666666;
@@ -52,10 +53,12 @@
 
   --color-border: #eaeaea;
   --color-border-hover: #d4d4d4;
+  --color-border-strong: #1a1a1a;
 
   --color-accent: #e8562d;
   --color-accent-hover: #d44a22;
   --color-accent-bg: #fceee8;
+  --color-accent-deep: #8c3318;
 
   --color-success: #2c8a4a;
   --color-warning: #d79b00;
@@ -67,6 +70,7 @@
   --radius-md: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
+  --radius-full: 9999px;
 
   /* -- Shadows -- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -95,6 +99,7 @@
     --color-bg: #131311;
     --color-surface: #1c1c1a;
     --color-surface-alt: #242422;
+    --color-surface-warm: #211f1b;
 
     --color-text: #f0efea;
     --color-text-muted: #a3a29c;
@@ -102,10 +107,12 @@
 
     --color-border: #2e2e2b;
     --color-border-hover: #3d3d3a;
+    --color-border-strong: #f0efea;
 
     --color-accent: #f27147;
     --color-accent-hover: #e8562d;
     --color-accent-bg: #3a1f15;
+    --color-accent-deep: #f5a585;
 
     --color-success: #4cae6c;
     --color-warning: #e6b23d;
@@ -114,6 +121,16 @@
 
     --shadow-pin: 0 2px 8px rgba(242, 113, 71, 0.4);
   }
+}
+
+/* -- Keyframes — OverlayPanel slide-in, ChatDock pulse -- */
+@keyframes alle-panel-in {
+  from { transform: translateX(-12px); opacity: 0; }
+  to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes alle-pulse {
+  0%        { box-shadow: 0 0 0 0 rgba(232, 86, 45, 0.6); }
+  80%, 100% { box-shadow: 0 0 0 8px rgba(232, 86, 45, 0); }
 }
 
 /* -- Base layer: 기본 태그 정리 -- */

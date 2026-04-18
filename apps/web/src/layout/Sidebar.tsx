@@ -1,97 +1,73 @@
-import { useState } from 'react';
-import { FilterSearchPanel } from '../components/FilterSearchPanel';
-import { FullListPanel } from '../components/FullListPanel';
+import { Icon } from '../components/Icon';
 
-/**
- * Sidebar — 메인 페이지 탐색 영역.
- *
- * Layout: 좁은 rail (3행 진입) + 오른쪽으로 펼쳐지는 확장 패널(세로 칼럼 하나 추가).
- * - rail 클릭 시 같은 섹션을 다시 누르면 닫힘 (toggle).
- * - 최대 1개 확장.
- * - 확장 시 map 영역이 줄어듦. 닫으면 rail만 차지.
- * - 채팅은 주 입력이 지도 하단 ChatDock이므로 확장 패널은 예시 힌트만.
- */
-
-type Section = 'filter' | 'list' | 'chat';
+export type SidebarSection = 'filter' | 'list' | 'chat';
 
 const SECTIONS: Array<{
-  key: Section;
+  key: SidebarSection;
   title: string;
   description: string;
+  icon: 'filter' | 'list' | 'chat';
 }> = [
-  {
-    key: 'filter',
-    title: '필터 검색',
-    description: '지역·기간·인원구성·종류·성향',
-  },
-  {
-    key: 'list',
-    title: '전체목록 조회',
-    description: '축제·박람회·심포지움·컨퍼런스',
-  },
-  {
-    key: 'chat',
-    title: '채팅방 검색',
-    description: '자연어 질문',
-  },
+  { key: 'filter', title: '필터 검색',     description: '5개 축으로 좁히기',  icon: 'filter' },
+  { key: 'list',   title: '전체목록 조회', description: '카테고리별 인덱스', icon: 'list' },
+  { key: 'chat',   title: '채팅방 검색',   description: '자연어로 묻기',       icon: 'chat' },
 ];
 
-export function Sidebar() {
-  const [open, setOpen] = useState<Section | null>(null);
-  const toggle = (key: Section) =>
-    setOpen((prev) => (prev === key ? null : key));
-
-  const activeSection = open ? SECTIONS.find((s) => s.key === open) : null;
-
+/**
+ * Sidebar — 메인 페이지 탐색 rail (236px).
+ *
+ * Layout:
+ *   - eyebrow → title → subtitle
+ *   - 3 row 네비게이션 (icon box + title + desc)
+ *   - 하단 stats 블록 (margin-top:auto 로 바닥 고정)
+ *
+ * state 는 AppShell 에서 lifted up — OverlayPanel 이 형제로 포지셔닝되려면 여기서는 소유 안 함.
+ */
+export function Sidebar({
+  open,
+  onToggle,
+}: {
+  open: SidebarSection | null;
+  onToggle: (key: SidebarSection) => void;
+}) {
   return (
-    <>
-      {/* 좁은 rail */}
-      <aside
-        className="flex w-[220px] shrink-0 flex-col border-r border-(--color-border) bg-(--color-surface)"
-        aria-label="이벤트 탐색 메뉴"
-      >
-        <h2 className="shrink-0 px-4 py-5 text-h3 font-semibold tracking-tight">
-          이벤트 찾기
-        </h2>
-        <nav aria-label="탐색 메뉴">
-          <ul className="divide-y divide-(--color-border) border-y border-(--color-border)">
-            {SECTIONS.map((s) => (
-              <li key={s.key}>
-                <RowButton
-                  section={s}
-                  active={open === s.key}
-                  onClick={() => toggle(s.key)}
-                />
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </aside>
+    <aside
+      className="flex w-[236px] shrink-0 flex-col border-r border-(--color-border) bg-(--color-surface)"
+      aria-label="이벤트 탐색 메뉴"
+    >
+      <div className="px-5 pb-1 pt-[18px] text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+        Discovery · A_200
+      </div>
+      <h2 className="m-0 px-5 pb-4 text-[22px] font-bold leading-tight tracking-[-0.02em]">
+        이벤트를 찾는
+        <br />
+        서울의 방법
+      </h2>
+      <p className="m-0 border-b border-(--color-border) px-5 pb-[18px] text-[13px] leading-[1.55] text-(--color-text-muted)">
+        지도 위 핀과 채팅, 필터로 축제·박람회·심포지움·컨퍼런스를 탐색하세요.
+      </p>
 
-      {/* 확장 패널 — rail 오른쪽에 overlay. 지도 크기 유지. */}
-      {open !== null && activeSection && (
-        <section
-          className="absolute bottom-0 left-[220px] top-0 z-20 flex w-[360px] flex-col border-r border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg)"
-          aria-label={`${activeSection.title} 상세`}
-        >
-          <PanelHeader title={activeSection.title} onClose={() => setOpen(null)} />
-          <div className="min-h-0 flex-1 overflow-hidden">
-            {open === 'filter' && <FilterSearchPanel />}
-            {open === 'list' && <FullListPanel />}
-            {open === 'chat' && <ChatHelpPanel />}
-          </div>
-        </section>
-      )}
-    </>
+      <nav aria-label="탐색 섹션">
+        <ul className="m-0 list-none p-0">
+          {SECTIONS.map((s, i) => (
+            <li key={s.key} className={i > 0 ? 'border-t border-(--color-border)' : ''}>
+              <RailRow section={s} active={open === s.key} onClick={() => onToggle(s.key)} />
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <StatsBlock />
+    </aside>
   );
 }
 
-function RowButton({
+function RailRow({
   section,
   active,
   onClick,
 }: {
-  section: { key: Section; title: string; description: string };
+  section: { key: SidebarSection; title: string; description: string; icon: 'filter' | 'list' | 'chat' };
   active: boolean;
   onClick: () => void;
 }) {
@@ -100,85 +76,71 @@ function RowButton({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`group relative flex w-full items-center gap-3 px-4 py-4 text-left transition-colors ${
-        active
-          ? 'bg-(--color-accent-bg)'
-          : 'hover:bg-(--color-surface-alt)'
+      className={`relative flex w-full items-center gap-3 px-5 py-4 text-left transition-colors ${
+        active ? 'bg-(--color-accent-bg)' : 'hover:bg-(--color-surface-alt)'
       }`}
     >
       {active && (
         <span
           aria-hidden
-          className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-(--color-accent)"
+          className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-[2px] bg-(--color-accent)"
         />
       )}
+      <div
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-(--radius-md) transition-colors ${
+          active
+            ? 'bg-(--color-surface) text-(--color-accent)'
+            : 'bg-(--color-surface-alt) text-(--color-text-muted)'
+        }`}
+      >
+        <Icon name={section.icon} />
+      </div>
       <div className="min-w-0 flex-1">
         <p
-          className={`mb-0.5 text-body font-semibold tracking-tight ${
+          className={`mb-0.5 text-[15px] font-semibold tracking-[-0.01em] ${
             active ? 'text-(--color-accent)' : 'text-(--color-text)'
           }`}
         >
           {section.title}
         </p>
-        <p className="truncate text-body-sm text-(--color-text-muted)">
+        <p className="truncate text-[12px] text-(--color-text-muted)">
           {section.description}
         </p>
       </div>
-      <span
-        aria-hidden
-        className={`shrink-0 text-body transition-colors ${
-          active
-            ? 'text-(--color-accent)'
-            : 'text-(--color-text-subtle) group-hover:text-(--color-accent)'
-        }`}
-      >
-        →
-      </span>
     </button>
   );
 }
 
-function PanelHeader({
-  title,
-  onClose,
+function StatsBlock() {
+  return (
+    <div className="mt-auto border-t border-(--color-border) px-5 py-[18px]">
+      <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+        현재 지도 위
+      </div>
+      <StatRow label="전체 이벤트" value="42" />
+      <StatRow label="진행중" value={<span className="text-(--color-accent)">8</span>} separator />
+      <StatRow label="이번 주 시작" value="12" separator />
+    </div>
+  );
+}
+
+function StatRow({
+  label,
+  value,
+  separator = false,
 }: {
-  title: string;
-  onClose: () => void;
+  label: string;
+  value: React.ReactNode;
+  separator?: boolean;
 }) {
   return (
-    <div className="flex h-12 shrink-0 items-center justify-between border-b border-(--color-border) px-4">
-      <h3 className="text-body font-semibold tracking-tight">{title}</h3>
-      <button
-        type="button"
-        aria-label="패널 닫기"
-        onClick={onClose}
-        className="flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-body text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
-      >
-        ×
-      </button>
+    <div
+      className={`flex items-baseline justify-between py-1.5 ${
+        separator ? 'border-t border-dashed border-(--color-border)' : ''
+      }`}
+    >
+      <span className="text-[13px] text-(--color-text-muted)">{label}</span>
+      <span className="tabular text-[15px] font-semibold text-(--color-text)">{value}</span>
     </div>
-  );
-}
-
-function ChatHelpPanel() {
-  return (
-    <div className="flex h-full flex-col gap-3 p-4">
-      <p className="text-body-sm text-(--color-text-muted)">
-        지도 하단 입력창에 자연어로 질문하면 LLM이 필터 조건을 맞춰 좁혀줍니다.
-      </p>
-      <div className="flex flex-col gap-2">
-        <ExampleQuery>이번 주말 가족이랑 볼만한 축제</ExampleQuery>
-        <ExampleQuery>강남에서 이번 달 AI 컨퍼런스</ExampleQuery>
-        <ExampleQuery>혼자 가도 좋은 교육형 이벤트</ExampleQuery>
-      </div>
-    </div>
-  );
-}
-
-function ExampleQuery({ children }: { children: string }) {
-  return (
-    <span className="inline-block rounded-full border border-(--color-border) bg-(--color-surface) px-3 py-1 text-body-sm text-(--color-text-muted)">
-      "{children}"
-    </span>
   );
 }

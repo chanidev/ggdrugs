@@ -1,116 +1,103 @@
+import { useMemo } from 'react';
+import { DUMMY_EVENTS, type CategoryKey, type MockEvent } from '../data/mock';
+import { Icon } from './Icon';
+import { PhaseBadge } from './PhaseBadge';
+import { Poster } from './Poster';
+
 /**
- * EventList — 이벤트 카드 목록.
- * Phase 2에서 GET /events API 연동. 현재는 더미 3건으로 디자인 토큰 검증.
+ * EventList — 필터/카테고리로 좁혀진 이벤트 카드 목록.
+ * 현재는 DUMMY_EVENTS mock. /events API 연결되면 props 로 주입받도록 교체.
  */
-
-type CategoryKey = 'all' | 'festival' | 'expo' | 'symposium' | 'conference';
-
-const DUMMY_EVENTS = [
-  {
-    id: 1,
-    category: 'festival' as const,
-    title: '서울 빛초롱 축제 2026',
-    region: '서울 종로구',
-    dateRange: '2026-05-03 ~ 2026-05-18',
-    vibes: ['체험형', '가족'],
-    phaseLabel: '예정',
-    phaseTone: 'info' as const,
-  },
-  {
-    id: 2,
-    category: 'expo' as const,
-    title: '코리아 콘텐츠 박람회',
-    region: '서울 강남구',
-    dateRange: '2026-05-12 ~ 2026-05-14',
-    vibes: ['네트워킹 중심'],
-    phaseLabel: '진행중',
-    phaseTone: 'accent' as const,
-  },
-  {
-    id: 3,
-    category: 'symposium' as const,
-    title: 'AI 윤리 심포지움',
-    region: '서울 관악구',
-    dateRange: '2026-04-20',
-    vibes: ['교육형'],
-    phaseLabel: '종료',
-    phaseTone: 'subtle' as const,
-  },
-] as const;
-
-type Event = (typeof DUMMY_EVENTS)[number];
-
 export function EventList({
   categoryFilter = 'all',
+  activeId,
+  onSelect,
 }: {
-  categoryFilter?: CategoryKey;
+  categoryFilter?: CategoryKey | 'all';
+  activeId?: number | null;
+  onSelect?: (id: number) => void;
 }) {
-  const events = DUMMY_EVENTS.filter(
-    (e) => categoryFilter === 'all' || e.category === categoryFilter,
+  const events = useMemo<MockEvent[]>(
+    () => DUMMY_EVENTS.filter((e) => categoryFilter === 'all' || e.category === categoryFilter),
+    [categoryFilter],
   );
 
   if (events.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center p-8 text-body-sm text-(--color-text-subtle)">
-        해당 카테고리에 이벤트가 없어요.
+      <div className="flex flex-1 flex-col items-center justify-center gap-2 p-10 text-center text-[13px] text-(--color-text-subtle)">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-(--color-surface-alt) text-(--color-text-subtle)">
+          <Icon name="inbox" size={20} />
+        </div>
+        <div className="text-[14px] font-medium text-(--color-text-muted)">아직 결과가 없어요</div>
+        <div>다른 카테고리를 선택해보세요.</div>
       </div>
     );
   }
 
   return (
-    <ul className="min-h-0 flex-1 overflow-y-auto divide-y divide-(--color-border)">
-      {events.map((event) => (
-        <EventCard key={event.id} event={event} />
-      ))}
-    </ul>
-  );
-}
-
-function EventCard({ event }: { event: Event }) {
-  return (
-    <li className="cursor-pointer p-4 transition-colors hover:bg-(--color-surface-alt)">
-      <div className="mb-2 flex items-start justify-between gap-3">
-        <h3 className="text-h3 font-semibold leading-tight tracking-tight">
-          {event.title}
-        </h3>
-        <PhaseBadge label={event.phaseLabel} tone={event.phaseTone} />
+    <>
+      <div className="flex items-center justify-between border-b border-(--color-border) bg-(--color-surface-alt) px-5 py-3">
+        <div className="text-[13px] text-(--color-text-muted)">
+          <strong className="tabular text-(--color-text)">{events.length}</strong>개의 이벤트
+        </div>
+        <button
+          type="button"
+          className="flex items-center gap-1.5 text-[13px] text-(--color-text-muted) hover:text-(--color-text)"
+        >
+          최신순 <Icon name="arrow" size={12} />
+        </button>
       </div>
-      <p className="mb-1 text-body-sm text-(--color-text-muted)">{event.region}</p>
-      <p className="mb-3 text-body-sm tabular text-(--color-text-muted)">
-        {event.dateRange}
-      </p>
-      <div className="flex flex-wrap gap-1.5">
-        {event.vibes.map((v) => (
-          <span
-            key={v}
-            className="rounded-full bg-(--color-surface-alt) px-2 py-0.5 text-caption text-(--color-text-muted)"
-          >
-            {v}
-          </span>
+      <ul className="m-0 min-h-0 flex-1 list-none overflow-y-auto p-0">
+        {events.map((e, i) => (
+          <li key={e.id} className={i > 0 ? 'border-t border-(--color-border)' : ''}>
+            <EventCard event={e} active={e.id === activeId} onClick={() => onSelect?.(e.id)} />
+          </li>
         ))}
-      </div>
-    </li>
+      </ul>
+    </>
   );
 }
 
-function PhaseBadge({
-  label,
-  tone,
+function EventCard({
+  event,
+  active,
+  onClick,
 }: {
-  label: string;
-  tone: 'info' | 'accent' | 'subtle';
+  event: MockEvent;
+  active: boolean;
+  onClick: () => void;
 }) {
-  const classes =
-    tone === 'accent'
-      ? 'bg-(--color-accent-bg) text-(--color-accent)'
-      : tone === 'info'
-        ? 'bg-(--color-info)/10 text-(--color-info)'
-        : 'bg-(--color-surface-alt) text-(--color-text-subtle)';
   return (
-    <span
-      className={`shrink-0 rounded-sm px-1.5 py-0.5 text-caption font-medium ${classes}`}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex w-full cursor-pointer gap-3.5 px-5 py-4 text-left transition-colors ${
+        active ? 'bg-(--color-accent-bg)' : 'hover:bg-(--color-surface-alt)'
+      }`}
     >
-      {label}
-    </span>
+      <Poster event={event} />
+      <div className="min-w-0 flex-1">
+        <div className="mb-1.5 flex items-start justify-between gap-2.5">
+          <h3 className="m-0 text-[16px] font-semibold leading-[1.3] tracking-[-0.01em]">
+            {event.title}
+          </h3>
+          <PhaseBadge phase={event.phase} />
+        </div>
+        <p className="m-0 text-[13px] text-(--color-text-muted)">{event.region}</p>
+        <p className="tabular m-0 text-[13px] text-(--color-text-muted)">{event.dateRange}</p>
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {event.vibes.map((v) => (
+            <span
+              key={v}
+              className={`rounded-full px-2 py-0.5 text-[11px] text-(--color-text-muted) ${
+                active ? 'bg-(--color-surface)' : 'bg-(--color-surface-alt)'
+              }`}
+            >
+              {v}
+            </span>
+          ))}
+        </div>
+      </div>
+    </button>
   );
 }
