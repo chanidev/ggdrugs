@@ -129,6 +129,17 @@ export function SeoulMap({
       .map((f) => ({ name: f.properties.name, path: geojsonToKakaoPath(f.geometry) }));
   }, [geojson, regions, highlightRegionIds, filter?.regionIds]);
 
+  // 폴리곤 pulse — Kakao Polygon 은 canvas/svg 라 CSS 애니메이션 불가. React state 로 주기적
+  // strokeOpacity / fillOpacity 토글. 하이라이트 있을 때만 interval 돌림.
+  const [pulsePhase, setPulsePhase] = useState(0);
+  useEffect(() => {
+    if (highlightedGu.length === 0) return;
+    const id = setInterval(() => setPulsePhase((p) => (p + 1) % 2), 650);
+    return () => clearInterval(id);
+  }, [highlightedGu.length]);
+  const strokeOpacity = pulsePhase === 0 ? 0.95 : 0.4;
+  const fillOpacity = pulsePhase === 0 ? 0.12 : 0.04;
+
   // 필터 없으면 기본값: 진행중+예정. 필터 있으면 해당 쿼리 + limit 500.
   const query = useMemo<EventListQuery>(
     () => (filter ? { ...filter, limit: PIN_LIMIT } : { phases: ['ongoing', 'upcoming'], limit: PIN_LIMIT }),
@@ -183,10 +194,10 @@ export function SeoulMap({
             path={gu.path}
             strokeWeight={3}
             strokeColor="#E8562D"
-            strokeOpacity={0.9}
+            strokeOpacity={strokeOpacity}
             strokeStyle="solid"
             fillColor="#E8562D"
-            fillOpacity={0.08}
+            fillOpacity={fillOpacity}
           />
         ))}
         <MarkerClusterer averageCenter minLevel={6} disableClickZoom={false}>
