@@ -15,8 +15,9 @@ import { prisma } from '../prisma.js';
 //                하나라도 겹치면 매치 (wiki filters-5-types open Q1 — 최단 UX 채택)
 //   eventTypes   CSV of (festival|expo|symposium|conference)  복수 시 OR
 //   vibeIds      CSV of BigInt    복수 시 OR (event_vibe_assignments)
+//   phases       CSV of (upcoming|ongoing|ended)   복수 시 OR
 //   page         1 이상 정수 (기본 1)
-//   limit        1~100 정수 (기본 20)
+//   limit        1~500 정수 (기본 20, map 뷰는 500 활용 가능)
 //
 // 공개 응답 조건:
 //   - approval_status = 'approved'
@@ -28,6 +29,7 @@ import { prisma } from '../prisma.js';
 const COMPANION_ENUM = new Set(['solo', 'couple', 'friend', 'family']);
 const EVENT_TYPE_ENUM = new Set(['festival', 'expo', 'symposium', 'conference']);
 const PERIOD_ENUM = new Set(['3m', '6m', 'all', 'custom']);
+const PHASE_ENUM = new Set(['upcoming', 'ongoing', 'ended']);
 
 function parseCsv(raw: unknown): string[] {
   if (typeof raw !== 'string' || raw.length === 0) return [];
@@ -87,8 +89,11 @@ export async function listEvents(req: Request, res: Response) {
   const eventTypesRaw = parseCsv(req.query.eventTypes);
   const eventTypes = eventTypesRaw.filter((c) => EVENT_TYPE_ENUM.has(c));
   const vibeIds = parseBigIntCsv(req.query.vibeIds);
+  const phasesRaw = parseCsv(req.query.phases);
+  const phases = phasesRaw.filter((p) => PHASE_ENUM.has(p));
   const page = parseIntClamp(req.query.page, 1, 1, 1_000_000);
-  const limit = parseIntClamp(req.query.limit, 20, 1, 100);
+  // limit 상한 500 — map 뷰 용도. 목록 페이지는 100 이하 사용 권장.
+  const limit = parseIntClamp(req.query.limit, 20, 1, 500);
 
   const periodResult = parsePeriod(req.query);
   if (periodResult.error) {
@@ -118,6 +123,9 @@ export async function listEvents(req: Request, res: Response) {
   }
   if (vibeIds.length > 0) {
     where.vibeAssignments = { some: { vibeId: { in: vibeIds } } };
+  }
+  if (phases.length > 0) {
+    where.phase = { in: phases };
   }
 
   const [total, rows] = await Promise.all([

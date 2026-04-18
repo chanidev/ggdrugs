@@ -51,6 +51,7 @@ export interface EventListQuery {
   companions?: string[];
   eventTypes?: string[];
   vibeIds?: string[];
+  phases?: EventPhase[];
   page?: number;
   limit?: number;
 }
@@ -64,6 +65,7 @@ function buildQuery(q: EventListQuery): string {
   if (q.companions?.length) sp.set('companions', q.companions.join(','));
   if (q.eventTypes?.length) sp.set('eventTypes', q.eventTypes.join(','));
   if (q.vibeIds?.length) sp.set('vibeIds', q.vibeIds.join(','));
+  if (q.phases?.length) sp.set('phases', q.phases.join(','));
   if (q.page) sp.set('page', String(q.page));
   if (q.limit) sp.set('limit', String(q.limit));
   return sp.toString();
@@ -82,4 +84,16 @@ export async function fetchEvents(
     throw new Error(`GET /events ${res.status}: ${body.slice(0, 200)}`);
   }
   return (await res.json()) as EventListResponse;
+}
+
+export interface EventsStatsResponse {
+  total: number;
+  categories: { code: string; label: string; count: number }[];
+}
+
+export async function fetchEventsStats(signal?: AbortSignal): Promise<EventsStatsResponse> {
+  const init: RequestInit = signal ? { signal } : {};
+  const res = await fetch(`${BFF_URL}/events/stats`, init);
+  if (!res.ok) throw new Error(`GET /events/stats ${res.status}`);
+  return (await res.json()) as EventsStatsResponse;
 }

@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
-import { CATEGORIES, type CategoryKey } from '../data/mock';
-import { fetchEvents, type EventListResponse } from '../lib/api';
+import {
+  fetchEvents,
+  fetchEventsStats,
+  type EventListResponse,
+  type EventsStatsResponse,
+} from '../lib/api';
 import { fromBffItem, type DisplayEvent } from '../lib/event-display';
 import { EventList } from './EventList';
+
+type SelectedKey = string; // 'all' | category code (ex. 'festival')
 
 /**
  * FullListPanel — A_300 전체목록 조회.
  *
- * 상단 카테고리 chip (전체 · 축제 · 박람회 · 심포지움 · 컨퍼런스) + 하단 EventList.
- * 카테고리 chip 클릭 → GET /events?eventTypes=<code> 재호출.
- *
- * Phase 1 제약:
- *  - chip 우측 숫자는 정적(mock). 동적 counts 엔드포인트는 Phase 2 에서.
- *  - pagination 미구현 — 서버 limit 100 이후는 잘림.
+ * 상단 카테고리 chip + 하단 EventList.
+ *  - 카테고리 chip: /events/stats 에서 실 count 조회.
+ *  - 리스트: /events?eventTypes=<code> (선택 시) 재호출.
  */
 export function FullListPanel() {
-  const [selected, setSelected] = useState<CategoryKey>('all');
-  const [state, setState] = useState<{
+  const [stats, setStats] = useState<EventsStatsResponse | null>(null);
+  const [statsError, setStatsError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<SelectedKey>('all');
+  const [listState, setListState] = useState<{
     loading: boolean;
     error: string | null;
     data: EventListResponse | null;
@@ -24,7 +29,18 @@ export function FullListPanel() {
 
   useEffect(() => {
     const ctrl = new AbortController();
-    setState({ loading: true, error: null, data: null });
+    fetchEventsStats(ctrl.signal)
+      .then(setStats)
+      .catch((err) => {
+        if ((err as Error).name === 'AbortError') return;
+        setStatsError((err as Error).message);
+      });
+    return () => ctrl.abort();
+  }, []);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    setListState({ loading: true, error: null, data: null });
     fetchEvents(
       {
         eventTypes: selected === 'all' ? [] : [selected],
@@ -32,21 +48,25 @@ export function FullListPanel() {
       },
       ctrl.signal,
     )
-      .then((data) => setState({ loading: false, error: null, data }))
+      .then((data) => setListState({ loading: false, error: null, data }))
       .catch((err) => {
         if ((err as Error).name === 'AbortError') return;
-        setState({ loading: false, error: (err as Error).message, data: null });
+        setListState({ loading: false, error: (err as Error).message, data: null });
       });
     return () => ctrl.abort();
   }, [selected]);
 
-  const items: DisplayEvent[] = state.data?.items.map(fromBffItem) ?? [];
-  const totalLabel = state.data?.total ?? items.length;
+  const chips: { key: SelectedKey; label: string; count: number | null }[] = [
+    { key: 'all', label: '전체', count: stats?.total ?? null },
+    ...(stats?.categories.map((c) => ({ key: c.code, label: c.label, count: c.count })) ?? []),
+  ];
+
+  const items: DisplayEvent[] = listState.data?.items.map(fromBffItem) ?? [];
 
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex shrink-0 flex-wrap gap-1.5 border-b border-(--color-border) px-5 py-3">
-        {CATEGORIES.map((c) => {
+        {chips.map((c) => {
           const active = selected === c.key;
           return (
             <button
@@ -61,23 +81,30 @@ export function FullListPanel() {
               }`}
             >
               {c.label}
-              <span
-                className={`tabular ml-1 font-medium ${
-                  active ? 'text-(--color-accent)' : 'text-(--color-text-subtle)'
-                }`}
-              >
-                {c.count}
-              </span>
+              {c.count !== null && (
+                <span
+                  className={`tabular ml-1 font-medium ${
+                    active ? 'text-(--color-accent)' : 'text-(--color-text-subtle)'
+                  }`}
+                >
+                  {c.count.toLocaleString()}
+                </span>
+              )}
             </button>
           );
         })}
+        {statsError && (
+          <span className="ml-auto self-center text-[11px] text-(--color-error)">
+            stats 로드 실패
+          </span>
+        )}
       </div>
       <EventList
         items={items}
-        loading={state.loading}
-        error={state.error}
+        loading={listState.loading}
+        error={listState.error}
         totalLabel={
-          state.data ? `${state.data.total.toLocaleString()}개의 이벤트` : undefined
+          listState.data ? `${listState.data.total.toLocaleString()}개의 이벤트` : undefined
         }
       />
     </div>
