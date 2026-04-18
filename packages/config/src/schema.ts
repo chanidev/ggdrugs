@@ -52,6 +52,10 @@ export const externalApiSchema = z.object({
   GOOGLE_OAUTH_CLIENT_SECRET: optionalKey,
   /** 한국관광공사 TourAPI 2.0 인증키 — 배치 ingest 에서 사용. 공공데이터포털 발급값(이미 URL-인코딩됨). */
   TOUR_API_KEY: optionalKey,
+  /** 서울열린데이터광장 인증키 — 'culturalEventInfo' API. data.seoul.go.kr 일반 인증키(디코딩된 raw 값). */
+  SEOUL_OPEN_API_KEY: optionalKey,
+  /** 한국문화정보원(KCISA) 공연전시정보 API 키. kcisa.kr 발급(URL-인코딩됨). */
+  KCISA_API_KEY: optionalKey,
 });
 
 export const openaiSchema = z.object({
@@ -98,4 +102,6 @@ export const productionRequiredKeys = [
   'GOOGLE_OAUTH_CLIENT_SECRET',
   'OPENAI_API_KEY',
   'TOUR_API_KEY',
+  'SEOUL_OPEN_API_KEY',
+  'KCISA_API_KEY',
 ] as const satisfies ReadonlyArray<keyof FullEnv>;

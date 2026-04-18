@@ -1,20 +1,35 @@
 #!/usr/bin/env tsx
 /**
- * CLI 진입점 — 배치 수동 실행.
+ * CLI 진입점 — 전체 소스 배치 수동 실행.
  *
- * 사용: `pnpm --filter bff exec tsx src/jobs/run-ingest.ts`
- *       또는 루트에서 `node --import tsx apps/bff/src/jobs/run-ingest.ts`.
+ * 사용: `pnpm --filter bff run ingest` 또는 루트에서
+ *   `dotenv -e .env -- tsx apps/bff/src/jobs/run-ingest.ts`.
+ *
+ * 특정 소스만 실행하려면 인자로 지정:
+ *   `... run-ingest.ts tourapi`        (기본은 all)
+ *   `... run-ingest.ts seoul-culture`
+ *   `... run-ingest.ts kcisa`
  */
 import { runTourapiIngest } from './tourapi-ingest.js';
+import { runSeoulCultureIngest } from './seoul-culture-ingest.js';
+import { runKcisaIngest } from './kcisa-ingest.js';
 import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
 
+const which = (process.argv[2] ?? 'all').toLowerCase();
+
 async function main() {
-  const result = await runTourapiIngest();
-  logger.info(result, 'manual ingest completed');
+  const results: Record<string, unknown> = {};
+  if (which === 'tourapi' || which === 'all') results.tourapi = await runTourapiIngest();
+  if (which === 'seoul-culture' || which === 'seoul' || which === 'all')
+    results['seoul-culture'] = await runSeoulCultureIngest();
+  if (which === 'kcisa' || which === 'all') results.kcisa = await runKcisaIngest();
+
+  logger.info(results, 'manual ingest completed');
   await prisma.$disconnect();
-  // upsert 실패가 있었다면 비정상 종료 코드 (CI/수동 점검용)
-  process.exit(result.errors > 0 ? 1 : 0);
+
+  const anyError = Object.values(results).some((r) => typeof r === 'object' && r !== null && 'errors' in r && (r as { errors: number }).errors > 0);
+  process.exit(anyError ? 1 : 0);
 }
 
 main().catch(async (err) => {
