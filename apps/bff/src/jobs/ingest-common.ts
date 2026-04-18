@@ -119,8 +119,31 @@ export async function getCategoryId(code: EventCategoryCode): Promise<bigint> {
   return row.categoryId;
 }
 
+/**
+ * 크로스-소스 중복 체크: (title, start_date, end_date) 가 동일한 이벤트가
+ * 다른 crawl_origin 에 이미 있으면 true.
+ *
+ * 한계: title 이 공백/기호 하나라도 다르면 못 잡음. Phase 2 에서 normalized_title
+ * + pg_trgm similarity 로 강화 예정. 지금은 정확 일치 기준.
+ */
+async function existsInOtherOrigin(ev: NormalizedEvent): Promise<boolean> {
+  const hit = await prisma.event.findFirst({
+    where: {
+      title: ev.title.slice(0, 200),
+      startDate: ev.startDate,
+      endDate: ev.endDate,
+      crawlOrigin: { not: ev.crawlOrigin },
+    },
+    select: { eventId: true },
+  });
+  return hit !== null;
+}
+
 export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
   if (ev.endDate < ev.startDate) throw new Error('endDate < startDate');
+
+  // 크로스-소스 dedup: 다른 소스가 이미 같은 이벤트 등록했으면 skip (먼저 들어온 쪽이 win).
+  if (await existsInOtherOrigin(ev)) return;
 
   const categoryId = await getCategoryId(ev.categoryCode);
   const regionId = await resolveSeoulRegionId(ev.addressText);
