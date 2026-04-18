@@ -43,6 +43,9 @@ Thumbs.db
 llm_wiki/graphify-out/cache/
 llm_wiki/graphify-out/memory/
 
+# Graphify runtime cache (project root, regenerable)
+graphify-out/cache/
+
 # Misc
 *.log
 coverage/
