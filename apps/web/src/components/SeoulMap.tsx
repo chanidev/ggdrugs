@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   Map,
@@ -7,7 +7,7 @@ import {
   useKakaoLoader,
   CustomOverlayMap,
 } from 'react-kakao-maps-sdk';
-import { fetchEvents, type BffEventItem } from '../lib/api';
+import { fetchEvents, type BffEventItem, type EventListQuery } from '../lib/api';
 import { Icon } from './Icon';
 
 /**
@@ -48,7 +48,15 @@ function toPin(item: BffEventItem): Pin | null {
   };
 }
 
-export function SeoulMap() {
+export function SeoulMap({
+  filter,
+  selectedEventId,
+  onSelectEvent,
+}: {
+  filter?: EventListQuery | null;
+  selectedEventId?: string | null;
+  onSelectEvent?: (id: string | null) => void;
+}) {
   const navigate = useNavigate();
   const appkey = import.meta.env.VITE_KAKAO_MAP_JS_KEY as string | undefined;
 
@@ -59,12 +67,25 @@ export function SeoulMap() {
 
   const [pins, setPins] = useState<Pin[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Pin | null>(null);
+
+  // 필터 없으면 기본값: 진행중+예정. 필터 있으면 해당 쿼리 + limit 500.
+  const query = useMemo<EventListQuery>(
+    () => (filter ? { ...filter, limit: PIN_LIMIT } : { phases: ['ongoing', 'upcoming'], limit: PIN_LIMIT }),
+    [filter],
+  );
+  const queryKey = useMemo(() => JSON.stringify(query), [query]);
+
+  // selected 는 AppShell 이 관리 — onSelectEvent 호출로 상향. 로컬 popup 은 pin 객체 참조.
+  const selectedPin = useMemo(
+    () => (selectedEventId ? pins.find((p) => p.id === selectedEventId) ?? null : null),
+    [selectedEventId, pins],
+  );
 
   useEffect(() => {
     if (!appkey) return;
     const ctrl = new AbortController();
-    fetchEvents({ phases: ['ongoing', 'upcoming'], limit: PIN_LIMIT }, ctrl.signal)
+    setFetchError(null);
+    fetchEvents(query, ctrl.signal)
       .then((res) => {
         const next: Pin[] = [];
         for (const it of res.items) {
@@ -78,7 +99,9 @@ export function SeoulMap() {
         setFetchError((err as Error).message);
       });
     return () => ctrl.abort();
-  }, [appkey]);
+    // queryKey 로 의존성 안정화 — query 객체 참조 변경돼도 실제 값 바뀔 때만 refetch
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appkey, queryKey]);
 
   if (!appkey) return <MissingKeyNotice />;
   if (error) return <LoaderErrorNotice error={error} />;
@@ -91,7 +114,7 @@ export function SeoulMap() {
         level={DEFAULT_LEVEL}
         style={{ width: '100%', height: '100%' }}
         aria-label="서울 이벤트 지도"
-        onClick={() => setSelected(null)}
+        onClick={() => onSelectEvent?.(null)}
       >
         <MarkerClusterer averageCenter minLevel={6} disableClickZoom={false}>
           {pins.map((p) => (
@@ -99,16 +122,16 @@ export function SeoulMap() {
               key={p.id}
               position={{ lat: p.lat, lng: p.lng }}
               title={p.title}
-              onClick={() => setSelected(p)}
+              onClick={() => onSelectEvent?.(p.id)}
             />
           ))}
         </MarkerClusterer>
-        {selected && (
-          <CustomOverlayMap position={{ lat: selected.lat, lng: selected.lng }} yAnchor={1.2}>
+        {selectedPin && (
+          <CustomOverlayMap position={{ lat: selectedPin.lat, lng: selectedPin.lng }} yAnchor={1.2}>
             <PinPopup
-              pin={selected}
-              onClose={() => setSelected(null)}
-              onOpen={() => navigate(`/events/${selected.id}`)}
+              pin={selectedPin}
+              onClose={() => onSelectEvent?.(null)}
+              onOpen={() => navigate(`/events/${selectedPin.id}`)}
             />
           </CustomOverlayMap>
         )}

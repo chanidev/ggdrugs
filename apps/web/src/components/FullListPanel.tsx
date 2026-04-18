@@ -18,7 +18,7 @@ type SelectedKey = string; // 'all' | category code (ex. 'festival')
  *  - 카테고리 chip: /events/stats 에서 실 count 조회.
  *  - 리스트: /events?eventTypes=<code> (선택 시) 재호출.
  */
-export function FullListPanel() {
+export function FullListPanel({ activeEventId }: { activeEventId?: string | null }) {
   const navigate = useNavigate();
   const [stats, setStats] = useState<EventsStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
@@ -105,6 +105,7 @@ export function FullListPanel() {
         items={items}
         loading={listState.loading}
         error={listState.error}
+        activeId={activeEventId ?? null}
         onSelect={(id) => navigate(`/events/${id}`)}
         totalLabel={
           listState.data ? `${listState.data.total.toLocaleString()}개의 이벤트` : undefined

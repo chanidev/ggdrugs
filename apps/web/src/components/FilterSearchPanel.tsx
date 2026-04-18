@@ -5,6 +5,7 @@ import {
   fetchEvents,
   fetchRegions,
   fetchVibes,
+  type EventListQuery,
   type EventListResponse,
   type RegionItem,
   type VibeItem,
@@ -68,7 +69,15 @@ function computePeriodRange(key: string): Range | null {
   }
 }
 
-export function FilterSearchPanel() {
+export function FilterSearchPanel({
+  onApplied,
+  onReset,
+}: {
+  /** 적용 시 상위(AppShell) 에 전체 쿼리 전달 — 지도 핀 refetch 에 사용. */
+  onApplied?: (query: EventListQuery) => void;
+  /** 초기화 시 상위 지도 필터 해제. */
+  onReset?: () => void;
+}) {
   const navigate = useNavigate();
   const [regions, setRegions] = useState<RegionItem[]>([]);
   const [vibes, setVibes] = useState<VibeItem[]>([]);
@@ -127,26 +136,25 @@ export function FilterSearchPanel() {
     setVibe(new Set());
     setApplied(false);
     setListState({ loading: false, error: null, data: null });
+    onReset?.();
   };
 
   const apply = () => {
     const range = period ? computePeriodRange(period) : null;
+    const query: EventListQuery = {
+      regionIds: Array.from(region),
+      companions: Array.from(companion),
+      eventTypes: Array.from(type),
+      vibeIds: Array.from(vibe),
+      limit: 100,
+      ...(range ? { period: 'custom', periodStart: range.start, periodEnd: range.end } : {}),
+    };
     setApplied(true);
     setListState({ loading: true, error: null, data: null });
+    // 지도 쪽은 상위가 관리 — 별도 rebroadcast
+    onApplied?.(query);
     const ctrl = new AbortController();
-    fetchEvents(
-      {
-        regionIds: Array.from(region),
-        companions: Array.from(companion),
-        eventTypes: Array.from(type),
-        vibeIds: Array.from(vibe),
-        limit: 100,
-        ...(range
-          ? { period: 'custom', periodStart: range.start, periodEnd: range.end }
-          : {}),
-      },
-      ctrl.signal,
-    )
+    fetchEvents(query, ctrl.signal)
       .then((data) => setListState({ loading: false, error: null, data }))
       .catch((err) => {
         if ((err as Error).name === 'AbortError') return;
