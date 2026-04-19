@@ -8,6 +8,7 @@ import { ChatHelpPanel } from '../components/ChatHelpPanel';
 import { SeoulMap } from '../components/SeoulMap';
 import { ChatDock, type ChatMessage } from '../components/ChatDock';
 import { HealthBadge } from '../components/HealthBadge';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import type { EventListQuery } from '../lib/api';
 
 /**
@@ -83,12 +84,14 @@ export function AppShell() {
         </OverlayPanel>
         <main className="relative flex min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">
-            <SeoulMap
-              filter={mapFilter}
-              highlightRegionIds={highlightRegionIds}
-              selectedEventId={selectedEventId}
-              onSelectEvent={setSelectedEventId}
-            />
+            <ErrorBoundary>
+              <SeoulMap
+                filter={mapFilter}
+                highlightRegionIds={highlightRegionIds}
+                selectedEventId={selectedEventId}
+                onSelectEvent={setSelectedEventId}
+              />
+            </ErrorBoundary>
             <HealthBadge />
             <ChatDock
               value={chatValue}
