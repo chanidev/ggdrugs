@@ -34,8 +34,17 @@ LLM 마이크로서비스. Python FastAPI + LangChain.
 - `POST /chat` — `{messages:[{role,text}]}` → `{reply, filters}` 반환
 - `GET /health`
 
-**Stage 2 (예정)** — `openai` SDK + LangChain chain 으로 chat 핸들러 교체.
-Stage 1 의 `filters.py` 는 eval/fallback dataset 으로 보존.
+**Stage 1.5 (라이브)** — 다중 턴 merge + negation reset + vibe 매핑.
+- `filters.extract_merge(messages)` — 모든 user 발화 union, periodKey 최근 덮어쓰기.
+- 최근 발화에 "말고/빼고/아니/대신/바꿔" 있으면 이전 턴 무시 (reset).
+- `VIBE_TABLE` — 성향 6종 (활동적/정적/체험형/관람형/교육형/네트워킹 중심) 키워드 매핑.
+
+**Stage 2 (코드 완성, 키 대기)** — `openai` SDK + structured outputs (`openai_chain.py`).
+- `OPENAI_API_KEY` 가 `.env` 에 설정되면 **자동 활성화** — 앱 재시작만 필요.
+- `GET /health` 가 `stage1-rules` / `stage2-openai` 라벨 리턴.
+- 모델: `OPENAI_MODEL_FAST` (기본 `gpt-4o-mini`).
+- 실패 시 규칙 기반으로 조용히 fallback (네트워크 이슈, rate limit 등 방어).
+- JSON schema 강제 (`strict: true`) 로 허용 값 외 무효.
 
 ## 실행
 
