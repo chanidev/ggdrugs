@@ -49,8 +49,10 @@ export async function postChat(req: Request, res: Response) {
   const hints = data.filters?.regionHints ?? [];
   let regionIds: string[] = [];
   if (hints.length > 0) {
+    // dongName: null 로 구·시·도 레벨 (district) 만. 동(neighborhood) 레벨 행과
+    // sigungu_name 이 겹치는 경우가 있어 필요. lookups.ts listRegions 와 동일 규약.
     const rows = await prisma.region.findMany({
-      where: { sigunguName: { in: hints } },
+      where: { sigunguName: { in: hints }, dongName: null },
       select: { regionId: true, sigunguName: true },
     });
     regionIds = rows.map((r) => r.regionId.toString());
