@@ -6,9 +6,10 @@ import { env } from './env.js';
 import { listEvents } from './routes/events.js';
 import { eventsStats } from './routes/events-stats.js';
 import { getEventDetail } from './routes/event-detail.js';
-import { listEventReviews } from './routes/event-reviews.js';
+import { listEventReviews, createEventReview } from './routes/event-reviews.js';
 import { listRegions, listVibes } from './routes/lookups.js';
 import { devLogin, me, logout, startGoogle, googleCallback } from './routes/auth.js';
+import { requireAuth } from './middleware/require-auth.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -70,6 +71,15 @@ export function createApp(): Express {
   app.get('/events/:id/reviews', (req: Request, res: Response, next: NextFunction) => {
     listEventReviews(req, res).catch(next);
   });
+  app.post(
+    '/events/:id/reviews',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      createEventReview(req, res).catch(next);
+    },
+  );
   app.get('/regions', (req: Request, res: Response, next: NextFunction) => {
     listRegions(req, res).catch(next);
   });

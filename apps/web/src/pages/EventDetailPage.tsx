@@ -4,6 +4,7 @@ import { Map, MapMarker, useKakaoLoader } from 'react-kakao-maps-sdk';
 import {
   fetchEventDetail,
   fetchEventReviews,
+  createEventReview,
   type BffEventDetail,
   type BffReviewItem,
   type EventReviewsResponse,
@@ -186,6 +187,25 @@ function ReviewsSection({ eventId }: { eventId: string }) {
   const total = state.data?.total ?? 0;
   const avg = state.data?.avgRating ?? 0;
 
+  const onCreated = (newReview: BffReviewItem) => {
+    setState((prev) => {
+      if (!prev.data) return prev;
+      const nextItems = [newReview, ...prev.data.items];
+      const nextTotal = prev.data.total + 1;
+      const nextAvg =
+        (prev.data.avgRating * prev.data.total + newReview.rating) / nextTotal;
+      return {
+        ...prev,
+        data: {
+          ...prev.data,
+          items: nextItems,
+          total: nextTotal,
+          avgRating: nextAvg,
+        },
+      };
+    });
+  };
+
   return (
     <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
       <header className="mb-4 flex items-end justify-between gap-3">
@@ -199,7 +219,11 @@ function ReviewsSection({ eventId }: { eventId: string }) {
         </div>
       </header>
 
-      {user ? <WritePlaceholder /> : <LoginGate />}
+      {user ? (
+        <ReviewComposer eventId={eventId} onCreated={onCreated} />
+      ) : (
+        <LoginGate />
+      )}
 
       <div className="mt-4 flex flex-col gap-3">
         {state.loading && <SkeletonReview />}
@@ -215,21 +239,135 @@ function ReviewsSection({ eventId }: { eventId: string }) {
   );
 }
 
-function WritePlaceholder() {
+function ReviewComposer({
+  eventId,
+  onCreated,
+}: {
+  eventId: string;
+  onCreated: (r: BffReviewItem) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [rating, setRating] = useState<number>(0);
+  const [body, setBody] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const bodyLen = body.trim().length;
+  const canSubmit = rating >= 1 && rating <= 5 && bodyLen >= 2 && !submitting;
+
+  const submit = async () => {
+    if (!canSubmit) return;
+    setSubmitting(true);
+    setError(null);
+    try {
+      const created = await createEventReview(eventId, { rating, body: body.trim() });
+      onCreated(created);
+      setOpen(false);
+      setRating(0);
+      setBody('');
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg === 'ALREADY_REVIEWED') setError('이미 이 이벤트에 리뷰를 남겼어요.');
+      else if (msg === 'UNAUTHENTICATED') setError('세션이 만료됐어요. 다시 로그인해 주세요.');
+      else setError('리뷰 작성에 실패했어요. 잠시 후 다시 시도해 주세요.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!open) {
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-4 py-3">
+        <p className="m-0 text-[13px] text-(--color-text-muted)">
+          후기를 남기고 다른 사람에게 도움이 되어 주세요.
+        </p>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
+        >
+          리뷰 쓰기 <Icon name="arrow" size={12} />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex items-center justify-between gap-3 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-4 py-3">
-      <p className="m-0 text-[13px] text-(--color-text-muted)">
-        후기를 남기고 다른 사람에게 도움이 되어 주세요.
-      </p>
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="리뷰 작성은 다음 단계에서 활성화됩니다"
-        className="inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-subtle)"
-      >
-        리뷰 쓰기 (준비 중) <Icon name="arrow" size={12} />
-      </button>
+    <div className="flex flex-col gap-3 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-4">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-[13px] text-(--color-text-muted)">
+          <span>별점</span>
+          <RatingInput value={rating} onChange={setRating} />
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            setOpen(false);
+            setError(null);
+          }}
+          aria-label="닫기"
+          className="flex h-7 w-7 items-center justify-center rounded-(--radius-md) text-(--color-text-subtle) hover:bg-(--color-surface-alt) hover:text-(--color-text)"
+        >
+          ×
+        </button>
+      </div>
+      <textarea
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+        placeholder="다녀온 느낌을 간단히 적어 주세요 (2자 이상)"
+        rows={4}
+        maxLength={2000}
+        className="w-full resize-y rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-3 text-[13px] leading-[1.55] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-accent) focus:outline-none focus:ring-2 focus:ring-(--color-accent-bg)"
+      />
+      <div className="flex items-center justify-between gap-3">
+        <span className="tabular text-[11px] text-(--color-text-subtle)">
+          {bodyLen}/2000
+        </span>
+        {error && <span className="text-[12px] text-(--color-error)">{error}</span>}
+        <button
+          type="button"
+          onClick={() => void submit()}
+          disabled={!canSubmit}
+          className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          {submitting ? '등록 중…' : '등록'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function RatingInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  const [hover, setHover] = useState(0);
+  const shown = hover || value;
+  return (
+    <div
+      role="radiogroup"
+      aria-label="별점 1~5"
+      className="inline-flex items-center gap-0.5"
+    >
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          key={n}
+          type="button"
+          role="radio"
+          aria-checked={value === n}
+          onClick={() => onChange(n)}
+          onMouseEnter={() => setHover(n)}
+          onMouseLeave={() => setHover(0)}
+          className={`text-[18px] leading-none transition-colors ${
+            shown >= n ? 'text-(--color-accent)' : 'text-(--color-border-hover)'
+          }`}
+        >
+          ★
+        </button>
+      ))}
     </div>
   );
 }
@@ -240,15 +378,12 @@ function LoginGate() {
       <p className="m-0 text-[13px] text-(--color-text-muted)">
         리뷰를 남기려면 로그인이 필요해요.
       </p>
-      <button
-        type="button"
-        disabled
-        aria-disabled="true"
-        title="로그인 기능은 준비 중입니다"
-        className="inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-subtle)"
+      <a
+        href="/api/auth/google"
+        className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
       >
-        로그인 후 작성 <Icon name="arrow" size={12} />
-      </button>
+        Google 로그인 <Icon name="arrow" size={12} />
+      </a>
     </div>
   );
 }

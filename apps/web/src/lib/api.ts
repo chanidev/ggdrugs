@@ -166,6 +166,27 @@ export interface EventReviewsResponse {
   items: BffReviewItem[];
 }
 
+export async function createEventReview(
+  id: string,
+  body: { rating: number; body: string },
+): Promise<BffReviewItem> {
+  const res = await fetch(
+    `${BFF_URL}/events/${encodeURIComponent(id)}/reviews`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 409) throw new Error('ALREADY_REVIEWED');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`POST /events/${id}/reviews ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as BffReviewItem;
+}
+
 export async function fetchEventReviews(
   id: string,
   opts: { page?: number; limit?: number } = {},
