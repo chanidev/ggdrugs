@@ -15,13 +15,13 @@ type PhaseKey = 'all' | EventPhase;
 
 const PHASE_TABS: { key: PhaseKey; label: string }[] = [
   { key: 'all', label: '전체' },
-  { key: 'upcoming', label: '곧 열리는' },
+  { key: 'upcoming', label: '예정' },
   { key: 'ongoing', label: '진행중' },
   { key: 'ended', label: '종료' },
 ];
 
 /**
- * FullListPanel — A_300 전체목록 조회 (+ A_203 곧 열리는 이벤트 탭).
+ * FullListPanel — A_300 전체목록 조회 (+ A_203 예정 이벤트 탭).
  *
  * 상단 phase 탭 + 카테고리 chip + 하단 EventList.
  *  - phase 탭: /events/stats.phases 로 count 표시, 선택 시 /events?phases=<phase>.
