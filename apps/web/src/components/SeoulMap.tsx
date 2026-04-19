@@ -5,6 +5,7 @@ import {
   MarkerClusterer,
   Polygon,
   useKakaoLoader,
+  CustomOverlayMap,
 } from 'react-kakao-maps-sdk';
 import {
   fetchEvents,
@@ -193,6 +194,12 @@ export function SeoulMap({
   );
   const queryKey = useMemo(() => JSON.stringify(query), [query]);
 
+  // 선택된 핀의 좌표 — 지도 위 강조 overlay 렌더용.
+  const selectedPin = useMemo(
+    () => (selectedEventId ? pins.find((p) => p.id === selectedEventId) ?? null : null),
+    [selectedEventId, pins],
+  );
+
   useEffect(() => {
     if (!appkey) return;
     const ctrl = new AbortController();
@@ -258,6 +265,20 @@ export function SeoulMap({
             />
           ))}
         </MarkerClusterer>
+        {selectedPin && (
+          <CustomOverlayMap
+            position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
+            yAnchor={1}
+            xAnchor={0.5}
+            zIndex={50}
+          >
+            <div aria-hidden className="pointer-events-none">
+              <span
+                className="block h-3.5 w-3.5 rounded-full border-2 border-white bg-(--color-accent) shadow-(--shadow-pin) [animation:alle-pulse_1.8s_cubic-bezier(0,0,0.2,1)_infinite]"
+              />
+            </div>
+          </CustomOverlayMap>
+        )}
       </KakaoMap>
       <StatusBadge count={pins.length} error={fetchError} />
     </div>
