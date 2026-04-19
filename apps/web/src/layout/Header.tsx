@@ -63,17 +63,22 @@ function AuthArea() {
     );
   }
 
-  // Real OAuth — Google 로 redirect. (BFF 503 이면 알림 fallback.)
+  // Real OAuth — Google/Kakao 선택. (BFF 503 이면 알림 fallback.)
   return (
-    <button
-      type="button"
-      onClick={() => {
-        window.location.href = '/api/auth/google';
-      }}
-      className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
-    >
-      Google 로그인
-    </button>
+    <div className="flex items-center gap-1.5">
+      <a
+        href="/api/auth/kakao"
+        className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-border) bg-[#FEE500] px-3 text-[13px] font-medium text-[#191600] transition-colors hover:bg-[#FDD835]"
+      >
+        Kakao
+      </a>
+      <a
+        href="/api/auth/google"
+        className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
+      >
+        Google 로그인
+      </a>
+    </div>
   );
 }
 

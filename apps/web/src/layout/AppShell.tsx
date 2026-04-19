@@ -53,6 +53,7 @@ function chatFiltersToQuery(f: ChatFilters): EventListQuery | null {
   const q: EventListQuery = {};
   if (f.eventTypes.length) q.eventTypes = f.eventTypes;
   if (f.companions.length) q.companions = f.companions;
+  if (f.regionIds.length) q.regionIds = f.regionIds;
   const r = rangeForPeriod(f.periodKey);
   if (r) {
     q.period = 'custom';
@@ -105,7 +106,11 @@ export function AppShell() {
         const reply = await sendChat(history);
         setMessages((prev) => [...prev, { role: 'assistant', text: reply.reply }]);
         const q = chatFiltersToQuery(reply.filters);
-        if (q) setMapFilter(q);
+        if (q) {
+          setMapFilter(q);
+          // 채팅에서 온 지역은 폴리곤 하이라이트도 켜준다.
+          setHighlightRegionIds(reply.filters.regionIds);
+        }
       } catch (err) {
         const msg =
           (err as Error).message === 'LLM_UNREACHABLE'

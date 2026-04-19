@@ -66,6 +66,10 @@ function googleRedirectUri(): string {
   return `${env.WEB_URL}/api/auth/google/callback`;
 }
 
+function kakaoRedirectUri(): string {
+  return `${env.WEB_URL}/api/auth/kakao/callback`;
+}
+
 async function issueSessionAndRedirect(res: Response, userId: bigint, to: string) {
   const sid = makeSessionId();
   const expiresAt = new Date(Date.now() + SESSION_TTL_MS);
@@ -295,6 +299,128 @@ export async function googleCallback(req: Request, res: Response) {
     update: { lastLoggedInAt: new Date() },
     create: {
       authProvider: 'google',
+      socialUid: sub,
+      nickname,
+      lastLoggedInAt: new Date(),
+    },
+    select: { userId: true },
+  });
+
+  await issueSessionAndRedirect(res, user.userId, `${env.WEB_URL}/`);
+}
+
+// =============================================================
+// Kakao OAuth (authorization code flow)
+// =============================================================
+
+export async function startKakao(_req: Request, res: Response) {
+  if (!env.KAKAO_REST_API_KEY) {
+    res.status(503).json({
+      error:
+        'kakao oauth not configured — set KAKAO_REST_API_KEY in .env and register ' +
+        `redirect URI ${kakaoRedirectUri()} in Kakao Developers console`,
+    });
+    return;
+  }
+
+  const state = crypto.randomBytes(24).toString('base64url');
+  const secureFlag = env.NODE_ENV === 'production' ? '; Secure' : '';
+  res.setHeader(
+    'Set-Cookie',
+    `${OAUTH_STATE_COOKIE}=${state}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${OAUTH_STATE_TTL_S}${secureFlag}`,
+  );
+
+  const params = new URLSearchParams({
+    client_id: env.KAKAO_REST_API_KEY,
+    redirect_uri: kakaoRedirectUri(),
+    response_type: 'code',
+    state,
+    // nickname 은 기본 제공. 필요 시 account_email 등 추가.
+  });
+  res.redirect(`https://kauth.kakao.com/oauth/authorize?${params.toString()}`);
+}
+
+interface KakaoTokenResponse {
+  access_token?: string;
+  token_type?: string;
+  refresh_token?: string;
+  expires_in?: number;
+  scope?: string;
+  error?: string;
+  error_description?: string;
+}
+
+interface KakaoUserMe {
+  id?: number;
+  properties?: { nickname?: string };
+  kakao_account?: {
+    profile?: { nickname?: string };
+    email?: string;
+  };
+}
+
+export async function kakaoCallback(req: Request, res: Response) {
+  const errorFromKakao =
+    typeof req.query.error === 'string' ? req.query.error : null;
+  if (errorFromKakao) {
+    res.redirect(`${env.WEB_URL}/?auth_error=${encodeURIComponent(errorFromKakao)}`);
+    return;
+  }
+
+  const code = typeof req.query.code === 'string' ? req.query.code : '';
+  const state = typeof req.query.state === 'string' ? req.query.state : '';
+  const cookieState = parseCookieValue(req, OAUTH_STATE_COOKIE);
+
+  if (!code || !state || !cookieState || state !== cookieState) {
+    res.status(400).json({ error: 'invalid oauth state' });
+    return;
+  }
+  if (!env.KAKAO_REST_API_KEY) {
+    res.status(503).json({ error: 'kakao oauth not configured' });
+    return;
+  }
+
+  // code → access_token
+  const tokenRes = await fetch('https://kauth.kakao.com/oauth/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'authorization_code',
+      client_id: env.KAKAO_REST_API_KEY,
+      redirect_uri: kakaoRedirectUri(),
+      code,
+    }),
+  });
+  const tokenJson = (await tokenRes.json()) as KakaoTokenResponse;
+  if (!tokenRes.ok || !tokenJson.access_token) {
+    res.status(400).json({
+      error: `kakao token exchange failed: ${tokenJson.error ?? 'no access_token'}`,
+    });
+    return;
+  }
+
+  // access_token → /v2/user/me
+  const meRes = await fetch('https://kapi.kakao.com/v2/user/me', {
+    headers: { Authorization: `Bearer ${tokenJson.access_token}` },
+  });
+  const me = (await meRes.json()) as KakaoUserMe;
+  if (!meRes.ok || !me.id) {
+    res.status(400).json({ error: 'kakao user fetch failed' });
+    return;
+  }
+
+  const sub = String(me.id);
+  const nicknameFromProfile =
+    me.kakao_account?.profile?.nickname ?? me.properties?.nickname ?? null;
+  const nickname = (nicknameFromProfile ?? `kakao-${sub.slice(-6)}`).slice(0, 50);
+
+  const user = await prisma.user.upsert({
+    where: {
+      authProvider_socialUid: { authProvider: 'kakao', socialUid: sub },
+    },
+    update: { lastLoggedInAt: new Date() },
+    create: {
+      authProvider: 'kakao',
       socialUid: sub,
       nickname,
       lastLoggedInAt: new Date(),

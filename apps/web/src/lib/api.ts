@@ -267,6 +267,8 @@ export interface ChatFilters {
   companions: string[];
   periodKey: 'today' | 'weekend' | 'week' | 'month' | null;
   regionHints: string[];
+  /** BFF 가 regionHints 를 regions 테이블에서 resolve 해 추가한 id (없으면 []). */
+  regionIds: string[];
 }
 
 export interface ChatReply {

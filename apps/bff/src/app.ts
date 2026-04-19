@@ -8,7 +8,15 @@ import { eventsStats } from './routes/events-stats.js';
 import { getEventDetail } from './routes/event-detail.js';
 import { listEventReviews, createEventReview, deleteMyReview } from './routes/event-reviews.js';
 import { listRegions, listVibes } from './routes/lookups.js';
-import { devLogin, me, logout, startGoogle, googleCallback } from './routes/auth.js';
+import {
+  devLogin,
+  me,
+  logout,
+  startGoogle,
+  googleCallback,
+  startKakao,
+  kakaoCallback,
+} from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
 import { postChat } from './routes/chat.js';
@@ -150,6 +158,12 @@ export function createApp(): Express {
   });
   app.get('/auth/google/callback', (req: Request, res: Response, next: NextFunction) => {
     googleCallback(req, res).catch(next);
+  });
+  app.get('/auth/kakao', (req: Request, res: Response, next: NextFunction) => {
+    startKakao(req, res).catch(next);
+  });
+  app.get('/auth/kakao/callback', (req: Request, res: Response, next: NextFunction) => {
+    kakaoCallback(req, res).catch(next);
   });
   app.post('/auth/dev-login', (req: Request, res: Response, next: NextFunction) => {
     devLogin(req, res).catch(next);

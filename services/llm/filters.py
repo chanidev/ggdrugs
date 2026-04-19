@@ -79,7 +79,9 @@ def extract(text: str) -> dict[str, Any]:
         "companions": _match_any(t, COMPANION_TABLE),
         "eventTypes": _match_any(t, EVENT_TYPE_TABLE),
         "periodKey":  _match_first(t, PERIOD_TABLE),
-        "regionHints": [gu for gu in SEOUL_GU if gu in t or gu.replace("구", "") in t],
+        # 접미어 "구" 만 떼서 매칭 — str.replace 가 전체 "구" 를 제거해 "구로구"→"로"로
+        # 너무 짧아져 오매칭 되던 문제 fix. (예: "종로구" 만 써도 "종로"에만 hit.)
+        "regionHints": [gu for gu in SEOUL_GU if gu in t or gu[:-1] in t],
     }
 
 
