@@ -55,6 +55,59 @@ const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 };
 const DEFAULT_LEVEL = 8;
 const PIN_LIMIT = 500;
 
+/**
+ * Cluster tier 스타일 — Kakao clusterer 에 inline-style 로 전달.
+ *
+ * calculator=[10, 100] → 3 tier:
+ *   idx 0: 2~9    (small,  32px)
+ *   idx 1: 10~99  (mid,    40px)
+ *   idx 2: 100+   (large,  52px)
+ *
+ * 브랜드 단일 accent (vermilion). tier 별 size + inner border 강도로 위계 표현.
+ */
+const CLUSTER_CALCULATOR: [number, number] = [10, 100];
+const CLUSTER_STYLES = [
+  {
+    width: '32px',
+    height: '32px',
+    background: 'rgba(232,86,45,0.92)',
+    border: '2px solid rgba(255,255,255,0.9)',
+    borderRadius: '50%',
+    color: '#fff',
+    textAlign: 'center' as const,
+    lineHeight: '28px',
+    fontSize: '12px',
+    fontWeight: '700',
+    boxShadow: '0 2px 6px rgba(232,86,45,0.35)',
+  },
+  {
+    width: '40px',
+    height: '40px',
+    background: 'rgba(232,86,45,0.94)',
+    border: '3px solid rgba(255,255,255,0.92)',
+    borderRadius: '50%',
+    color: '#fff',
+    textAlign: 'center' as const,
+    lineHeight: '34px',
+    fontSize: '13px',
+    fontWeight: '700',
+    boxShadow: '0 3px 10px rgba(232,86,45,0.4)',
+  },
+  {
+    width: '52px',
+    height: '52px',
+    background: 'rgba(232,86,45,0.96)',
+    border: '4px solid rgba(255,255,255,0.94)',
+    borderRadius: '50%',
+    color: '#fff',
+    textAlign: 'center' as const,
+    lineHeight: '44px',
+    fontSize: '14px',
+    fontWeight: '800',
+    boxShadow: '0 4px 14px rgba(232,86,45,0.45)',
+  },
+];
+
 interface Pin {
   id: string;
   lat: number;
@@ -200,7 +253,15 @@ export function SeoulMap({
             fillOpacity={fillOpacity}
           />
         ))}
-        <MarkerClusterer averageCenter minLevel={6} disableClickZoom={false}>
+        <MarkerClusterer
+          averageCenter
+          minLevel={5}
+          disableClickZoom={false}
+          gridSize={72}
+          minClusterSize={3}
+          calculator={CLUSTER_CALCULATOR}
+          styles={CLUSTER_STYLES}
+        >
           {pins.map((p) => (
             <MapMarker
               key={p.id}
