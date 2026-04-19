@@ -305,7 +305,7 @@ function PinPopup({
     pin.phase === 'ongoing'
       ? 'bg-(--color-accent) text-white'
       : pin.phase === 'upcoming'
-        ? 'bg-[rgba(58,110,165,0.12)] text-(--color-info)'
+        ? 'bg-(--color-info-bg) text-(--color-info)'
         : 'bg-(--color-surface-alt) text-(--color-text-subtle)';
   return (
     <div

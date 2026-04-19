@@ -62,12 +62,12 @@ export function EventList({
             </>
           )}
         </div>
-        <button
-          type="button"
-          className="flex items-center gap-1.5 text-[13px] text-(--color-text-muted) hover:text-(--color-text)"
+        <span
+          className="text-[12px] text-(--color-text-subtle)"
+          title="진행중·예정 이벤트가 먼저, 종료는 뒤로"
         >
-          최신순 <Icon name="arrow" size={12} />
-        </button>
+          진행중·예정 우선
+        </span>
       </div>
       <ul className="m-0 min-h-0 flex-1 list-none overflow-y-auto p-0">
         {items.map((e, i) => (

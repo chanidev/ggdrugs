@@ -64,6 +64,7 @@
   --color-warning: #d79b00;
   --color-error: #b8362a;
   --color-info: #3a6ea5;
+  --color-info-bg: #e7eef6; /* info 톤 tinted — phase upcoming 배지 등 */
 
   /* -- Radius -- */
   --radius-sm: 4px;
@@ -118,6 +119,7 @@
     --color-warning: #e6b23d;
     --color-error: #d15547;
     --color-info: #6090c0;
+    --color-info-bg: #1f2b38; /* dark mode info tint */
 
     --shadow-pin: 0 2px 8px rgba(242, 113, 71, 0.4);
   }

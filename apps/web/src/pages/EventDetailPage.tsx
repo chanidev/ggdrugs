@@ -189,15 +189,11 @@ function ReviewsSection({ eventId }: { eventId: string }) {
       <header className="mb-4 flex items-end justify-between gap-3">
         <div>
           <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">리뷰</h2>
-          <p className="tabular m-0 mt-1 text-[12px] text-(--color-text-muted)">
-            {total > 0 ? (
-              <>
-                ★ <span className="text-(--color-text)">{avg.toFixed(1)}</span> · {total.toLocaleString()}개
-              </>
-            ) : (
-              '아직 리뷰가 없어요'
-            )}
-          </p>
+          {total > 0 && (
+            <p className="tabular m-0 mt-1 text-[12px] text-(--color-text-muted)">
+              ★ <span className="text-(--color-text)">{avg.toFixed(1)}</span> · {total.toLocaleString()}개
+            </p>
+          )}
         </div>
       </header>
 

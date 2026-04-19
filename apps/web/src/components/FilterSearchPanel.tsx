@@ -334,7 +334,7 @@ function Chip({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`inline-flex h-[30px] items-center rounded-full border px-3 text-[13px] font-medium transition-colors ${
+      className={`inline-flex h-8 items-center rounded-full border px-3 text-[13px] font-medium transition-colors ${
         active
           ? 'border-(--color-accent) bg-(--color-accent-bg) text-(--color-accent)'
           : 'border-(--color-border) bg-(--color-surface) text-(--color-text) hover:border-(--color-border-hover)'

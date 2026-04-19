@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { Icon } from '../components/Icon';
+import { fetchEventsStats, type EventsStatsResponse } from '../lib/api';
 
 export type SidebarSection = 'filter' | 'list' | 'chat';
 
@@ -112,14 +114,33 @@ function RailRow({
 }
 
 function StatsBlock() {
+  const [stats, setStats] = useState<EventsStatsResponse | null>(null);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetchEventsStats(ctrl.signal)
+      .then(setStats)
+      .catch(() => {
+        // 조용히 skip — stats 는 부가 정보
+      });
+    return () => ctrl.abort();
+  }, []);
+
+  const fmt = (n: number | undefined) =>
+    typeof n === 'number' ? n.toLocaleString() : '–';
+
   return (
     <div className="mt-auto border-t border-(--color-border) px-5 py-[18px]">
       <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-        현재 지도 위
+        현재 공개 이벤트
       </div>
-      <StatRow label="전체 이벤트" value="42" />
-      <StatRow label="진행중" value={<span className="text-(--color-accent)">8</span>} separator />
-      <StatRow label="이번 주 시작" value="12" separator />
+      <StatRow label="전체" value={fmt(stats?.total)} />
+      <StatRow
+        label="진행중"
+        value={<span className="text-(--color-accent)">{fmt(stats?.phases.ongoing)}</span>}
+        separator
+      />
+      <StatRow label="예정" value={fmt(stats?.phases.upcoming)} separator />
     </div>
   );
 }

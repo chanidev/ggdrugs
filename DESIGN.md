@@ -114,6 +114,7 @@
 --warning:      #D79B00;
 --error:        #B8362A;
 --info:         #3A6EA5;
+--info-bg:      #E7EEF6;   /* info 톤 tinted — phase upcoming 배지 등 */
 ```
 
 ### Dark mode
@@ -138,6 +139,7 @@
 --warning:      #E6B23D;
 --error:        #D15547;
 --info:         #6090C0;
+--info-bg:      #1F2B38;   /* dark info tint */
 ```
 
 ### Usage rules

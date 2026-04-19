@@ -33,7 +33,7 @@ export function OverlayPanel({
     >
       <div className="flex shrink-0 items-start justify-between border-b border-(--color-border) px-5 pb-[14px] pt-5">
         <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-accent)">
+          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
             {meta.eyebrow}
           </div>
           <h3 className="m-0 text-[18px] font-bold tracking-[-0.015em]">{meta.title}</h3>

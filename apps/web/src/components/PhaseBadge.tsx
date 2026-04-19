@@ -12,7 +12,7 @@ export function PhaseBadge({ phase }: { phase: Phase }) {
     p.tone === 'accent'
       ? 'bg-(--color-accent) text-white'
       : p.tone === 'info'
-        ? 'bg-[rgba(58,110,165,0.12)] text-(--color-info)'
+        ? 'bg-(--color-info-bg) text-(--color-info)'
         : 'bg-(--color-surface-alt) text-(--color-text-subtle)';
   return (
     <span

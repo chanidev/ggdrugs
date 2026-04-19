@@ -105,7 +105,7 @@ export function ChatDock({
               <button
                 key={s}
                 type="button"
-                onClick={() => onChange(s + ' ')}
+                onClick={() => onSubmit(s)}
                 className="rounded-full border border-transparent bg-(--color-surface-alt) px-2.5 py-1.5 text-[13px] text-(--color-text-muted) transition-colors hover:border-(--color-accent) hover:bg-(--color-surface) hover:text-(--color-accent)"
               >
                 {s}
