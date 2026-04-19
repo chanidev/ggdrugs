@@ -143,3 +143,39 @@ export async function fetchEventDetail(id: string, signal?: AbortSignal): Promis
   if (!res.ok) throw new Error(`GET /events/${id} ${res.status}`);
   return (await res.json()) as BffEventDetail;
 }
+
+export interface BffReviewItem {
+  reviewId: string;
+  nickname: string;
+  rating: number; // 1~5
+  body: string;
+  createdAt: string; // ISO
+  photos: { path: string; sortOrder: number }[];
+}
+
+export interface EventReviewsResponse {
+  page: number;
+  limit: number;
+  total: number;
+  avgRating: number;
+  items: BffReviewItem[];
+}
+
+export async function fetchEventReviews(
+  id: string,
+  opts: { page?: number; limit?: number } = {},
+  signal?: AbortSignal,
+): Promise<EventReviewsResponse> {
+  const sp = new URLSearchParams();
+  if (opts.page) sp.set('page', String(opts.page));
+  if (opts.limit) sp.set('limit', String(opts.limit));
+  const qs = sp.toString();
+  const init: RequestInit = signal ? { signal } : {};
+  const res = await fetch(
+    `${BFF_URL}/events/${encodeURIComponent(id)}/reviews${qs ? `?${qs}` : ''}`,
+    init,
+  );
+  if (res.status === 404) throw new Error('NOT_FOUND');
+  if (!res.ok) throw new Error(`GET /events/${id}/reviews ${res.status}`);
+  return (await res.json()) as EventReviewsResponse;
+}

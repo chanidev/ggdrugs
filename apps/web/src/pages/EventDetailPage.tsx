@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { Map, MapMarker, useKakaoLoader } from 'react-kakao-maps-sdk';
-import { fetchEventDetail, type BffEventDetail } from '../lib/api';
+import {
+  fetchEventDetail,
+  fetchEventReviews,
+  type BffEventDetail,
+  type BffReviewItem,
+  type EventReviewsResponse,
+} from '../lib/api';
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PhaseBadge } from '../components/PhaseBadge';
@@ -148,8 +154,136 @@ function DetailBody({ detail }: { detail: BffEventDetail }) {
 
       <MiniMap detail={detail} />
 
+      <ReviewsSection eventId={detail.eventId} />
+
       <Provenance detail={detail} />
     </article>
+  );
+}
+
+function ReviewsSection({ eventId }: { eventId: string }) {
+  const [state, setState] = useState<{
+    loading: boolean;
+    error: string | null;
+    data: EventReviewsResponse | null;
+  }>({ loading: true, error: null, data: null });
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    setState({ loading: true, error: null, data: null });
+    fetchEventReviews(eventId, { limit: 20 }, ctrl.signal)
+      .then((data) => setState({ loading: false, error: null, data }))
+      .catch((err) => {
+        if ((err as Error).name === 'AbortError') return;
+        setState({ loading: false, error: (err as Error).message, data: null });
+      });
+    return () => ctrl.abort();
+  }, [eventId]);
+
+  const items = state.data?.items ?? [];
+  const total = state.data?.total ?? 0;
+  const avg = state.data?.avgRating ?? 0;
+
+  return (
+    <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
+      <header className="mb-4 flex items-end justify-between gap-3">
+        <div>
+          <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">리뷰</h2>
+          <p className="tabular m-0 mt-1 text-[12px] text-(--color-text-muted)">
+            {total > 0 ? (
+              <>
+                ★ <span className="text-(--color-text)">{avg.toFixed(1)}</span> · {total.toLocaleString()}개
+              </>
+            ) : (
+              '아직 리뷰가 없어요'
+            )}
+          </p>
+        </div>
+      </header>
+
+      <LoginGate />
+
+      <div className="mt-4 flex flex-col gap-3">
+        {state.loading && <SkeletonReview />}
+        {state.error && (
+          <div className="text-[13px] text-(--color-error)">리뷰를 불러오지 못했어요.</div>
+        )}
+        {!state.loading && !state.error && items.length === 0 && <EmptyReviews />}
+        {items.map((r) => (
+          <ReviewCard key={r.reviewId} review={r} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LoginGate() {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-(--radius-md) border border-dashed border-(--color-border) bg-(--color-surface-alt) px-4 py-3">
+      <p className="m-0 text-[13px] text-(--color-text-muted)">
+        리뷰를 남기려면 로그인이 필요해요.
+      </p>
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        title="로그인 기능은 준비 중입니다"
+        className="inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-subtle)"
+      >
+        로그인 후 작성 <Icon name="arrow" size={12} />
+      </button>
+    </div>
+  );
+}
+
+function EmptyReviews() {
+  return (
+    <div className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-6 text-center text-[13px] text-(--color-text-muted)">
+      첫 리뷰의 주인공이 되어 주세요.
+    </div>
+  );
+}
+
+function SkeletonReview() {
+  return (
+    <div
+      aria-hidden
+      className="h-[84px] animate-pulse rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt)"
+    />
+  );
+}
+
+function ReviewCard({ review }: { review: BffReviewItem }) {
+  const date = review.createdAt.slice(0, 10);
+  return (
+    <article className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-4">
+      <header className="mb-1.5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-[13px]">
+          <span className="font-semibold text-(--color-text)">{review.nickname}</span>
+          <Stars value={review.rating} />
+        </div>
+        <time className="tabular text-[11px] text-(--color-text-subtle)">{date}</time>
+      </header>
+      <p className="m-0 whitespace-pre-wrap text-[13px] leading-[1.6] text-(--color-text)">
+        {review.body}
+      </p>
+    </article>
+  );
+}
+
+function Stars({ value }: { value: number }) {
+  const clamped = Math.max(0, Math.min(5, value));
+  return (
+    <span
+      aria-label={`별점 ${clamped} / 5`}
+      className="inline-flex items-center gap-0.5 text-(--color-accent)"
+    >
+      {Array.from({ length: 5 }, (_, i) => (
+        <span key={i} aria-hidden className={i < clamped ? '' : 'text-(--color-border)'}>
+          ★
+        </span>
+      ))}
+    </span>
   );
 }
 
