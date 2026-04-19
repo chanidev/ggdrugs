@@ -272,7 +272,12 @@ export function SeoulMap({
           ))}
         </MarkerClusterer>
         {selectedPin && (
-          <CustomOverlayMap position={{ lat: selectedPin.lat, lng: selectedPin.lng }} yAnchor={1.2}>
+          <CustomOverlayMap
+            position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
+            yAnchor={1.2}
+            clickable
+            zIndex={100}
+          >
             <PinPopup
               pin={selectedPin}
               onClose={() => onSelectEvent?.(null)}
@@ -303,7 +308,12 @@ function PinPopup({
         ? 'bg-[rgba(58,110,165,0.12)] text-(--color-info)'
         : 'bg-(--color-surface-alt) text-(--color-text-subtle)';
   return (
-    <div className="relative w-[280px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-3.5 shadow-(--shadow-lg)">
+    <div
+      className="relative w-[280px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-3.5 shadow-(--shadow-lg)"
+      // Kakao Map container 의 onClick (selection clear) 이 팝업 내부 클릭으로도 발화
+      // 하는 것을 방지 — 팝업 안 클릭은 맵으로 버블링 시키지 않는다.
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="mb-1.5 flex items-start justify-between gap-2">
         <h3 className="line-clamp-2 text-[14px] font-semibold leading-[1.3] tracking-[-0.01em]">
           {pin.title}
@@ -315,14 +325,20 @@ function PinPopup({
       <p className="tabular m-0 mb-3 text-[12px] text-(--color-text-muted)">{pin.dateRange}</p>
       <button
         type="button"
-        onClick={onOpen}
+        onClick={(e) => {
+          e.stopPropagation();
+          onOpen();
+        }}
         className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
       >
         상세 보기 <Icon name="arrow" size={13} />
       </button>
       <button
         type="button"
-        onClick={onClose}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
         aria-label="팝업 닫기"
         className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-(--radius-md) text-(--color-text-subtle) hover:bg-(--color-surface-alt) hover:text-(--color-text)"
       >
