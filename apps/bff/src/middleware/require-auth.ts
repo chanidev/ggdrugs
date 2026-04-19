@@ -24,6 +24,40 @@ function parseSid(req: Request): string | null {
   return null;
 }
 
+/**
+ * optional auth — 쿠키 있으면 req.auth 세팅, 없거나 만료여도 next().
+ * 공개 + 인증 시 개인화 응답을 섞는 엔드포인트용 (예: event-detail 에 isBookmarked).
+ */
+export async function resolveAuth(req: Request, _res: Response, next: NextFunction) {
+  const sid = parseSid(req);
+  if (!sid) {
+    next();
+    return;
+  }
+  const row = await prisma.authSession.findUnique({
+    where: { sessionId: sid },
+    select: {
+      expiresAt: true,
+      user: {
+        select: {
+          userId: true,
+          nickname: true,
+          activeRole: true,
+          isDeleted: true,
+        },
+      },
+    },
+  });
+  if (row && !row.user.isDeleted && row.expiresAt > new Date()) {
+    (req as AuthenticatedRequest).auth = {
+      userId: row.user.userId,
+      nickname: row.user.nickname,
+      activeRole: row.user.activeRole,
+    };
+  }
+  next();
+}
+
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const sid = parseSid(req);
   if (!sid) {

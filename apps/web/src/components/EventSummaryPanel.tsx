@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { fetchEventDetail, type BffEventDetail } from '../lib/api';
 import { Icon } from './Icon';
 import { PhaseBadge } from './PhaseBadge';
+import { BookmarkButton } from './BookmarkButton';
 
 /**
  * EventSummaryPanel — 선택된 이벤트의 요약 카드 (A_200 중간 레이어).
@@ -73,16 +74,10 @@ export function EventSummaryPanel({
 
       {state.data && (
         <footer className="flex shrink-0 items-center gap-2 border-t border-(--color-border) px-5 py-3">
-          <button
-            type="button"
-            disabled
-            aria-disabled="true"
-            title="북마크는 준비 중입니다"
-            className="inline-flex h-9 shrink-0 cursor-not-allowed items-center justify-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-subtle)"
-          >
-            <Icon name="bookmark" size={14} />
-            북마크
-          </button>
+          <BookmarkButton
+            eventId={eventId}
+            initialBookmarked={state.data.isBookmarked}
+          />
           <button
             type="button"
             onClick={() => navigate(`/events/${eventId}`)}

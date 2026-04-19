@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
+import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
 /**
  * GET /events/:id — 단일 이벤트 상세.
@@ -68,6 +69,17 @@ export async function getEventDetail(req: Request, res: Response) {
     return;
   }
 
+  // 옵셔널 인증: 쿠키 있으면 resolveAuth 미들웨어가 req.auth 채움.
+  const auth = (req as AuthenticatedRequest).auth;
+  let isBookmarked: boolean | null = null;
+  if (auth) {
+    const bm = await prisma.bookmark.findUnique({
+      where: { userId_eventId: { userId: auth.userId, eventId: id } },
+      select: { bookmarkId: true },
+    });
+    isBookmarked = bm !== null;
+  }
+
   res.json({
     eventId: row.eventId.toString(),
     title: row.title,
@@ -105,5 +117,6 @@ export async function getEventDetail(req: Request, res: Response) {
     },
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
+    isBookmarked, // null = 비로그인, true/false = 로그인 상태
   });
 }

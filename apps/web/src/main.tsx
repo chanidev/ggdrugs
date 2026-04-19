@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router';
 import { AppShell } from './layout/AppShell';
 import { EventDetailPage } from './pages/EventDetailPage';
+import { MyPage } from './pages/MyPage';
 import { AuthProvider } from './lib/auth-context';
 import './styles/index.css';
 
@@ -19,6 +20,7 @@ createRoot(rootEl).render(
       <Routes>
         <Route path="/" element={<AppShell />} />
         <Route path="/events/:id" element={<EventDetailPage />} />
+        <Route path="/me" element={<MyPage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,

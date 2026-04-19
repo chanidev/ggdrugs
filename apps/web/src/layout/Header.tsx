@@ -1,3 +1,4 @@
+import { Link } from 'react-router';
 import { LogoLockup } from '../components/brand/Logo';
 import { Icon } from '../components/Icon';
 import { useCurrentUser } from '../lib/auth-context';
@@ -38,13 +39,17 @@ function AuthArea() {
   if (user) {
     return (
       <div className="flex items-center gap-2">
-        <span className="hidden items-center gap-1.5 text-[13px] text-(--color-text) sm:inline-flex">
+        <Link
+          to="/me"
+          className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] text-(--color-text) transition-colors hover:border-(--color-border-hover) sm:inline-flex"
+          aria-label="마이페이지"
+        >
           <span
             aria-hidden
             className="h-1.5 w-1.5 rounded-full bg-(--color-accent)"
           />
           <span className="font-medium">{user.nickname}</span>
-        </span>
+        </Link>
         <button
           type="button"
           onClick={() => {

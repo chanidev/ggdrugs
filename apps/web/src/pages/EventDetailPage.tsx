@@ -12,6 +12,7 @@ import {
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PhaseBadge } from '../components/PhaseBadge';
+import { BookmarkButton } from '../components/BookmarkButton';
 import { useCurrentUser } from '../lib/auth-context';
 
 /**
@@ -467,6 +468,15 @@ function Hero({ detail }: { detail: BffEventDetail }) {
           <PhaseBadge phase={detail.phase} />
         </div>
         <p className="m-0 text-[14px] text-(--color-text-muted)">{detail.region.fullAddress}</p>
+        <div className="mt-2 flex items-center gap-2">
+          <BookmarkButton
+            eventId={detail.eventId}
+            initialBookmarked={detail.isBookmarked}
+          />
+          <span className="tabular text-[12px] text-(--color-text-subtle)">
+            북마크 {detail.bookmarkCount.toLocaleString()}
+          </span>
+        </div>
       </div>
     </div>
   );

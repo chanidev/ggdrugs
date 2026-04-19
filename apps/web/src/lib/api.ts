@@ -139,6 +139,8 @@ export interface BffEventDetail extends BffEventItem {
   source: { type: string; crawlOrigin: string; externalId: string };
   createdAt: string;
   updatedAt: string;
+  /** null = 비로그인. true/false = 로그인 상태의 현재 북마크 여부. */
+  isBookmarked: boolean | null;
 }
 
 export async function fetchEventDetail(id: string, signal?: AbortSignal): Promise<BffEventDetail> {
@@ -247,4 +249,98 @@ export async function devLogin(nickname: string): Promise<CurrentUser> {
 export async function logout(): Promise<void> {
   const res = await fetch(`${BFF_URL}/auth/logout`, withCredentials({ method: 'POST' }));
   if (!res.ok) throw new Error(`POST /auth/logout ${res.status}`);
+}
+
+// =============================================================
+// Bookmarks (A_302 / A_500)
+// =============================================================
+
+export interface BookmarkMutationResult {
+  bookmarked: boolean;
+  bookmarkCount: number;
+}
+
+export async function createBookmark(eventId: string): Promise<BookmarkMutationResult> {
+  const res = await fetch(
+    `${BFF_URL}/events/${encodeURIComponent(eventId)}/bookmark`,
+    withCredentials({ method: 'POST' }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) throw new Error(`POST /events/${eventId}/bookmark ${res.status}`);
+  return (await res.json()) as BookmarkMutationResult;
+}
+
+export async function deleteBookmark(eventId: string): Promise<BookmarkMutationResult> {
+  const res = await fetch(
+    `${BFF_URL}/events/${encodeURIComponent(eventId)}/bookmark`,
+    withCredentials({ method: 'DELETE' }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) throw new Error(`DELETE /events/${eventId}/bookmark ${res.status}`);
+  return (await res.json()) as BookmarkMutationResult;
+}
+
+export interface BookmarkListItem {
+  bookmarkId: string;
+  bookmarkedAt: string;
+  event: BffEventItem;
+}
+
+export interface MyBookmarksResponse {
+  page: number;
+  limit: number;
+  total: number;
+  items: BookmarkListItem[];
+}
+
+export async function fetchMyBookmarks(
+  opts: { page?: number; limit?: number } = {},
+  signal?: AbortSignal,
+): Promise<MyBookmarksResponse> {
+  const sp = new URLSearchParams();
+  if (opts.page) sp.set('page', String(opts.page));
+  if (opts.limit) sp.set('limit', String(opts.limit));
+  const qs = sp.toString();
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(`${BFF_URL}/me/bookmarks${qs ? `?${qs}` : ''}`, init);
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) throw new Error(`GET /me/bookmarks ${res.status}`);
+  return (await res.json()) as MyBookmarksResponse;
+}
+
+export interface MyReviewItem {
+  reviewId: string;
+  rating: number;
+  body: string;
+  createdAt: string;
+  event: {
+    eventId: string;
+    title: string;
+    posterImageUrl: string | null;
+    startDate: string;
+    endDate: string;
+    region: { sidoName: string; sigunguName: string | null; fullAddress: string };
+  };
+}
+
+export interface MyReviewsResponse {
+  page: number;
+  limit: number;
+  total: number;
+  items: MyReviewItem[];
+}
+
+export async function fetchMyReviews(
+  opts: { page?: number; limit?: number } = {},
+  signal?: AbortSignal,
+): Promise<MyReviewsResponse> {
+  const sp = new URLSearchParams();
+  if (opts.page) sp.set('page', String(opts.page));
+  if (opts.limit) sp.set('limit', String(opts.limit));
+  const qs = sp.toString();
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(`${BFF_URL}/me/reviews${qs ? `?${qs}` : ''}`, init);
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) throw new Error(`GET /me/reviews ${res.status}`);
+  return (await res.json()) as MyReviewsResponse;
 }

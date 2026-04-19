@@ -9,7 +9,8 @@ import { getEventDetail } from './routes/event-detail.js';
 import { listEventReviews, createEventReview } from './routes/event-reviews.js';
 import { listRegions, listVibes } from './routes/lookups.js';
 import { devLogin, me, logout, startGoogle, googleCallback } from './routes/auth.js';
-import { requireAuth } from './middleware/require-auth.js';
+import { requireAuth, resolveAuth } from './middleware/require-auth.js';
+import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -65,9 +66,15 @@ export function createApp(): Express {
   app.get('/events/stats', (req: Request, res: Response, next: NextFunction) => {
     eventsStats(req, res).catch(next);
   });
-  app.get('/events/:id', (req: Request, res: Response, next: NextFunction) => {
-    getEventDetail(req, res).catch(next);
-  });
+  app.get(
+    '/events/:id',
+    (req: Request, res: Response, next: NextFunction) => {
+      resolveAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      getEventDetail(req, res).catch(next);
+    },
+  );
   app.get('/events/:id/reviews', (req: Request, res: Response, next: NextFunction) => {
     listEventReviews(req, res).catch(next);
   });
@@ -78,6 +85,42 @@ export function createApp(): Express {
     },
     (req: Request, res: Response, next: NextFunction) => {
       createEventReview(req, res).catch(next);
+    },
+  );
+  app.post(
+    '/events/:id/bookmark',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      addBookmark(req, res).catch(next);
+    },
+  );
+  app.delete(
+    '/events/:id/bookmark',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      removeBookmark(req, res).catch(next);
+    },
+  );
+  app.get(
+    '/me/bookmarks',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      listMyBookmarks(req, res).catch(next);
+    },
+  );
+  app.get(
+    '/me/reviews',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      listMyReviews(req, res).catch(next);
     },
   );
   app.get('/regions', (req: Request, res: Response, next: NextFunction) => {
