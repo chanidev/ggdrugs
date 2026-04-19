@@ -1,8 +1,8 @@
 # Wiki Lint Report
 
-**Generated**: 2026-04-19 (Phase 1 mid-sprint sweep)
+**Generated**: 2026-04-19 (Phase 1 late sweep — A_200~A_501 코어 루프 완성 후)
 **Scope**: `wiki/` 전체 (4 sources + 14 topics + 0 entities, index/log 제외)
-**Graphify cross-check**: 가능 (`graphify-out/` 존재, 491 nodes / 608 edges / 71 communities, 2026-04-19 재빌드).
+**Graphify cross-check**: `graphify-out/` 491 nodes / 608 edges / 71 communities (2026-04-19 재빌드).
 
 ---
 
@@ -10,136 +10,135 @@
 
 | 카테고리 | 건수 | 심각도 |
 |---|---|---|
-| Contradictions | **2** | 🔴 event_type 4→8 수 드리프트 큼 |
-| Stale refs | **2** | 🟡 Phase 0 프레이즈 잔존 |
+| Contradictions | **2** | 🔴 event_type 4→8, auth_provider dev |
+| Stale refs | **1** | 🟡 log.md 4종 시드 이후 8종 전환 기록 누락 (계속) |
 | Orphans | 0 | — |
-| Gaps | **4** | 🟡 Phase 1 구현 문서화 지체 |
+| Gaps | **5** | 🟡 Phase 1 후반 구현물 대거 문서화 미착수 |
 | Over-large pages | 0 | — |
-| Low-confidence inferences | 0 | graphify 재빌드 후 재검토 |
+| 이전 오진 정정 | 1 | ℹ️ regions sigungu_name "중복" → 실은 계층 구조 |
 
-**상태**: Phase 1 코딩 속도가 위키 갱신 속도를 앞질렀음. 코드 fact 기준으로 4곳 업데이트 필요.
-
----
-
-## 1. Contradictions — 🔴 2건
-
-### C-5 [신규]. `event_type` 4종 → **8종** 확장이 wiki 에 미반영
-- **실 사실**: DB `event_categories` 시드가 `{festival, expo, symposium, conference, exhibition, performance, education, movie}` (마이그레이션 `20260418180000_expand_event_categories` 적용). 커밋 `35cd6f8 feat(bff,web): 이벤트 카테고리 enum 세분화 (8종) + 재분류`. 라이브 `/events/stats` 도 8종 응답.
-- **wiki 표기** (4종 남아있음):
-  - `sources/2026-04-17_requirements-v5.md` L41 — "event_type은 {축제, 박람회, 심포지움, 컨퍼런스} 4종"
-  - `topics/terminology-glossary.md` — event_type 섹션 (확인 필요)
-  - `topics/filters-5-types.md` L40, L42 — "4종", "5개 버튼(전체/4종)"
-  - `topics/db-schema-overview.md` L33 — "종류 마스터 (festival/expo/symposium/conference)"
-  - `topics/use-cases-index.md` L41 (A_300) — "카테고리 5버튼(전체/4종)"
-  - `sources/2026-04-17_ui-flow-draft.md` — UI 와이어프레임 4버튼 가정 (확인 필요)
-- **조치**: 6개 파일 전부 8종 반영 + 확장 근거를 ADR 또는 terminology §event_type 변경이력으로 기록.
-
-### C-6 [신규]. `auth_provider` 에 `'dev'` 허용값 추가
-- **실 사실**: `chk_users_provider` 제약이 `{google, kakao, dev}` 로 확장 (마이그레이션 `20260419201000_allow_dev_auth_provider`).
-- **wiki 표기**: `topics/terminology-glossary.md`, `topics/roles-and-active-role.md` 등에 여전히 `{google, kakao}` 로 기재.
-- **배경**: Stage 1 dev-login stub 용 임시. Stage 2 Google OAuth 완료 후에도 dev 는 로컬 테스트 편의상 유지.
-- **조치**: terminology 에 "dev (로컬 전용 stub, NODE_ENV=production 에서 POST /auth/dev-login 이 404)" 각주 추가.
+**상태**: 탐색·인증·리뷰·북마크·채팅 코어 루프 모두 라이브. wiki 갱신은 세 번째 sprint 뒤처진 상태.
 
 ---
 
-## 2. Stale refs — 🟡 2건
+## 이전 lint 결과 정정 (2026-04-19 early)
 
-### S-3 [신규]. "Phase 1 진입 전" 프레이즈 잔존
-`topics/*.md` 여러 곳에서 "Phase 1 진입 조건" 혹은 "Phase 1 이후" 서술이 남아있음. 이미 Phase 1 중반 — 표현을 "Phase 1 현 단계" 혹은 "구현 완료 시점" 으로 교체.
+### ℹ️ "regions 테이블 sigungu_name 중복" — 오진
+초판 lint 보고에서 "종로구 regionId 3/5 중복" 이라 flag 했으나 실제는 **의도된 계층 구조**:
+- `region_id=5` — 구(district) 레벨, `dong_name=null`, full_address="서울 종로구"
+- `region_id=3` — 동(neighborhood) 레벨, `dong_name=세종로`, full_address="서울 종로구 세종로"
 
-### S-4 [신규]. `log.md` 의 "event_categories 4종 시드 완료" (2026-04-17T15:30)
-- 역사적 기록이므로 log.md 본문은 append-only 보존.
-- 단, **후속 로그 항목**에 "4종 → 8종 확장 (2026-04-18, 커밋 35cd6f8)" 기록 필요 (현재 누락).
+Prisma schema `regions` 는 sido / sigungu / dong 3단 계층 지원. `lookups.ts listRegions` 는 `dongName: null` 로 district 만 노출 중. 진짜 버그는 `chat.ts` regionHints resolver 에서 같은 필터를 빠뜨렸던 것 — 커밋 `9313be1` 에서 해소. 데이터 마이그레이션 불필요.
+
+---
+
+## 1. Contradictions — 🔴 2건 (변동 없음)
+
+### C-5. `event_type` 4종 → **8종** 확장이 wiki 미반영
+- **실 사실**: DB+API 에 8종 live (`festival, expo, symposium, conference, exhibition, performance, education, movie`, 마이그레이션 `20260418180000`).
+- **wiki 표기 4종 잔존**:
+  - `sources/2026-04-17_requirements-v5.md` L41
+  - `topics/filters-5-types.md` L40, L42
+  - `topics/db-schema-overview.md` L33
+  - `topics/use-cases-index.md` L41 (A_300)
+  - (확인 필요) `sources/2026-04-17_ui-flow-draft.md`, `topics/terminology-glossary.md`
+- **조치**: 일괄 수정 + `terminology-glossary` 에 "event_type 확장 이력 (2026-04-18)" 기록 또는 ADR 0003 신설.
+
+### C-6. `auth_provider` 에 `'dev'` 허용값 추가
+- DB `chk_users_provider` 가 `{google, kakao, dev}` 허용 (마이그레이션 `20260419201000`).
+- wiki 문서들은 `{google, kakao}` 만 기재.
+- **조치**: `terminology-glossary.md` 에 dev provider 각주 — "로컬 dev-login stub. NODE_ENV=production 에서 POST /auth/dev-login 이 404".
+
+---
+
+## 2. Stale refs — 🟡 1건
+
+### S-4. log.md `event_categories 4종 시드` 이후 8종 전환 기록 누락
+역사적 append-only 로 원문 보존. 단, 최근 2주 활동(A_201~A_501 라이브) 전반에 대한 log 엔트리 자체가 적어 history gap 존재 — lint 범위 외지만 문서 유지 관리 리스크로 언급.
 
 ---
 
 ## 3. Orphans — ✅ 0건
 
-- 모든 topics/sources 가 `index.md` 에 등재.
-- `entities/` 여전히 비어있음. Phase 1 외부 의존성이 급증(Google OAuth Stage 2, Kakao Maps, TourAPI, Seoul Open API, KCISA) — Gap 으로 분리 (G-4 참조).
+`entities/` 여전히 빈 채 (G-6 참조).
 
 ---
 
-## 4. Gaps — 🟡 4건
+## 4. Gaps — 🟡 5건 (확장)
 
-### G-3 [신규]. Auth 구현 문서화 없음
-Stage 1 (dev-login + cookie session + AuthSession 모델) + Stage 2 (Google OAuth authorization code flow, tokeninfo 검증) 전부 구현됐으나 wiki 에 `topics/auth-flow.md` 없음. `event-state-machine` · `roles-and-active-role` 수준의 topic 문서 필요.
+### G-3. Auth 구현 문서화 — 🔴 확대
+Stage 1 (dev-login + cookie session + AuthSession) + Stage 2 (Google OAuth) + **Kakao OAuth (신규)** 전부 라이브. `topics/auth-flow.md` 여전히 없음.
 
-**핵심 내용 (초안)**:
-- AuthSession 모델 (sessionId PK, userId FK CASCADE, expiresAt, lastSeenAt, TTL 7d)
-- dev-login stub (NODE_ENV production 에서 404)
-- Google OAuth 흐름 (state CSRF 쿠키 10m, redirect_uri=`{WEB_URL}/api/auth/google/callback`, tokeninfo 검증)
-- requireAuth 미들웨어 (req.auth 주입)
-- 쿠키 same-origin 전략 (Vite dev proxy `/api/*` 경유)
-- Kakao OAuth 는 **아직 미구현** — A_100/A_101 완결 위해 필요.
+핵심 내용 (이번 lint 에 추가):
+- AuthSession 모델 (TTL 7d, sliding expiry)
+- dev-login stub (NODE_ENV check)
+- Google OAuth authorization code flow (tokeninfo 검증)
+- Kakao OAuth (kapi.kakao.com/v2/user/me, 토큰 교환)
+- requireAuth / resolveAuth 미들웨어 이원화 (필수 vs 옵셔널)
+- 쿠키 same-origin 전략 (Vite proxy 경유)
 
-### G-4 [신규]. 다중 소스 ingest 파이프라인 문서 없음
-TourAPI (전국 축제) + Seoul Open API (문화행사) + KCISA (공연전시) + 공통 중복 방지 로직 + forward-looking 일일 배치. 현재 `apps/bff/src/jobs/` 에 구현됐고 log.md 에 단편적 기록만 있음. `topics/ingest-pipeline.md` 필요.
+### G-4. 다중 소스 ingest 파이프라인 문서 없음
+TourAPI + Seoul Open API + KCISA + forward-looking daily batch + ingest-common 중복방지. `topics/ingest-pipeline.md` 필요.
 
-### G-5 [신규]. regions 시드 문서 없음
-서울 25구 + 광역시 + 경기 (현재 regions 테이블 시드됨). `topics/regions-taxonomy.md` 또는 `db-schema-overview` 갱신.
+### G-5. regions 시드 계층 문서 없음
+sido / sigungu / dong 3단 계층. listRegions 가 district 만 노출하는 규약. chat resolver 도 동일 규약 따라야 함.
 
-### G-6. entities 레이어 착수 시기 도래
-외부 의존성 5개 (Google / Kakao / TourAPI / Seoul Open Data / KCISA) — 각각 간단한 entities 페이지 권장 (API endpoint, 인증 방식, rate limit, 장애 시 대체 동작).
+### G-6. entities 레이어 착수 시기 초과
+외부 의존성: Google OAuth / Kakao OAuth / Kakao Maps / TourAPI / Seoul Open Data / KCISA / OpenAI (Stage 2 예정). 각 1 페이지.
 
-### ~~G-2. entities 레이어 미착수~~ → G-6 으로 업그레이드 (Phase 1 현재).
-
----
-
-## 5. Over-large pages
-
-**해당 없음.** 최장 `db-schema-overview.md` 여전히 ~110 lines.
+### G-7 [신규]. A_302 북마크 / A_500 마이페이지 / A_501 리뷰 쓰기 / A_201 LLM 실 연동 / A_200 EventSummaryPanel — 구현 문서화 zero
+라이브 기능이지만 `topics/` 에 대응 페이지 없음. `topics/main-page-flow.md` · `topics/event-detail-review-flow.md` 는 요구사항 초안 기반이라 실구현 대응 문서가 별도 필요.
 
 ---
 
-## 6. Low-confidence inferences
-
-`graphify-out/graph.json` 491 nodes / 73 INFERRED 엣지 (평균 confidence 0.81). 따로 떨어진 커뮤니티 (God node 근접 관계) 검토는 별도 세션에서 (시간 비용).
+## 5~6. Over-large / low-confidence — 해당 없음
 
 ---
 
-## 방향 점검 — 유스케이스 구현 상태 (2026-04-19)
+## 방향 점검 — 유스케이스 구현 상태 (2026-04-19 late)
 
-| ID | 요구사항 | 실제 | Gap |
+| ID | 요구사항 | 상태 | 커밋 |
 |---|---|---|---|
-| A_100 가입 | Google + Kakao 소셜 | **Google OAuth 완료 (Stage 2)** | Kakao OAuth 추가 |
-| A_101 로그인 | 동 | 동 | 동 |
-| A_200 메인 | 사이드바 + 지도 + 채팅 + 상단 예정탭 | Layout / Filter / List / Map / ChatDock(mock) ✓ | 상단 "예정 이벤트" 헤더 탭 없음 (FullListPanel 내부 탭으로 흡수 — 의도적 결정이면 ADR 필요) |
-| A_201 채팅검색 | LLM 5종 필터 자동 매핑 | ChatDock UI only, mock echo | **services/llm 빈 폴더** |
-| A_202 필터검색 | 5종 다중 선택 + 적용 | ✓ | - |
-| A_203 예정 이벤트 | 상단 탭, 3/6/전체 기간 | FullListPanel phase 탭에 "예정" 포함 | 기간 토글 (3/6/전체) 미구현 |
-| A_300 전체목록 | 카테고리 5버튼 (전체/4종) | 8버튼 + phase 4탭 | 카테고리 확장으로 UI 재검토 |
-| A_400 상세 | 포스터+북마크, 개요, 프로그램, 관련 기사 | Hero/meta/desc/minimap/리뷰/provenance | **북마크 미구현**, 프로그램 구조 · 관련 기사 없음 |
-| A_500 마이페이지 | 월간 캘린더 + 저장 배지 + 역할전환 | **미착수 (0%)** | 전부 |
-| A_501 리뷰 작성 | 별점+텍스트+사진 ≤5장, 종료일 이후 활성 | 별점+텍스트(2~2000자) ✓ | **사진 업로드 0**, **종료일 검증 0** |
-| A_600 업로더 승급 | 역할 추가 신청 + 증명 업로드 | 미착수 | - |
-| A_601 업로더 메인 | 본인 이벤트 그리드 | 미착수 | - |
-| A_602 이벤트 업로드 | 서류 ≥2종, 기본정보, 종류, companion 2 | 미착수 | - |
-| A_700 관리자 | 이벤트 승인 / 라벨 / 업로더 심사 | 미착수 | - |
+| A_100 가입 | Google + Kakao 소셜 | ✅ **완료** | `d29bec3` (Google) + `a038626` (Kakao) |
+| A_101 로그인 | 동 | ✅ 완료 | 동 |
+| A_200 메인 | 레이아웃 + 필터 + 목록 + 채팅 + 상단 예정 탭 | ✅ 핵심 완료 (상단 탭은 phase 탭으로 흡수) | 다수 |
+| A_201 채팅검색 | LLM 5종 필터 자동 매핑 | ✅ Stage 1 (rule-based), ChatDock 실 연동 | `ff6548f` + `9313be1` |
+| A_202 필터검색 | 5종 다중 선택 + 적용 | ✅ 완료 | 초기 |
+| A_203 예정 이벤트 | 상단 탭 / 3·6·전체 기간 | ✅ FullListPanel phase 탭에 흡수 | `c19f231` |
+| A_300 전체목록 | 카테고리 5버튼 | ✅ (8버튼 + phase 4탭) | `35cd6f8` |
+| A_400 상세 | Hero + 개요 + 관련 기사 + 북마크 | ✅ 북마크 추가 / 관련 기사 미구현 | `1977225` + `30bf5d6` |
+| A_500 마이페이지 | 월간 캘린더 + 저장 배지 + 역할전환 | 🟡 뼈대만 (내 북마크 + 내 리뷰 탭) | `30bf5d6` |
+| A_501 리뷰 작성 | 별점+텍스트+사진 ≤5장, 종료일 이후 | 🟡 사진 제외 완료 (종료일 검증 ✓) | `e6ef2fe` + `052291c` |
+| A_600~A_602 업로더 | 역할 승급 + 이벤트 등록 | 🔴 미착수 | — |
+| A_700 관리자 | 이벤트 승인 + 라벨 부여 | 🔴 미착수 | — |
 
-### 추가 누락 (요구사항 외 구현 필요 기능)
+### 추가 구현 상태
 
-| 항목 | 상태 | 우선 |
+| 항목 | 상태 | 비고 |
 |---|---|---|
-| 북마크 API / UI | 모델만 있고 API/UI 0 | 🔴 A_400·A_500 의존 |
-| 뉴스 기사 ingest + 표시 | news_articles 테이블 있음, ingest 0 | 🟡 A_400 관련 기사용 |
-| 알림 배달 로직 | notifications 테이블만 | 🟡 A_203 / A_500 연결 |
-| 이벤트 구독 UI | event_subscriptions 테이블만 | 🟡 A_203 |
-| 모바일 반응형 | 전무 (AppShell 데스크탑 고정) | 🟡 DESIGN.md §Layout 지시 |
-| ChatDock LLM 연동 | mock echo | 🔴 A_201 |
-| Kakao OAuth | 미구현 | 🟡 A_100/A_101 완결 |
-| 사진 업로드 (리뷰 · 업로더 서류) | MinIO 버킷만 생성됨 | 🟡 A_501 · A_602 |
+| 북마크 API / UI | ✅ 완료 | A_302 — event detail isBookmarked 포함 |
+| MyPage 내 북마크/리뷰 | ✅ 뼈대 완료 | 캘린더는 후속 |
+| 리뷰 본인 삭제 | ✅ 완료 | A_501 soft-delete |
+| 지도 선택 핀 강조 | ✅ 완료 | vermilion pulse ring |
+| EventSummaryPanel | ✅ 와이어프레임 동선 복원 | 북마크 + 상세 CTA |
+| services/llm | ✅ Stage 1 (Python 3.14 호환) | rule-based, 8종 카테고리 매핑 |
+| BFF /chat regionHints resolve | ✅ district-level only | `9313be1` |
+| 모바일 반응형 | 🔴 미구현 | AppShell 3-col 데스크탑 고정 |
+| 리뷰 사진 업로드 | 🔴 미구현 | MinIO 버킷만 |
+| 뉴스 기사 ingest / A_400 관련기사 | 🔴 미구현 | news_articles 테이블만 |
+| 알림 배달 / 이벤트 구독 UI | 🔴 미구현 | 테이블만 |
+| Stage 2 LLM (OpenAI) | 🔴 미착수 | API 키 비용 |
 
 ---
 
-## 권장 우선 순서
+## 권장 우선 순서 (남은 작업)
 
-1. **wiki 드리프트 정리** (event_type 4→8, auth_provider dev, topics/auth-flow 신설) — 30분, lint 재실행까지
-2. **북마크 (A_302 parent)** — 모델 있음, API 2개 + UI 토글. 1~2시간.
-3. **A_500 마이페이지 뼈대** — 내 리뷰 + 내 북마크 간단 리스트. 캘린더는 후속. 1~2시간.
-4. **A_501 조건 보강** — 종료일 이후만 리뷰 작성 허용 (필수). 사진 업로드는 후속.
-5. **services/llm 부트스트랩** — FastAPI + 기본 chain, ChatDock 실 연동. 2~3시간.
-6. **업로더 / 관리자** — auth role toggle, 서류 업로드 → S3, approval flow. 다음 sprint.
+1. **wiki 드리프트 대청소** (1~1.5h) — C-5 / C-6 / S-4 / G-3~G-7. 7개 문서 손대고 `topics/auth-flow.md` + `topics/ingest-pipeline.md` + `entities/{google,kakao,tourapi,seoul-open-data,kcisa}.md` 신설
+2. **모바일 반응형** (2~3h) — 사용자 환경 넓히기. 현재는 데스크탑만.
+3. **리뷰 사진 업로드 (A_501)** (2h) — MinIO 프리사인드 URL, 이미지 리사이즈, 5장 제한. **업로더 서류 업로드와 같은 인프라** 재사용.
+4. **업로더 플로우 (A_600~A_602)** (대) — role toggle + 이벤트 등록 + 서류 업로드 (S3 연동). 사진 업로드 코드 재사용.
+5. **관리자 승인 (A_700)** (대) — approval queue + 라벨 부여 UI.
+6. **Stage 2 LLM** (중) — OpenAI gpt-4o, API 키 발급 후.
 
 ---
 
