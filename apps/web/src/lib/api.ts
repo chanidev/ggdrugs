@@ -3,13 +3,18 @@
  *
  * baseURL 결정:
  *  - VITE_BFF_URL 우선 (배포 환경·명시적 지정).
- *  - 없으면 dev 에서 vite proxy ('/api' 경유) 또는 직접 localhost:3000.
+ *  - 없으면 `/api` (vite dev proxy 또는 같은 origin reverse-proxy).
  *
- * 현재는 간단히 localhost:3000 을 기본값으로. CORS 는 BFF 측에서 WEB_URL 로 허용됨.
+ * same-origin 전략 — 쿠키 세션(HttpOnly SameSite=Lax) 를 cross-origin 이슈 없이
+ * 쓰기 위함. 모든 요청은 `credentials: 'include'`.
  */
 
 const BFF_URL =
-  (import.meta.env.VITE_BFF_URL as string | undefined) ?? 'http://localhost:3000';
+  (import.meta.env.VITE_BFF_URL as string | undefined) ?? '/api';
+
+function withCredentials(init: RequestInit = {}): RequestInit {
+  return { credentials: 'include', ...init };
+}
 
 export type EventPhase = 'upcoming' | 'ongoing' | 'ended';
 
@@ -77,7 +82,7 @@ export async function fetchEvents(
 ): Promise<EventListResponse> {
   const qs = buildQuery(query);
   const url = `${BFF_URL}/events${qs ? `?${qs}` : ''}`;
-  const init: RequestInit = signal ? { signal } : {};
+  const init = withCredentials(signal ? { signal } : {});
   const res = await fetch(url, init);
   if (!res.ok) {
     const body = await res.text().catch(() => '');
@@ -93,7 +98,7 @@ export interface EventsStatsResponse {
 }
 
 export async function fetchEventsStats(signal?: AbortSignal): Promise<EventsStatsResponse> {
-  const init: RequestInit = signal ? { signal } : {};
+  const init = withCredentials(signal ? { signal } : {});
   const res = await fetch(`${BFF_URL}/events/stats`, init);
   if (!res.ok) throw new Error(`GET /events/stats ${res.status}`);
   return (await res.json()) as EventsStatsResponse;
@@ -107,7 +112,7 @@ export interface RegionItem {
 }
 
 export async function fetchRegions(signal?: AbortSignal): Promise<RegionItem[]> {
-  const init: RequestInit = signal ? { signal } : {};
+  const init = withCredentials(signal ? { signal } : {});
   const res = await fetch(`${BFF_URL}/regions`, init);
   if (!res.ok) throw new Error(`GET /regions ${res.status}`);
   const data = (await res.json()) as { items: RegionItem[] };
@@ -121,7 +126,7 @@ export interface VibeItem {
 }
 
 export async function fetchVibes(signal?: AbortSignal): Promise<VibeItem[]> {
-  const init: RequestInit = signal ? { signal } : {};
+  const init = withCredentials(signal ? { signal } : {});
   const res = await fetch(`${BFF_URL}/vibes`, init);
   if (!res.ok) throw new Error(`GET /vibes ${res.status}`);
   const data = (await res.json()) as { items: VibeItem[] };
@@ -137,7 +142,7 @@ export interface BffEventDetail extends BffEventItem {
 }
 
 export async function fetchEventDetail(id: string, signal?: AbortSignal): Promise<BffEventDetail> {
-  const init: RequestInit = signal ? { signal } : {};
+  const init = withCredentials(signal ? { signal } : {});
   const res = await fetch(`${BFF_URL}/events/${encodeURIComponent(id)}`, init);
   if (res.status === 404) throw new Error('NOT_FOUND');
   if (!res.ok) throw new Error(`GET /events/${id} ${res.status}`);
@@ -170,7 +175,7 @@ export async function fetchEventReviews(
   if (opts.page) sp.set('page', String(opts.page));
   if (opts.limit) sp.set('limit', String(opts.limit));
   const qs = sp.toString();
-  const init: RequestInit = signal ? { signal } : {};
+  const init = withCredentials(signal ? { signal } : {});
   const res = await fetch(
     `${BFF_URL}/events/${encodeURIComponent(id)}/reviews${qs ? `?${qs}` : ''}`,
     init,
@@ -178,4 +183,47 @@ export async function fetchEventReviews(
   if (res.status === 404) throw new Error('NOT_FOUND');
   if (!res.ok) throw new Error(`GET /events/${id}/reviews ${res.status}`);
   return (await res.json()) as EventReviewsResponse;
+}
+
+// =============================================================
+// Auth
+// =============================================================
+
+export interface CurrentUser {
+  userId: string;
+  nickname: string;
+  activeRole: 'user' | 'uploader' | 'admin';
+}
+
+/** 현재 세션의 사용자. 401 이면 null (비로그인). 그 외 에러는 throw. */
+export async function fetchMe(signal?: AbortSignal): Promise<CurrentUser | null> {
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(`${BFF_URL}/auth/me`, init);
+  if (res.status === 401) return null;
+  if (!res.ok) throw new Error(`GET /auth/me ${res.status}`);
+  const body = (await res.json()) as { user: CurrentUser };
+  return body.user;
+}
+
+/** Stage 1 — dev 전용 로그인 stub. Stage 2 에서 Google OAuth 리다이렉트로 교체. */
+export async function devLogin(nickname: string): Promise<CurrentUser> {
+  const res = await fetch(
+    `${BFF_URL}/auth/dev-login`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname }),
+    }),
+  );
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`POST /auth/dev-login ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as { user: CurrentUser };
+  return data.user;
+}
+
+export async function logout(): Promise<void> {
+  const res = await fetch(`${BFF_URL}/auth/logout`, withCredentials({ method: 'POST' }));
+  if (!res.ok) throw new Error(`POST /auth/logout ${res.status}`);
 }

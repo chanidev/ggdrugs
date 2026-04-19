@@ -11,6 +11,7 @@ import {
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PhaseBadge } from '../components/PhaseBadge';
+import { useCurrentUser } from '../lib/auth-context';
 
 /**
  * EventDetailPage — A_400 이벤트 상세.
@@ -162,6 +163,7 @@ function DetailBody({ detail }: { detail: BffEventDetail }) {
 }
 
 function ReviewsSection({ eventId }: { eventId: string }) {
+  const { user } = useCurrentUser();
   const [state, setState] = useState<{
     loading: boolean;
     error: string | null;
@@ -197,7 +199,7 @@ function ReviewsSection({ eventId }: { eventId: string }) {
         </div>
       </header>
 
-      <LoginGate />
+      {user ? <WritePlaceholder /> : <LoginGate />}
 
       <div className="mt-4 flex flex-col gap-3">
         {state.loading && <SkeletonReview />}
@@ -210,6 +212,25 @@ function ReviewsSection({ eventId }: { eventId: string }) {
         ))}
       </div>
     </section>
+  );
+}
+
+function WritePlaceholder() {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-4 py-3">
+      <p className="m-0 text-[13px] text-(--color-text-muted)">
+        후기를 남기고 다른 사람에게 도움이 되어 주세요.
+      </p>
+      <button
+        type="button"
+        disabled
+        aria-disabled="true"
+        title="리뷰 작성은 다음 단계에서 활성화됩니다"
+        className="inline-flex h-8 cursor-not-allowed items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-subtle)"
+      >
+        리뷰 쓰기 (준비 중) <Icon name="arrow" size={12} />
+      </button>
+    </div>
   );
 }
 

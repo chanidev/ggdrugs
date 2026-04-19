@@ -73,6 +73,7 @@ model User {
   chatSessions       ChatSession[]
   photoAlbums        PhotoAlbum[]
   tasteProfiles      UserTasteProfile[]
+  authSessions       AuthSession[]
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -499,6 +500,25 @@ model Photo {
 
   @@index([albumId, createdAt(sort: Desc)], map: "idx_photos_album")
   @@map("photos")
+}
+
+// =============================================================
+// 19c. AUTH_SESSIONS  (HTTP 세션 — ChatSession 과 별개 컨셉)
+// =============================================================
+model AuthSession {
+  // 64자 이상 random token (crypto.randomBytes(32).toString('base64url')).
+  // PK 로 그대로 사용 — lookup key 도 이것. cookie 에는 이 값을 담는다.
+  sessionId  String   @id @map("session_id") @db.VarChar(128)
+  userId     BigInt   @map("user_id")
+  expiresAt  DateTime @map("expires_at")  @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at")   @db.Timestamptz
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId],    map: "idx_auth_sessions_user")
+  @@index([expiresAt], map: "idx_auth_sessions_expires")
+  @@map("auth_sessions")
 }
 
 // =============================================================
