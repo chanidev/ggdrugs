@@ -28,4 +28,29 @@ LLM 마이크로서비스. Python FastAPI + LangChain.
 
 ## 상태
 
-Phase 0 — 스켈레톤. FastAPI 앱 스캐폴드는 Phase 1 이후.
+**Stage 1 (라이브, 2026-04)** — 규칙 기반 한국어 키워드 매핑 스텁.
+외부 LLM 미사용. `filters.py` 의 단순 사전으로 자연어 → 5종 필터 매핑.
+
+- `POST /chat` — `{messages:[{role,text}]}` → `{reply, filters}` 반환
+- `GET /health`
+
+**Stage 2 (예정)** — `openai` SDK + LangChain chain 으로 chat 핸들러 교체.
+Stage 1 의 `filters.py` 는 eval/fallback dataset 으로 보존.
+
+## 실행
+
+```bash
+pip install -r requirements.txt
+python -m uvicorn app:app --port 8000 --reload
+```
+
+BFF (`apps/bff`) 가 `LLM_SERVICE_URL` (기본 `http://localhost:8000`) 로 프록시.
+브라우저는 `/api/chat` → BFF → LLM 순으로 호출.
+
+## 필터 매핑 예
+
+| 사용자 발화 | 추출 필터 |
+|---|---|
+| "이번 주말 연인이랑 강남에서 볼만한 공연" | eventTypes=[performance], companions=[couple], periodKey=weekend, regionHints=[강남구] |
+| "가족이랑 주말 전시" | eventTypes=[exhibition], companions=[family], periodKey=weekend |
+| "오늘 종로 축제" | eventTypes=[festival], periodKey=today, regionHints=[종로구] |

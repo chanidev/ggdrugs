@@ -11,6 +11,7 @@ import { listRegions, listVibes } from './routes/lookups.js';
 import { devLogin, me, logout, startGoogle, googleCallback } from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
+import { postChat } from './routes/chat.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -137,6 +138,10 @@ export function createApp(): Express {
   });
   app.get('/vibes', (req: Request, res: Response, next: NextFunction) => {
     listVibes(req, res).catch(next);
+  });
+
+  app.post('/chat', (req: Request, res: Response, next: NextFunction) => {
+    postChat(req, res).catch(next);
   });
 
   // Auth — Google OAuth (real) + dev-login stub (dev only).

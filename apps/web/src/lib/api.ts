@@ -258,6 +258,41 @@ export async function devLogin(nickname: string): Promise<CurrentUser> {
   return data.user;
 }
 
+// =============================================================
+// Chat (A_201 — LLM 자연어 검색)
+// =============================================================
+
+export interface ChatFilters {
+  eventTypes: string[];
+  companions: string[];
+  periodKey: 'today' | 'weekend' | 'week' | 'month' | null;
+  regionHints: string[];
+}
+
+export interface ChatReply {
+  reply: string;
+  filters: ChatFilters;
+}
+
+export async function sendChat(
+  messages: { role: 'user' | 'assistant' | 'system'; text: string }[],
+): Promise<ChatReply> {
+  const res = await fetch(
+    `${BFF_URL}/chat`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages }),
+    }),
+  );
+  if (res.status === 502) throw new Error('LLM_UNREACHABLE');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`POST /chat ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as ChatReply;
+}
+
 export async function logout(): Promise<void> {
   const res = await fetch(`${BFF_URL}/auth/logout`, withCredentials({ method: 'POST' }));
   if (!res.ok) throw new Error(`POST /auth/logout ${res.status}`);

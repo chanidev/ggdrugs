@@ -10,7 +10,59 @@ import { ChatDock, type ChatMessage } from '../components/ChatDock';
 import { HealthBadge } from '../components/HealthBadge';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { EventSummaryPanel } from '../components/EventSummaryPanel';
-import type { EventListQuery } from '../lib/api';
+import { sendChat, type ChatFilters, type EventListQuery, type EventPhase } from '../lib/api';
+
+/** periodKey → {start, end} (YYYY-MM-DD). FilterSearchPanel 로직과 동일 의미. */
+function rangeForPeriod(key: ChatFilters['periodKey']): { start: string; end: string } | null {
+  if (!key) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const iso = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  };
+  const add = (d: Date, n: number) => {
+    const r = new Date(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  };
+  if (key === 'today') return { start: iso(today), end: iso(today) };
+  if (key === 'weekend') {
+    const day = today.getDay();
+    const sat = add(today, (6 - day + 7) % 7);
+    const sun = add(sat, 1);
+    return { start: iso(sat), end: iso(sun) };
+  }
+  if (key === 'week') {
+    const day = today.getDay() || 7;
+    const mon = add(today, -(day - 1));
+    const sun = add(mon, 6);
+    return { start: iso(mon), end: iso(sun) };
+  }
+  if (key === 'month') {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    return { start: iso(start), end: iso(end) };
+  }
+  return null;
+}
+
+function chatFiltersToQuery(f: ChatFilters): EventListQuery | null {
+  const q: EventListQuery = {};
+  if (f.eventTypes.length) q.eventTypes = f.eventTypes;
+  if (f.companions.length) q.companions = f.companions;
+  const r = rangeForPeriod(f.periodKey);
+  if (r) {
+    q.period = 'custom';
+    q.periodStart = r.start;
+    q.periodEnd = r.end;
+  }
+  const phases: EventPhase[] = ['upcoming', 'ongoing'];
+  q.phases = phases; // 채팅 검색은 기본적으로 현재·미래 이벤트만.
+  return Object.keys(q).length > 1 ? q : null; // phases 만으로는 '무필터'
+}
 
 /**
  * AppShell — A_200 메인 페이지 레이아웃.
@@ -43,18 +95,25 @@ export function AppShell() {
     setOpen((prev) => (prev === key ? null : key));
 
   const handleChatSubmit = (text: string) => {
-    setMessages((prev) => [...prev, { role: 'user', text }]);
+    const userMsg: ChatMessage = { role: 'user', text };
+    const history = [...messages, userMsg];
+    setMessages(history);
     setChatValue('');
     if (dockCollapsed) setDockCollapsed(false);
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          text: `"${text}" → 종로구·강남구 일대에서 관련 이벤트 ${Math.floor(2 + Math.random() * 4)}건을 찾았어요. 지도 위 핀을 눌러 자세히 보세요.`,
-        },
-      ]);
-    }, 600);
+    (async () => {
+      try {
+        const reply = await sendChat(history);
+        setMessages((prev) => [...prev, { role: 'assistant', text: reply.reply }]);
+        const q = chatFiltersToQuery(reply.filters);
+        if (q) setMapFilter(q);
+      } catch (err) {
+        const msg =
+          (err as Error).message === 'LLM_UNREACHABLE'
+            ? 'LLM 서비스에 연결하지 못했어요. 서비스가 올라와 있는지 확인해 주세요.'
+            : '응답을 받지 못했어요. 잠시 후 다시 시도해 주세요.';
+        setMessages((prev) => [...prev, { role: 'assistant', text: msg }]);
+      }
+    })();
   };
 
   return (
