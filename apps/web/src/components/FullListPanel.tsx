@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import {
   fetchEvents,
@@ -85,38 +85,58 @@ export function FullListPanel({ activeEventId }: { activeEventId?: string | null
 
   return (
     <div className="flex h-full min-h-0 flex-col">
+      {/* Editorial status strip — 종이 지도 범례 감성.
+          4 equal tabs 대신 한 줄 인라인 문장 (middot 구분),
+          숫자는 mono tabular, active 는 버밀리언 dot. */}
       <div
         role="tablist"
         aria-label="이벤트 진행 단계"
-        className="flex shrink-0 gap-0.5 border-b border-(--color-border) px-5 pt-3 text-[13px]"
+        className="flex shrink-0 flex-wrap items-center gap-y-1 border-b border-(--color-border) bg-(--color-surface) px-5 py-2.5"
       >
-        {PHASE_TABS.map((t) => {
+        {PHASE_TABS.map((t, i) => {
           const active = phase === t.key;
           const count = phaseCount(t.key);
           return (
-            <button
-              key={t.key}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={() => setPhase(t.key)}
-              className={`relative -mb-px inline-flex h-9 items-center gap-1.5 border-b-2 px-3 font-medium transition-colors ${
-                active
-                  ? 'border-(--color-accent) text-(--color-accent)'
-                  : 'border-transparent text-(--color-text-subtle) hover:text-(--color-text)'
-              }`}
-            >
-              {t.label}
-              {count !== null && (
+            <Fragment key={t.key}>
+              {i > 0 && (
                 <span
-                  className={`tabular text-[12px] ${
-                    active ? 'text-(--color-accent)' : 'text-(--color-text-subtle)'
-                  }`}
+                  aria-hidden
+                  className="select-none px-1 text-[12px] text-(--color-text-subtle)"
                 >
-                  {count.toLocaleString()}
+                  ·
                 </span>
               )}
-            </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setPhase(t.key)}
+                className={`group inline-flex items-center gap-1.5 rounded-(--radius-sm) px-1.5 py-0.5 text-[13px] transition-colors ${
+                  active
+                    ? 'text-(--color-accent)'
+                    : 'text-(--color-text-muted) hover:text-(--color-text)'
+                }`}
+              >
+                {active && (
+                  <span
+                    aria-hidden
+                    className="h-1.5 w-1.5 rounded-full bg-(--color-accent)"
+                  />
+                )}
+                <span className={active ? 'font-semibold' : 'font-medium'}>{t.label}</span>
+                {count !== null && (
+                  <span
+                    className={`font-mono text-[12px] tabular ${
+                      active
+                        ? 'text-(--color-accent)'
+                        : 'text-(--color-text-subtle) group-hover:text-(--color-text-muted)'
+                    }`}
+                  >
+                    {count.toLocaleString()}
+                  </span>
+                )}
+              </button>
+            </Fragment>
           );
         })}
       </div>
