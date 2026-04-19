@@ -9,6 +9,7 @@ interface LlmChatResponse {
     eventTypes: string[];
     companions: string[];
     periodKey: string | null;
+    vibes: string[];
     regionHints: string[];
   };
 }
@@ -47,6 +48,8 @@ export async function postChat(req: Request, res: Response) {
 
   const data = (await upstream.json()) as LlmChatResponse;
   const hints = data.filters?.regionHints ?? [];
+  const vibeNames = data.filters?.vibes ?? [];
+
   let regionIds: string[] = [];
   if (hints.length > 0) {
     // dongName: null 로 구·시·도 레벨 (district) 만. 동(neighborhood) 레벨 행과
@@ -58,11 +61,21 @@ export async function postChat(req: Request, res: Response) {
     regionIds = rows.map((r) => r.regionId.toString());
   }
 
+  let vibeIds: string[] = [];
+  if (vibeNames.length > 0) {
+    const rows = await prisma.eventVibe.findMany({
+      where: { vibeName: { in: vibeNames }, isActive: true },
+      select: { vibeId: true, vibeName: true },
+    });
+    vibeIds = rows.map((r) => r.vibeId.toString());
+  }
+
   res.json({
     reply: data.reply,
     filters: {
       ...data.filters,
       regionIds,
+      vibeIds,
     },
   });
 }

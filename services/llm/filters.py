@@ -40,6 +40,17 @@ PERIOD_TABLE: list[tuple[list[str], str]] = [
     (["이번달", "이번 달", "이달"], "month"),
 ]
 
+# vibe 라벨 (DB `event_vibes.vibe_name`) — 키워드 → 정확한 vibe 이름 매핑.
+# BFF 가 vibe_name → vibe_id 로 resolve 해 /events?vibeIds=... 쿼리에 사용.
+VIBE_TABLE: list[tuple[list[str], str]] = [
+    (["활동적", "액티브", "몸 쓰", "뛰"], "활동적"),
+    (["정적", "차분", "조용", "힐링"], "정적"),
+    (["체험형", "체험", "참여", "만들기"], "체험형"),
+    (["관람형", "관람", "보기", "구경"], "관람형"),
+    (["교육형", "교육적", "배우는", "배움"], "교육형"),
+    (["네트워킹", "교류", "친목"], "네트워킹 중심"),
+]
+
 # 서울 25개 구 — 단순 텍스트 매칭. BFF /regions 가 실제 regionId 로 resolve.
 SEOUL_GU = [
     "종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구",
@@ -79,10 +90,42 @@ def extract(text: str) -> dict[str, Any]:
         "companions": _match_any(t, COMPANION_TABLE),
         "eventTypes": _match_any(t, EVENT_TYPE_TABLE),
         "periodKey":  _match_first(t, PERIOD_TABLE),
+        "vibes":      _match_any(t, VIBE_TABLE),
         # 접미어 "구" 만 떼서 매칭 — str.replace 가 전체 "구" 를 제거해 "구로구"→"로"로
         # 너무 짧아져 오매칭 되던 문제 fix. (예: "종로구" 만 써도 "종로"에만 hit.)
         "regionHints": [gu for gu in SEOUL_GU if gu in t or gu[:-1] in t],
     }
+
+
+def extract_merge(messages: list[str]) -> dict[str, Any]:
+    """
+    다중 턴 — 모든 user 발화에서 추출한 필터를 머지. 최근 발화가 우선.
+
+    - 다중 값 축(companions/eventTypes/vibes/regionHints): 모든 턴의 union.
+    - 단일 값 축(periodKey): 가장 최근 턴의 값이 우선.
+    - "말고" / "빼고" / "대신" 이 최근 발화에 있으면 이전 턴의 다중 값 축을
+      해당 발화의 값으로 완전 교체 (사용자 의도 변경 힌트).
+    """
+    # 최근 턴이 교체(reset) 신호를 가졌는지 먼저 체크.
+    if not messages:
+        return {"companions": [], "eventTypes": [], "periodKey": None, "vibes": [], "regionHints": []}
+
+    latest = messages[-1]
+    reset_flag = any(k in latest for k in ["말고", "빼고", "대신", "바꿔", "아니"])
+    if reset_flag:
+        return extract(latest)
+
+    # 머지: 모든 턴 추출 → union.
+    merged = {"companions": [], "eventTypes": [], "periodKey": None, "vibes": [], "regionHints": []}
+    for t in messages:
+        ex = extract(t)
+        for k in ("companions", "eventTypes", "vibes", "regionHints"):
+            for v in ex[k]:
+                if v not in merged[k]:
+                    merged[k].append(v)
+        if ex["periodKey"] is not None:
+            merged["periodKey"] = ex["periodKey"]  # 최근 덮어쓰기
+    return merged
 
 
 # ---------------------------------------------------------------------------
@@ -118,11 +161,13 @@ def compose_reply(user_text: str, extracted: dict[str, Any]) -> str:
     if types := extracted.get("eventTypes"):
         labeled = ", ".join(_TYPE_LABEL.get(t, t) for t in types)
         parts.append(labeled)
+    if vibes := extracted.get("vibes"):
+        parts.append(", ".join(vibes))
 
     if not parts:
         return (
             "아직 필터를 못 찾았어요. '이번 주말 가족이랑 전시', '연인이랑 강남 공연'"
-            " 같이 지역·기간·동행·종류를 섞어서 물어봐 주세요."
+            " 같이 지역·기간·동행·종류·성향(활동적/정적/체험형 등)을 섞어서 물어봐 주세요."
         )
 
     summary = " · ".join(parts)

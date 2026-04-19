@@ -55,6 +55,7 @@ function chatFiltersToQuery(f: ChatFilters): EventListQuery | null {
   if (f.eventTypes.length) q.eventTypes = f.eventTypes;
   if (f.companions.length) q.companions = f.companions;
   if (f.regionIds.length) q.regionIds = f.regionIds;
+  if (f.vibeIds.length) q.vibeIds = f.vibeIds;
   const r = rangeForPeriod(f.periodKey);
   if (r) {
     q.period = 'custom';

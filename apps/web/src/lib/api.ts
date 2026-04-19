@@ -266,9 +266,12 @@ export interface ChatFilters {
   eventTypes: string[];
   companions: string[];
   periodKey: 'today' | 'weekend' | 'week' | 'month' | null;
+  vibes: string[];
   regionHints: string[];
   /** BFF 가 regionHints 를 regions 테이블에서 resolve 해 추가한 id (없으면 []). */
   regionIds: string[];
+  /** BFF 가 vibes(이름) 를 event_vibes 테이블에서 resolve 해 추가한 id. */
+  vibeIds: string[];
 }
 
 export interface ChatReply {
