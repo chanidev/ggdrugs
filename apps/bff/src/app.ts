@@ -8,7 +8,7 @@ import { eventsStats } from './routes/events-stats.js';
 import { getEventDetail } from './routes/event-detail.js';
 import { listEventReviews } from './routes/event-reviews.js';
 import { listRegions, listVibes } from './routes/lookups.js';
-import { devLogin, me, logout } from './routes/auth.js';
+import { devLogin, me, logout, startGoogle, googleCallback } from './routes/auth.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -77,7 +77,13 @@ export function createApp(): Express {
     listVibes(req, res).catch(next);
   });
 
-  // Auth — Stage 1: dev-login stub. Stage 2 에서 /auth/google/* 대체.
+  // Auth — Google OAuth (real) + dev-login stub (dev only).
+  app.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {
+    startGoogle(req, res).catch(next);
+  });
+  app.get('/auth/google/callback', (req: Request, res: Response, next: NextFunction) => {
+    googleCallback(req, res).catch(next);
+  });
   app.post('/auth/dev-login', (req: Request, res: Response, next: NextFunction) => {
     devLogin(req, res).catch(next);
   });

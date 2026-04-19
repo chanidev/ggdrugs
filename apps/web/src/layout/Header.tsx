@@ -30,7 +30,7 @@ export function Header() {
 }
 
 function AuthArea() {
-  const { user, loading, login, logout } = useCurrentUser();
+  const { user, loading, logout } = useCurrentUser();
 
   if (loading) {
     return (
@@ -64,22 +64,16 @@ function AuthArea() {
     );
   }
 
+  // Real OAuth — Google 로 redirect. (BFF 503 이면 알림 fallback.)
   return (
     <button
       type="button"
       onClick={() => {
-        // Stage 1: dev prompt. Stage 2 에서 `window.location = '/api/auth/google'` 로 swap.
-        const raw = window.prompt('닉네임을 입력하세요 (dev 로그인)');
-        if (!raw) return;
-        const nickname = raw.trim().slice(0, 50);
-        if (!nickname) return;
-        login(nickname).catch((err: unknown) => {
-          window.alert(`로그인 실패: ${(err as Error).message}`);
-        });
+        window.location.href = '/api/auth/google';
       }}
       className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
     >
-      로그인
+      Google 로그인
     </button>
   );
 }
