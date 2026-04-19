@@ -2,10 +2,10 @@ import type { ReactNode } from 'react';
 import { Icon } from './Icon';
 import type { SidebarSection } from '../layout/Sidebar';
 
-const META: Record<SidebarSection, { eyebrow: string; title: string }> = {
-  filter: { eyebrow: 'Filter · 5축', title: '필터 검색' },
-  list:   { eyebrow: 'Index',        title: '전체목록 조회' },
-  chat:   { eyebrow: 'LLM Search',   title: '채팅방 검색' },
+const META: Record<SidebarSection, { title: string }> = {
+  filter: { title: '필터 검색' },
+  list:   { title: '전체목록 조회' },
+  chat:   { title: '채팅방 검색' },
 };
 
 /**
@@ -31,13 +31,8 @@ export function OverlayPanel({
       className="absolute bottom-0 left-[236px] top-0 z-20 flex w-[380px] flex-col border-r border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)]"
       aria-label={`${meta.title} 상세`}
     >
-      <div className="flex shrink-0 items-start justify-between border-b border-(--color-border) px-5 pb-[14px] pt-5">
-        <div>
-          <div className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            {meta.eyebrow}
-          </div>
-          <h3 className="m-0 text-[18px] font-bold tracking-[-0.015em]">{meta.title}</h3>
-        </div>
+      <div className="flex shrink-0 items-center justify-between border-b border-(--color-border) px-5 pb-4 pt-5">
+        <h3 className="m-0 text-[18px] font-bold tracking-[-0.015em]">{meta.title}</h3>
         <button
           type="button"
           onClick={onClose}

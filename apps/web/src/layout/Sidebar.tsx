@@ -37,10 +37,7 @@ export function Sidebar({
       className="flex w-[236px] shrink-0 flex-col border-r border-(--color-border) bg-(--color-surface)"
       aria-label="이벤트 탐색 메뉴"
     >
-      <div className="px-5 pb-1 pt-[18px] text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-        Discovery · A_200
-      </div>
-      <h2 className="m-0 px-5 pb-4 text-[22px] font-bold leading-tight tracking-[-0.02em]">
+      <h2 className="m-0 px-5 pb-4 pt-6 text-[22px] font-bold leading-tight tracking-[-0.02em]">
         이벤트를 찾는
         <br />
         서울의 방법

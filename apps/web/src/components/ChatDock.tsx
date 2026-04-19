@@ -90,15 +90,12 @@ export function ChatDock({
               ))}
             </div>
           )}
-          <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+          <div className="mb-2 flex items-center gap-2 text-[12px] text-(--color-text-subtle)">
             <span
               aria-hidden
               className="h-1.5 w-1.5 rounded-full bg-(--color-accent) [animation:alle-pulse_1.6s_cubic-bezier(0,0,0.2,1)_infinite]"
             />
-            채팅 검색 · A_201
-            <span className="ml-auto text-[11px] font-medium normal-case tracking-normal text-(--color-text-subtle)">
-              LLM이 5개 필터로 자동 매핑
-            </span>
+            <span>자연어로 질문하면 5개 필터로 자동 매핑해 드려요</span>
           </div>
           <div className="mb-2.5 flex flex-wrap gap-1.5">
             {SUGGESTIONS.map((s) => (
