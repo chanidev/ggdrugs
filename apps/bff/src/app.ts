@@ -6,7 +6,7 @@ import { env } from './env.js';
 import { listEvents } from './routes/events.js';
 import { eventsStats } from './routes/events-stats.js';
 import { getEventDetail } from './routes/event-detail.js';
-import { listEventReviews, createEventReview } from './routes/event-reviews.js';
+import { listEventReviews, createEventReview, deleteMyReview } from './routes/event-reviews.js';
 import { listRegions, listVibes } from './routes/lookups.js';
 import { devLogin, me, logout, startGoogle, googleCallback } from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
@@ -85,6 +85,15 @@ export function createApp(): Express {
     },
     (req: Request, res: Response, next: NextFunction) => {
       createEventReview(req, res).catch(next);
+    },
+  );
+  app.delete(
+    '/reviews/:id',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      deleteMyReview(req, res).catch(next);
     },
   );
   app.post(

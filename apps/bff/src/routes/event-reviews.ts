@@ -132,10 +132,19 @@ export async function createEventReview(req: Request, res: Response) {
   // event 유효성 — 공개 상태 아니면 작성 불가
   const event = await prisma.event.findFirst({
     where: { eventId, approvalStatus: 'approved', isDeleted: false },
-    select: { eventId: true },
+    select: { eventId: true, phase: true, endDate: true },
   });
   if (!event) {
     res.status(404).json({ error: 'event not found' });
+    return;
+  }
+  // 요구사항 A_501: 이벤트 종료일 이후에만 리뷰 작성 활성화.
+  if (event.phase !== 'ended') {
+    res.status(422).json({
+      error: 'review_not_allowed_yet',
+      message: '리뷰는 이벤트 종료일 이후에 작성할 수 있어요.',
+      endDate: event.endDate.toISOString().slice(0, 10),
+    });
     return;
   }
 
@@ -190,4 +199,55 @@ export async function createEventReview(req: Request, res: Response) {
     }
     throw err;
   }
+}
+
+/**
+ * DELETE /reviews/:id — 본인 리뷰 soft-delete. tx 로 event.review_count·avg_rating 재계산.
+ */
+export async function deleteMyReview(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  const idStr = typeof req.params.id === 'string' ? req.params.id : '';
+  let reviewId: bigint;
+  try {
+    reviewId = BigInt(idStr);
+    if (reviewId <= 0n) throw new Error('invalid id');
+  } catch {
+    res.status(400).json({ error: 'invalid id' });
+    return;
+  }
+
+  const existing = await prisma.review.findUnique({
+    where: { reviewId },
+    select: { reviewId: true, userId: true, eventId: true, isDeleted: true },
+  });
+  if (!existing || existing.isDeleted) {
+    res.status(404).json({ error: 'review not found' });
+    return;
+  }
+  if (existing.userId !== auth.userId) {
+    res.status(403).json({ error: 'forbidden' });
+    return;
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.review.update({
+      where: { reviewId },
+      data: { isDeleted: true, deletedAt: new Date() },
+    });
+    const agg = await tx.review.aggregate({
+      where: { eventId: existing.eventId, isDeleted: false },
+      _avg: { rating: true },
+      _count: { _all: true },
+    });
+    const avg = agg._avg.rating ?? 0;
+    await tx.event.update({
+      where: { eventId: existing.eventId },
+      data: {
+        reviewCount: agg._count._all,
+        avgRating: new Prisma.Decimal(Number(avg).toFixed(2)),
+      },
+    });
+  });
+
+  res.json({ ok: true });
 }

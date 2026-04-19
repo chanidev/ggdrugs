@@ -182,11 +182,23 @@ export async function createEventReview(
   );
   if (res.status === 401) throw new Error('UNAUTHENTICATED');
   if (res.status === 409) throw new Error('ALREADY_REVIEWED');
+  if (res.status === 422) throw new Error('REVIEW_NOT_ALLOWED_YET');
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
     throw new Error(`POST /events/${id}/reviews ${res.status}: ${txt.slice(0, 200)}`);
   }
   return (await res.json()) as BffReviewItem;
+}
+
+export async function deleteMyReview(reviewId: string): Promise<void> {
+  const res = await fetch(
+    `${BFF_URL}/reviews/${encodeURIComponent(reviewId)}`,
+    withCredentials({ method: 'DELETE' }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (res.status === 404) throw new Error('NOT_FOUND');
+  if (!res.ok) throw new Error(`DELETE /reviews/${reviewId} ${res.status}`);
 }
 
 export async function fetchEventReviews(
