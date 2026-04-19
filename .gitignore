@@ -56,3 +56,4 @@ coverage/
 # User screenshots (ad-hoc, not project assets)
 image.png
 screenshot*.png
+.gstack/

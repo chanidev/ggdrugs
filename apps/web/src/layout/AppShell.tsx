@@ -9,6 +9,7 @@ import { SeoulMap } from '../components/SeoulMap';
 import { ChatDock, type ChatMessage } from '../components/ChatDock';
 import { HealthBadge } from '../components/HealthBadge';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { EventSummaryPanel } from '../components/EventSummaryPanel';
 import type { EventListQuery } from '../lib/api';
 
 /**
@@ -18,14 +19,15 @@ import type { EventListQuery } from '../lib/api';
  *  - Header (60px)
  *  - Body (flex row):
  *    · Sidebar rail (236px)
- *    · OverlayPanel (absolute left=236, w=380, z=20)
+ *    · OverlayPanel (absolute left=236, w=380, z=20)         — 필터/목록/채팅 help
+ *    · EventSummaryPanel (absolute left=616, w=380, z=10)     — 선택 이벤트 요약 (있을 때만)
  *    · main (map + 플로팅 ChatDock)
  *
  * State lift:
  *  - open section (filter/list/chat/null)
  *  - chatValue + messages + dockCollapsed
  *  - mapFilter: FilterSearchPanel 적용 결과가 SeoulMap 재-fetch 를 트리거
- *  - selectedEventId: 핀 선택 → FullListPanel 카드 하이라이트 (E 싱크)
+ *  - selectedEventId: 핀 클릭 / 목록 클릭 → 요약 패널 + 지도 하이라이트 동기화
  */
 export function AppShell() {
   const [open, setOpen] = useState<SidebarSection | null>('filter');
@@ -69,9 +71,16 @@ export function AppShell() {
                 setHighlightRegionIds([]);
               }}
               onRegionSelectionChange={setHighlightRegionIds}
+              onSelectEvent={setSelectedEventId}
+              activeEventId={selectedEventId}
             />
           )}
-          {open === 'list' && <FullListPanel activeEventId={selectedEventId} />}
+          {open === 'list' && (
+            <FullListPanel
+              activeEventId={selectedEventId}
+              onSelect={setSelectedEventId}
+            />
+          )}
           {open === 'chat' && (
             <ChatHelpPanel
               onPick={(q) => {
@@ -82,6 +91,12 @@ export function AppShell() {
             />
           )}
         </OverlayPanel>
+        {selectedEventId && (
+          <EventSummaryPanel
+            eventId={selectedEventId}
+            onClose={() => setSelectedEventId(null)}
+          />
+        )}
         <main className="relative flex min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">
             <ErrorBoundary>

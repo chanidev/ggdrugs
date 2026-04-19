@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { PERIODS, COMPANIONS, TYPES } from '../data/mock';
 import {
   fetchEvents,
@@ -73,6 +72,8 @@ export function FilterSearchPanel({
   onApplied,
   onReset,
   onRegionSelectionChange,
+  onSelectEvent,
+  activeEventId,
 }: {
   /** 적용 시 상위(AppShell) 에 전체 쿼리 전달 — 지도 핀 refetch 에 사용. */
   onApplied?: (query: EventListQuery) => void;
@@ -80,8 +81,10 @@ export function FilterSearchPanel({
   onReset?: () => void;
   /** 지역 chip 클릭 즉시 발행 — 지도 폴리곤 하이라이트 (적용 대기 X). */
   onRegionSelectionChange?: (regionIds: string[]) => void;
+  /** 결과 카드 클릭 시 요약 패널 열기 (navigate 대신). */
+  onSelectEvent?: (id: string) => void;
+  activeEventId?: string | null;
 }) {
-  const navigate = useNavigate();
   const [regions, setRegions] = useState<RegionItem[]>([]);
   const [vibes, setVibes] = useState<VibeItem[]>([]);
   const [lookupError, setLookupError] = useState<string | null>(null);
@@ -263,7 +266,8 @@ export function FilterSearchPanel({
             items={items}
             loading={listState.loading}
             error={listState.error}
-            onSelect={(id) => navigate(`/events/${id}`)}
+            activeId={activeEventId ?? null}
+            onSelect={(id) => onSelectEvent?.(id)}
             totalLabel={
               listState.data ? `${listState.data.total.toLocaleString()}개의 결과` : undefined
             }

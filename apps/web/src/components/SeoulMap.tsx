@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 import {
   Map as KakaoMap,
   MapMarker,
   MarkerClusterer,
   Polygon,
   useKakaoLoader,
-  CustomOverlayMap,
 } from 'react-kakao-maps-sdk';
 import {
   fetchEvents,
@@ -15,7 +13,6 @@ import {
   type EventListQuery,
   type RegionItem,
 } from '../lib/api';
-import { Icon } from './Icon';
 
 /** GeoJSON 데이터 타입 (필요한 서브셋만). southkorea/seoul-maps 형식. */
 interface SeoulGuFeature {
@@ -48,7 +45,8 @@ function geojsonToKakaoPath(geom: SeoulGuFeature['geometry']): { lat: number; ln
  *  - lat/lng null 인 행은 제외
  *  - MarkerClusterer 로 줌 레벨에 따라 클러스터 묶음
  *
- * Pin 클릭 → CustomOverlayMap 으로 간단 팝업 (제목 + 기간). 상세는 Phase 2.
+ * Pin 클릭 → onSelectEvent 으로 상향 (AppShell 의 EventSummaryPanel 이 요약 렌더).
+ *            지도 자체에는 별도 팝업 없음 (단일 진실: selectedEventId).
  */
 
 const SEOUL_CENTER = { lat: 37.5665, lng: 126.978 };
@@ -113,8 +111,6 @@ interface Pin {
   lat: number;
   lng: number;
   title: string;
-  dateRange: string;
-  phase: BffEventItem['phase'];
 }
 
 function toPin(item: BffEventItem): Pin | null {
@@ -124,8 +120,6 @@ function toPin(item: BffEventItem): Pin | null {
     lat: item.latitude,
     lng: item.longitude,
     title: item.title,
-    dateRange: item.startDate === item.endDate ? item.startDate : `${item.startDate} ~ ${item.endDate}`,
-    phase: item.phase,
   };
 }
 
@@ -141,7 +135,6 @@ export function SeoulMap({
   selectedEventId?: string | null;
   onSelectEvent?: (id: string | null) => void;
 }) {
-  const navigate = useNavigate();
   const appkey = import.meta.env.VITE_KAKAO_MAP_JS_KEY as string | undefined;
 
   const [loading, error] = useKakaoLoader({
@@ -199,12 +192,6 @@ export function SeoulMap({
     [filter],
   );
   const queryKey = useMemo(() => JSON.stringify(query), [query]);
-
-  // selected 는 AppShell 이 관리 — onSelectEvent 호출로 상향. 로컬 popup 은 pin 객체 참조.
-  const selectedPin = useMemo(
-    () => (selectedEventId ? pins.find((p) => p.id === selectedEventId) ?? null : null),
-    [selectedEventId, pins],
-  );
 
   useEffect(() => {
     if (!appkey) return;
@@ -271,79 +258,8 @@ export function SeoulMap({
             />
           ))}
         </MarkerClusterer>
-        {selectedPin && (
-          <CustomOverlayMap
-            position={{ lat: selectedPin.lat, lng: selectedPin.lng }}
-            yAnchor={1.2}
-            clickable
-            zIndex={100}
-          >
-            <PinPopup
-              pin={selectedPin}
-              onClose={() => onSelectEvent?.(null)}
-              onOpen={() => navigate(`/events/${selectedPin.id}`)}
-            />
-          </CustomOverlayMap>
-        )}
       </KakaoMap>
       <StatusBadge count={pins.length} error={fetchError} />
-    </div>
-  );
-}
-
-function PinPopup({
-  pin,
-  onClose,
-  onOpen,
-}: {
-  pin: Pin;
-  onClose: () => void;
-  onOpen: () => void;
-}) {
-  const phaseLabel = pin.phase === 'ongoing' ? '진행중' : pin.phase === 'upcoming' ? '예정' : '종료';
-  const tone =
-    pin.phase === 'ongoing'
-      ? 'bg-(--color-accent) text-white'
-      : pin.phase === 'upcoming'
-        ? 'bg-(--color-info-bg) text-(--color-info)'
-        : 'bg-(--color-surface-alt) text-(--color-text-subtle)';
-  return (
-    <div
-      className="relative w-[280px] rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-3.5 shadow-(--shadow-lg)"
-      // Kakao Map container 의 onClick (selection clear) 이 팝업 내부 클릭으로도 발화
-      // 하는 것을 방지 — 팝업 안 클릭은 맵으로 버블링 시키지 않는다.
-      onClick={(e) => e.stopPropagation()}
-    >
-      <div className="mb-1.5 flex items-start justify-between gap-2">
-        <h3 className="line-clamp-2 text-[14px] font-semibold leading-[1.3] tracking-[-0.01em]">
-          {pin.title}
-        </h3>
-        <span className={`inline-flex shrink-0 items-center rounded-(--radius-sm) px-2 py-[3px] text-[11px] font-semibold ${tone}`}>
-          {phaseLabel}
-        </span>
-      </div>
-      <p className="tabular m-0 mb-3 text-[12px] text-(--color-text-muted)">{pin.dateRange}</p>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpen();
-        }}
-        className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
-      >
-        상세 보기 <Icon name="arrow" size={13} />
-      </button>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        aria-label="팝업 닫기"
-        className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-(--radius-md) text-(--color-text-subtle) hover:bg-(--color-surface-alt) hover:text-(--color-text)"
-      >
-        ×
-      </button>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import {
   fetchEvents,
   fetchEventsStats,
@@ -28,8 +27,14 @@ const PHASE_TABS: { key: PhaseKey; label: string }[] = [
  *  - 카테고리 chip: /events/stats.categories 로 count 표시, 선택 시 /events?eventTypes=<code>.
  *  - phase · category 는 교집합 (AND).
  */
-export function FullListPanel({ activeEventId }: { activeEventId?: string | null }) {
-  const navigate = useNavigate();
+export function FullListPanel({
+  activeEventId,
+  onSelect,
+}: {
+  activeEventId?: string | null;
+  /** 카드 클릭 시 호출 — navigate 대신 요약 패널을 여는 상위 핸들러. */
+  onSelect?: (id: string) => void;
+}) {
   const [stats, setStats] = useState<EventsStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedKey>('all');
@@ -179,7 +184,7 @@ export function FullListPanel({ activeEventId }: { activeEventId?: string | null
         loading={listState.loading}
         error={listState.error}
         activeId={activeEventId ?? null}
-        onSelect={(id) => navigate(`/events/${id}`)}
+        onSelect={(id) => onSelect?.(id)}
         totalLabel={
           listState.data ? `${listState.data.total.toLocaleString()}개의 이벤트` : undefined
         }

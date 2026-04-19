@@ -17,6 +17,7 @@ type IconName =
   | 'locate'
   | 'sparkles'
   | 'inbox'
+  | 'bookmark'
   | 'chevronDown';
 
 export function Icon({ name, size = 18, className = '' }: { name: IconName; size?: number; className?: string }) {
@@ -107,6 +108,12 @@ export function Icon({ name, size = 18, className = '' }: { name: IconName; size
         <svg {...common}>
           <path d="M22 12h-6l-2 3h-4l-2-3H2" />
           <path d="M5.5 5.5h13L22 12v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6z" />
+        </svg>
+      );
+    case 'bookmark':
+      return (
+        <svg {...common}>
+          <path d="M6 4h12v17l-6-4-6 4V4z" />
         </svg>
       );
     case 'chevronDown':
