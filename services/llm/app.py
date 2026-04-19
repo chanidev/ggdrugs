@@ -57,6 +57,26 @@ class ChatRequest(BaseModel):
     messages: list[ChatMessage]
 
 
+class SummarizeRequest(BaseModel):
+    title: str
+    description: str | None = None
+    categoryName: str | None = None
+    vibes: list[str] = []
+    regionName: str | None = None
+
+
+class SummarizeResponse(BaseModel):
+    summary: str
+
+
+class SentimentRequest(BaseModel):
+    text: str
+
+
+class SentimentResponse(BaseModel):
+    sentiment: str  # "positive" | "negative" | "neutral"
+
+
 class ChatFilters(BaseModel):
     eventTypes: list[str] = []
     companions: list[str] = []
@@ -113,3 +133,65 @@ def _openai_extract(messages: list[ChatMessage]) -> dict[str, Any]:
 
     payload = [{"role": m.role, "text": m.text} for m in messages]
     return extract_via_openai(payload)
+
+
+@app.post("/summarize", response_model=SummarizeResponse)
+def summarize(req: SummarizeRequest) -> SummarizeResponse:
+    """
+    이벤트 한 건 → 2~3 문장 한국어 요약.
+
+    OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fallback.
+    description 이 있을수록 품질↑, 없어도 최소한의 요약은 반환.
+    """
+    if os.environ.get("OPENAI_API_KEY"):
+        try:
+            from openai_chain import summarize_event
+            text = summarize_event(
+                title=req.title,
+                description=req.description,
+                category_name=req.categoryName,
+                vibes=req.vibes,
+                region_name=req.regionName,
+            )
+            return SummarizeResponse(summary=text)
+        except Exception:
+            pass  # fallback below
+    # Fallback: 키 없음 또는 실패.
+    parts = [req.title]
+    if req.categoryName:
+        parts.append(f"{req.categoryName} 행사")
+    if req.regionName:
+        parts.append(f"{req.regionName} 에서 열립니다")
+    if req.vibes:
+        parts.append(f"분위기: {', '.join(req.vibes)}")
+    fallback = ". ".join(parts) + "."
+    return SummarizeResponse(summary=fallback)
+
+
+_POSITIVE_WORDS = ["좋", "최고", "만족", "추천", "재밌", "신남", "굿", "행복", "훌륭"]
+_NEGATIVE_WORDS = ["별로", "실망", "나쁨", "최악", "비추", "지루", "불편", "화났", "짜증"]
+
+
+def _rule_sentiment(text: str) -> str:
+    t = text.strip()
+    pos = sum(1 for w in _POSITIVE_WORDS if w in t)
+    neg = sum(1 for w in _NEGATIVE_WORDS if w in t)
+    if pos > neg and pos > 0:
+        return "positive"
+    if neg > pos and neg > 0:
+        return "negative"
+    return "neutral"
+
+
+@app.post("/sentiment", response_model=SentimentResponse)
+def sentiment(req: SentimentRequest) -> SentimentResponse:
+    """리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출."""
+    if os.environ.get("OPENAI_API_KEY"):
+        try:
+            from openai_chain import classify_sentiment
+            label = classify_sentiment(req.text)
+            if label in {"positive", "negative", "neutral"}:
+                return SentimentResponse(sentiment=label)
+        except Exception:
+            pass
+    return SentimentResponse(sentiment=_rule_sentiment(req.text))

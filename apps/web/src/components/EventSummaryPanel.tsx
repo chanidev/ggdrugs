@@ -148,10 +148,24 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
           </div>
         )}
 
-        {detail.description && (
-          <p className="m-0 line-clamp-6 text-[13px] leading-[1.6] text-(--color-text-muted)">
-            {detail.description}
-          </p>
+        {(detail.aiSummary || detail.description) && (
+          <section className="flex flex-col gap-1.5">
+            {detail.aiSummary && (
+              <>
+                <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+                  AI 요약
+                </p>
+                <p className="m-0 text-[13px] leading-[1.6] text-(--color-text)">
+                  {detail.aiSummary}
+                </p>
+              </>
+            )}
+            {detail.description && !detail.aiSummary && (
+              <p className="m-0 line-clamp-6 text-[13px] leading-[1.6] text-(--color-text-muted)">
+                {detail.description}
+              </p>
+            )}
+          </section>
         )}
       </div>
     </article>

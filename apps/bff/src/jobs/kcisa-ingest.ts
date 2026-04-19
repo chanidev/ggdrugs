@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
 import {
+  cleanDescription,
   extractSeoulGu,
   isForwardLooking,
   isSeoulAddress,
@@ -117,11 +118,16 @@ function toNormalized(item: KcisaItem): NormalizedEvent | null {
   if (!period) return null;
   const gu = extractSeoulGu(item.EVENT_SITE);
   const addressText = item.EVENT_SITE ?? (gu ? `서울 ${gu}` : '서울');
+  const descParts: string[] = [];
+  if (item.SUB_TITLE) descParts.push(item.SUB_TITLE);
+  if (item.DESCRIPTION) descParts.push(item.DESCRIPTION);
+  const description = cleanDescription(descParts.join('\n'));
   return {
     externalSourceId: externalIdOf(item),
     crawlOrigin: CRAWL_ORIGIN,
     categoryCode: classifyCategory(item.GENRE),
     title: item.TITLE,
+    description,
     addressText,
     latitude: null,
     longitude: null,

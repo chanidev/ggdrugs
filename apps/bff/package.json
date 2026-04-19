@@ -18,7 +18,8 @@
     "ingest": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts",
     "ingest:tourapi": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts tourapi",
     "ingest:seoul": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts seoul-culture",
-    "ingest:kcisa": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts kcisa"
+    "ingest:kcisa": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts kcisa",
+    "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts"
   },
   "dependencies": {
     "@ggdrugs/config": "workspace:*",

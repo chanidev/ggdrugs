@@ -90,6 +90,9 @@ function toNormalized(item: TourApiItem): NormalizedEvent | null {
     crawlOrigin: CRAWL_ORIGIN,
     categoryCode: 'festival',
     title: item.title,
+    // TourAPI `searchFestival2` 는 설명을 기본 리턴 안 함 (detailCommon 별도 호출 필요).
+    // 대량 배치 비용 문제로 skip — AI 요약은 title+category 기반으로 fallback.
+    description: null,
     addressText: addr,
     latitude: lat !== null && Number.isFinite(lat) ? lat : null,
     longitude: lng !== null && Number.isFinite(lng) ? lng : null,

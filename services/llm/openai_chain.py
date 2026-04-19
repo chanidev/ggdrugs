@@ -87,6 +87,88 @@ _SCHEMA = {
 }
 
 
+SUMMARY_SYSTEM = """당신은 서울 이벤트 안내 어시스턴트입니다.
+
+주어진 이벤트 정보를 사용해 사용자에게 바로 보여줄 **2~3문장 한국어 요약**을 작성하세요.
+
+규칙:
+- 존댓말, 간결하고 단정한 톤 (여행 가이드 느낌).
+- 첫 문장: 어떤 행사인지 (무엇/카테고리).
+- 둘째 문장: 누구에게 추천 / 어떤 경험을 할 수 있는지.
+- 셋째 문장 (있으면): 장소·기간 같은 실용 정보 or 분위기 한 단어.
+- 제공된 사실만 쓰세요. 없는 정보를 지어내지 마세요.
+- 별점·가격·예매 같은 추측은 금지.
+- 이모지·해시태그·마크다운 금지. 일반 문장으로.
+- 전체 250자 이내.
+"""
+
+
+SENTIMENT_SYSTEM = """당신은 이벤트 리뷰의 감성을 분류하는 분류기입니다.
+주어진 한국어 리뷰를 positive / negative / neutral 중 하나로 분류하세요.
+반드시 JSON 으로 {"sentiment": "positive|negative|neutral"} 만 반환하세요."""
+
+_SENTIMENT_SCHEMA = {
+    "name": "sentiment_classify",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "sentiment": {"type": "string", "enum": ["positive", "negative", "neutral"]},
+        },
+        "required": ["sentiment"],
+    },
+}
+
+
+def classify_sentiment(text: str) -> str:
+    client = OpenAI()
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": SENTIMENT_SYSTEM},
+            {"role": "user", "content": text[:2000]},
+        ],
+        response_format={"type": "json_schema", "json_schema": _SENTIMENT_SCHEMA},
+        temperature=0,
+        max_tokens=30,
+    )
+    content = resp.choices[0].message.content or "{}"
+    return json.loads(content).get("sentiment", "neutral")
+
+
+def summarize_event(
+    *,
+    title: str,
+    description: str | None,
+    category_name: str | None,
+    vibes: list[str],
+    region_name: str | None,
+) -> str:
+    client = OpenAI()
+    user_lines = [f"제목: {title}"]
+    if category_name:
+        user_lines.append(f"분류: {category_name}")
+    if region_name:
+        user_lines.append(f"지역: {region_name}")
+    if vibes:
+        user_lines.append(f"성향: {', '.join(vibes)}")
+    if description:
+        user_lines.append(f"원본 설명: {description[:2000]}")
+    user_msg = "\n".join(user_lines)
+
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": SUMMARY_SYSTEM},
+            {"role": "user", "content": user_msg},
+        ],
+        temperature=0.3,
+        max_tokens=220,
+    )
+    return (resp.choices[0].message.content or "").strip()
+
+
 def extract_via_openai(messages: list[dict[str, str]]) -> dict[str, Any]:
     """
     messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]

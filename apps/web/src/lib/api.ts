@@ -135,6 +135,8 @@ export async function fetchVibes(signal?: AbortSignal): Promise<VibeItem[]> {
 
 export interface BffEventDetail extends BffEventItem {
   description: string | null;
+  /** gpt-4o-mini 가 생성한 2~3문장 한국어 요약. description/title/category/vibes 기반. */
+  aiSummary: string | null;
   addressDetail: string | null;
   source: { type: string; crawlOrigin: string; externalId: string };
   createdAt: string;
@@ -156,6 +158,8 @@ export interface BffReviewItem {
   nickname: string;
   rating: number; // 1~5
   body: string;
+  /** gpt-4o-mini 가 자동 분류한 감성. 작성 직후엔 null, 몇 초 뒤 분류 완료. */
+  sentiment: 'positive' | 'negative' | 'neutral' | null;
   createdAt: string; // ISO
   photos: { path: string; sortOrder: number }[];
 }

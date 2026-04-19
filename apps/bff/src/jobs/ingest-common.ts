@@ -25,6 +25,8 @@ export interface NormalizedEvent {
   crawlOrigin: string;
   categoryCode: EventCategoryCode;
   title: string;
+  /** 원본 API 가 제공하는 설명 문구. HTML strip 후 plain text 로 저장. 없으면 null. */
+  description: string | null;
   addressText: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -166,6 +168,7 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
     sourceType: 'crawled',
     crawlOrigin: ev.crawlOrigin,
     title: ev.title.slice(0, 200),
+    description: ev.description ? ev.description.slice(0, 10_000) : null,
     addressDetail: ev.addressText?.slice(0, 255) ?? null,
     latitude:
       ev.latitude !== null && Number.isFinite(ev.latitude)
@@ -193,6 +196,7 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
     create: { ...data, externalSourceId: ev.externalSourceId },
     update: {
       title: data.title,
+      description: data.description,
       addressDetail: data.addressDetail,
       latitude: data.latitude,
       longitude: data.longitude,
@@ -204,6 +208,22 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
       regionId: data.regionId,
     },
   });
+}
+
+/** HTML tag 제거 + 엔티티 디코드(&nbsp; 등) + 공백 정규화. 100K 길이 컷오프. */
+export function cleanDescription(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  let t = raw.slice(0, 100_000);
+  t = t.replace(/<[^>]+>/g, ' ');
+  t = t
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'");
+  t = t.replace(/\s+/g, ' ').trim();
+  return t.length > 0 ? t : null;
 }
 
 export interface IngestResult {

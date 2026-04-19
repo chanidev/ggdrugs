@@ -31,6 +31,7 @@ export async function getEventDetail(req: Request, res: Response) {
       eventId: true,
       title: true,
       description: true,
+      aiSummary: true,
       addressDetail: true,
       startDate: true,
       endDate: true,
@@ -84,6 +85,7 @@ export async function getEventDetail(req: Request, res: Response) {
     eventId: row.eventId.toString(),
     title: row.title,
     description: row.description,
+    aiSummary: row.aiSummary,
     addressDetail: row.addressDetail,
     category: {
       code: row.category.categoryCode,

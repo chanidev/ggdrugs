@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
 import {
+  cleanDescription,
   isForwardLooking,
   parseYmd,
   upsertCrawledEvent,
@@ -40,6 +41,12 @@ interface SeoulEventRow {
   HMPG_ADDR?: string;
   LOT?: string;
   LAT?: string;
+  // 추가 설명 필드 — 대부분 비어있지만 있을 땐 가치 큼.
+  USE_TRGT?: string;   // 이용대상
+  USE_FEE?: string;    // 이용료
+  PLAYER?: string;     // 출연자
+  PROGRAM?: string;    // 프로그램 소개
+  ETC_DESC?: string;   // 기타 설명
 }
 
 interface SeoulResponse {
@@ -124,11 +131,21 @@ function toNormalized(row: SeoulEventRow): NormalizedEvent | null {
   const gu = row.GUNAME ? `${row.GUNAME.endsWith('구') ? row.GUNAME : row.GUNAME + '구'}` : '';
   const addressText = row.PLACE ? `서울 ${gu} ${row.PLACE}`.trim() : `서울 ${gu}`.trim() || null;
   const { latitude, longitude } = splitLatLng(row.LOT, row.LAT);
+  // 설명 필드 합성: PROGRAM + ETC_DESC 가 본문. PLAYER/USE_TRGT/USE_FEE 는 보조.
+  // Seoul OpenAPI 는 description 전용 필드가 없어 여러 필드를 라벨링해 합친다.
+  const parts: string[] = [];
+  if (row.PROGRAM) parts.push(row.PROGRAM);
+  if (row.ETC_DESC) parts.push(row.ETC_DESC);
+  if (row.PLAYER) parts.push(`출연: ${row.PLAYER}`);
+  if (row.USE_TRGT) parts.push(`대상: ${row.USE_TRGT}`);
+  if (row.USE_FEE) parts.push(`이용료: ${row.USE_FEE}`);
+  const description = cleanDescription(parts.join('\n'));
   return {
     externalSourceId: makeExternalId(row),
     crawlOrigin: CRAWL_ORIGIN,
     categoryCode: classifyCategory(row.CODENAME),
     title: row.TITLE,
+    description,
     addressText,
     latitude,
     longitude,

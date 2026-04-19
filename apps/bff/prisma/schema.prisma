@@ -151,6 +151,10 @@ model Event {
   externalSourceId            String?   @map("external_source_id")   @db.VarChar(100)
   title                       String    @db.VarChar(200)
   description                 String?   @db.Text
+  /// LLM 2~3문장 요약 (gpt-4o-mini 생성). description + title + category + vibes 기반.
+  /// ingest 시점 또는 backfill 스크립트로 채움. 실시간 조회 시 캐시 역할.
+  aiSummary                   String?   @map("ai_summary") @db.Text
+  aiSummaryAt                 DateTime? @map("ai_summary_at") @db.Timestamptz
   addressDetail               String?   @map("address_detail")       @db.VarChar(255)
   latitude                    Decimal?  @db.Decimal(10, 7)
   longitude                   Decimal?  @db.Decimal(10, 7)

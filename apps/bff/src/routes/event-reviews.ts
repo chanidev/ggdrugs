@@ -1,7 +1,27 @@
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
+import { env } from '../env.js';
+import { logger } from '../logger.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
+
+/** 리뷰 작성 후 fire-and-forget 으로 LLM sentiment 분류 → DB 업데이트. */
+async function classifyAndStoreSentiment(reviewId: bigint, text: string): Promise<void> {
+  try {
+    const res = await fetch(`${env.LLM_SERVICE_URL}/sentiment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) return;
+    const data = (await res.json()) as { sentiment?: string };
+    const s = data.sentiment;
+    if (s !== 'positive' && s !== 'negative' && s !== 'neutral') return;
+    await prisma.review.update({ where: { reviewId }, data: { sentiment: s } });
+  } catch (err) {
+    logger.warn({ err, reviewId: reviewId.toString() }, 'sentiment classify failed');
+  }
+}
 
 /**
  * GET /events/:id/reviews — A_501 리뷰 목록.
@@ -57,6 +77,7 @@ export async function listEventReviews(req: Request, res: Response) {
         reviewId: true,
         rating: true,
         body: true,
+        sentiment: true,
         createdAt: true,
         user: { select: { nickname: true } },
         photos: {
@@ -72,6 +93,7 @@ export async function listEventReviews(req: Request, res: Response) {
     nickname: r.user.nickname,
     rating: r.rating,
     body: r.body,
+    sentiment: r.sentiment,
     createdAt: r.createdAt.toISOString(),
     photos: r.photos.map((p) => ({ path: p.filePath, sortOrder: p.sortOrder })),
   }));
@@ -184,12 +206,16 @@ export async function createEventReview(req: Request, res: Response) {
       return review;
     });
 
+    // fire-and-forget: LLM sentiment 분류 → DB update (응답 후 비동기).
+    void classifyAndStoreSentiment(created.reviewId, created.body);
+
     res.status(201).json({
       reviewId: created.reviewId.toString(),
       nickname: created.user.nickname,
       rating: created.rating,
       body: created.body,
       createdAt: created.createdAt.toISOString(),
+      sentiment: null, // 작성 직후엔 아직 분류 전
       photos: [],
     });
   } catch (err) {
