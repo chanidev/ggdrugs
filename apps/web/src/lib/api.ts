@@ -89,6 +89,7 @@ export async function fetchEvents(
 export interface EventsStatsResponse {
   total: number;
   categories: { code: string; label: string; count: number }[];
+  phases: Record<EventPhase, number>;
 }
 
 export async function fetchEventsStats(signal?: AbortSignal): Promise<EventsStatsResponse> {

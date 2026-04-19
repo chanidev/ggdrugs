@@ -4,25 +4,30 @@ import { prisma } from '../prisma.js';
 /**
  * GET /events/stats — 집계용.
  *
- * 현재 공개 이벤트의 카테고리별 count. 전체목록 chip (축제 N · 박람회 N · ...) 용.
- * 추후 phase 별·region 별 breakdown 추가 가능.
+ * 공개 이벤트의 카테고리별 · phase 별 count.
+ *  - 전체목록 chip (축제 N · 박람회 N · ...) 용.
+ *  - A_203 "곧 열리는" / 진행중 / 종료 tab count.
  *
  * 응답:
  *   {
  *     total: number,
- *     categories: [{ code: 'festival', label: '축제', count: 1234 }, ...]
+ *     categories: [{ code: 'festival', label: '축제', count: 1234 }, ...],
+ *     phases:     { upcoming: n, ongoing: n, ended: n }
  *   }
- *
- * `all` pseudo-카테고리는 total 로 표현. 클라이언트가 원하면 직접 삽입.
  */
 export async function eventsStats(_req: Request, res: Response) {
-  const [total, byCategory] = await Promise.all([
-    prisma.event.count({
-      where: { approvalStatus: 'approved', isDeleted: false },
-    }),
+  const baseWhere = { approvalStatus: 'approved' as const, isDeleted: false };
+
+  const [total, byCategory, byPhase] = await Promise.all([
+    prisma.event.count({ where: baseWhere }),
     prisma.event.groupBy({
       by: ['categoryId'],
-      where: { approvalStatus: 'approved', isDeleted: false },
+      where: baseWhere,
+      _count: { _all: true },
+    }),
+    prisma.event.groupBy({
+      by: ['phase'],
+      where: baseWhere,
       _count: { _all: true },
     }),
   ]);
@@ -43,5 +48,12 @@ export async function eventsStats(_req: Request, res: Response) {
     count: countByCategoryId.get(c.categoryId.toString()) ?? 0,
   }));
 
-  res.json({ total, categories });
+  const phases = { upcoming: 0, ongoing: 0, ended: 0 };
+  for (const g of byPhase) {
+    if (g.phase in phases) {
+      phases[g.phase as keyof typeof phases] = g._count._all;
+    }
+  }
+
+  res.json({ total, categories, phases });
 }
