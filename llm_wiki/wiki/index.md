@@ -35,6 +35,7 @@ See [log.md](log.md) for chronological activity.
 ### 시스템 흐름 (Phase 1 구현본)
 - [인증 흐름](topics/auth-flow.md) — Google/Kakao OAuth + dev stub + 쿠키 세션
 - [이벤트 Ingest 파이프라인](topics/ingest-pipeline.md) — TourAPI + Seoul + KCISA 다중 소스
+- [AI Enrichment](topics/ai-enrichment.md) — 이벤트 요약 + 리뷰 감성 분류 (gpt-4o-mini)
 
 ## Entities
 <!-- 외부 의존성: API, 서비스, 조직. 각 페이지에 endpoint·키·장애시 동작. -->

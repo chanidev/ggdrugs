@@ -139,3 +139,25 @@ Phase 1 실제 코드 착수. 이전까지는 스키마·문서만 있었고 이
 - 신규 topic 2개: `auth-flow.md`, `ingest-pipeline.md`.
 - 신규 entity 5개: `google`, `kakao`, `tourapi`, `seoul-open-data`, `kcisa`.
 - 이전 lint 의 "regions sigungu_name 중복" 오진 정정 — 실은 sido/sigungu/dong 3단 계층 설계. `chat.ts` regionHints resolver 만 `dongName:null` 필터 누락 (커밋 `9313be1` 해소).
+
+## 2026-04-19T22:30  feature  LLM enrichment — 이벤트 AI 요약 + 리뷰 sentiment
+Stage 2 OpenAI (gpt-4o-mini) 기반 자동 enrichment 파이프라인 구축.
+- **이벤트 요약 (aiSummary)**: 지금까지 `events.description` 이 0 rows — 세
+  러너 모두 ingest 단계에서 description 을 버리고 있었음. 이번 패치로
+  `NormalizedEvent.description` 추가 + Seoul(ETC_DESC/PROGRAM/PLAYER/USE_TRGT/
+  USE_FEE 결합) · KCISA(SUB_TITLE+DESCRIPTION) 반영. TourAPI list API 는
+  설명 미제공(별도 detailCommon 호출 비용 과해 skip).
+- **events.ai_summary TEXT + ai_summary_at 컬럼** 신설 (마이그레이션
+  `20260419210000`). `services/llm /summarize` (gpt-4o-mini + 한국어 가이드
+  톤 시스템 프롬프트, 2~3문장, 250자 이내) + BFF `jobs/summarize-events.ts`
+  backfill 스크립트 (`pnpm backfill:summary`). 동시성 5.
+- 초기 backfill 결과: description 있는 **403 → ai_summary 398 건 생성** (비용
+  ~$0.1, 시간 ~4분). 실패 0.
+- **리뷰 sentiment 자동 분류**: POST /events/:id/reviews 트랜잭션 응답 후
+  fire-and-forget 으로 `/sentiment` (gpt-4o-mini + JSON schema strict
+  `positive|negative|neutral`) 호출 → `reviews.sentiment` update. 실패 시
+  키워드 룰 기반 fallback.
+- UI: EventSummaryPanel·EventDetailPage 의 "소개" 섹션이 **AI 요약 + 원본
+  접기** 2-레이어로 재편. ReviewCard 에 SentimentBadge (긍정/부정/보통 색
+  뱃지). AI 뱃지는 accent-bg 칩으로 출처 표시.
+- 커밋 `7d58960`.

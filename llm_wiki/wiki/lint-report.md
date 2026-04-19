@@ -1,7 +1,7 @@
 # Wiki Lint Report
 
-**Generated**: 2026-04-19 (post-sweep — 대청소 직후)
-**Scope**: `wiki/` 전체 (4 sources + **16 topics** + **5 entities**, index/log 제외)
+**Generated**: 2026-04-19 (AI enrichment sprint 후)
+**Scope**: `wiki/` 전체 (4 sources + **17 topics** + **5 entities**, index/log 제외)
 **Graphify cross-check**: `graphify-out/` 491 nodes / 608 edges / 71 communities (2026-04-19 재빌드).
 
 ---
