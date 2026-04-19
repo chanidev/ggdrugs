@@ -1,4 +1,3 @@
-import { Link } from 'react-router';
 import { LogoLockup } from '../components/brand/Logo';
 import { Icon } from '../components/Icon';
 import { useCurrentUser } from '../lib/auth-context';
@@ -13,13 +12,8 @@ import { useCurrentUser } from '../lib/auth-context';
 export function Header() {
   return (
     <header className="flex h-[60px] shrink-0 items-center justify-between border-b border-(--color-border) bg-(--color-surface) px-6">
-      <Link
-        to="/"
-        className="inline-flex items-center rounded-(--radius-md) outline-none focus-visible:ring-2 focus-visible:ring-(--color-accent)"
-        aria-label="Alle 홈"
-      >
-        <LogoLockup />
-      </Link>
+      {/* LogoLockup 내부가 이미 <Link to="/">. 중첩 <a> 방지 위해 여기서는 감싸지 않는다. */}
+      <LogoLockup />
 
       <div className="flex items-center gap-3">
         <SearchMini />
