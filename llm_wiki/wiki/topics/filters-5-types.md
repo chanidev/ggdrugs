@@ -37,9 +37,12 @@ A_202(필터 검색)·A_201(채팅 검색)·A_203(예정 이벤트)에서 일관
 - ⚠ 매칭 규칙 확정 필요 (primary/secondary 중 하나라도 겹치면 매치? 아니면 primary 우선?).
 
 ### 4. 이벤트 종류 (event_type)
-- 값: 축제 / 박람회 / 심포지움 / 컨퍼런스 (4종).
+- **v5.0 원안 4종** → **현 DB 8종 확장** (마이그레이션 `20260418180000_expand_event_categories`, 2026-04-18).
+- 값: `festival` / `expo` / `symposium` / `conference` / `exhibition` / `performance` / `education` / `movie`.
+- 한글 표기: 축제 / 박람회 / 심포지움 / 컨퍼런스 / 전시 / 공연 / 교육 / 영화.
 - DB: `event_categories.category_code` + `events.category_id` FK.
-- 전체 카테고리 버튼 포함 시 UI는 5개 버튼(전체/4종).
+- 전체 카테고리 버튼 포함 시 UI는 **9개 버튼(전체/8종)** — FullListPanel 카테고리 chip 행.
+- **확장 근거**: 다중 소스 ingest (Seoul Open Data, KCISA) 가 실제로 공급하는 카테고리가 축제·박람회 외에 전시·공연·교육·영화 비중이 크다 (2026-04-18 데이터 기준 ended 4k 중 performance 1357 / education 1393 / exhibition 633). 4종만으론 "기타"가 과도 → UX 의미 약화. 요구사항 5차의 event_type 은 상위 분류고, DB `event_category` 는 실제 표시 수준으로 세분화.
 
 ### 5. 이벤트 성향 (event_vibe)
 - 예시 값: 활동적 / 정적 / 체험형 / 관람형 / 교육형 / 네트워킹 중심.

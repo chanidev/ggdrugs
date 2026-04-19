@@ -25,7 +25,8 @@ related:
 | 용어집 | DDL v3 실제 컬럼 | 비고 |
 |---|---|---|
 | event (상위 개념) | `events` 테이블 | 일치 |
-| event_type {축제, 박람회, 심포지움, 컨퍼런스} | `event_categories.category_code` (FK via `events.category_id`) | ⚠ 네이밍 차이 — event_type 개념이 별도 마스터 테이블로 정규화됨 |
+| event_type 원안 4종 {축제, 박람회, 심포지움, 컨퍼런스} | `event_categories.category_code` (FK via `events.category_id`) | 네이밍 차이 — event_type 개념이 별도 마스터 테이블로 정규화. |
+| event_type **확장 8종** (2026-04-18) {+ 전시, 공연, 교육, 영화} | 동 테이블에 `exhibition` / `performance` / `education` / `movie` 추가 (마이그레이션 `20260418180000_expand_event_categories`) | 다중 소스 ingest (Seoul/KCISA) 실데이터 분포에 따라 확장. [filters-5-types §4](filters-5-types.md) 근거. |
 | festival | `event_categories.category_code = 'festival'` | 일치 |
 
 ### 2. 분류·라벨
@@ -59,8 +60,17 @@ related:
 
 ### 6. 기술 용어
 - **BFF**: Node.js + Express + Prisma. 프론트 전용 중계.
-- **LLM 마이크로서비스**: Python FastAPI + LangChain.
-- **벡터 검색**: Qdrant.
+- **LLM 마이크로서비스**: Python FastAPI + LangChain (Stage 2 예정). 현재 Stage 1 은 규칙 기반 키워드 매퍼 (`services/llm/filters.py`).
+- **벡터 검색**: Qdrant (Stage 2).
+
+### 7. 인증 (auth_provider)
+| 값 | 용도 | 비고 |
+|---|---|---|
+| `google` | 프로덕션 OAuth 2.0 authorization code flow (authorization code → id_token → tokeninfo 검증) | 라이브 |
+| `kakao` | 프로덕션 OAuth (kauth.kakao.com → kapi.kakao.com/v2/user/me) | 라이브 |
+| `dev` | **로컬 dev-login stub** — `POST /auth/dev-login` 이 nickname 으로 user upsert. `NODE_ENV=production` 에서는 라우트가 404. 마이그레이션 `20260419201000_allow_dev_auth_provider` 로 `chk_users_provider` 확장. | dev 전용 |
+
+상세 흐름 → [auth-flow](auth-flow.md) (topic).
 
 ## Open questions / contradictions
 

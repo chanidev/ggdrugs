@@ -38,7 +38,7 @@ GGdrugs 프로젝트의 공식 요구사항정의서. 2026.04.17 발간된 v5.0(
 - **ADMIN**: A_700(이벤트승인·라벨부여·업로더 승급 심사)
 
 ### 용어집 핵심 (Ⅴ장)
-- **event / event_type / festival** — 상위-하위 계층. event_type은 {축제, 박람회, 심포지움, 컨퍼런스} 4종.
+- **event / event_type / festival** — 상위-하위 계층. 원안 event_type은 {축제, 박람회, 심포지움, 컨퍼런스} 4종. **2026-04-18 확장: {전시, 공연, 교육, 영화} 4종 추가 → DB event_categories 8종** (마이그레이션 `20260418180000`). UI 카테고리 버튼도 5→9 로 증가. 상세 근거 [filters-5-types §4](../topics/filters-5-types.md).
 - **event_vibe** — 이벤트 성향 라벨. 관리자가 A_700 심사 시 부여. 예: 활동적/정적/체험형/관람형/교육형/네트워킹 중심.
 - **companion_type** (방문자 측, 필터용) vs **expected_companion** (업로더 측, 업로드 시 상위 2개 선택). 같은 도메인 {혼자/연인/친구/가족}이지만 의미 분리 → **컬럼명 분리 관리 지시**.
 - **role**: {user, uploader, admin}. 모든 회원이 user 기본 보유. uploader는 A_600 신청 + A_700 승인 후 동일 계정에 추가. admin은 별도 전용 계정.

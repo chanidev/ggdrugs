@@ -32,9 +32,17 @@ See [log.md](log.md) for chronological activity.
 - [관리자 플로우](topics/admin-flow.md) — 승인·반려·라벨 부여
 - [UI 아키텍처 (구현본)](topics/ui-architecture.md) — rail + overlay panel, Tailwind v4 토큰 매핑
 
+### 시스템 흐름 (Phase 1 구현본)
+- [인증 흐름](topics/auth-flow.md) — Google/Kakao OAuth + dev stub + 쿠키 세션
+- [이벤트 Ingest 파이프라인](topics/ingest-pipeline.md) — TourAPI + Seoul + KCISA 다중 소스
+
 ## Entities
-<!-- People, orgs, products, projects. One file per entity in wiki/entities/. -->
-_(none yet)_
+<!-- 외부 의존성: API, 서비스, 조직. 각 페이지에 endpoint·키·장애시 동작. -->
+- [Google](entities/google.md) — OAuth (A_100/A_101)
+- [Kakao](entities/kakao.md) — OAuth + Maps SDK
+- [TourAPI](entities/tourapi.md) — 한국관광공사, 전국 축제 ingest
+- [Seoul Open Data](entities/seoul-open-data.md) — 서울열린데이터광장, 주 이벤트 소스
+- [KCISA](entities/kcisa.md) — 한국문화정보원, 공연·전시 공급
 
 ## Sources
 <!-- 1:1 summary pages for files in raw/. -->

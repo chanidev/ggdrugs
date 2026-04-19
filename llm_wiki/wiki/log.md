@@ -112,3 +112,30 @@ Phase 1 실제 코드 착수. 이전까지는 스키마·문서만 있었고 이
   - **Overlay Panel (w-360px, absolute left-220)**: rail 클릭 시 나타남, shadow-lg 로 지도 위 부양. 상단 `×` 닫기. 채팅 행은 예시 쿼리 3개 보여주고 실 입력은 하단 ChatDock.
   - **Map (flex-1)**: Kakao Maps 정상 로드 (envDir + 콘솔 서비스 활성화 후). 서울 중심 + 더미 마커 3 (종로·강남·관악).
   - **ChatDock (shrink-0)**: 지도 바로 아래. 입력창 + 검색 CTA. LLM 연동 전 no-op.
+
+## 2026-04-19T11:00  rebrand+ingest  Alle 브랜딩 + 다중 소스 ingest + event_type 8종 확장
+- **Alle 브랜딩 완료** (Phase 0 말 → Phase 1 초). GGdrugs → Alle 제품 표기 교체 (레포·패키지·DB 식별자는 ggdrugs 유지). Line Monogram 로고 + Vermilion accent 확정. 커밋 `98bdfa5`, `bfcb7ef`, `d49d16a`.
+- **다중 소스 ingest 도입**: TourAPI + Seoul Open Data + KCISA. forward-looking 일일 배치. 크로스 소스 중복방지 (제목·start_date 정확일치). 커밋 `87fa633`, `95820e1`, `38b2727`.
+- **event_categories 4종 → 8종 확장** (커밋 `35cd6f8`, 마이그레이션 `20260418180000`): Seoul/KCISA 가 공급하는 실 카테고리 분포 (공연 1357 / 교육 1393 / 전시 633) 를 위해 `exhibition, performance, education, movie` 추가. UI 카테고리 버튼 5→9.
+- **지역 폴리곤 하이라이트** + pulse 애니메이션: 필터 지역 chip ↔ 지도 구 경계 즉시 동기화. 커밋 `d02fec7`, `5b8273a`, `21e1dbe`.
+- **이벤트 상세 페이지**(A_400) 실 라우트 추가. 지도 필터 → /events 쿼리 매핑 (F), 필터·지도·목록 state lift (E), 필터·지도·목록 동기 선택 (E-sync). 커밋 `d76c23f`, `1977225`, `c05d8d6`.
+
+## 2026-04-19T12:30  feature  A_201·A_302·A_500·A_501 1차 sprint — 핵심 루프 완성
+한 세션에서 인증 Stage 1/2 + 리뷰 + 북마크 + 마이페이지 + 채팅 LLM stub 까지 완성.
+- **auth (A_100/A_101)**:
+  - Stage 1 dev-login stub + `auth_sessions` 테이블 + 쿠키 세션. 커밋 `c2bd555`. 마이그레이션 `20260419200000_add_auth_sessions`, `20260419201000_allow_dev_auth_provider` (chk_users_provider 에 dev 허용).
+  - Stage 2 Google OAuth (authorization code + tokeninfo 검증). 커밋 `d29bec3`.
+  - Stage 2 Kakao OAuth (kauth.kakao.com + kapi.kakao.com/v2/user/me). 커밋 `a038626`.
+  - BFF 미들웨어 이원화: `requireAuth` (필수), `resolveAuth` (옵셔널 — event-detail 의 isBookmarked 용).
+- **A_501 리뷰 쓰기/삭제**: POST /events/:id/reviews (rating 1~5, body 2~2000자, **event.phase='ended' 검증**, 1인 1리뷰 uq), DELETE /reviews/:id (본인, soft-delete + count/avg 재계산). 커밋 `e6ef2fe`, `052291c`.
+- **A_302 북마크**: POST/DELETE /events/:id/bookmark (idempotent + tx bookmark_count), GET /me/bookmarks + /me/reviews. BookmarkButton 공용 컴포넌트 (낙관적 토글). 커밋 `30bf5d6`.
+- **A_500 마이페이지 뼈대** (`/me`): 내 북마크 / 내 리뷰 2 탭, skeleton / empty / login gate. 캘린더는 후속. 커밋 `30bf5d6`.
+- **A_200 EventSummaryPanel 복원**: 원 와이어프레임 동선 (목록/핀 → 지도 옆 요약 패널 → "상세 페이지로" CTA). AppShell 3-column 레이아웃. 커밋 `8712f00`.
+- **선택 핀 강조**: CustomOverlayMap + vermilion pulse ring. 커밋 `da50724`.
+- **A_201 ChatDock 실 연동**: services/llm Python FastAPI Stage 1 rule-based stub (`filters.py` Korean keyword → 5종 필터). BFF `/chat` 프록시 + regionHints → regionIds resolve (district 레벨만). 채팅 결과가 map filter 자동 반영. 커밋 `ff6548f`, `9313be1`, `a038626`.
+
+## 2026-04-19T18:00  docs  lint sweep + wiki 대청소
+- event_type 4→8, auth_provider dev, Kakao OAuth 를 5개 기존 문서에 반영.
+- 신규 topic 2개: `auth-flow.md`, `ingest-pipeline.md`.
+- 신규 entity 5개: `google`, `kakao`, `tourapi`, `seoul-open-data`, `kcisa`.
+- 이전 lint 의 "regions sigungu_name 중복" 오진 정정 — 실은 sido/sigungu/dong 3단 계층 설계. `chat.ts` regionHints resolver 만 `dongName:null` 필터 누락 (커밋 `9313be1` 해소).

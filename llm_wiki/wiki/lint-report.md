@@ -1,23 +1,23 @@
 # Wiki Lint Report
 
-**Generated**: 2026-04-19 (Phase 1 late sweep — A_200~A_501 코어 루프 완성 후)
-**Scope**: `wiki/` 전체 (4 sources + 14 topics + 0 entities, index/log 제외)
+**Generated**: 2026-04-19 (post-sweep — 대청소 직후)
+**Scope**: `wiki/` 전체 (4 sources + **16 topics** + **5 entities**, index/log 제외)
 **Graphify cross-check**: `graphify-out/` 491 nodes / 608 edges / 71 communities (2026-04-19 재빌드).
 
 ---
 
 ## 요약
 
-| 카테고리 | 건수 | 심각도 |
+| 카테고리 | 이전 | 현재 |
 |---|---|---|
-| Contradictions | **2** | 🔴 event_type 4→8, auth_provider dev |
-| Stale refs | **1** | 🟡 log.md 4종 시드 이후 8종 전환 기록 누락 (계속) |
-| Orphans | 0 | — |
-| Gaps | **5** | 🟡 Phase 1 후반 구현물 대거 문서화 미착수 |
-| Over-large pages | 0 | — |
-| 이전 오진 정정 | 1 | ℹ️ regions sigungu_name "중복" → 실은 계층 구조 |
+| Contradictions | 2 | ✅ **0** (C-5 event_type 8종 / C-6 auth_provider dev 모두 반영) |
+| Stale refs | 1 | ✅ **0** (log.md 엔트리 추가로 S-4 해소) |
+| Orphans | 0 | 0 |
+| Gaps | 5 | 🟡 **2** (G-3·G-4 해소, G-6 해소, G-7 은 부분 해소 — 남은 2개는 아래 참조) |
+| Over-large pages | 0 | 0 |
+| 이전 오진 정정 | 1 | ℹ️ 완료 |
 
-**상태**: 탐색·인증·리뷰·북마크·채팅 코어 루프 모두 라이브. wiki 갱신은 세 번째 sprint 뒤처진 상태.
+**상태**: 대청소 1회 완료. wiki 갱신이 code 진행을 따라잡음.
 
 ---
 
@@ -32,7 +32,19 @@ Prisma schema `regions` 는 sido / sigungu / dong 3단 계층 지원. `lookups.t
 
 ---
 
-## 1. Contradictions — 🔴 2건 (변동 없음)
+## 1. Contradictions — ✅ 0건 (전부 해소)
+
+### ~~C-5. event_type 4종 → 8종~~ — ✅ 반영 완료
+- `sources/2026-04-17_requirements-v5.md` L41, `topics/filters-5-types.md` §4, `topics/db-schema-overview.md` §2, `topics/use-cases-index.md` A_300 행, `topics/terminology-glossary.md` §1 모두 갱신.
+- filters-5-types §4 에 8종 확장 근거 (Seoul/KCISA ingest 분포) 추가.
+
+### ~~C-6. auth_provider dev + Kakao~~ — ✅ 반영 완료
+- `topics/terminology-glossary.md` §7 인증 섹션 신설 (Google/Kakao/dev).
+- 상세 흐름은 신규 `topics/auth-flow.md` 로 분리.
+
+---
+
+## (원본 스캔) 전 분석 기록 (보존용)
 
 ### C-5. `event_type` 4종 → **8종** 확장이 wiki 미반영
 - **실 사실**: DB+API 에 8종 live (`festival, expo, symposium, conference, exhibition, performance, education, movie`, 마이그레이션 `20260418180000`).
@@ -51,7 +63,7 @@ Prisma schema `regions` 는 sido / sigungu / dong 3단 계층 지원. `lookups.t
 
 ---
 
-## 2. Stale refs — 🟡 1건
+## 2. Stale refs — ✅ 0건
 
 ### S-4. log.md `event_categories 4종 시드` 이후 8종 전환 기록 누락
 역사적 append-only 로 원문 보존. 단, 최근 2주 활동(A_201~A_501 라이브) 전반에 대한 log 엔트리 자체가 적어 history gap 존재 — lint 범위 외지만 문서 유지 관리 리스크로 언급.
@@ -64,9 +76,26 @@ Prisma schema `regions` 는 sido / sigungu / dong 3단 계층 지원. `lookups.t
 
 ---
 
-## 4. Gaps — 🟡 5건 (확장)
+## 4. Gaps — 🟡 2건 (3개 해소)
 
-### G-3. Auth 구현 문서화 — 🔴 확대
+### ~~G-3. Auth 구현 문서화~~ — ✅ 해소
+`topics/auth-flow.md` 신설 (Stage 1 dev-login + Google/Kakao OAuth + session 저장소 + 미들웨어 이원화 + same-origin 쿠키 전략).
+
+### ~~G-4. Ingest 파이프라인 문서화~~ — ✅ 해소
+`topics/ingest-pipeline.md` 신설 (3 러너 + ingest-common + 프로비넌스 컬럼).
+
+### ~~G-6. Entities 레이어~~ — ✅ 착수 (5개)
+`entities/{google, kakao, tourapi, seoul-open-data, kcisa}.md`. 외부 의존성 전부 커버.
+
+### G-5. regions 계층 문서 (부분 해소)
+`db-schema-overview.md` 에 auth_sessions 테이블 추가 + event_categories 8종 주석. regions sido/sigungu/dong 계층 설명은 `ingest-pipeline.md` §공통 로직 에 포함. 별도 topic 은 불필요로 판단.
+
+### G-7. 최근 구현 기능 (A_302/A_500/A_501/A_201/A_200 요약패널) 전용 topic — 🟡 부분 해소
+- auth / ingest 는 별도 topic 으로 분리 완료.
+- 북마크 / 마이페이지 / 리뷰 쓰기 / 요약패널은 `use-cases-index.md` 상태 표 + `log.md` 2026-04-19 sprint 로그로 커버. 별도 topic 은 규모가 작아 보류 (사용자 플로우가 바뀌면 그때 작성).
+- **잔여 gap**: EventSummaryPanel 같은 UI 원 설계 ↔ 실 구현 매핑 문서. `ui-architecture.md` 갱신 필요 (별건 후속).
+
+### 기존 G-3. Auth 구현 문서화 — 🔴 확대
 Stage 1 (dev-login + cookie session + AuthSession) + Stage 2 (Google OAuth) + **Kakao OAuth (신규)** 전부 라이브. `topics/auth-flow.md` 여전히 없음.
 
 핵심 내용 (이번 lint 에 추가):
