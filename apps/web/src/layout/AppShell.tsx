@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Header } from './Header';
 import { Sidebar, type SidebarSection } from './Sidebar';
+import { MobileTabBar } from './MobileTabBar';
 import { OverlayPanel } from '../components/OverlayPanel';
 import { FilterSearchPanel } from '../components/FilterSearchPanel';
 import { FullListPanel } from '../components/FullListPanel';
@@ -83,7 +84,12 @@ function chatFiltersToQuery(f: ChatFilters): EventListQuery | null {
  *  - selectedEventId: 핀 클릭 / 목록 클릭 → 요약 패널 + 지도 하이라이트 동기화
  */
 export function AppShell() {
-  const [open, setOpen] = useState<SidebarSection | null>('filter');
+  // 기본 시작 상태: 데스크탑 필터 패널, 모바일은 닫힘(지도). CSS breakpoint 로
+  // 대체할 수 없어서 초기값만 viewport 폭으로 결정. 이후엔 사용자 state.
+  const [open, setOpen] = useState<SidebarSection | null>(() => {
+    if (typeof window === 'undefined') return 'filter';
+    return window.matchMedia('(min-width: 768px)').matches ? 'filter' : null;
+  });
   const [chatValue, setChatValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [dockCollapsed, setDockCollapsed] = useState(false);
@@ -161,6 +167,7 @@ export function AppShell() {
             onClose={() => setSelectedEventId(null)}
           />
         )}
+        <MobileTabBar open={open} onSelect={setOpen} />
         <main className="relative flex min-w-0 flex-1 flex-col">
           <div className="relative min-h-0 flex-1">
             <ErrorBoundary>

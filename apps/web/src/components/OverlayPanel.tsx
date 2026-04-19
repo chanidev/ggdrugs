@@ -28,7 +28,7 @@ export function OverlayPanel({
   const meta = META[open];
   return (
     <section
-      className="absolute bottom-0 left-[236px] top-0 z-20 flex w-[380px] flex-col border-r border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)]"
+      className="absolute bottom-14 left-0 right-0 top-[60px] z-20 flex flex-col border-t border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)] md:bottom-0 md:left-[236px] md:right-auto md:top-0 md:w-[380px] md:border-r md:border-t-0"
       aria-label={`${meta.title} 상세`}
     >
       <div className="flex shrink-0 items-center justify-between border-b border-(--color-border) px-5 pb-4 pt-5">

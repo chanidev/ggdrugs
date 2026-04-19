@@ -47,7 +47,7 @@ export function EventSummaryPanel({
   return (
     <aside
       aria-label="선택된 이벤트 요약"
-      className="absolute bottom-0 left-[616px] top-0 z-10 flex w-[380px] flex-col border-r border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)]"
+      className="absolute bottom-14 left-0 right-0 top-[60px] z-20 flex flex-col border-t border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)] md:bottom-0 md:left-[616px] md:right-auto md:top-0 md:z-10 md:w-[380px] md:border-r md:border-t-0"
     >
       <header className="flex shrink-0 items-center justify-between border-b border-(--color-border) px-5 pb-4 pt-5">
         <h3 className="m-0 text-[16px] font-bold tracking-[-0.015em]">이벤트 요약</h3>
