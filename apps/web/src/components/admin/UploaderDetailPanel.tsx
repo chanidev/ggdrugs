@@ -129,6 +129,86 @@ export function UploaderDetailPanel({
       </div>
 
       <section className="mb-4">
+        <h3 className="m-0 mb-2 text-[13px] font-semibold">
+          신원 정보
+          {data.adminScope !== 'full' && (
+            <span className="ml-2 text-[11px] font-normal text-(--color-warning)">
+              (마스킹 · scope={data.adminScope})
+            </span>
+          )}
+        </h3>
+        <dl className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-1 text-[12px]">
+          <dt className="text-(--color-text-subtle)">실명</dt>
+          <dd className="m-0 text-(--color-text)">{u.realName || '(미등록)'}</dd>
+          {u.businessRegistrationNumber && (
+            <>
+              <dt className="text-(--color-text-subtle)">사업자번호</dt>
+              <dd className="m-0 tabular text-(--color-text)">{u.businessRegistrationNumber}</dd>
+            </>
+          )}
+          {u.ciHash && (
+            <>
+              <dt className="text-(--color-text-subtle)">본인인증</dt>
+              <dd className="m-0 font-mono text-[11px] text-(--color-text)">{u.ciHash}</dd>
+            </>
+          )}
+        </dl>
+      </section>
+
+      {data.documents.length > 0 && (
+        <section className="mb-4">
+          <div className="mb-2 flex items-baseline justify-between">
+            <h3 className="m-0 text-[13px] font-semibold">제출 서류</h3>
+            <span className="text-[11px] text-(--color-text-subtle)">
+              {data.documents.length}건 · 5분 TTL
+            </span>
+          </div>
+          <ul className="flex flex-col gap-2">
+            {data.documents.map((d) => (
+              <li
+                key={d.documentId}
+                className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-2"
+              >
+                <div className="mb-1.5 flex items-center justify-between gap-2 text-[12px]">
+                  <span className="truncate font-medium text-(--color-text)">
+                    {d.originalFilename}
+                  </span>
+                  <span className="shrink-0 text-(--color-text-subtle)">
+                    {(d.fileSizeBytes / 1024).toFixed(0)} KB · {d.mimeType}
+                  </span>
+                </div>
+                {d.mimeType === 'application/pdf' ? (
+                  <a
+                    href={d.previewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex h-8 items-center rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface-alt) px-3 text-[12px] font-medium hover:border-(--color-border-hover)"
+                  >
+                    PDF 새 탭으로 열기 →
+                  </a>
+                ) : (
+                  <a
+                    href={d.previewUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                    aria-label={`${d.originalFilename} 원본`}
+                  >
+                    <img
+                      src={d.previewUrl}
+                      alt={d.originalFilename}
+                      className="max-h-48 w-full rounded-(--radius-sm) bg-(--color-surface-alt) object-contain"
+                      loading="lazy"
+                    />
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <section className="mb-4">
         <h3 className="m-0 mb-2 text-[13px] font-semibold">등록 이벤트 현황</h3>
         <div className="grid grid-cols-4 gap-2">
           {(

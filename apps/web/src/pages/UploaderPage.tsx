@@ -5,6 +5,11 @@ import { PhaseBadge } from '../components/PhaseBadge';
 import { Icon } from '../components/Icon';
 import { useCurrentUser } from '../lib/auth-context';
 import {
+  APPROVAL_DOC_MIME,
+  DocumentsPickerField,
+  type StagedDoc,
+} from '../components/uploader/DocumentsPickerField';
+import {
   applyUploader,
   fetchMyUploader,
   fetchMyUploaderEvents,
@@ -13,6 +18,7 @@ import {
   type MyUploaderEventItem,
   type UploaderApprovalStatus,
 } from '../lib/api';
+import { uploadUploaderSignupDocuments } from '../lib/uploads';
 
 /**
  * /uploader — 업로더 자기 페이지 (A_600 + A_601 합본).
@@ -152,17 +158,46 @@ function LoginGate() {
 // Apply form — A_600
 // =============================================================
 
+type IdentityKind = 'organization' | 'individual';
+
+/** dev 용 CI 해시 stub — 실 PASS/NICE 연동은 Phase 2. Base64 88자 random. */
+function generateMockCiHash(): string {
+  const bytes = new Uint8Array(66); // 66 bytes → 88 Base64
+  crypto.getRandomValues(bytes);
+  let bin = '';
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin).slice(0, 88);
+}
+
 function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => void }) {
   const [organizationName, setOrg] = useState('');
   const [contactPhone, setPhone] = useState('');
   const [contactEmail, setEmail] = useState('');
+  const [realName, setRealName] = useState('');
+  const [identityKind, setIdentityKind] = useState<IdentityKind>('organization');
+  const [bizRegNumber, setBizRegNumber] = useState('');
+  const [ciHash, setCiHash] = useState<string | null>(null);
+  const [docs, setDocs] = useState<StagedDoc[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [docsUploading, setDocsUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const bizValid = /^[0-9]{10}$/.test(bizRegNumber.replace(/[-\s]/g, ''));
+  const identityValid =
+    identityKind === 'organization' ? bizValid : ciHash !== null && ciHash.length === 88;
 
   const valid =
     organizationName.trim().length >= 2 &&
+    realName.trim().length >= 1 &&
     /^[0-9+\-\s()]{7,20}$/.test(contactPhone) &&
-    /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail);
+    /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(contactEmail) &&
+    identityValid &&
+    docs.length >= 1 &&
+    docs.length <= 5;
+
+  const runMockCI = () => {
+    setCiHash(generateMockCiHash());
+  };
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,10 +205,22 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
     setSubmitting(true);
     setError(null);
     try {
+      setDocsUploading(true);
+      let uploaded;
+      try {
+        uploaded = await uploadUploaderSignupDocuments(docs.map((d) => d.file));
+      } finally {
+        setDocsUploading(false);
+      }
       const { uploader } = await applyUploader({
         organizationName: organizationName.trim(),
         contactPhone: contactPhone.trim(),
         contactEmail: contactEmail.trim(),
+        realName: realName.trim(),
+        businessRegistrationNumber:
+          identityKind === 'organization' ? bizRegNumber.replace(/[-\s]/g, '') : null,
+        ciHash: identityKind === 'individual' ? ciHash : null,
+        documents: uploaded,
       });
       onSubmitted(uploader);
     } catch (err) {
@@ -192,7 +239,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
           이벤트를 등록하려면 업로더 역할이 필요해요. 신청 후 관리자 승인을 거치면 활성화됩니다.
         </p>
         <p className="m-0 mt-2 text-[12px] text-(--color-text-subtle)">
-          ※ 이름·주민번호·증명사진·소속 서류는 다음 단계 (ADR) 에서 추가 예정. 현재는 최소 정보만 수집.
+          주민번호 대신 <strong>기관은 사업자등록번호</strong>, <strong>개인은 본인인증</strong>으로 신원을 확인해요 (ADR 0003).
         </p>
       </div>
 
@@ -207,6 +254,17 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
             onChange={(e) => setOrg(e.target.value)}
             placeholder="기관·팀 이름"
             maxLength={100}
+            className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
+          />
+        </Field>
+        <Field label="신청자 실명" hint="서류에 적힌 대표자/담당자 실명">
+          <input
+            type="text"
+            value={realName}
+            onChange={(e) => setRealName(e.target.value)}
+            placeholder="홍길동"
+            maxLength={50}
+            autoComplete="name"
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
           />
         </Field>
@@ -228,6 +286,92 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
             placeholder="contact@example.com"
             maxLength={255}
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
+          />
+        </Field>
+
+        <fieldset className="flex flex-col gap-2 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-3">
+          <legend className="px-1 text-[13px] font-semibold text-(--color-text)">신원 확인</legend>
+          <div className="flex gap-2">
+            <label
+              className={`inline-flex flex-1 cursor-pointer items-center gap-2 rounded-(--radius-md) border px-3 py-2 text-[13px] ${
+                identityKind === 'organization'
+                  ? 'border-(--color-accent) bg-(--color-accent-bg) text-(--color-accent)'
+                  : 'border-(--color-border) bg-(--color-surface) text-(--color-text-muted) hover:text-(--color-text)'
+              }`}
+            >
+              <input
+                type="radio"
+                className="sr-only"
+                checked={identityKind === 'organization'}
+                onChange={() => setIdentityKind('organization')}
+              />
+              기관 (사업자등록번호)
+            </label>
+            <label
+              className={`inline-flex flex-1 cursor-pointer items-center gap-2 rounded-(--radius-md) border px-3 py-2 text-[13px] ${
+                identityKind === 'individual'
+                  ? 'border-(--color-accent) bg-(--color-accent-bg) text-(--color-accent)'
+                  : 'border-(--color-border) bg-(--color-surface) text-(--color-text-muted) hover:text-(--color-text)'
+              }`}
+            >
+              <input
+                type="radio"
+                className="sr-only"
+                checked={identityKind === 'individual'}
+                onChange={() => setIdentityKind('individual')}
+              />
+              개인 (본인인증)
+            </label>
+          </div>
+          {identityKind === 'organization' ? (
+            <Field label="사업자등록번호" hint="10자리 숫자. 하이픈은 자동 제거">
+              <input
+                type="text"
+                value={bizRegNumber}
+                onChange={(e) => setBizRegNumber(e.target.value)}
+                placeholder="123-45-67890"
+                maxLength={13}
+                className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none tabular focus:border-(--color-accent)"
+              />
+            </Field>
+          ) : (
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[13px] font-semibold text-(--color-text)">본인인증</span>
+              {ciHash ? (
+                <div className="flex items-center justify-between gap-2 rounded-(--radius-md) border border-(--color-success)/40 bg-(--color-success)/5 px-3 py-2 text-[12px]">
+                  <span className="text-(--color-success)">✓ 본인인증 완료 (dev stub)</span>
+                  <button
+                    type="button"
+                    onClick={() => setCiHash(null)}
+                    className="text-(--color-text-subtle) hover:text-(--color-error)"
+                  >
+                    다시 인증
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={runMockCI}
+                  className="inline-flex h-10 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-4 text-[13px] font-medium hover:border-(--color-border-hover)"
+                >
+                  본인인증 시작 (dev stub)
+                </button>
+              )}
+              <span className="text-[11px] text-(--color-text-subtle)">
+                실 배포에서는 PASS / NICE / 카카오 본인인증으로 대체됨. 현재는 CI 88자 random stub.
+              </span>
+            </div>
+          )}
+        </fieldset>
+
+        <Field label="증빙 서류 (1~5개)" hint="사업자등록증 · 허가서 · 재직증명 등. JPEG · PNG · PDF, 파일당 5MB">
+          <DocumentsPickerField
+            files={docs}
+            onChange={setDocs}
+            uploading={docsUploading}
+            allowedMime={APPROVAL_DOC_MIME}
+            min={1}
+            max={5}
           />
         </Field>
 

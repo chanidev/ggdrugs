@@ -2,9 +2,11 @@ import {
   requestDocumentUploadUrl,
   requestPosterUploadUrl,
   requestReviewPhotoUploadUrl,
+  requestUploaderSignupDocumentUploadUrl,
   uploadToPresignedUrl,
   type ReviewPhotoMeta,
   type UploaderDocumentMeta,
+  type UploaderSignupDocumentMeta,
 } from './api';
 
 /**
@@ -53,6 +55,26 @@ export async function uploadReviewPhotos(files: File[]): Promise<ReviewPhotoMeta
   const out: ReviewPhotoMeta[] = [];
   for (const f of files) {
     const presign = await requestReviewPhotoUploadUrl({
+      contentType: f.type,
+      sizeBytes: f.size,
+    });
+    await uploadToPresignedUrl(presign.uploadUrl, f);
+    out.push({
+      key: presign.key,
+      originalFilename: f.name.slice(0, 255),
+      mimeType: f.type,
+      fileSizeBytes: f.size,
+    });
+  }
+  return out;
+}
+
+export async function uploadUploaderSignupDocuments(
+  files: File[],
+): Promise<UploaderSignupDocumentMeta[]> {
+  const out: UploaderSignupDocumentMeta[] = [];
+  for (const f of files) {
+    const presign = await requestUploaderSignupDocumentUploadUrl({
       contentType: f.type,
       sizeBytes: f.size,
     });

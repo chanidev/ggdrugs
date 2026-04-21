@@ -612,7 +612,12 @@ export async function decideAdminEvent(
 export interface AdminUploaderDetailResponse {
   uploader: AdminUploaderItem & {
     user: AdminUploaderItem['user'] & { createdAt: string };
+    /** ADR 0003. scope<full 이면 마스킹된 값. */
+    realName: string;
+    businessRegistrationNumber: string | null;
+    ciHash: string | null;
   };
+  adminScope: string;
   eventStats: Record<UploaderApprovalStatus, number>;
   recentEvents: Array<{
     eventId: string;
@@ -624,6 +629,15 @@ export interface AdminUploaderDetailResponse {
     createdAt: string;
     categoryName: string;
   }>;
+  documents: Array<{
+    documentId: string;
+    originalFilename: string;
+    mimeType: string;
+    fileSizeBytes: number;
+    createdAt: string;
+    previewUrl: string;
+  }>;
+  documentsExpiresIn: number;
 }
 
 export async function fetchAdminUploaderDetail(
@@ -703,11 +717,51 @@ export async function fetchMyUploader(
   return data.uploader;
 }
 
-export async function applyUploader(body: {
+export interface UploaderSignupDocumentMeta {
+  key: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+}
+
+export interface ApplyUploaderBody {
   organizationName: string;
   contactPhone: string;
   contactEmail: string;
-}): Promise<{ uploader: MyUploaderProfile; resubmitted?: boolean }> {
+  realName: string;
+  /** 기관 업로더. ciHash 와 XOR. 10자리 숫자. */
+  businessRegistrationNumber?: string | null;
+  /** 개인 업로더. businessRegistrationNumber 와 XOR. 88자 Base64. */
+  ciHash?: string | null;
+  documents: UploaderSignupDocumentMeta[];
+}
+
+export async function requestUploaderSignupDocumentUploadUrl(body: {
+  contentType: string;
+  sizeBytes: number;
+}): Promise<DocumentUploadUrlResponse> {
+  const res = await fetch(
+    `${BFF_URL}/me/uploader/documents/upload-url`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(
+      `POST /me/uploader/documents/upload-url ${res.status}: ${txt.slice(0, 200)}`,
+    );
+  }
+  return (await res.json()) as DocumentUploadUrlResponse;
+}
+
+export async function applyUploader(body: ApplyUploaderBody): Promise<{
+  uploader: MyUploaderProfile;
+  resubmitted?: boolean;
+}> {
   const res = await fetch(
     `${BFF_URL}/me/uploader/apply`,
     withCredentials({
