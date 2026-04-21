@@ -1,12 +1,12 @@
 # Graph Report - .  (2026-04-21)
 
 ## Corpus Check
-- 86 files · ~119,176 words
+- 87 files · ~120,250 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 783 nodes · 997 edges · 108 communities detected
-- Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 75 edges (avg confidence: 0.81)
+- 793 nodes · 1011 edges · 108 communities detected
+- Extraction: 93% EXTRACTED · 7% INFERRED · 0% AMBIGUOUS · INFERRED: 75 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
 ## Community Hubs (Navigation)
@@ -138,10 +138,10 @@
   llm_wiki\raw\design_handoff_alle_brand\README.md → graphify-out\GRAPH_REPORT.md
 - `LLM Wiki + graphify Setup Guide` --semantically_similar_to--> `LLM Wiki 사용법`  [INFERRED] [semantically similar]
   llm_wiki_셋업가이드.md → llm_wiki/사용법.md
+- `D-2 OpenAI single LLM provider` --conceptually_related_to--> `LangChain (Python)`  [INFERRED]
+  docs/decisions/0002-stack-decisions.md → README.md
 - `Rejected: Anthropic (no embeddings)` --semantically_similar_to--> `Provider Abstraction Layer`  [INFERRED] [semantically similar]
   llm_wiki/wiki/topics/adr-0002-stack-decisions.md → services/llm/README.md
-- `Crossbar uses var(--color-accent) = #E8562D only` --semantically_similar_to--> `Vermilion single accent (#E8562D) — existing design token`  [INFERRED] [semantically similar]
-  llm_wiki\raw\design_handoff_alle_brand\README.md → DESIGN.md
 
 ## Hyperedges (group relationships)
 - **8-category taxonomy** — bff_type_EventCategoryCode, bff_event_type_enum_8, bff_fn_classifyCategory, bff_migration_expand_categories [EXTRACTED 0.95]
@@ -155,75 +155,75 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (83): A_700 Dual-Tab Structure, Event Approval Queue, LLM Delegation Guardrail (CLAUDE.md §6-4), Admin Flow, Decision #1: on_hold → revision_requested, Decision #2: users.active_role column, Decision #3: admin_profiles table, Decision #4: expected_companion rename (+75 more)
+Nodes (88): A_700 Dual-Tab Structure, Event Approval Queue, LLM Delegation Guardrail (CLAUDE.md §6-4), Admin Flow, Decision #2: users.active_role column, Decision #3: admin_profiles table, Decision #4: expected_companion rename, Decision #6: review_photos table (+80 more)
 
 ### Community 1 - "Community 1"
+Cohesion: 0.06
+Nodes (33): computePhase(), existsInOtherOrigin(), extractSeoulGu(), getCategoryId(), isForwardLooking(), resolveSeoulRegionId(), todayUtcMidnight(), todayYmd() (+25 more)
+
+### Community 2 - "Community 2"
 Cohesion: 0.05
 Nodes (23): listAdminAuditLogs(), parseBigIntQuery(), parseIntClamp(), listAdminEvents(), parseBigIntCsv(), parseIntClamp(), listEventArticles(), parseIntClamp() (+15 more)
 
-### Community 2 - "Community 2"
-Cohesion: 0.08
-Nodes (46): applyUploader(), buildQuery(), createBookmark(), createEventReview(), createSubscription(), createUploaderEvent(), decideAdminEvent(), decideAdminUploader() (+38 more)
-
 ### Community 3 - "Community 3"
-Cohesion: 0.07
-Nodes (27): computePhase(), existsInOtherOrigin(), extractSeoulGu(), getCategoryId(), isForwardLooking(), resolveSeoulRegionId(), todayUtcMidnight(), todayYmd() (+19 more)
+Cohesion: 0.06
+Nodes (53): Issue #1 approval_status enum unify, Issue #2 users.active_role column, Issue #3 admin_profiles table, Issue #4 expected_companion rename, Issue #5 event_vibes rename, Issue #6 review_photos table, Issue #7 event_subscriptions table, ADR 0001 — DDL v3 ↔ Terminology v5 Reconciliation (+45 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.07
-Nodes (43): Issue #1 approval_status enum unify, Issue #2 users.active_role column, Issue #3 admin_profiles table, Issue #4 expected_companion rename, Issue #5 event_vibes rename, Issue #6 review_photos table, Issue #7 event_subscriptions table, ADR 0001 — DDL v3 ↔ Terminology v5 Reconciliation (+35 more)
+Cohesion: 0.08
+Nodes (46): applyUploader(), buildQuery(), createBookmark(), createEventReview(), createSubscription(), createUploaderEvent(), decideAdminEvent(), decideAdminUploader() (+38 more)
 
 ### Community 5 - "Community 5"
 Cohesion: 0.06
 Nodes (36): Asset: favicon.svg (thicker strokes for 16px), Asset: logo-lockup.svg (260×84, mark + Alle + SEOUL), Asset: logo-mark.svg (84×84), Brand Name: Alle (replaces GGdrugs), Alle rollout checklist (8 items), DESIGN.md patch — new Brand section under Product Context, Alle Brand Handoff README, Crossbar uses var(--color-accent) = #E8562D only (+28 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.07
-Nodes (33): D-1 MinIO object storage, D-2 OpenAI single LLM provider, D-3 Qdrant single vector store, Rationale: S3-compat enables migration, Rejected: Anthropic (no embeddings), Rejected: pgvector single, BFF runtime dependencies, apps/bff README (+25 more)
-
-### Community 7 - "Community 7"
 Cohesion: 0.11
 Nodes (32): UI 컴포넌트: 자연어 채팅 검색 입력창, UI 컴포넌트: 이벤트 상세 카드, UI 컴포넌트: 필터 패널 (5종 필터), UI 컴포넌트: 카카오 지도 뷰 (행정구역 레이어), UI 컴포넌트: 지역 목록 사이드 패널, 플로우: 관리자 (이벤트 승인/반려/라벨 부여), 플로우: 일반 사용자 (지도 → 검색 → 상세 → 북마크), 플로우: 업로더 (역할 부여 → 이벤트 등록 → 승인 대기) (+24 more)
 
-### Community 8 - "Community 8"
+### Community 7 - "Community 7"
 Cohesion: 0.07
 Nodes (29): Dockerfile directory readme, Alle (Product Name), apps/bff (Node.js + Express + Prisma), apps/web (React Frontend), CLAUDE.md (Agent Instructions), Docker Compose (postgres/qdrant/redis), Docker Desktop, docs/ (Requirements & Decisions) (+21 more)
 
-### Community 9 - "Community 9"
+### Community 8 - "Community 8"
 Cohesion: 0.14
 Nodes (22): chat(), ChatFilters, ChatMessage, ChatRequest, ChatResponse, health(), _openai_available(), _openai_extract() (+14 more)
 
-### Community 10 - "Community 10"
+### Community 9 - "Community 9"
 Cohesion: 0.22
 Nodes (16): applyUploader(), computePhase(), createUploaderEvent(), getMyUploader(), getMyUploaderEvent(), listMyUploaderEvents(), parseBigIntParam(), parseIntClamp() (+8 more)
 
-### Community 11 - "Community 11"
+### Community 10 - "Community 10"
 Cohesion: 0.16
 Nodes (18): Ink Black #1A1A1A (Primary Stroke), Muted Gray #999999 (Locale Tag), Alle Orange #E8562D (Accent Crossbar), Alle Favicon (Bolder Stroke Variant), Locale Tag 'SEOUL' (JetBrains Mono 500, 14px, tracking 2), Lockup ViewBox 260x84 (horizontal composition), Alle Logo Lockup (Mark + Wordmark + Locale), A-Apex Path (M22 64 L42 22 L62 64) (+10 more)
 
-### Community 12 - "Community 12"
+### Community 11 - "Community 11"
 Cohesion: 0.26
 Nodes (15): clearSessionCookie(), devLogin(), googleCallback(), googleRedirectUri(), issueSessionAndRedirect(), kakaoCallback(), kakaoRedirectUri(), logout() (+7 more)
+
+### Community 12 - "Community 12"
+Cohesion: 0.13
+Nodes (16): D-1 MinIO object storage, D-3 Qdrant single vector store, Rationale: S3-compat enables migration, Rejected: pgvector single, BFF runtime dependencies, apps/bff README, BFF responsibilities, Kakao Maps SDK (+8 more)
 
 ### Community 13 - "Community 13"
 Cohesion: 0.15
 Nodes (15): DESIGN.md Brand section, Logo spec — Line Monogram (frame + A + vermilion crossbar), Logo usage rules (Do/Don't, favicon stroke variant), WHY: stroke-only + currentColor so logo works on any surface and auto-inverts in dark mode, WHY: 24px min size — strokes blur below that, fallback to vermilion dot, WHY: Pretendard single family — Inter/Roboto breaks Noto Sans KR fallback weight/spacing, WHY: single vermilion accent (avoid AI slop, Korean traditional color, red-pin memorability), Brand voice + tagline (editorial, travel-guide paper map + Korean editorial) (+7 more)
 
 ### Community 14 - "Community 14"
+Cohesion: 0.18
+Nodes (12): Decision #1: on_hold → revision_requested, Decision #5: event_vibes rename, approval_status enum, approval_documents table, approval_logs table, event_vibe_assignments table, event_vibes table, events table (+4 more)
+
+### Community 15 - "Community 15"
 Cohesion: 0.29
 Nodes (5): CostTracker, _daily_budget_usd(), _price_for(), OpenAI API 호출 비용 관측 + 일일 예산 가드.  - track(endpoint, prompt_tokens, completion_tok, TOKEN_BUDGET_DAILY_USD 환경변수. 없으면 None (가드 off).
 
-### Community 15 - "Community 15"
+### Community 16 - "Community 16"
 Cohesion: 0.36
 Nodes (9): decideEventUpload(), decideUploader(), getAdminUploader(), listAdminUploaders(), maskBizRegNumber(), maskCiHash(), maskRealName(), parseBigIntParam() (+1 more)
 
-### Community 16 - "Community 16"
-Cohesion: 0.27
-Nodes (8): extract(), extract_merge(), _match_any(), _match_first(), Korean keyword → filter mapping (Stage 1 rule-based).  의도적으로 단순하게 유지. Stage 2 에서, 다중 턴 — 모든 user 발화에서 추출한 필터를 머지. 최근 발화가 우선.      - 다중 값 축(companions/eventTypes/v, table 의 각 그룹(동의어)에서 하나라도 걸리면 해당 code 를 수집., 사용자 발화에서 5개 필터 축을 뽑는다. 없으면 빈 값.
-
 ### Community 17 - "Community 17"
 Cohesion: 0.27
-Nodes (10): Wiki invariants (raw append-only, 1:1 sources), LLM Wiki raw/ readme, LLM Wiki README, LLM Wiki Schema, LLM Wiki + graphify Setup Guide, Three-layer architecture (raw/wiki/schema), LLM Wiki 사용법, CLAUDE.md auto-load hook (+2 more)
+Nodes (8): extract(), extract_merge(), _match_any(), _match_first(), Korean keyword → filter mapping (Stage 1 rule-based).  의도적으로 단순하게 유지. Stage 2 에서, 다중 턴 — 모든 user 발화에서 추출한 필터를 머지. 최근 발화가 우선.      - 다중 값 축(companions/eventTypes/v, table 의 각 그룹(동의어)에서 하나라도 걸리면 해당 code 를 수집., 사용자 발화에서 5개 필터 축을 뽑는다. 없으면 빈 값.
 
 ### Community 18 - "Community 18"
 Cohesion: 0.33
@@ -262,12 +262,12 @@ Cohesion: 0.43
 Nodes (6): classify_sentiment(), extract_via_openai(), Stage 2 — OpenAI gpt-4o-mini 기반 필터 추출 체인.  규칙 - 인터페이스는 Stage 1 의 extract_merge 와, messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag, summarize_event(), _track_usage()
 
 ### Community 27 - "Community 27"
-Cohesion: 0.53
-Nodes (4): formatDateRange(), fromBffItem(), hashToColor(), shortRegion()
-
-### Community 28 - "Community 28"
 Cohesion: 0.4
 Nodes (6): EnvValidationError, loadEnv (full validation), loadPartial (per-service schema), env (BffEnv instance), pino logger (env-aware), prisma (PrismaClient singleton)
+
+### Community 28 - "Community 28"
+Cohesion: 0.53
+Nodes (4): formatDateRange(), fromBffItem(), hashToColor(), shortRegion()
 
 ### Community 29 - "Community 29"
 Cohesion: 0.33
@@ -371,7 +371,7 @@ Nodes (0):
 
 ### Community 54 - "Community 54"
 Cohesion: 1.0
-Nodes (2): /api → localhost:3000 proxy (rewrite strip), HealthBadge (BFF /api/health poll)
+Nodes (0): 
 
 ### Community 55 - "Community 55"
 Cohesion: 1.0
@@ -387,7 +387,7 @@ Nodes (0):
 
 ### Community 58 - "Community 58"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): /api → localhost:3000 proxy (rewrite strip), HealthBadge (BFF /api/health poll)
 
 ### Community 59 - "Community 59"
 Cohesion: 1.0
@@ -443,11 +443,11 @@ Nodes (2): Do-not-edit: DB schema, env keys, internal identifiers, DB v3: 20 tab
 
 ### Community 72 - "Community 72"
 Cohesion: 1.0
-Nodes (2): DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001), Term: event_vibe (event vibe labels, admin-assigned)
+Nodes (2): v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video, Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향
 
 ### Community 73 - "Community 73"
 Cohesion: 1.0
-Nodes (2): v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video, Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향
+Nodes (2): DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001), Term: event_vibe (event vibe labels, admin-assigned)
 
 ### Community 74 - "Community 74"
 Cohesion: 1.0
@@ -590,15 +590,15 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **Thin community `Community 53`** (2 nodes): `subscription-match.ts`, `notifyMatchingSubscribers()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 54`** (2 nodes): `/api → localhost:3000 proxy (rewrite strip)`, `HealthBadge (BFF /api/health poll)`
+- **Thin community `Community 54`** (2 nodes): `BookmarkButton.tsx`, `BookmarkButton()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 55`** (2 nodes): `BookmarkButton.tsx`, `BookmarkButton()`
+- **Thin community `Community 55`** (2 nodes): `ChatDock.tsx`, `ChatDock()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 56`** (2 nodes): `ChatDock.tsx`, `ChatDock()`
+- **Thin community `Community 56`** (2 nodes): `ChatHelpPanel.tsx`, `ChatHelpPanel()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 57`** (2 nodes): `ChatHelpPanel.tsx`, `ChatHelpPanel()`
+- **Thin community `Community 57`** (2 nodes): `FullListPanel.tsx`, `phaseCount()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 58`** (2 nodes): `FullListPanel.tsx`, `phaseCount()`
+- **Thin community `Community 58`** (2 nodes): `/api → localhost:3000 proxy (rewrite strip)`, `HealthBadge (BFF /api/health poll)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 59`** (2 nodes): `Icon.tsx`, `Icon()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -626,9 +626,9 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 71`** (2 nodes): `Do-not-edit: DB schema, env keys, internal identifiers`, `DB v3: 20 tables (regions, users, uploader_profiles, events, ...)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (2 nodes): `DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)`, `Term: event_vibe (event vibe labels, admin-assigned)`
+- **Thin community `Community 72`** (2 nodes): `v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video`, `Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (2 nodes): `v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video`, `Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향`
+- **Thin community `Community 73`** (2 nodes): `DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)`, `Term: event_vibe (event vibe labels, admin-assigned)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 74`** (2 nodes): `Three roles: user / uploader / admin with active_role toggle`, `users + uploader_profiles 1:1 — single-account multi-role`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -702,17 +702,17 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Tech Stack` connect `Community 0` to `Community 6`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
-- **Why does `ADR 0002 — Stack Decisions (MinIO/OpenAI/Qdrant)` connect `Community 4` to `Community 6`?**
-  _High betweenness centrality (0.022) - this node is a cross-community bridge._
-- **Why does `Technology stack table` connect `Community 6` to `Community 8`?**
+- **Why does `ADR 0002 — Stack Decisions (MinIO/OpenAI/Qdrant)` connect `Community 3` to `Community 0`, `Community 12`?**
+  _High betweenness centrality (0.021) - this node is a cross-community bridge._
+- **Why does `Technology stack table` connect `Community 12` to `Community 7`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **What connects `BFF env schema (merged)`, `pino logger (env-aware)`, `prisma (PrismaClient singleton)` to the rest of the system?**
   _189 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
   _Cohesion score 0.03 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
-  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._
+- **Should `Community 3` be split into smaller, more focused modules?**
+  _Cohesion score 0.06 - nodes in this community are weakly interconnected._
