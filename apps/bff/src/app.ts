@@ -21,7 +21,23 @@ import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
 import { postChat } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
+import {
+  listAdminUploaders,
+  decideUploader,
+  decideEventUpload,
+} from './routes/admin-uploaders.js';
+import {
+  getMyUploader,
+  applyUploader,
+  setActiveRole,
+  listMyUploaderEvents,
+  createUploaderEvent,
+} from './routes/uploader.js';
 import { requireAdmin } from './middleware/require-admin.js';
+import {
+  requireUploaderApproved,
+  requireUploaderActive,
+} from './middleware/require-uploader.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -178,6 +194,55 @@ export function createApp(): Express {
     (req: Request, res: Response, next: NextFunction) => {
       putAdminEventVibes(req, res).catch(next);
     },
+  );
+
+  // Admin — 업로더 승급 심사 + 업로드 이벤트 심사 (A_700 part 2)
+  app.get(
+    '/admin/uploaders',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => listAdminUploaders(req, res).catch(next),
+  );
+  app.post(
+    '/admin/uploaders/:id/decision',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => decideUploader(req, res).catch(next),
+  );
+  app.post(
+    '/admin/events/:id/decision',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => decideEventUpload(req, res).catch(next),
+  );
+
+  // Uploader — 본인 프로파일/신청/역할 토글/이벤트 업로드
+  app.get(
+    '/me/uploader',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getMyUploader(req, res).catch(next),
+  );
+  app.post(
+    '/me/uploader/apply',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => applyUploader(req, res).catch(next),
+  );
+  app.put(
+    '/me/active-role',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => setActiveRole(req, res).catch(next),
+  );
+  app.get(
+    '/me/uploader/events',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireUploaderApproved(req, res, next).catch(next),
+    (req, res, next) => listMyUploaderEvents(req, res).catch(next),
+  );
+  app.post(
+    '/uploader/events',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireUploaderActive(req, res, next).catch(next),
+    (req, res, next) => createUploaderEvent(req, res).catch(next),
   );
 
   // Auth — Google OAuth (real) + dev-login stub (dev only).
