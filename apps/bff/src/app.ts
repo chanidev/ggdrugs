@@ -34,6 +34,8 @@ import {
   setActiveRole,
   listMyUploaderEvents,
   createUploaderEvent,
+  getMyUploaderEvent,
+  updateUploaderEvent,
 } from './routes/uploader.js';
 import {
   posterUploadUrl,
@@ -322,6 +324,18 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireUploaderActive(req, res, next).catch(next),
     (req, res, next) => createUploaderEvent(req, res).catch(next),
+  );
+  app.get(
+    '/uploader/events/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireUploaderActive(req, res, next).catch(next),
+    (req, res, next) => getMyUploaderEvent(req, res).catch(next),
+  );
+  app.patch(
+    '/uploader/events/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireUploaderActive(req, res, next).catch(next),
+    (req, res, next) => updateUploaderEvent(req, res).catch(next),
   );
   app.post(
     '/uploader/events/poster-upload-url',

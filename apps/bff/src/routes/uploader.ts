@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
-import { deleteObjects } from '../lib/s3.js';
+import { deleteObjects, presignGet } from '../lib/s3.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 import type { UploaderRequest } from '../middleware/require-uploader.js';
 
@@ -37,6 +37,16 @@ const DOC_MIME_WHITELIST = new Set(['image/jpeg', 'image/png', 'application/pdf'
 const MAX_DOC_BYTES = 5 * 1024 * 1024;
 const MIN_DOCS = 2; // A_602: 서류 ≥ 2종
 const MAX_DOCS = 5;
+
+function parseBigIntParam(raw: unknown): bigint | null {
+  if (typeof raw !== 'string') return null;
+  try {
+    const n = BigInt(raw);
+    return n > 0n ? n : null;
+  } catch {
+    return null;
+  }
+}
 
 function parseIntClamp(raw: unknown, fallback: number, min: number, max: number): number {
   const n = typeof raw === 'string' ? Number.parseInt(raw, 10) : NaN;
@@ -724,4 +734,322 @@ export async function createUploaderEvent(req: Request, res: Response) {
       createdAt: created.createdAt.toISOString(),
     },
   });
+}
+
+// =============================================================
+// A_601b — 업로더 이벤트 수정 재제출
+// =============================================================
+
+/**
+ * GET /uploader/events/:id — 업로더 본인 이벤트 단건 조회 (수정 폼 prefill 용).
+ *
+ * requireUploaderActive 뒤. 본인 소유 + 미삭제 이벤트만. 기존 서류는 presigned GET URL 포함.
+ * status 와 latestDecision 은 UI 가 "수정 가능 여부" 판단용.
+ */
+export async function getMyUploaderEvent(req: Request, res: Response) {
+  const uploader = (req as UploaderRequest).uploader;
+  const eventId = parseBigIntParam(req.params.id);
+  if (!eventId) {
+    res.status(400).json({ error: 'invalid event id' });
+    return;
+  }
+
+  const row = await prisma.event.findFirst({
+    where: { eventId, uploaderId: uploader.uploaderId, isDeleted: false },
+    select: {
+      eventId: true,
+      title: true,
+      description: true,
+      addressDetail: true,
+      latitude: true,
+      longitude: true,
+      startDate: true,
+      endDate: true,
+      operatingHours: true,
+      targetAudience: true,
+      admissionFee: true,
+      expectedCompanionPrimary: true,
+      expectedCompanionSecondary: true,
+      posterImageUrl: true,
+      approvalStatus: true,
+      phase: true,
+      createdAt: true,
+      updatedAt: true,
+      category: { select: { categoryId: true, categoryCode: true, displayName: true } },
+      region: { select: { regionId: true, sidoName: true, sigunguName: true } },
+      approvalDocuments: {
+        orderBy: { documentId: 'asc' },
+        select: {
+          documentId: true,
+          filePath: true,
+          originalFilename: true,
+          mimeType: true,
+          fileSizeBytes: true,
+        },
+      },
+      approvalLogs: {
+        orderBy: { createdAt: 'desc' },
+        take: 1,
+        select: { action: true, reason: true, createdAt: true },
+      },
+    },
+  });
+
+  if (!row) {
+    res.status(404).json({ error: 'event_not_found' });
+    return;
+  }
+
+  const documents = await Promise.all(
+    row.approvalDocuments.map(async (d) => ({
+      documentId: d.documentId.toString(),
+      originalFilename: d.originalFilename,
+      mimeType: d.mimeType,
+      fileSizeBytes: d.fileSizeBytes,
+      previewUrl: await presignGet(env.S3_BUCKET_APPROVAL_DOCS, d.filePath, 300),
+    })),
+  );
+
+  const latestLog = row.approvalLogs[0];
+  res.json({
+    event: {
+      eventId: row.eventId.toString(),
+      title: row.title,
+      categoryCode: row.category.categoryCode,
+      regionId: row.region.regionId.toString(),
+      regionLabel: `${row.region.sidoName}${row.region.sigunguName ? ` ${row.region.sigunguName}` : ''}`,
+      description: row.description,
+      startDate: row.startDate.toISOString().slice(0, 10),
+      endDate: row.endDate.toISOString().slice(0, 10),
+      addressDetail: row.addressDetail,
+      latitude: row.latitude?.toString() ?? null,
+      longitude: row.longitude?.toString() ?? null,
+      operatingHours: row.operatingHours,
+      targetAudience: row.targetAudience,
+      admissionFee: row.admissionFee,
+      expectedCompanionPrimary: row.expectedCompanionPrimary,
+      expectedCompanionSecondary: row.expectedCompanionSecondary,
+      posterImageUrl: row.posterImageUrl,
+      approvalStatus: row.approvalStatus,
+      phase: row.phase,
+      createdAt: row.createdAt.toISOString(),
+      updatedAt: row.updatedAt.toISOString(),
+      documents,
+      latestDecision: latestLog
+        ? {
+            action: latestLog.action,
+            reason: latestLog.reason,
+            decidedAt: latestLog.createdAt.toISOString(),
+          }
+        : null,
+    },
+  });
+}
+
+/**
+ * PATCH /uploader/events/:id — 업로더 이벤트 수정 재제출.
+ *
+ * requireUploaderActive 뒤. 본인 소유 + 미삭제 + approvalStatus ∈ {revision_requested, rejected}
+ * 일 때만 허용. 성공 시 approval_status='pending' 으로 리셋.
+ *
+ * body:
+ *   title*, categoryCode*, regionId*, startDate*, endDate*,
+ *   description?, addressDetail?, operatingHours?, targetAudience?, admissionFee?,
+ *   expectedCompanionPrimary?, expectedCompanionSecondary?,
+ *   posterImageUrl (null | 새 URL | undefined=유지),
+ *   clearPoster (true 면 포스터 제거),
+ *   approvalDocuments (신규 세트 — 있으면 기존 전체 교체, 없으면 유지)
+ */
+export async function updateUploaderEvent(req: Request, res: Response) {
+  const uploader = (req as UploaderRequest).uploader;
+  const eventId = parseBigIntParam(req.params.id);
+  if (!eventId) {
+    res.status(400).json({ error: 'invalid event id' });
+    return;
+  }
+
+  const existing = await prisma.event.findFirst({
+    where: { eventId, uploaderId: uploader.uploaderId, isDeleted: false },
+    select: {
+      eventId: true,
+      approvalStatus: true,
+      posterImageUrl: true,
+      approvalDocuments: { select: { filePath: true } },
+    },
+  });
+  if (!existing) {
+    res.status(404).json({ error: 'event_not_found' });
+    return;
+  }
+  if (existing.approvalStatus !== 'revision_requested' && existing.approvalStatus !== 'rejected') {
+    res.status(409).json({
+      error: 'not_editable',
+      status: existing.approvalStatus,
+    });
+    return;
+  }
+
+  const b = req.body ?? {};
+
+  const title = trimStr(b.title, 200);
+  if (title.length < 1) {
+    res.status(400).json({ error: 'title 필수' });
+    return;
+  }
+  const categoryCode = typeof b.categoryCode === 'string' ? b.categoryCode : '';
+  if (!EVENT_TYPE_CODES.has(categoryCode)) {
+    res.status(400).json({ error: `categoryCode 은 ${[...EVENT_TYPE_CODES].join('|')} 중 하나` });
+    return;
+  }
+  let regionId: bigint;
+  try {
+    regionId = BigInt(typeof b.regionId === 'string' || typeof b.regionId === 'number' ? b.regionId : '0');
+    if (regionId <= 0n) throw new Error('bad');
+  } catch {
+    res.status(400).json({ error: 'regionId 필수' });
+    return;
+  }
+  const startDate = parseYmd(b.startDate);
+  const endDate = parseYmd(b.endDate);
+  if (!startDate || !endDate) {
+    res.status(400).json({ error: 'startDate/endDate 는 YYYY-MM-DD' });
+    return;
+  }
+  if (endDate < startDate) {
+    res.status(400).json({ error: 'endDate < startDate' });
+    return;
+  }
+
+  const description = b.description == null ? null : trimStr(b.description, 10_000) || null;
+  const addressDetail = b.addressDetail == null ? null : trimStr(b.addressDetail, 255) || null;
+  const operatingHours = b.operatingHours == null ? null : trimStr(b.operatingHours, 100) || null;
+  const targetAudience = b.targetAudience == null ? null : trimStr(b.targetAudience, 100) || null;
+  const admissionFee = b.admissionFee == null ? null : trimStr(b.admissionFee, 100) || null;
+
+  const primary = b.expectedCompanionPrimary;
+  const secondary = b.expectedCompanionSecondary;
+  if (primary != null && primary !== '' && !COMPANION_CODES.has(primary)) {
+    res.status(400).json({ error: 'expectedCompanionPrimary 값 오류' });
+    return;
+  }
+  if (secondary != null && secondary !== '' && !COMPANION_CODES.has(secondary)) {
+    res.status(400).json({ error: 'expectedCompanionSecondary 값 오류' });
+    return;
+  }
+
+  // 포스터 — 3가지 케이스:
+  //   posterImageUrl: string  → 새 URL 로 교체 (이전 포스터 key 삭제)
+  //   clearPoster: true        → null 로 (이전 포스터 key 삭제)
+  //   그 외                     → 유지
+  let posterImageUrl: string | null | undefined;
+  let oldPosterKeyToDelete: string | null = null;
+  if (b.clearPoster === true) {
+    posterImageUrl = null;
+    oldPosterKeyToDelete = posterKeyFromUrl(existing.posterImageUrl);
+  } else if (typeof b.posterImageUrl === 'string' && b.posterImageUrl.length > 0) {
+    posterImageUrl = trimStr(b.posterImageUrl, 500) || null;
+    if (posterImageUrl !== existing.posterImageUrl) {
+      oldPosterKeyToDelete = posterKeyFromUrl(existing.posterImageUrl);
+    }
+  } else {
+    posterImageUrl = undefined; // no change
+  }
+
+  // 서류 — approvalDocuments 가 배열로 오면 전체 교체, 아니면 유지.
+  const docsProvided = Array.isArray(b.approvalDocuments);
+  let docs: IncomingDoc[] = [];
+  if (docsProvided) {
+    const parsed = validateDocs(b.approvalDocuments, uploader.uploaderId.toString());
+    if (!Array.isArray(parsed)) {
+      res.status(400).json({ error: parsed.error });
+      return;
+    }
+    docs = parsed;
+  }
+
+  // FK 검증.
+  const [category, region] = await Promise.all([
+    prisma.eventCategory.findUnique({ where: { categoryCode }, select: { categoryId: true } }),
+    prisma.region.findUnique({ where: { regionId }, select: { regionId: true } }),
+  ]);
+  if (!category) {
+    if (docsProvided) await deleteObjects(env.S3_BUCKET_APPROVAL_DOCS, docs.map((d) => d.key));
+    res.status(400).json({ error: `categoryCode=${categoryCode} 비활성` });
+    return;
+  }
+  if (!region) {
+    if (docsProvided) await deleteObjects(env.S3_BUCKET_APPROVAL_DOCS, docs.map((d) => d.key));
+    res.status(400).json({ error: `regionId=${regionId.toString()} 없음` });
+    return;
+  }
+
+  const phase = computePhase(startDate, endDate);
+
+  const updateData: Prisma.EventUpdateInput = {
+    title,
+    category: { connect: { categoryId: category.categoryId } },
+    region: { connect: { regionId: region.regionId } },
+    description,
+    addressDetail,
+    startDate,
+    endDate,
+    operatingHours,
+    targetAudience,
+    admissionFee,
+    expectedCompanionPrimary: primary ? primary : null,
+    expectedCompanionSecondary: secondary ? secondary : null,
+    phase,
+    approvalStatus: 'pending',
+    approvedAt: null,
+  };
+  if (posterImageUrl !== undefined) {
+    updateData.posterImageUrl = posterImageUrl;
+  }
+
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.event.update({ where: { eventId }, data: updateData });
+      if (docsProvided) {
+        await tx.approvalDocument.deleteMany({ where: { eventId } });
+        await tx.approvalDocument.createMany({
+          data: docs.map((d) => ({
+            eventId,
+            filePath: d.key,
+            originalFilename: d.originalFilename,
+            mimeType: d.mimeType,
+            fileSizeBytes: d.fileSizeBytes,
+          })),
+        });
+      }
+    });
+  } catch (err) {
+    if (docsProvided) {
+      await deleteObjects(env.S3_BUCKET_APPROVAL_DOCS, docs.map((d) => d.key));
+    }
+    throw err;
+  }
+
+  // 트랜잭션 성공 후 오래된 객체 정리 (실패해도 응답 영향 없음).
+  if (docsProvided) {
+    const oldKeys = existing.approvalDocuments.map((d) => d.filePath);
+    if (oldKeys.length > 0) await deleteObjects(env.S3_BUCKET_APPROVAL_DOCS, oldKeys);
+  }
+  if (oldPosterKeyToDelete) {
+    await deleteObjects(env.S3_BUCKET_EVENT_POSTERS, [oldPosterKeyToDelete]);
+  }
+
+  res.json({
+    eventId: eventId.toString(),
+    approvalStatus: 'pending',
+    phase,
+    resubmitted: true,
+  });
+}
+
+function posterKeyFromUrl(url: string | null): string | null {
+  if (!url) return null;
+  const prefix = `/${env.S3_BUCKET_EVENT_POSTERS}/`;
+  const idx = url.indexOf(prefix);
+  if (idx < 0) return null;
+  return decodeURI(url.slice(idx + prefix.length));
 }
