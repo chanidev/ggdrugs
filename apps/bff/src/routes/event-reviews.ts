@@ -216,15 +216,9 @@ export async function createEventReview(req: Request, res: Response) {
     res.status(404).json({ error: 'event not found' });
     return;
   }
-  // 요구사항 A_501: 이벤트 종료일 이후에만 리뷰 작성 활성화.
-  if (event.phase !== 'ended') {
-    res.status(422).json({
-      error: 'review_not_allowed_yet',
-      message: '리뷰는 이벤트 종료일 이후에 작성할 수 있어요.',
-      endDate: event.endDate.toISOString().slice(0, 10),
-    });
-    return;
-  }
+  // 2026-04-21 정책 변경: 기존 GG-REVIEW-001 (종료일 이후 작성) 완화.
+  // 진행 중·예정 이벤트도 리뷰 작성 가능 (기대평·라이브 리뷰 허용).
+  // phase check 제거. endDate 는 UI 힌트용으로만 사용.
 
   try {
     const created = await prisma.$transaction(async (tx) => {

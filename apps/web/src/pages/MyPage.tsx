@@ -269,8 +269,9 @@ type SummaryEvent = {
  *   이벤트명 · 장소 · 기간 · 가격 · 대상 · 요약(aiSummary)
  *   + '상세 보기' (A_400) / '리뷰 작성·수정' (A_501) CTA
  *
- * 리뷰 CTA 활성 조건 (GG-REVIEW-001):
- *   phase === 'ended' 일 때만 활성. 내가 이미 리뷰 작성했으면 '수정'.
+ * 리뷰 CTA (2026-04-21 정책 변경: 항상 활성):
+ *   이전 GG-REVIEW-001 '종료일 이후' 제약 완화. 진행 중·예정 이벤트도
+ *   작성 가능 (기대평 / 라이브 리뷰 허용). 이미 작성했으면 '수정' 레이블.
  *
  * 관련 기사 수는 스펙엔 없지만 UX 힌트로 작은 배지. articleCount > 0 일 때만.
  */
@@ -290,7 +291,6 @@ function CalendarSummaryCard({
       ? `${event.region.sidoName} ${event.region.sigunguName}`
       : event.region.fullAddress);
 
-  const canReview = phase === 'ended';
   const reviewLabel = reviewedRating !== undefined ? '리뷰 수정' : '리뷰 작성';
   const reviewHref = `/events/${event.eventId}#review`;
 
@@ -350,22 +350,12 @@ function CalendarSummaryCard({
         >
           상세 보기
         </Link>
-        {canReview ? (
-          <Link
-            to={reviewHref}
-            className="inline-flex h-8 flex-1 items-center justify-center rounded-(--radius-md) bg-(--color-accent) text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
-          >
-            {reviewLabel}
-          </Link>
-        ) : (
-          <span
-            aria-disabled="true"
-            className="inline-flex h-8 flex-1 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-dashed border-(--color-border) text-[11.5px] text-(--color-text-subtle)"
-            title="이벤트 종료일 이후에 작성 가능 (GG-REVIEW-001)"
-          >
-            {phase === 'upcoming' ? '리뷰는 종료 후' : '종료 후 작성'}
-          </span>
-        )}
+        <Link
+          to={reviewHref}
+          className="inline-flex h-8 flex-1 items-center justify-center rounded-(--radius-md) bg-(--color-accent) text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
+        >
+          {reviewLabel}
+        </Link>
       </footer>
     </article>
   );

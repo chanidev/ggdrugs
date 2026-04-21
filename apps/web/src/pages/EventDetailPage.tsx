@@ -189,22 +189,14 @@ function DetailBody({ detail }: { detail: BffEventDetail }) {
 
       <ArticlesSection eventId={detail.eventId} />
 
-      <ReviewsSection eventId={detail.eventId} phase={detail.phase} endDate={detail.endDate} />
+      <ReviewsSection eventId={detail.eventId} />
 
       <Provenance detail={detail} />
     </article>
   );
 }
 
-function ReviewsSection({
-  eventId,
-  phase,
-  endDate,
-}: {
-  eventId: string;
-  phase: BffEventDetail['phase'];
-  endDate: string;
-}) {
+function ReviewsSection({ eventId }: { eventId: string }) {
   const { user } = useCurrentUser();
   const [state, setState] = useState<{
     loading: boolean;
@@ -278,11 +270,7 @@ function ReviewsSection({
       </header>
 
       {user ? (
-        phase === 'ended' ? (
-          <ReviewComposer eventId={eventId} onCreated={onCreated} />
-        ) : (
-          <NotEndedNotice endDate={endDate} />
-        )
+        <ReviewComposer eventId={eventId} onCreated={onCreated} />
       ) : (
         <LoginGate />
       )}
@@ -476,15 +464,6 @@ function LoginGate() {
       >
         Google 로그인 <Icon name="arrow" size={12} />
       </a>
-    </div>
-  );
-}
-
-function NotEndedNotice({ endDate }: { endDate: string }) {
-  return (
-    <div className="rounded-(--radius-md) border border-dashed border-(--color-border) bg-(--color-surface-alt) px-4 py-3 text-[13px] text-(--color-text-muted)">
-      리뷰는 이벤트가 종료된 뒤에 작성할 수 있어요.
-      <span className="tabular ml-1 text-(--color-text)">{endDate}</span> 이후 오픈.
     </div>
   );
 }
