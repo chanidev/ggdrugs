@@ -24,6 +24,8 @@
     "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1033.0",
+    "@aws-sdk/s3-request-presigner": "^3.1033.0",
     "@ggdrugs/config": "workspace:*",
     "@prisma/client": "^5.22.0",
     "express": "^5.2.1",

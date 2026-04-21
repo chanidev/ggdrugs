@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
@@ -7,7 +7,9 @@ import {
   createUploaderEvent,
   fetchMyUploader,
   fetchRegions,
+  requestPosterUploadUrl,
   setActiveRole,
+  uploadToPresignedUrl,
   type MyUploaderProfile,
   type NewUploaderEventBody,
   type RegionItem,
@@ -56,7 +58,7 @@ type FormState = {
   admissionFee: string;
   expectedCompanionPrimary: '' | 'family' | 'friend' | 'couple' | 'solo';
   expectedCompanionSecondary: '' | 'family' | 'friend' | 'couple' | 'solo';
-  posterImageUrl: string;
+  // posterImageUrl 은 file 업로드 후 presigned publicUrl 을 submit 직전 주입. form state 에 없음.
 };
 
 const INITIAL: FormState = {
@@ -72,8 +74,10 @@ const INITIAL: FormState = {
   admissionFee: '',
   expectedCompanionPrimary: '',
   expectedCompanionSecondary: '',
-  posterImageUrl: '',
 };
+
+const ALLOWED_POSTER_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
+const MAX_POSTER_BYTES = 5 * 1024 * 1024;
 
 export function UploaderNewEventPage() {
   const { user, loading: authLoading, refresh } = useCurrentUser();
@@ -85,6 +89,21 @@ export function UploaderNewEventPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState(false);
+  const [posterFile, setPosterFile] = useState<File | null>(null);
+  const [posterPreview, setPosterPreview] = useState<string | null>(null);
+  const [posterUploading, setPosterUploading] = useState(false);
+  const [posterError, setPosterError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!posterFile) {
+      setPosterPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(posterFile);
+    setPosterPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [posterFile]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -132,11 +151,65 @@ export function UploaderNewEventPage() {
     }
   };
 
+  const onPosterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPosterError(null);
+    const f = e.target.files?.[0] ?? null;
+    if (!f) {
+      setPosterFile(null);
+      return;
+    }
+    if (!(ALLOWED_POSTER_MIME as readonly string[]).includes(f.type)) {
+      setPosterError(`지원 형식: ${ALLOWED_POSTER_MIME.join(', ')}`);
+      setPosterFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    if (f.size > MAX_POSTER_BYTES) {
+      setPosterError(`최대 ${Math.round(MAX_POSTER_BYTES / 1024 / 1024)}MB`);
+      setPosterFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
+    }
+    setPosterFile(f);
+  };
+
+  const clearPoster = () => {
+    setPosterFile(null);
+    setPosterError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || submitting) return;
     setSubmitting(true);
     setError(null);
+
+    // 1) 포스터 파일 선택돼 있으면 presigned PUT 으로 업로드 먼저.
+    let posterUrl: string | null = null;
+    if (posterFile) {
+      setPosterUploading(true);
+      try {
+        const presign = await requestPosterUploadUrl({
+          contentType: posterFile.type,
+          sizeBytes: posterFile.size,
+        });
+        await uploadToPresignedUrl(presign.uploadUrl, posterFile);
+        posterUrl = presign.publicUrl;
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? `포스터 업로드 실패: ${err.message}`
+            : '포스터 업로드 실패',
+        );
+        setSubmitting(false);
+        setPosterUploading(false);
+        return;
+      } finally {
+        setPosterUploading(false);
+      }
+    }
+
     try {
       const body: NewUploaderEventBody = {
         title: form.title.trim(),
@@ -151,7 +224,7 @@ export function UploaderNewEventPage() {
         admissionFee: form.admissionFee.trim() || null,
         expectedCompanionPrimary: form.expectedCompanionPrimary || null,
         expectedCompanionSecondary: form.expectedCompanionSecondary || null,
-        posterImageUrl: form.posterImageUrl.trim() || null,
+        posterImageUrl: posterUrl,
       };
       await createUploaderEvent(body);
       navigate('/uploader');
@@ -377,15 +450,51 @@ export function UploaderNewEventPage() {
                 </select>
               </Field>
             </div>
-            <Field label="포스터 URL" hint="외부 URL 만. 실파일 업로드는 다음 패스">
-              <input
-                type="url"
-                value={form.posterImageUrl}
-                onChange={(e) => setForm((f) => ({ ...f, posterImageUrl: e.target.value }))}
-                maxLength={500}
-                placeholder="https://..."
-                className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
-              />
+            <Field label="포스터 이미지" hint="JPEG · PNG · WebP, 최대 5MB">
+              <div className="flex items-start gap-3">
+                {posterPreview ? (
+                  <div className="relative h-32 w-24 shrink-0 overflow-hidden rounded-(--radius-md) bg-(--color-surface-alt)">
+                    <img
+                      src={posterPreview}
+                      alt="포스터 미리보기"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-32 w-24 shrink-0 items-center justify-center rounded-(--radius-md) border border-dashed border-(--color-border) bg-(--color-surface-alt) text-[11px] text-(--color-text-subtle)">
+                    없음
+                  </div>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept={ALLOWED_POSTER_MIME.join(',')}
+                    onChange={onPosterChange}
+                    className="block w-full text-[13px] text-(--color-text-muted) file:mr-3 file:inline-flex file:h-9 file:cursor-pointer file:items-center file:rounded-(--radius-md) file:border file:border-(--color-border) file:bg-(--color-surface) file:px-3 file:text-[13px] file:font-medium file:text-(--color-text) hover:file:border-(--color-border-hover)"
+                  />
+                  {posterFile && (
+                    <div className="flex items-center justify-between gap-2 text-[12px] text-(--color-text-muted)">
+                      <span className="truncate">
+                        {posterFile.name} · {(posterFile.size / 1024).toFixed(0)} KB
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clearPoster}
+                        className="shrink-0 text-(--color-text-subtle) hover:text-(--color-error)"
+                      >
+                        제거
+                      </button>
+                    </div>
+                  )}
+                  {posterError && (
+                    <div className="text-[12px] text-(--color-error)">{posterError}</div>
+                  )}
+                  {posterUploading && (
+                    <div className="text-[12px] text-(--color-text-muted)">업로드 중…</div>
+                  )}
+                </div>
+              </div>
             </Field>
 
             {error && (

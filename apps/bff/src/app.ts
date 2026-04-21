@@ -33,6 +33,7 @@ import {
   listMyUploaderEvents,
   createUploaderEvent,
 } from './routes/uploader.js';
+import { posterUploadUrl } from './routes/uploads.js';
 import { requireAdmin } from './middleware/require-admin.js';
 import {
   requireUploaderApproved,
@@ -243,6 +244,12 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireUploaderActive(req, res, next).catch(next),
     (req, res, next) => createUploaderEvent(req, res).catch(next),
+  );
+  app.post(
+    '/uploader/events/poster-upload-url',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireUploaderActive(req, res, next).catch(next),
+    (req, res, next) => posterUploadUrl(req, res).catch(next),
   );
 
   // Auth — Google OAuth (real) + dev-login stub (dev only).

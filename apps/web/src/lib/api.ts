@@ -721,6 +721,53 @@ export interface CreatedUploaderEvent {
   createdAt: string;
 }
 
+export interface PosterUploadUrlResponse {
+  uploadUrl: string;
+  publicUrl: string;
+  key: string;
+  expiresIn: number;
+  maxBytes: number;
+}
+
+export async function requestPosterUploadUrl(body: {
+  contentType: string;
+  sizeBytes: number;
+}): Promise<PosterUploadUrlResponse> {
+  const res = await fetch(
+    `${BFF_URL}/uploader/events/poster-upload-url`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(
+      `POST /uploader/events/poster-upload-url ${res.status}: ${txt.slice(0, 200)}`,
+    );
+  }
+  return (await res.json()) as PosterUploadUrlResponse;
+}
+
+/** presigned URL 로 바로 PUT. BFF 거치지 않음 (Content-Type 헤더 일치해야 서명 유효). */
+export async function uploadToPresignedUrl(
+  uploadUrl: string,
+  file: File,
+): Promise<void> {
+  const res = await fetch(uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type },
+    body: file,
+  });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`PUT S3 ${res.status}: ${txt.slice(0, 200)}`);
+  }
+}
+
 export async function createUploaderEvent(
   body: NewUploaderEventBody,
 ): Promise<CreatedUploaderEvent> {
