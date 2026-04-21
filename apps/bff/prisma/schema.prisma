@@ -91,17 +91,40 @@ model UploaderProfile {
   organizationName String    @map("organization_name") @db.VarChar(100)
   contactPhone     String    @map("contact_phone")     @db.VarChar(20)
   contactEmail     String    @map("contact_email")     @db.VarChar(255)
+  /// 실명 (ADR 0003). 기존 dev 행은 ''. 신규 apply 부터 필수 (서버 검증).
+  realName         String    @default("") @map("real_name") @db.VarChar(50)
+  /// 기관 업로더 사업자등록번호 10자리 (숫자만). ci_hash 와 XOR.
+  businessRegistrationNumber String? @map("business_registration_number") @db.Char(10)
+  /// 개인 업로더 본인인증 CI (88자 Base64). businessRegistrationNumber 와 XOR.
+  ciHash           String?   @map("ci_hash") @db.Char(88)
   approvalStatus   String    @default("pending") @map("approval_status") @db.VarChar(20)
   // pending | approved | revision_requested | rejected  (ADR 0001 #1 대칭 적용)
   approvedAt       DateTime? @map("approved_at") @db.Timestamptz
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user   User    @relation(fields: [userId], references: [userId])
-  events Event[]
+  user      User                @relation(fields: [userId], references: [userId])
+  events    Event[]
+  documents UploaderDocument[]
 
   @@index([approvalStatus], map: "idx_uploader_status")
   @@map("uploader_profiles")
+}
+
+/// ADR 0003 — 업로더 승급 서류. event 심사용 approval_documents 와 분리.
+model UploaderDocument {
+  documentId       BigInt   @id @default(autoincrement()) @map("document_id")
+  uploaderId       BigInt   @map("uploader_id")
+  filePath         String   @map("file_path")         @db.VarChar(500)
+  originalFilename String   @map("original_filename") @db.VarChar(255)
+  mimeType         String   @map("mime_type")         @db.VarChar(30)
+  fileSizeBytes    Int      @map("file_size_bytes")
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  uploader UploaderProfile @relation(fields: [uploaderId], references: [uploaderId], onDelete: Cascade)
+
+  @@index([uploaderId], map: "idx_uploader_docs_uploader")
+  @@map("uploader_documents")
 }
 
 // =============================================================
