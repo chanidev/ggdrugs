@@ -28,6 +28,7 @@ import {
   decideUploader,
   decideEventUpload,
 } from './routes/admin-uploaders.js';
+import { listAdminAuditLogs } from './routes/admin-audit.js';
 import {
   getMyUploader,
   applyUploader,
@@ -248,6 +249,12 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireAdmin(req, res, next).catch(next),
     (req, res, next) => decideEventUpload(req, res).catch(next),
+  );
+  app.get(
+    '/admin/audit-logs',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => listAdminAuditLogs(req, res).catch(next),
   );
 
   // Uploader — 본인 프로파일/신청/역할 토글/이벤트 업로드
