@@ -36,8 +36,8 @@ async function summarizeOne(input: SummarizeInput): Promise<string | null> {
 }
 
 interface BackfillOptions {
-  /** description 없어도 title + category fallback 으로 요약할지. 기본 false (설명 있는 것만). */
-  includeNoDescription?: boolean;
+  /** true 면 description 있는 이벤트만. 기본은 false — description 없는 이벤트도 title+category 로 요약. */
+  withDescriptionOnly?: boolean;
   /** 처리할 최대 건수. 비용 상한. */
   limit?: number;
   /** 병렬도. OpenAI tier 1 기준 5 안전. */
@@ -53,14 +53,14 @@ export async function runBackfillSummaries(options: BackfillOptions = {}): Promi
   const concurrency = options.concurrency ?? 5;
   const limit = options.limit ?? 10_000;
 
-  const where = options.includeNoDescription
-    ? { aiSummary: null, isDeleted: false, approvalStatus: 'approved' as const }
-    : {
+  const where = options.withDescriptionOnly
+    ? {
         aiSummary: null,
         isDeleted: false,
         approvalStatus: 'approved' as const,
         description: { not: null },
-      };
+      }
+    : { aiSummary: null, isDeleted: false, approvalStatus: 'approved' as const };
 
   const rows = await prisma.event.findMany({
     where,
@@ -74,7 +74,7 @@ export async function runBackfillSummaries(options: BackfillOptions = {}): Promi
       vibeAssignments: { select: { vibe: { select: { vibeName: true } } } },
     },
   });
-  log.info({ total: rows.length, includeNoDescription: !!options.includeNoDescription }, 'start');
+  log.info({ total: rows.length, withDescriptionOnly: !!options.withDescriptionOnly }, 'start');
 
   let processed = 0;
   let updated = 0;
@@ -128,15 +128,16 @@ export async function runBackfillSummaries(options: BackfillOptions = {}): Promi
   return { processed, updated, errors };
 }
 
-// CLI: `pnpm backfill:summary [--include-no-description] [--limit N]`
+// CLI: `pnpm backfill:summary [--with-description-only] [--limit N]`
+// 기본은 description 유무와 무관하게 approved & aiSummary IS NULL 인 이벤트 전체.
 // Windows 와 POSIX 양쪽 import.meta.url 매칭을 피하려 argv 기반 단순 체크.
 const isCliRun =
   process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('summarize-events.ts');
 if (isCliRun) {
   const args = process.argv.slice(2);
-  const include = args.includes('--include-no-description');
+  const withDescOnly = args.includes('--with-description-only');
   const limitArg = args.indexOf('--limit');
-  const opts: BackfillOptions = { includeNoDescription: include };
+  const opts: BackfillOptions = { withDescriptionOnly: withDescOnly };
   if (limitArg >= 0) {
     const n = Number(args[limitArg + 1]);
     if (Number.isFinite(n)) opts.limit = n;

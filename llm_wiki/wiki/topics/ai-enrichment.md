@@ -55,11 +55,31 @@ ai_summary_at / description_hash 를 자동 NULL 처리. 다음 backfill 실행 
 편집이든 동일 경로로 무효화. 마이그레이션
 `20260421100000_event_summary_cache_invalidation`.
 
-### 미구현 (후속)
+### Ingest 후속 자동 요약 (2026-04-21)
 
-- Ingest 시점 자동 summarize (현재 backfill 만). 새 이벤트 upsert 후
-  비동기 호출 패턴은 reviews.sentiment 와 동일하게 추가 가능.
-- description 없는 이벤트 요약 (title + category 기반 fallback). 현재는 스킵.
+`run-ingest.ts` 가 TourAPI/Seoul/KCISA 소스 실행 후 `runBackfillSummaries({})`
+를 awaited 로 한 번 호출. description 변경 트리거가 ai_summary 를 비운 행과
+신규 인서트된 행이 모두 같은 쿼리(`aiSummary IS NULL`)에 잡히므로 자동으로
+재/신규 요약됨. `--no-summarize` 플래그로 스킵 가능 (비용 회피용). services/llm
+의 `TOKEN_BUDGET_DAILY_USD` 가 상한 역할을 함.
+
+### Description 없는 이벤트 요약 (2026-04-21)
+
+backfill 기본값을 변경 — description 유무와 무관하게 `aiSummary IS NULL`
+approved 이벤트 전체를 대상. `--with-description-only` 로 과거 동작(설명 있는
+것만) 으로 되돌릴 수 있음. 프롬프트가 "설명 비어있으면 억지로 채우지 말 것"
+규칙을 포함해 title+category+region 만으로도 담백한 1~2문장을 내도록 유도.
+
+### 프롬프트 튜닝 — 과장/추측 금지 (2026-04-21)
+
+`SUMMARY_SYSTEM` 재작성:
+- 금지 수식어 열거: "특별한", "잊지 못할", "감동적인", "완벽한", "즐거운 추억",
+  "놓칠 수 없는", "환상적인", "마음을 사로잡는" 등.
+- "제공되지 않은 정보(분위기·감상·추천 대상·체험 내용) 추가 금지" 를 명시적
+  실패 조건으로 규정.
+- "신문 기사 도입부" 톤 지정 (기존: 여행 가이드 느낌).
+- 설명 없는 경우 억지 채우기 대신 짧은 사실만 쓰도록 지시.
+프롬프트 길이는 ~2배 늘어 입력 토큰 증가분 건당 ~$0.00004 정도.
 
 ## 2. 리뷰 감성 분류 (reviews.sentiment)
 
@@ -153,4 +173,5 @@ fallback 으로 전환 (stage label 변경).
 - `apps/bff/src/routes/event-reviews.ts` — POST 시 sentiment 비동기 호출
 - 마이그레이션 `20260419210000_add_event_ai_summary` (컬럼 추가)
 - 마이그레이션 `20260421100000_event_summary_cache_invalidation` (hash + 트리거)
+- `apps/bff/src/jobs/run-ingest.ts` — ingest 후속 backfill 연결 (`--no-summarize` 로 스킵)
 - 커밋 `7d58960` (AI 요약 + sentiment 통합)

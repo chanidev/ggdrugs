@@ -17,6 +17,7 @@
 import { runTourapiIngest } from './tourapi-ingest.js';
 import { runSeoulCultureIngest } from './seoul-culture-ingest.js';
 import { runKcisaIngest } from './kcisa-ingest.js';
+import { runBackfillSummaries } from './summarize-events.js';
 import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
 
@@ -24,6 +25,8 @@ const which = (process.argv[2] ?? 'all').toLowerCase();
 const tourapiFloor = process.argv[3]; // YYYYMMDD optional (tourapi 전용)
 // `--backfill` 이 아무 위치에 있으면 seoul-culture 를 전체(종료 포함) 재분류 모드로.
 const seoulBackfill = process.argv.slice(2).includes('--backfill');
+// `--no-summarize` 로 ingest 후 AI 요약 단계를 스킵할 수 있음 (배치 시간 단축 / 비용 회피).
+const skipSummarize = process.argv.slice(2).includes('--no-summarize');
 
 async function main() {
   const results: Record<string, unknown> = {};
@@ -35,6 +38,22 @@ async function main() {
   if (which === 'kcisa' || which === 'all') results.kcisa = await runKcisaIngest();
 
   logger.info(results, 'manual ingest completed');
+
+  // Ingest 후속: aiSummary 가 비어 있는 행 (= 새 인서트 + description 변경으로 트리거가
+  // 캐시를 비운 행) 을 자동 요약. services/llm 의 일일 예산 가드가 비용 상한 역할.
+  // --no-summarize 로 비활성화 가능.
+  if (!skipSummarize) {
+    try {
+      const summary = await runBackfillSummaries({});
+      logger.info({ summary }, 'post-ingest ai-summary backfill done');
+    } catch (err) {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        'post-ingest ai-summary backfill failed — 그래프 ingest 자체는 성공',
+      );
+    }
+  }
+
   await prisma.$disconnect();
 
   const anyError = Object.values(results).some((r) => typeof r === 'object' && r !== null && 'errors' in r && (r as { errors: number }).errors > 0);
