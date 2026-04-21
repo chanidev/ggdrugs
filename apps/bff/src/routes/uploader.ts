@@ -283,6 +283,11 @@ export async function listMyUploaderEvents(req: Request, res: Response) {
         createdAt: true,
         category: { select: { categoryCode: true, displayName: true } },
         region: { select: { regionId: true, sidoName: true, sigunguName: true } },
+        approvalLogs: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { action: true, reason: true, createdAt: true },
+        },
       },
     }),
     prisma.event.groupBy({
@@ -305,22 +310,33 @@ export async function listMyUploaderEvents(req: Request, res: Response) {
     limit,
     total,
     byStatus,
-    items: rows.map((r) => ({
-      eventId: r.eventId.toString(),
-      title: r.title,
-      phase: r.phase,
-      approvalStatus: r.approvalStatus,
-      startDate: r.startDate.toISOString().slice(0, 10),
-      endDate: r.endDate.toISOString().slice(0, 10),
-      posterImageUrl: r.posterImageUrl,
-      createdAt: r.createdAt.toISOString(),
-      category: { code: r.category.categoryCode, name: r.category.displayName },
-      region: {
-        regionId: r.region.regionId.toString(),
-        sido: r.region.sidoName,
-        sigungu: r.region.sigunguName,
-      },
-    })),
+    items: rows.map((r) => {
+      const latestLog = r.approvalLogs[0];
+      return {
+        eventId: r.eventId.toString(),
+        title: r.title,
+        phase: r.phase,
+        approvalStatus: r.approvalStatus,
+        startDate: r.startDate.toISOString().slice(0, 10),
+        endDate: r.endDate.toISOString().slice(0, 10),
+        posterImageUrl: r.posterImageUrl,
+        createdAt: r.createdAt.toISOString(),
+        category: { code: r.category.categoryCode, name: r.category.displayName },
+        region: {
+          regionId: r.region.regionId.toString(),
+          sido: r.region.sidoName,
+          sigungu: r.region.sigunguName,
+        },
+        // rejected/revision_requested 일 때만 UI 에서 쓸 최신 관리자 사유.
+        latestDecision: latestLog
+          ? {
+              action: latestLog.action,
+              reason: latestLog.reason,
+              decidedAt: latestLog.createdAt.toISOString(),
+            }
+          : null,
+      };
+    }),
   });
 }
 

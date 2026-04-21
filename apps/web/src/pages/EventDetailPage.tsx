@@ -487,6 +487,7 @@ function SkeletonReview() {
 
 function ReviewCard({ review }: { review: BffReviewItem }) {
   const date = review.createdAt.slice(0, 10);
+  const photos = [...review.photos].sort((a, b) => a.sortOrder - b.sortOrder);
   return (
     <article className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-4">
       <header className="mb-1.5 flex items-center justify-between gap-3">
@@ -500,6 +501,31 @@ function ReviewCard({ review }: { review: BffReviewItem }) {
       <p className="m-0 whitespace-pre-wrap text-[13px] leading-[1.6] text-(--color-text)">
         {review.body}
       </p>
+      {photos.length > 0 && (
+        <ul className="mt-3 grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-5">
+          {photos.map((p) => (
+            <li key={p.url} className="aspect-square overflow-hidden rounded-(--radius-md) bg-(--color-surface-alt)">
+              <a
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="리뷰 사진 원본 보기"
+                className="block h-full w-full"
+              >
+                <img
+                  src={p.url}
+                  alt=""
+                  loading="lazy"
+                  className="h-full w-full object-cover transition-transform duration-[180ms] hover:scale-[1.03]"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
+                />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
     </article>
   );
 }

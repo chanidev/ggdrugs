@@ -1,8 +1,10 @@
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
+import { env } from '../env.js';
 import { logger } from '../logger.js';
 import { callLlm } from '../llm-client.js';
+import { publicUrl } from '../lib/s3.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
 /** 리뷰 작성 후 fire-and-forget 으로 LLM sentiment 분류 → DB 업데이트. */
@@ -90,7 +92,10 @@ export async function listEventReviews(req: Request, res: Response) {
     body: r.body,
     sentiment: r.sentiment,
     createdAt: r.createdAt.toISOString(),
-    photos: r.photos.map((p) => ({ path: p.filePath, sortOrder: p.sortOrder })),
+    photos: r.photos.map((p) => ({
+      url: publicUrl(env.S3_BUCKET_REVIEW_PHOTOS, p.filePath),
+      sortOrder: p.sortOrder,
+    })),
   }));
 
   res.json({
@@ -280,7 +285,10 @@ export async function createEventReview(req: Request, res: Response) {
       body: created.body,
       createdAt: created.createdAt.toISOString(),
       sentiment: null, // 작성 직후엔 아직 분류 전
-      photos: photos.map((p, i) => ({ path: p.key, sortOrder: i })),
+      photos: photos.map((p, i) => ({
+        url: publicUrl(env.S3_BUCKET_REVIEW_PHOTOS, p.key),
+        sortOrder: i,
+      })),
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {

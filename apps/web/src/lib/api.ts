@@ -161,7 +161,8 @@ export interface BffReviewItem {
   /** gpt-4o-mini 가 자동 분류한 감성. 작성 직후엔 null, 몇 초 뒤 분류 완료. */
   sentiment: 'positive' | 'negative' | 'neutral' | null;
   createdAt: string; // ISO
-  photos: { path: string; sortOrder: number }[];
+  /** url 은 review-photos 버킷 public URL (anonymous download 정책 전제). */
+  photos: { url: string; sortOrder: number }[];
 }
 
 export interface EventReviewsResponse {
@@ -729,6 +730,12 @@ export interface MyUploaderEventItem {
   createdAt: string;
   category: { code: string; name: string };
   region: { regionId: string; sido: string; sigungu: string | null };
+  /** 최신 관리자 심사 로그 — rejected/revision_requested 일 때 사유 표시. */
+  latestDecision: {
+    action: 'approved' | 'revision_requested' | 'rejected';
+    reason: string | null;
+    decidedAt: string;
+  } | null;
 }
 
 export interface MyUploaderEventsResponse {

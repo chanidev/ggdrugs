@@ -483,44 +483,74 @@ function ApprovedBody({
           </div>
         ) : (
           <ul className="divide-y divide-(--color-border)">
-            {items.map((e) => (
-              <li key={e.eventId} className="p-4">
-                <div className="flex items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <PhaseBadge phase={e.phase} />
-                      <span
-                        className={`inline-flex items-center rounded-(--radius-sm) px-2 py-[2px] text-[11px] font-semibold tracking-[0.02em] ${
-                          e.approvalStatus === 'approved'
-                            ? 'bg-(--color-success)/10 text-(--color-success)'
-                            : e.approvalStatus === 'rejected'
-                              ? 'bg-(--color-error)/10 text-(--color-error)'
-                              : 'bg-(--color-warning)/10 text-(--color-warning)'
-                        }`}
+            {items.map((e) => {
+              const needsReason =
+                (e.approvalStatus === 'rejected' ||
+                  e.approvalStatus === 'revision_requested') &&
+                e.latestDecision;
+              return (
+                <li key={e.eventId} className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <PhaseBadge phase={e.phase} />
+                        <span
+                          className={`inline-flex items-center rounded-(--radius-sm) px-2 py-[2px] text-[11px] font-semibold tracking-[0.02em] ${
+                            e.approvalStatus === 'approved'
+                              ? 'bg-(--color-success)/10 text-(--color-success)'
+                              : e.approvalStatus === 'rejected'
+                                ? 'bg-(--color-error)/10 text-(--color-error)'
+                                : 'bg-(--color-warning)/10 text-(--color-warning)'
+                          }`}
+                        >
+                          {STATUS_LABEL[e.approvalStatus]}
+                        </span>
+                        <span className="text-[12px] text-(--color-text-subtle)">
+                          {e.category.name} · {e.region.sido}
+                          {e.region.sigungu ? ` ${e.region.sigungu}` : ''}
+                        </span>
+                      </div>
+                      <div className="mt-1 text-[15px] font-medium text-(--color-text)">
+                        {e.title}
+                      </div>
+                      <div className="mt-0.5 tabular text-[12px] text-(--color-text-subtle)">
+                        {e.startDate} ~ {e.endDate} · 등록 {e.createdAt.slice(0, 10)}
+                      </div>
+                      {needsReason && e.latestDecision && (
+                        <div
+                          className={`mt-2 rounded-(--radius-md) border p-2.5 text-[12px] ${
+                            e.approvalStatus === 'rejected'
+                              ? 'border-(--color-error)/30 bg-(--color-error)/5'
+                              : 'border-(--color-warning)/30 bg-(--color-warning)/5'
+                          }`}
+                        >
+                          <div
+                            className={`mb-0.5 text-[11px] font-semibold uppercase tracking-[0.05em] ${
+                              e.approvalStatus === 'rejected'
+                                ? 'text-(--color-error)'
+                                : 'text-(--color-warning)'
+                            }`}
+                          >
+                            관리자 사유 · {e.latestDecision.decidedAt.slice(0, 10)}
+                          </div>
+                          <p className="m-0 whitespace-pre-wrap text-(--color-text)">
+                            {e.latestDecision.reason ?? '(사유 없음)'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    {e.approvalStatus === 'approved' && (
+                      <Link
+                        to={`/events/${e.eventId}`}
+                        className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
                       >
-                        {STATUS_LABEL[e.approvalStatus]}
-                      </span>
-                      <span className="text-[12px] text-(--color-text-subtle)">
-                        {e.category.name} · {e.region.sido}
-                        {e.region.sigungu ? ` ${e.region.sigungu}` : ''}
-                      </span>
-                    </div>
-                    <div className="mt-1 text-[15px] font-medium text-(--color-text)">{e.title}</div>
-                    <div className="mt-0.5 tabular text-[12px] text-(--color-text-subtle)">
-                      {e.startDate} ~ {e.endDate} · 등록 {e.createdAt.slice(0, 10)}
-                    </div>
+                        공개 페이지
+                      </Link>
+                    )}
                   </div>
-                  {e.approvalStatus === 'approved' && (
-                    <Link
-                      to={`/events/${e.eventId}`}
-                      className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
-                    >
-                      공개 페이지
-                    </Link>
-                  )}
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
