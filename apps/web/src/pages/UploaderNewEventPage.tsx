@@ -7,12 +7,14 @@ import {
   createUploaderEvent,
   fetchMyUploader,
   fetchRegions,
+  requestDocumentUploadUrl,
   requestPosterUploadUrl,
   setActiveRole,
   uploadToPresignedUrl,
   type MyUploaderProfile,
   type NewUploaderEventBody,
   type RegionItem,
+  type UploaderDocumentMeta,
 } from '../lib/api';
 
 /**
@@ -77,7 +79,16 @@ const INITIAL: FormState = {
 };
 
 const ALLOWED_POSTER_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
+const ALLOWED_DOC_MIME = ['image/jpeg', 'image/png'] as const;
 const MAX_POSTER_BYTES = 5 * 1024 * 1024;
+const MAX_DOC_BYTES = 5 * 1024 * 1024;
+const MIN_DOCS = 2;
+const MAX_DOCS = 5;
+
+type DocStaged = {
+  id: string; // client-side only
+  file: File;
+};
 
 export function UploaderNewEventPage() {
   const { user, loading: authLoading, refresh } = useCurrentUser();
@@ -94,6 +105,10 @@ export function UploaderNewEventPage() {
   const [posterUploading, setPosterUploading] = useState(false);
   const [posterError, setPosterError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [docs, setDocs] = useState<DocStaged[]>([]);
+  const [docsError, setDocsError] = useState<string | null>(null);
+  const [docsUploading, setDocsUploading] = useState(false);
+  const docsInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!posterFile) {
@@ -136,7 +151,9 @@ export function UploaderNewEventPage() {
     form.regionId.length > 0 &&
     /^\d{4}-\d{2}-\d{2}$/.test(form.startDate) &&
     /^\d{4}-\d{2}-\d{2}$/.test(form.endDate) &&
-    form.startDate <= form.endDate;
+    form.startDate <= form.endDate &&
+    docs.length >= MIN_DOCS &&
+    docs.length <= MAX_DOCS;
 
   const toggleToUploader = async () => {
     setToggling(true);
@@ -179,6 +196,34 @@ export function UploaderNewEventPage() {
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const onDocsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setDocsError(null);
+    const picked = Array.from(e.target.files ?? []);
+    if (picked.length === 0) return;
+    const next: DocStaged[] = [...docs];
+    for (const f of picked) {
+      if (next.length >= MAX_DOCS) {
+        setDocsError(`서류 최대 ${MAX_DOCS}개`);
+        break;
+      }
+      if (!(ALLOWED_DOC_MIME as readonly string[]).includes(f.type)) {
+        setDocsError(`지원 형식: ${ALLOWED_DOC_MIME.join(', ')} (PDF 미지원 — 스키마 확장 후속)`);
+        continue;
+      }
+      if (f.size > MAX_DOC_BYTES) {
+        setDocsError(`파일당 최대 ${Math.round(MAX_DOC_BYTES / 1024 / 1024)}MB`);
+        continue;
+      }
+      next.push({ id: `${f.name}-${f.size}-${Date.now()}-${Math.random()}`, file: f });
+    }
+    setDocs(next);
+    if (docsInputRef.current) docsInputRef.current.value = '';
+  };
+
+  const removeDoc = (id: string) => {
+    setDocs((prev) => prev.filter((d) => d.id !== id));
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || submitting) return;
@@ -210,6 +255,34 @@ export function UploaderNewEventPage() {
       }
     }
 
+    // 2) 서류 업로드 — 각 파일마다 presigned URL 받아서 PUT. 하나라도 실패하면 중단.
+    const uploadedDocs: UploaderDocumentMeta[] = [];
+    setDocsUploading(true);
+    try {
+      for (const d of docs) {
+        const presign = await requestDocumentUploadUrl({
+          contentType: d.file.type,
+          sizeBytes: d.file.size,
+        });
+        await uploadToPresignedUrl(presign.uploadUrl, d.file);
+        uploadedDocs.push({
+          key: presign.key,
+          originalFilename: d.file.name.slice(0, 255),
+          mimeType: d.file.type,
+          fileSizeBytes: d.file.size,
+        });
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? `서류 업로드 실패: ${err.message}` : '서류 업로드 실패',
+      );
+      setSubmitting(false);
+      setDocsUploading(false);
+      return;
+    } finally {
+      setDocsUploading(false);
+    }
+
     try {
       const body: NewUploaderEventBody = {
         title: form.title.trim(),
@@ -225,6 +298,7 @@ export function UploaderNewEventPage() {
         expectedCompanionPrimary: form.expectedCompanionPrimary || null,
         expectedCompanionSecondary: form.expectedCompanionSecondary || null,
         posterImageUrl: posterUrl,
+        approvalDocuments: uploadedDocs,
       };
       await createUploaderEvent(body);
       navigate('/uploader');
@@ -450,6 +524,54 @@ export function UploaderNewEventPage() {
                 </select>
               </Field>
             </div>
+            <Field
+              label={`서류 (${MIN_DOCS}~${MAX_DOCS}개 필수)`}
+              hint="사업자등록증 · 상위기관 승인서 · 허가서 · 기타 신분 등. JPEG · PNG 5MB 이하. PDF 는 스키마 확장 후속"
+            >
+              <input
+                ref={docsInputRef}
+                type="file"
+                accept={ALLOWED_DOC_MIME.join(',')}
+                multiple
+                onChange={onDocsChange}
+                disabled={docs.length >= MAX_DOCS}
+                className="block w-full text-[13px] text-(--color-text-muted) file:mr-3 file:inline-flex file:h-9 file:cursor-pointer file:items-center file:rounded-(--radius-md) file:border file:border-(--color-border) file:bg-(--color-surface) file:px-3 file:text-[13px] file:font-medium file:text-(--color-text) hover:file:border-(--color-border-hover) disabled:opacity-50"
+              />
+              {docsError && <div className="mt-1 text-[12px] text-(--color-error)">{docsError}</div>}
+              {docs.length > 0 && (
+                <ul className="mt-2 flex flex-col gap-1">
+                  {docs.map((d, i) => (
+                    <li
+                      key={d.id}
+                      className="flex items-center justify-between gap-2 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-1.5 text-[12px]"
+                    >
+                      <span className="truncate text-(--color-text)">
+                        <span className="mr-2 text-(--color-text-subtle)">#{i + 1}</span>
+                        {d.file.name}
+                        <span className="ml-2 text-(--color-text-subtle)">
+                          · {(d.file.size / 1024).toFixed(0)} KB
+                        </span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeDoc(d.id)}
+                        className="shrink-0 text-(--color-text-subtle) hover:text-(--color-error)"
+                      >
+                        제거
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <div className="mt-1 text-[12px] text-(--color-text-subtle)">
+                현재 {docs.length}개 선택됨
+                {docs.length < MIN_DOCS && ` (최소 ${MIN_DOCS}개 필요)`}
+              </div>
+              {docsUploading && (
+                <div className="mt-1 text-[12px] text-(--color-text-muted)">서류 업로드 중…</div>
+              )}
+            </Field>
+
             <Field label="포스터 이미지" hint="JPEG · PNG · WebP, 최대 5MB">
               <div className="flex items-start gap-3">
                 {posterPreview ? (

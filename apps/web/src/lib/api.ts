@@ -693,6 +693,13 @@ export async function fetchMyUploaderEvents(
   return (await res.json()) as MyUploaderEventsResponse;
 }
 
+export interface UploaderDocumentMeta {
+  key: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+}
+
 export type NewUploaderEventBody = {
   title: string;
   categoryCode: string;
@@ -709,6 +716,7 @@ export type NewUploaderEventBody = {
   expectedCompanionPrimary?: 'family' | 'friend' | 'couple' | 'solo' | null;
   expectedCompanionSecondary?: 'family' | 'friend' | 'couple' | 'solo' | null;
   posterImageUrl?: string | null;
+  approvalDocuments: UploaderDocumentMeta[];
 };
 
 export interface CreatedUploaderEvent {
@@ -727,6 +735,36 @@ export interface PosterUploadUrlResponse {
   key: string;
   expiresIn: number;
   maxBytes: number;
+}
+
+export interface DocumentUploadUrlResponse {
+  uploadUrl: string;
+  key: string;
+  expiresIn: number;
+  maxBytes: number;
+}
+
+export async function requestDocumentUploadUrl(body: {
+  contentType: string;
+  sizeBytes: number;
+}): Promise<DocumentUploadUrlResponse> {
+  const res = await fetch(
+    `${BFF_URL}/uploader/documents/upload-url`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(
+      `POST /uploader/documents/upload-url ${res.status}: ${txt.slice(0, 200)}`,
+    );
+  }
+  return (await res.json()) as DocumentUploadUrlResponse;
 }
 
 export async function requestPosterUploadUrl(body: {

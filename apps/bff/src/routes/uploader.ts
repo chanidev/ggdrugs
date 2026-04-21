@@ -30,6 +30,11 @@ const EVENT_TYPE_CODES = new Set([
 
 const COMPANION_CODES = new Set(['family', 'friend', 'couple', 'solo']);
 
+const DOC_MIME_WHITELIST = new Set(['image/jpeg', 'image/png']);
+const MAX_DOC_BYTES = 5 * 1024 * 1024;
+const MIN_DOCS = 2; // A_602: 서류 ≥ 2종
+const MAX_DOCS = 5;
+
 function parseIntClamp(raw: unknown, fallback: number, min: number, max: number): number {
   const n = typeof raw === 'string' ? Number.parseInt(raw, 10) : NaN;
   if (!Number.isFinite(n)) return fallback;
@@ -342,6 +347,49 @@ export async function listMyUploaderEvents(req: Request, res: Response) {
  * 승인 흐름: source_type=uploaded, approval_status=pending, phase 자동 계산.
  * 실제 공개는 관리자 승인 뒤(POST /admin/events/:id/approve)에만.
  */
+interface IncomingDoc {
+  key: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+}
+
+function validateDocs(raw: unknown, uploaderIdStr: string): IncomingDoc[] | { error: string } {
+  if (!Array.isArray(raw)) return { error: 'approvalDocuments 배열 필수' };
+  if (raw.length < MIN_DOCS) return { error: `서류는 최소 ${MIN_DOCS}개` };
+  if (raw.length > MAX_DOCS) return { error: `서류는 최대 ${MAX_DOCS}개` };
+
+  const seenKeys = new Set<string>();
+  const docs: IncomingDoc[] = [];
+  const expectedPrefix = `doc/${uploaderIdStr}/`;
+
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') return { error: 'invalid document entry' };
+    const d = item as Record<string, unknown>;
+    const key = typeof d.key === 'string' ? d.key : '';
+    const filename = typeof d.originalFilename === 'string' ? d.originalFilename.trim() : '';
+    const mime = typeof d.mimeType === 'string' ? d.mimeType : '';
+    const size = typeof d.fileSizeBytes === 'number' ? d.fileSizeBytes : -1;
+
+    if (!key.startsWith(expectedPrefix)) {
+      return { error: `key 가 uploader scope 밖: ${key}` };
+    }
+    if (seenKeys.has(key)) return { error: `중복 key: ${key}` };
+    seenKeys.add(key);
+    if (filename.length < 1 || filename.length > 255) {
+      return { error: 'originalFilename 필수 1~255자' };
+    }
+    if (!DOC_MIME_WHITELIST.has(mime)) {
+      return { error: `mimeType 허용 외: ${mime}` };
+    }
+    if (!Number.isInteger(size) || size <= 0 || size > MAX_DOC_BYTES) {
+      return { error: `fileSizeBytes 범위 초과: ${size}` };
+    }
+    docs.push({ key, originalFilename: filename, mimeType: mime, fileSizeBytes: size });
+  }
+  return docs;
+}
+
 export async function createUploaderEvent(req: Request, res: Response) {
   const uploader = (req as UploaderRequest).uploader;
   const b = req.body ?? {};
@@ -408,6 +456,14 @@ export async function createUploaderEvent(req: Request, res: Response) {
     return;
   }
 
+  // 서류 검증 — A_602 필수 요구사항
+  const docsResult = validateDocs(b.approvalDocuments, uploader.uploaderId.toString());
+  if (!Array.isArray(docsResult)) {
+    res.status(400).json({ error: docsResult.error });
+    return;
+  }
+  const docs = docsResult;
+
   // FK 검증 — category + region.
   const [category, region] = await Promise.all([
     prisma.eventCategory.findUnique({ where: { categoryCode }, select: { categoryId: true } }),
@@ -424,37 +480,51 @@ export async function createUploaderEvent(req: Request, res: Response) {
 
   const phase = computePhase(startDate, endDate);
 
-  const created = await prisma.event.create({
-    data: {
-      uploaderId: uploader.uploaderId,
-      categoryId: category.categoryId,
-      regionId: region.regionId,
-      sourceType: 'uploaded',
-      title,
-      description,
-      addressDetail,
-      latitude,
-      longitude,
-      startDate,
-      endDate,
-      operatingHours,
-      targetAudience,
-      admissionFee,
-      expectedCompanionPrimary: primary ?? null,
-      expectedCompanionSecondary: secondary ?? null,
-      posterImageUrl,
-      approvalStatus: 'pending',
-      phase,
-    },
-    select: {
-      eventId: true,
-      title: true,
-      approvalStatus: true,
-      phase: true,
-      startDate: true,
-      endDate: true,
-      createdAt: true,
-    },
+  // 트랜잭션: event insert + approval_documents N rows.
+  // docs.file_path 에 MinIO object key 를 그대로 저장 (GET 은 관리자용 presigned).
+  const created = await prisma.$transaction(async (tx) => {
+    const event = await tx.event.create({
+      data: {
+        uploaderId: uploader.uploaderId,
+        categoryId: category.categoryId,
+        regionId: region.regionId,
+        sourceType: 'uploaded',
+        title,
+        description,
+        addressDetail,
+        latitude,
+        longitude,
+        startDate,
+        endDate,
+        operatingHours,
+        targetAudience,
+        admissionFee,
+        expectedCompanionPrimary: primary ?? null,
+        expectedCompanionSecondary: secondary ?? null,
+        posterImageUrl,
+        approvalStatus: 'pending',
+        phase,
+      },
+      select: {
+        eventId: true,
+        title: true,
+        approvalStatus: true,
+        phase: true,
+        startDate: true,
+        endDate: true,
+        createdAt: true,
+      },
+    });
+    await tx.approvalDocument.createMany({
+      data: docs.map((d) => ({
+        eventId: event.eventId,
+        filePath: d.key,
+        originalFilename: d.originalFilename,
+        mimeType: d.mimeType,
+        fileSizeBytes: d.fileSizeBytes,
+      })),
+    });
+    return event;
   });
 
   res.status(201).json({
