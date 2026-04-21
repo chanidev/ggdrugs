@@ -894,7 +894,7 @@
       "label": "notifyMatchingSubscribers()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\lib\\subscription-match.ts",
-      "source_location": "L22",
+      "source_location": "L25",
       "id": "subscription_match_notifymatchingsubscribers",
       "community": 54,
       "norm_label": "notifymatchingsubscribers()"
@@ -10631,7 +10631,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\lib\\subscription-match.ts",
-      "source_location": "L22",
+      "source_location": "L25",
       "weight": 1.0,
       "_src": "apps_bff_src_lib_subscription_match_ts",
       "_tgt": "subscription_match_notifymatchingsubscribers",
