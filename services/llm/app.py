@@ -89,6 +89,40 @@ class EmbedResponse(BaseModel):
     vectors: list[list[float]]
 
 
+class EventSearchRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+    limit: int = Field(default=20, ge=1, le=100)
+    score_threshold: float | None = Field(default=0.3, ge=0.0, le=1.0)
+    # 선택적 pre-filter. 예: {"regionId": "3", "categoryCode": ["festival", "exhibition"]}
+    filter: dict | None = None
+
+
+class EventSearchHit(BaseModel):
+    eventId: str
+    score: float
+    payload: dict = Field(default_factory=dict)
+
+
+class EventSearchResponse(BaseModel):
+    query: str
+    hits: list[EventSearchHit]
+
+
+class EventUpsertItem(BaseModel):
+    id: int
+    vector: list[float]
+    payload: dict = Field(default_factory=dict)
+
+
+class EventUpsertRequest(BaseModel):
+    items: list[EventUpsertItem]
+
+
+class EventUpsertResponse(BaseModel):
+    upserted: int
+    collection: str
+
+
 class ChatFilters(BaseModel):
     eventTypes: list[str] = []
     companions: list[str] = []
@@ -118,11 +152,13 @@ def _openai_available() -> bool:
 
 @app.get("/health")
 def health() -> dict[str, Any]:
+    from qdrant_events import collection_stats
     return {
         "ok": True,
         "service": "alle-llm",
         "stage": _stage_label(),
         "cost": cost_tracker.snapshot(),
+        "qdrant": collection_stats(),
     }
 
 
@@ -248,3 +284,58 @@ def embed(req: EmbedRequest) -> EmbedResponse:
 
     dim = len(vectors[0]) if vectors else 0
     return EmbedResponse(model=EMBED_MODEL, dim=dim, vectors=vectors)
+
+
+@app.post("/events/search", response_model=EventSearchResponse)
+def events_search(req: EventSearchRequest) -> EventSearchResponse:
+    """
+    Qdrant 의미 검색 — 자연어 쿼리 → 1536d 임베딩 → kNN.
+
+    /chat 체인에서 필터 추출 후 자연어 쿼리로 후속 호출하거나, 독립적으로
+    'AI 추천 유사 이벤트' 에 사용. payload 에 최소 메타데이터(title, phase,
+    regionId, categoryCode, vibeIds) 가 있어 BFF 가 event_id 만 resolve 하면 됨.
+
+    OPENAI_API_KEY 없거나 Qdrant 비가용이면 503.
+    """
+    from fastapi import HTTPException
+
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="embedding unavailable (no key or over budget)")
+    try:
+        from openai_chain import embed_texts
+        vectors = embed_texts([req.query])
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"embed failed: {e.__class__.__name__}")
+    if not vectors:
+        return EventSearchResponse(query=req.query, hits=[])
+
+    from qdrant_events import search_events
+    hits = search_events(
+        vector=vectors[0],
+        limit=req.limit,
+        score_threshold=req.score_threshold,
+        filter_payload=req.filter,
+    )
+    return EventSearchResponse(
+        query=req.query,
+        hits=[EventSearchHit(**h) for h in hits],
+    )
+
+
+@app.post("/events/upsert", response_model=EventUpsertResponse)
+def events_upsert(req: EventUpsertRequest) -> EventUpsertResponse:
+    """
+    BFF 이벤트 embed 배치가 호출 — Qdrant alle-events collection 에 upsert.
+    vector dim=1536 고정 (text-embedding-3-small). payload 자유.
+    """
+    from fastapi import HTTPException
+    from qdrant_events import upsert_events
+
+    if len(req.items) > 256:
+        raise HTTPException(status_code=400, detail="max 256 items per call")
+    bad = next((i for i in req.items if len(i.vector) != 1536), None)
+    if bad is not None:
+        raise HTTPException(status_code=400, detail=f"vector dim must be 1536 (id={bad.id})")
+
+    n = upsert_events([it.model_dump() for it in req.items])
+    return EventUpsertResponse(upserted=n, collection="alle-events")

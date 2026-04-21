@@ -3,3 +3,4 @@ uvicorn[standard]>=0.44
 pydantic>=2.13
 openai>=2.32  # Stage 2 chain. OPENAI_API_KEY 없으면 dynamic import 하지 않고 stub fallback
 python-dotenv>=1.0  # 모노레포 루트 .env 자동 로드 (dev 편의)
+qdrant-client>=1.12  # 이벤트 벡터 검색 (alle-events collection)
