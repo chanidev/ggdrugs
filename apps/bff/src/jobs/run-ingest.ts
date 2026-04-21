@@ -40,8 +40,15 @@ async function main() {
   if (which === 'kcisa' || which === 'all') results.kcisa = await runKcisaIngest();
   // news-naver 는 이벤트 ingest 와 독립. 'all' 에 기본 포함하지 않음 — 이벤트 테이블이
   // 비어있는 dev 첫 기동에서 불필요한 네이버 호출을 피하기 위함. 명시 호출만.
+  //   news-naver              — 최신 50 이벤트
+  //   news-naver --all        — approved 이벤트 전체 (초기 backfill)
+  //   news-naver --missing    — mapping 0건인 이벤트만 (incremental)
   if (which === 'news-naver' || which === 'news') {
-    results['news-naver'] = await runNewsNaverIngest({});
+    const args = process.argv.slice(2);
+    const opts: { eventLimit?: number | 'all'; onlyMissing?: boolean } = {};
+    if (args.includes('--all')) opts.eventLimit = 'all';
+    if (args.includes('--missing')) opts.onlyMissing = true;
+    results['news-naver'] = await runNewsNaverIngest(opts);
   }
 
   logger.info(results, 'manual ingest completed');

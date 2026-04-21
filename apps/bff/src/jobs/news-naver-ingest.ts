@@ -402,11 +402,19 @@ async function processEvent(
 /**
  * 전체 파이프라인 진입점.
  *
- * @param opts.eventLimit  — 단일 실행에서 처리할 최대 이벤트 수 (기본 50).
- *                            비용 관점: 네이버 API 호출 * 이벤트수.
- * @param opts.onlyEventId — 특정 이벤트 하나만 재매핑 (테스트용).
+ * @param opts.eventLimit  — 단일 실행에서 처리할 최대 이벤트 수. 기본 50 (빠른 루프).
+ *                            전체 backfill 은 'all' 로 무제한. 비용: Naver API + OpenAI embed 호출 * 이벤트수.
+ * @param opts.onlyEventId — 특정 이벤트 하나만 재매핑 (신규 승인 훅 / 테스트용).
+ * @param opts.onlyMissing — true 면 event_article_mappings 가 아직 0 건인 이벤트만 대상
+ *                            (incremental backfill — 이미 매핑된 이벤트 skip).
  */
-export async function runNewsNaverIngest(opts: { eventLimit?: number; onlyEventId?: bigint } = {}): Promise<NewsNaverIngestResult> {
+export async function runNewsNaverIngest(
+  opts: {
+    eventLimit?: number | 'all';
+    onlyEventId?: bigint;
+    onlyMissing?: boolean;
+  } = {},
+): Promise<NewsNaverIngestResult> {
   const result: NewsNaverIngestResult = {
     eventsProcessed: 0,
     articlesUpserted: 0,
@@ -425,11 +433,14 @@ export async function runNewsNaverIngest(opts: { eventLimit?: number; onlyEventI
     approvalStatus: 'approved',
   };
   if (opts.onlyEventId) where.eventId = opts.onlyEventId;
+  if (opts.onlyMissing) where.articleMappings = { none: {} };
+
+  const take: number | undefined = opts.eventLimit === 'all' ? undefined : (opts.eventLimit ?? 50);
 
   const events = await prisma.event.findMany({
     where,
     orderBy: [{ startDate: 'desc' }],
-    take: opts.eventLimit ?? 50,
+    ...(take != null ? { take } : {}),
     select: { eventId: true, title: true, aiSummary: true, description: true },
   });
 

@@ -4,6 +4,7 @@ import { prisma } from '../prisma.js';
 import { env } from '../env.js';
 import { presignGet } from '../lib/s3.js';
 import { notifyMatchingSubscribers } from '../lib/subscription-match.js';
+import { runNewsNaverIngest } from '../jobs/news-naver-ingest.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 import type { AdminRequest } from '../middleware/require-admin.js';
 
@@ -381,8 +382,12 @@ export async function decideEventUpload(req: Request, res: Response) {
   ]);
 
   // A_203: 승인 시점에 매칭 구독자에게 알림 fire-and-forget.
+  // A_400: 동시에 네이버 뉴스 매핑도 fire-and-forget (NAVER_CLIENT_ID 없으면 내부에서 no-op).
   if (action === 'approved') {
     void notifyMatchingSubscribers(eventId);
+    void runNewsNaverIngest({ onlyEventId: eventId }).catch(() => {
+      // 기사 매핑 실패는 이벤트 승인 성공에 영향 없음. 주기 배치가 나중에 복구.
+    });
   }
 
   res.json({
