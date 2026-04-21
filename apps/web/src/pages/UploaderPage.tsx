@@ -564,28 +564,30 @@ function ApprovedBody({
             {activeRole !== 'uploader' && ' — 업로더로 전환해야 이벤트를 등록할 수 있어요'}
           </p>
         </div>
-        <button
-          type="button"
-          onClick={toggleRole}
-          disabled={toggling}
-          className={`inline-flex h-9 items-center rounded-(--radius-md) px-3 text-[13px] font-medium transition-colors disabled:opacity-40 ${
-            activeRole === 'uploader'
-              ? 'border border-(--color-border) bg-(--color-surface) text-(--color-text-muted) hover:text-(--color-text)'
-              : 'bg-(--color-accent) text-white hover:bg-(--color-accent-hover)'
-          }`}
-        >
-          {toggling
-            ? '…'
-            : activeRole === 'uploader'
-              ? 'user 역할로'
-              : 'uploader 역할로 전환'}
-        </button>
-        <Link
-          to="/uploader/new"
-          className="inline-flex h-9 items-center gap-1.5 rounded-(--radius-md) border border-(--color-accent) bg-(--color-accent-bg) px-3 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/15"
-        >
-          새 이벤트 업로드 <Icon name="arrow" size={14} />
-        </Link>
+        <div className="flex w-full gap-2 sm:w-auto">
+          <button
+            type="button"
+            onClick={toggleRole}
+            disabled={toggling}
+            className={`inline-flex h-9 flex-1 items-center justify-center rounded-(--radius-md) px-3 text-[13px] font-medium transition-colors disabled:opacity-40 sm:flex-initial ${
+              activeRole === 'uploader'
+                ? 'border border-(--color-border) bg-(--color-surface) text-(--color-text-muted) hover:text-(--color-text)'
+                : 'bg-(--color-accent) text-white hover:bg-(--color-accent-hover)'
+            }`}
+          >
+            {toggling
+              ? '…'
+              : activeRole === 'uploader'
+                ? 'user 역할로'
+                : 'uploader 역할로 전환'}
+          </button>
+          <Link
+            to="/uploader/new"
+            className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-(--radius-md) border border-(--color-accent) bg-(--color-accent-bg) px-3 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/15 sm:flex-initial"
+          >
+            새 이벤트 업로드 <Icon name="arrow" size={14} />
+          </Link>
+        </div>
       </div>
 
       {error && (

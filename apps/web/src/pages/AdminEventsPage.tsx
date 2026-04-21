@@ -113,7 +113,7 @@ function Shell({
                       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
                     )}
                     <span className={active ? 'font-semibold' : 'font-medium'}>{t.label}</span>
-                    <span className="text-[12px] text-(--color-text-subtle)">{t.subtitle}</span>
+                    <span className="hidden text-[12px] text-(--color-text-subtle) sm:inline">{t.subtitle}</span>
                   </button>
                 </Fragment>
               );
