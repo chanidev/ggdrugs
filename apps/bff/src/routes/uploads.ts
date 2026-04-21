@@ -128,6 +128,40 @@ export async function documentUploadUrl(req: Request, res: Response) {
 }
 
 /**
+ * POST /me/uploader/documents/upload-url  (requireAuth 만 — 신청 중인 사용자)
+ *
+ * ADR 0003 A_600 승급 서류 업로드. 신청 폼 제출 전에 호출 (uploader_profile 이
+ * 아직 없거나 pending 상태). key prefix 로 user_id scope, approval-docs 버킷
+ * 재사용. apply 시 server-side 에서 key 의 user scope 를 검증.
+ */
+export async function uploaderSignupDocumentUploadUrl(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  const body = req.body ?? {};
+  const contentType = typeof body.contentType === 'string' ? body.contentType : '';
+  const sizeBytes = typeof body.sizeBytes === 'number' ? body.sizeBytes : -1;
+
+  if (!ALLOWED_DOC_MIME.has(contentType)) {
+    res.status(400).json({ error: 'unsupported_content_type', allowed: [...ALLOWED_DOC_MIME] });
+    return;
+  }
+  if (sizeBytes <= 0 || sizeBytes > MAX_DOC_BYTES) {
+    res.status(400).json({ error: 'invalid_size', max: MAX_DOC_BYTES });
+    return;
+  }
+
+  const ext = MIME_TO_EXT[contentType]!;
+  const key = `uploader-doc/${auth.userId.toString()}/${randomUUID()}.${ext}`;
+  const expiresIn = 900;
+  try {
+    const uploadUrl = await presignPut(env.S3_BUCKET_APPROVAL_DOCS, key, contentType, expiresIn);
+    res.json({ uploadUrl, key, expiresIn, maxBytes: MAX_DOC_BYTES });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown';
+    res.status(500).json({ error: 'presign_failed', detail: msg });
+  }
+}
+
+/**
  * POST /reviews/photos/upload-url  (requireAuth 만 — 일반 사용자)
  *
  * A_501 리뷰 사진 presigned PUT URL. 이벤트 리뷰 작성 시 최대 5장.

@@ -39,6 +39,7 @@ import {
   posterUploadUrl,
   documentUploadUrl,
   reviewPhotoUploadUrl,
+  uploaderSignupDocumentUploadUrl,
 } from './routes/uploads.js';
 import { requireAdmin } from './middleware/require-admin.js';
 import {
@@ -245,6 +246,11 @@ export function createApp(): Express {
     '/me/uploader/apply',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => applyUploader(req, res).catch(next),
+  );
+  app.post(
+    '/me/uploader/documents/upload-url',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => uploaderSignupDocumentUploadUrl(req, res).catch(next),
   );
   app.put(
     '/me/active-role',

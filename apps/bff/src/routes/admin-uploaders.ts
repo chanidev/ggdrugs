@@ -1,7 +1,33 @@
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
+import { env } from '../env.js';
+import { presignGet } from '../lib/s3.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
+import type { AdminRequest } from '../middleware/require-admin.js';
+
+/**
+ * ADR 0003 마스킹 헬퍼 — scope='full' 만 원본, 그 외는 PII 마스킹.
+ *   real_name: 첫 글자 + '**' (홍** 스타일)
+ *   business_registration_number: 'XXX-XX-*****' (앞 5자리만)
+ *   ci_hash: 앞/뒤 4자리 + '...'
+ */
+function maskRealName(v: string, scope: string): string {
+  if (scope === 'full') return v;
+  if (v.length <= 1) return v;
+  return v[0] + '*'.repeat(Math.max(1, v.length - 1));
+}
+function maskBizRegNumber(v: string | null, scope: string): string | null {
+  if (!v) return null;
+  if (scope === 'full') return v;
+  // 원본은 10자리 연속 숫자. 표시 포맷은 XXX-XX-XXXXX 가 한국 관행.
+  return `${v.slice(0, 3)}-${v.slice(3, 5)}-*****`;
+}
+function maskCiHash(v: string | null, scope: string): string | null {
+  if (!v) return null;
+  if (scope === 'full') return v;
+  return `${v.slice(0, 4)}...${v.slice(-4)}`;
+}
 
 /**
  * 관리자 — A_700 part 2 업로더 승급 심사 + 업로드 이벤트 심사.
@@ -119,6 +145,8 @@ export async function listAdminUploaders(req: Request, res: Response) {
  * 등록 이벤트 없어도 (처음 신청이면) 빈 값 반환.
  */
 export async function getAdminUploader(req: Request, res: Response) {
+  const admin = (req as AdminRequest).admin;
+  const scope = admin.scope;
   const uploaderId = parseBigIntParam(req.params.id);
   if (!uploaderId) {
     res.status(400).json({ error: 'invalid uploader id' });
@@ -132,6 +160,9 @@ export async function getAdminUploader(req: Request, res: Response) {
       organizationName: true,
       contactPhone: true,
       contactEmail: true,
+      realName: true,
+      businessRegistrationNumber: true,
+      ciHash: true,
       approvalStatus: true,
       approvedAt: true,
       createdAt: true,
@@ -152,7 +183,7 @@ export async function getAdminUploader(req: Request, res: Response) {
     return;
   }
 
-  const [statusRows, recentRows] = await Promise.all([
+  const [statusRows, recentRows, docRows] = await Promise.all([
     prisma.event.groupBy({
       by: ['approvalStatus'],
       where: { uploaderId, isDeleted: false },
@@ -173,6 +204,18 @@ export async function getAdminUploader(req: Request, res: Response) {
         category: { select: { displayName: true } },
       },
     }),
+    prisma.uploaderDocument.findMany({
+      where: { uploaderId },
+      orderBy: { documentId: 'asc' },
+      select: {
+        documentId: true,
+        filePath: true,
+        originalFilename: true,
+        mimeType: true,
+        fileSizeBytes: true,
+        createdAt: true,
+      },
+    }),
   ]);
 
   const eventStats: Record<string, number> = {
@@ -183,12 +226,26 @@ export async function getAdminUploader(req: Request, res: Response) {
   };
   for (const row of statusRows) eventStats[row.approvalStatus] = row._count._all;
 
+  const documents = await Promise.all(
+    docRows.map(async (r) => ({
+      documentId: r.documentId.toString(),
+      originalFilename: r.originalFilename,
+      mimeType: r.mimeType,
+      fileSizeBytes: r.fileSizeBytes,
+      createdAt: r.createdAt.toISOString(),
+      previewUrl: await presignGet(env.S3_BUCKET_APPROVAL_DOCS, r.filePath, 300),
+    })),
+  );
+
   res.json({
     uploader: {
       uploaderId: profile.uploaderId.toString(),
       organizationName: profile.organizationName,
       contactPhone: profile.contactPhone,
       contactEmail: profile.contactEmail,
+      realName: maskRealName(profile.realName, scope),
+      businessRegistrationNumber: maskBizRegNumber(profile.businessRegistrationNumber, scope),
+      ciHash: maskCiHash(profile.ciHash, scope),
       approvalStatus: profile.approvalStatus,
       approvedAt: profile.approvedAt?.toISOString() ?? null,
       createdAt: profile.createdAt.toISOString(),
@@ -201,6 +258,7 @@ export async function getAdminUploader(req: Request, res: Response) {
         createdAt: profile.user.createdAt.toISOString(),
       },
     },
+    adminScope: scope,
     eventStats,
     recentEvents: recentRows.map((r) => ({
       eventId: r.eventId.toString(),
@@ -212,6 +270,8 @@ export async function getAdminUploader(req: Request, res: Response) {
       createdAt: r.createdAt.toISOString(),
       categoryName: r.category.displayName,
     })),
+    documents,
+    documentsExpiresIn: 300,
   });
 }
 
