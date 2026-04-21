@@ -12,9 +12,12 @@ import { logger } from '../logger.js';
  *  - vibeIds 비어있으면 skip, 있으면 event.vibe_assignments 교집합 ≥ 1
  *  - periodMonths NULL 이면 skip, 있으면 event.start_date <= now + N months
  *
- * isActive = false 구독은 제외. 같은 user 의 여러 구독이 매칭되면 중복 알림.
- * (구독 하나당 1 notification 이 기대되는 UX — 사용자가 명시적으로 만든
- * 조건이므로 많으면 많은 대로)
+ * isActive = false 구독은 제외.
+ *
+ * 중복 방지 (ADR 0001 §3 후속):
+ *   1. 같은 user 의 여러 구독이 매칭되면 1건만 전송 (in-run userId dedup).
+ *   2. 이미 같은 (user, event) notification 이 DB 에 있으면 skip (cross-run dedup).
+ *   → 한 user + 한 event 당 평생 최대 1건 알림.
  *
  * 비동기 호출: 관리자 승인 응답 빠르게 두고 fire-and-forget.
  */
@@ -72,20 +75,26 @@ export async function notifyMatchingSubscribers(eventId: bigint): Promise<void> 
 
     if (matches.length === 0) return;
 
-    // 중복 방지: 이미 해당 (user, event) 조합으로 notification 있으면 skip.
+    // 1단계 dedup — 같은 user 의 여러 구독 매치를 1건으로 묶는다.
+    const uniqueUserIds = new Map<string, bigint>();
+    for (const m of matches) uniqueUserIds.set(m.userId.toString(), m.userId);
+
+    // 2단계 dedup — 이미 같은 (user, event) notification 이 있으면 skip.
     const existing = await prisma.notification.findMany({
       where: {
         eventId,
-        userId: { in: matches.map((m) => m.userId) },
+        userId: { in: [...uniqueUserIds.values()] },
       },
       select: { userId: true },
     });
     const existingUserIds = new Set(existing.map((n) => n.userId.toString()));
-    const newMatches = matches.filter((m) => !existingUserIds.has(m.userId.toString()));
-    if (newMatches.length === 0) return;
+    const targetUserIds = [...uniqueUserIds.entries()]
+      .filter(([id]) => !existingUserIds.has(id))
+      .map(([, userId]) => userId);
+    if (targetUserIds.length === 0) return;
 
-    const rows = newMatches.map((m) => ({
-      userId: m.userId,
+    const rows = targetUserIds.map((userId) => ({
+      userId,
       eventId: event.eventId,
       title: '새 이벤트 알림',
       message: `구독 조건에 맞는 새 이벤트가 등록됐어요: ${event.title}`,
