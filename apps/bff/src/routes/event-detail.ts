@@ -42,6 +42,9 @@ export async function getEventDetail(req: Request, res: Response) {
       bookmarkCount: true,
       avgRating: true,
       reviewCount: true,
+      operatingHours: true,
+      targetAudience: true,
+      admissionFee: true,
       sourceType: true,
       crawlOrigin: true,
       externalSourceId: true,
@@ -62,6 +65,7 @@ export async function getEventDetail(req: Request, res: Response) {
           vibe: { select: { vibeId: true, vibeName: true, vibeGroup: true } },
         },
       },
+      _count: { select: { articleMappings: true } },
     },
   });
 
@@ -87,6 +91,9 @@ export async function getEventDetail(req: Request, res: Response) {
     description: row.description,
     aiSummary: row.aiSummary,
     addressDetail: row.addressDetail,
+    operatingHours: row.operatingHours,
+    targetAudience: row.targetAudience,
+    admissionFee: row.admissionFee,
     category: {
       code: row.category.categoryCode,
       name: row.category.displayName,
@@ -112,6 +119,7 @@ export async function getEventDetail(req: Request, res: Response) {
       name: va.vibe.vibeName,
       group: va.vibe.vibeGroup,
     })),
+    articleCount: row._count.articleMappings,
     source: {
       type: row.sourceType,
       crawlOrigin: row.crawlOrigin,

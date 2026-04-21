@@ -138,6 +138,11 @@ export interface BffEventDetail extends BffEventItem {
   /** gpt-4o-mini 가 생성한 2~3문장 한국어 요약. description/title/category/vibes 기반. */
   aiSummary: string | null;
   addressDetail: string | null;
+  operatingHours: string | null;
+  targetAudience: string | null;
+  admissionFee: string | null;
+  /** 매핑된 관련 기사 수 (A_400 상세 섹션에서 실제 list 조회). */
+  articleCount: number;
   source: { type: string; crawlOrigin: string; externalId: string };
   createdAt: string;
   updatedAt: string;
@@ -346,10 +351,19 @@ export async function deleteBookmark(eventId: string): Promise<BookmarkMutationR
   return (await res.json()) as BookmarkMutationResult;
 }
 
+/** 마이페이지 북마크 목록에서 캘린더 팝업 렌더에 필요한 확장 필드. */
+export interface BookmarkedEvent extends BffEventItem {
+  addressDetail: string | null;
+  admissionFee: string | null;
+  targetAudience: string | null;
+  aiSummary: string | null;
+  articleCount: number;
+}
+
 export interface BookmarkListItem {
   bookmarkId: string;
   bookmarkedAt: string;
-  event: BffEventItem;
+  event: BookmarkedEvent;
 }
 
 export interface MyBookmarksResponse {
@@ -385,6 +399,11 @@ export interface MyReviewItem {
     posterImageUrl: string | null;
     startDate: string;
     endDate: string;
+    addressDetail: string | null;
+    admissionFee: string | null;
+    targetAudience: string | null;
+    aiSummary: string | null;
+    articleCount: number;
     region: { sidoName: string; sigunguName: string | null; fullAddress: string };
   };
 }

@@ -247,8 +247,25 @@ function ReviewsSection({
     });
   };
 
+  // /events/:id#review 로 진입 시 (A_500 캘린더 팝업의 '리뷰 작성' CTA 등)
+  // 리뷰 섹션으로 스크롤 + 컴포저 focus.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (window.location.hash !== '#review') return;
+    if (state.loading) return; // 리뷰 로딩 완료 후 scroll
+    const el = document.getElementById('reviews');
+    if (!el) return;
+    // 레이아웃 안정화 후 스크롤.
+    const t = window.setTimeout(() => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const ta = document.getElementById('review-body');
+      if (ta instanceof HTMLTextAreaElement) ta.focus({ preventScroll: true });
+    }, 120);
+    return () => window.clearTimeout(t);
+  }, [state.loading]);
+
   return (
-    <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
+    <section id="reviews" className="scroll-mt-20 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
       <header className="mb-4 flex items-end justify-between gap-3">
         <div>
           <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">리뷰</h2>

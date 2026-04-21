@@ -126,17 +126,35 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
           <PhaseBadge phase={detail.phase} />
         </div>
 
-        <dl className="grid grid-cols-[64px_1fr] gap-x-3 gap-y-2 text-[13px]">
+        <dl className="grid grid-cols-[52px_1fr] gap-x-3 gap-y-2 text-[13px]">
           <dt className="text-(--color-text-subtle)">분류</dt>
           <dd className="m-0 text-(--color-text)">{detail.category.name}</dd>
           <dt className="text-(--color-text-subtle)">장소</dt>
           <dd className="m-0 text-(--color-text)">{location}</dd>
           <dt className="text-(--color-text-subtle)">기간</dt>
           <dd className="tabular m-0 text-(--color-text)">{dateLabel}</dd>
+          {detail.operatingHours && (
+            <>
+              <dt className="text-(--color-text-subtle)">시간</dt>
+              <dd className="m-0 text-(--color-text)">{detail.operatingHours}</dd>
+            </>
+          )}
+          {detail.admissionFee && (
+            <>
+              <dt className="text-(--color-text-subtle)">가격</dt>
+              <dd className="m-0 text-(--color-text)">{detail.admissionFee}</dd>
+            </>
+          )}
+          {detail.targetAudience && (
+            <>
+              <dt className="text-(--color-text-subtle)">대상</dt>
+              <dd className="m-0 text-(--color-text)">{detail.targetAudience}</dd>
+            </>
+          )}
         </dl>
 
-        {detail.vibes.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+        {(detail.vibes.length > 0 || detail.articleCount > 0) && (
+          <div className="flex flex-wrap items-center gap-1.5">
             {detail.vibes.map((v) => (
               <span
                 key={v.vibeId}
@@ -145,31 +163,35 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
                 {v.name}
               </span>
             ))}
+            {detail.articleCount > 0 && (
+              <span
+                className="ml-auto inline-flex items-center gap-1 rounded-full bg-(--color-accent-bg) px-2 py-0.5 text-[11px] font-medium text-(--color-accent)"
+                title={`관련 기사 ${detail.articleCount}건 — 상세 페이지에서 전체 보기`}
+              >
+                <span className="tabular">{detail.articleCount}</span>
+                <span>관련 기사</span>
+              </span>
+            )}
           </div>
         )}
 
         {(detail.aiSummary || detail.description) && (
           <section className="flex flex-col gap-1.5">
-            {detail.aiSummary && (
-              <>
-                <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-                  AI 요약
-                </p>
-                <p className="m-0 text-[13px] leading-[1.6] text-(--color-text)">
-                  {detail.aiSummary}
-                </p>
-              </>
-            )}
-            {detail.description && !detail.aiSummary && (
-              <p className="m-0 line-clamp-6 text-[13px] leading-[1.6] text-(--color-text-muted)">
-                {detail.description}
-              </p>
-            )}
+            <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+              {detail.aiSummary ? 'AI 요약' : '내용 요약'}
+            </p>
+            <p className="m-0 whitespace-pre-wrap rounded-(--radius-md) bg-(--color-surface-alt) p-3 text-[13px] leading-[1.6] text-(--color-text)">
+              {detail.aiSummary ?? clampText(detail.description ?? '', 320)}
+            </p>
           </section>
         )}
       </div>
     </article>
   );
+}
+
+function clampText(s: string, n: number): string {
+  return s.length > n ? s.slice(0, n).trimEnd() + '…' : s;
 }
 
 function SummarySkeleton() {

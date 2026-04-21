@@ -204,39 +204,44 @@ function CalendarTab() {
         }}
         onDayClick={(d) => setSelectedDate(d)}
       />
-      <aside className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-4">
-        <h3 className="m-0 mb-2 text-[14px] font-semibold">
-          {selectedDate ? selectedDate : '날짜를 선택하세요'}
-        </h3>
+      <aside className="flex flex-col gap-3 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-5">
+        <header>
+          <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+            A_500 · 캘린더 요약
+          </p>
+          <h3 className="tabular m-0 mt-0.5 text-[15px] font-bold tracking-[-0.01em]">
+            {selectedDate ?? '날짜를 선택하세요'}
+          </h3>
+        </header>
         {selectedEvents.length === 0 && selectedReviewed.length === 0 ? (
-          <p className="m-0 text-[12px] text-(--color-text-subtle)">
+          <p className="m-0 rounded-(--radius-md) bg-(--color-surface-alt) p-4 text-center text-[12px] text-(--color-text-subtle)">
             이 날에 걸린 북마크·리뷰 이벤트가 없어요.
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
-            {selectedEvents.map((b) => (
-              <li key={b.bookmarkId}>
-                <CalendarEventCard
-                  eventId={b.event.eventId}
-                  title={b.event.title}
-                  phase={b.event.phase}
-                  startDate={b.event.startDate}
-                  endDate={b.event.endDate}
-                />
-              </li>
-            ))}
-            {selectedReviewed.map((r) => (
-              <li key={r.reviewId}>
-                <CalendarEventCard
-                  eventId={r.event.eventId}
-                  title={r.event.title}
-                  phase="ended"
-                  startDate={r.event.startDate}
-                  endDate={r.event.endDate}
-                  reviewedStars={r.rating}
-                />
-              </li>
-            ))}
+          <ul className="flex flex-col gap-3">
+            {selectedEvents.map((b) => {
+              const reviewOfThis = reviews.find((r) => r.event.eventId === b.event.eventId);
+              return (
+                <li key={b.bookmarkId}>
+                  <CalendarSummaryCard
+                    event={b.event}
+                    phase={b.event.phase}
+                    reviewedRating={reviewOfThis?.rating}
+                  />
+                </li>
+              );
+            })}
+            {selectedReviewed
+              .filter((r) => !selectedEvents.some((b) => b.event.eventId === r.event.eventId))
+              .map((r) => (
+                <li key={r.reviewId}>
+                  <CalendarSummaryCard
+                    event={r.event}
+                    phase="ended"
+                    reviewedRating={r.rating}
+                  />
+                </li>
+              ))}
           </ul>
         )}
       </aside>
@@ -244,42 +249,125 @@ function CalendarTab() {
   );
 }
 
-function CalendarEventCard({
-  eventId,
-  title,
-  phase,
-  startDate,
-  endDate,
-  reviewedStars,
-}: {
+type SummaryEvent = {
   eventId: string;
   title: string;
-  phase: 'upcoming' | 'ongoing' | 'ended';
   startDate: string;
   endDate: string;
-  reviewedStars?: number;
+  addressDetail: string | null;
+  admissionFee: string | null;
+  targetAudience: string | null;
+  aiSummary: string | null;
+  articleCount: number;
+  region: { sidoName: string; sigunguName: string | null; fullAddress: string };
+};
+
+/**
+ * A_500 캘린더 이벤트 요약 카드.
+ *
+ * 요구사항정의서 v5.0 A_500 §4 스펙:
+ *   이벤트명 · 장소 · 기간 · 가격 · 대상 · 요약(aiSummary)
+ *   + '상세 보기' (A_400) / '리뷰 작성·수정' (A_501) CTA
+ *
+ * 리뷰 CTA 활성 조건 (GG-REVIEW-001):
+ *   phase === 'ended' 일 때만 활성. 내가 이미 리뷰 작성했으면 '수정'.
+ *
+ * 관련 기사 수는 스펙엔 없지만 UX 힌트로 작은 배지. articleCount > 0 일 때만.
+ */
+function CalendarSummaryCard({
+  event,
+  phase,
+  reviewedRating,
+}: {
+  event: SummaryEvent;
+  phase: 'upcoming' | 'ongoing' | 'ended';
+  reviewedRating?: number;
 }) {
-  const dateLabel = startDate === endDate ? startDate : `${startDate} ~ ${endDate}`;
+  const dateLabel = event.startDate === event.endDate ? event.startDate : `${event.startDate} ~ ${event.endDate}`;
+  const place =
+    event.addressDetail ??
+    (event.region.sigunguName
+      ? `${event.region.sidoName} ${event.region.sigunguName}`
+      : event.region.fullAddress);
+
+  const canReview = phase === 'ended';
+  const reviewLabel = reviewedRating !== undefined ? '리뷰 수정' : '리뷰 작성';
+  const reviewHref = `/events/${event.eventId}#review`;
+
   return (
-    <Link
-      to={`/events/${eventId}`}
-      className="flex flex-col gap-1 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-2.5 transition-colors hover:border-(--color-border-hover) hover:bg-(--color-surface-alt)"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <h4 className="m-0 line-clamp-2 text-[13px] font-medium leading-[1.35]">{title}</h4>
+    <article className="flex flex-col gap-3 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-4 transition-colors hover:border-(--color-border-hover)">
+      <header className="flex flex-wrap items-center gap-1.5">
         <PhaseBadge phase={phase} />
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <span className="tabular text-[11px] text-(--color-text-subtle)">{dateLabel}</span>
-        {reviewedStars !== undefined ? (
-          <span className="inline-flex items-center gap-1 text-[11px] text-(--color-accent)">
-            <Stars value={reviewedStars} /> 리뷰 완료
+        {reviewedRating !== undefined && (
+          <span className="inline-flex items-center gap-1 rounded-(--radius-sm) bg-(--color-accent-bg) px-1.5 py-0.5 text-[10px] font-medium text-(--color-accent)">
+            <Stars value={reviewedRating} />
           </span>
-        ) : phase === 'ended' ? (
-          <span className="text-[11px] font-medium text-(--color-accent)">리뷰 작성 가능 →</span>
-        ) : null}
-      </div>
-    </Link>
+        )}
+        {event.articleCount > 0 && (
+          <span
+            className="ml-auto inline-flex items-center gap-1 rounded-full bg-(--color-surface-alt) px-2 py-0.5 text-[10px] font-medium text-(--color-text-muted)"
+            title={`관련 기사 ${event.articleCount}건 — 상세에서 전체 보기`}
+          >
+            <span className="tabular text-(--color-text)">{event.articleCount}</span>
+            <span>관련 기사</span>
+          </span>
+        )}
+      </header>
+
+      <h4 className="m-0 text-[15px] font-semibold leading-[1.4] tracking-[-0.01em] text-(--color-text)">
+        {event.title}
+      </h4>
+
+      <dl className="grid grid-cols-[44px_1fr] gap-x-3 gap-y-1 text-[12.5px]">
+        <dt className="text-(--color-text-subtle)">장소</dt>
+        <dd className="m-0 truncate text-(--color-text-muted)">{place}</dd>
+        <dt className="text-(--color-text-subtle)">기간</dt>
+        <dd className="tabular m-0 text-(--color-text-muted)">{dateLabel}</dd>
+        {event.admissionFee && (
+          <>
+            <dt className="text-(--color-text-subtle)">가격</dt>
+            <dd className="m-0 text-(--color-text-muted)">{event.admissionFee}</dd>
+          </>
+        )}
+        {event.targetAudience && (
+          <>
+            <dt className="text-(--color-text-subtle)">대상</dt>
+            <dd className="m-0 text-(--color-text-muted)">{event.targetAudience}</dd>
+          </>
+        )}
+      </dl>
+
+      {event.aiSummary && (
+        <p className="m-0 line-clamp-3 rounded-(--radius-md) bg-(--color-surface-alt) p-2.5 text-[12px] leading-[1.55] text-(--color-text-muted)">
+          {event.aiSummary}
+        </p>
+      )}
+
+      <footer className="flex gap-1.5">
+        <Link
+          to={`/events/${event.eventId}`}
+          className="inline-flex h-8 flex-1 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
+        >
+          상세 보기
+        </Link>
+        {canReview ? (
+          <Link
+            to={reviewHref}
+            className="inline-flex h-8 flex-1 items-center justify-center rounded-(--radius-md) bg-(--color-accent) text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
+          >
+            {reviewLabel}
+          </Link>
+        ) : (
+          <span
+            aria-disabled="true"
+            className="inline-flex h-8 flex-1 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-dashed border-(--color-border) text-[11.5px] text-(--color-text-subtle)"
+            title="이벤트 종료일 이후에 작성 가능 (GG-REVIEW-001)"
+          >
+            {phase === 'upcoming' ? '리뷰는 종료 후' : '종료 후 작성'}
+          </span>
+        )}
+      </footer>
+    </article>
   );
 }
 
