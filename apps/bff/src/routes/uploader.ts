@@ -30,7 +30,8 @@ const EVENT_TYPE_CODES = new Set([
 
 const COMPANION_CODES = new Set(['family', 'friend', 'couple', 'solo']);
 
-const DOC_MIME_WHITELIST = new Set(['image/jpeg', 'image/png']);
+// approval_documents CHECK chk_doc_mime 와 동기. PDF 허용 후속 마이그레이션 반영.
+const DOC_MIME_WHITELIST = new Set(['image/jpeg', 'image/png', 'application/pdf']);
 const MAX_DOC_BYTES = 5 * 1024 * 1024;
 const MIN_DOCS = 2; // A_602: 서류 ≥ 2종
 const MAX_DOCS = 5;

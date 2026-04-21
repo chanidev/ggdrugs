@@ -4,6 +4,7 @@ import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PosterPickerField } from '../components/uploader/PosterPickerField';
 import {
+  APPROVAL_DOC_MIME,
   DocumentsPickerField,
   type StagedDoc,
 } from '../components/uploader/DocumentsPickerField';
@@ -426,12 +427,13 @@ export function UploaderNewEventPage() {
             </div>
             <Field
               label={`서류 (${MIN_DOCS}~${MAX_DOCS}개 필수)`}
-              hint="사업자등록증 · 상위기관 승인서 · 허가서 · 기타 신분 등. JPEG · PNG 5MB 이하. PDF 는 스키마 확장 후속"
+              hint="사업자등록증 · 상위기관 승인서 · 허가서 · 기타 신분 등. JPEG · PNG · PDF, 파일당 5MB"
             >
               <DocumentsPickerField
                 files={docs}
                 onChange={setDocs}
                 uploading={docsUploading}
+                allowedMime={APPROVAL_DOC_MIME}
                 min={MIN_DOCS}
                 max={MAX_DOCS}
               />

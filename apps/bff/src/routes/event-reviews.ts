@@ -146,6 +146,62 @@ export async function createEventReview(req: Request, res: Response) {
     return;
   }
 
+  // 사진 0~5장 (A_501). uploader scoped key prefix (review/{userId}/) 강제.
+  const photosRaw = (req.body ?? {}).photos;
+  interface IncomingPhoto {
+    key: string;
+    originalFilename: string;
+    mimeType: string;
+    fileSizeBytes: number;
+  }
+  const photos: IncomingPhoto[] = [];
+  if (photosRaw !== undefined && photosRaw !== null) {
+    if (!Array.isArray(photosRaw)) {
+      res.status(400).json({ error: 'photos 배열' });
+      return;
+    }
+    if (photosRaw.length > 5) {
+      res.status(400).json({ error: 'photos 최대 5장' });
+      return;
+    }
+    const expectedPrefix = `review/${auth.userId.toString()}/`;
+    const allowedMime = new Set(['image/jpeg', 'image/png', 'image/webp']);
+    const seen = new Set<string>();
+    for (const item of photosRaw) {
+      if (!item || typeof item !== 'object') {
+        res.status(400).json({ error: 'invalid photo entry' });
+        return;
+      }
+      const d = item as Record<string, unknown>;
+      const key = typeof d.key === 'string' ? d.key : '';
+      const filename = typeof d.originalFilename === 'string' ? d.originalFilename.trim() : '';
+      const mime = typeof d.mimeType === 'string' ? d.mimeType : '';
+      const size = typeof d.fileSizeBytes === 'number' ? d.fileSizeBytes : -1;
+      if (!key.startsWith(expectedPrefix)) {
+        res.status(400).json({ error: `key 가 user scope 밖: ${key}` });
+        return;
+      }
+      if (seen.has(key)) {
+        res.status(400).json({ error: `중복 key: ${key}` });
+        return;
+      }
+      seen.add(key);
+      if (filename.length < 1 || filename.length > 255) {
+        res.status(400).json({ error: 'originalFilename 1~255자' });
+        return;
+      }
+      if (!allowedMime.has(mime)) {
+        res.status(400).json({ error: `mimeType: ${mime}` });
+        return;
+      }
+      if (!Number.isInteger(size) || size <= 0 || size > 5 * 1024 * 1024) {
+        res.status(400).json({ error: `fileSizeBytes: ${size}` });
+        return;
+      }
+      photos.push({ key, originalFilename: filename, mimeType: mime, fileSizeBytes: size });
+    }
+  }
+
   // event 유효성 — 공개 상태 아니면 작성 불가
   const event = await prisma.event.findFirst({
     where: { eventId, approvalStatus: 'approved', isDeleted: false },
@@ -183,6 +239,19 @@ export async function createEventReview(req: Request, res: Response) {
         },
       });
 
+      if (photos.length > 0) {
+        await tx.reviewPhoto.createMany({
+          data: photos.map((p, i) => ({
+            reviewId: review.reviewId,
+            filePath: p.key,
+            originalFilename: p.originalFilename,
+            mimeType: p.mimeType,
+            fileSizeBytes: p.fileSizeBytes,
+            sortOrder: i,
+          })),
+        });
+      }
+
       // event 집계 재계산 — 삭제되지 않은 리뷰만.
       const agg = await tx.review.aggregate({
         where: { eventId, isDeleted: false },
@@ -211,7 +280,7 @@ export async function createEventReview(req: Request, res: Response) {
       body: created.body,
       createdAt: created.createdAt.toISOString(),
       sentiment: null, // 작성 직후엔 아직 분류 전
-      photos: [],
+      photos: photos.map((p, i) => ({ path: p.key, sortOrder: i })),
     });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {

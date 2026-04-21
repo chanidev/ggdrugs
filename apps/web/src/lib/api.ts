@@ -172,9 +172,16 @@ export interface EventReviewsResponse {
   items: BffReviewItem[];
 }
 
+export interface ReviewPhotoMeta {
+  key: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+}
+
 export async function createEventReview(
   id: string,
-  body: { rating: number; body: string },
+  body: { rating: number; body: string; photos?: ReviewPhotoMeta[] },
 ): Promise<BffReviewItem> {
   const res = await fetch(
     `${BFF_URL}/events/${encodeURIComponent(id)}/reviews`,
@@ -804,6 +811,36 @@ export interface DocumentUploadUrlResponse {
   key: string;
   expiresIn: number;
   maxBytes: number;
+}
+
+export interface ReviewPhotoUploadUrlResponse {
+  uploadUrl: string;
+  publicUrl: string;
+  key: string;
+  expiresIn: number;
+  maxBytes: number;
+}
+
+export async function requestReviewPhotoUploadUrl(body: {
+  contentType: string;
+  sizeBytes: number;
+}): Promise<ReviewPhotoUploadUrlResponse> {
+  const res = await fetch(
+    `${BFF_URL}/reviews/photos/upload-url`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(
+      `POST /reviews/photos/upload-url ${res.status}: ${txt.slice(0, 200)}`,
+    );
+  }
+  return (await res.json()) as ReviewPhotoUploadUrlResponse;
 }
 
 export async function requestDocumentUploadUrl(body: {

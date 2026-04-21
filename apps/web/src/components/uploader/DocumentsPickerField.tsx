@@ -1,7 +1,13 @@
 import { useRef, useState } from 'react';
 
-const ALLOWED_DOC_MIME = ['image/jpeg', 'image/png'] as const;
-const MAX_DOC_BYTES = 5 * 1024 * 1024;
+// 서버 CHECK chk_doc_mime 와 동기 — 마이그레이션 20260421110000 이후 PDF 허용.
+export const APPROVAL_DOC_MIME = [
+  'image/jpeg',
+  'image/png',
+  'application/pdf',
+] as const;
+export const REVIEW_PHOTO_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
+const DEFAULT_MAX_BYTES = 5 * 1024 * 1024;
 
 export type StagedDoc = {
   /** 클라이언트 전용 id — key collision 방지용. 서버 전송 안 함. */
@@ -10,26 +16,34 @@ export type StagedDoc = {
 };
 
 /**
- * A_602 서류 다중 picker — 2~5개 필수.
+ * 다중 파일 picker — A_602 서류, A_501 리뷰 사진 양쪽 공용.
  *
- * 상위 컴포넌트가 files state 를 소유하고 lib/uploads.uploadDocuments() 로
- * 실제 업로드. 이 컴포넌트는 staging + UI + 개별 파일 validation 책임.
+ *   files      부모가 소유하는 stage 리스트
+ *   onChange   stage 리스트 갱신 callback
+ *   allowedMime 허용 MIME — 서버 whitelist 와 반드시 동기
+ *   minCount / maxCount  UI hint 표시 + picker disable 임계
+ *   maxBytes   파일당 상한 (기본 5MB)
+ *   showCounter 'min-max' 카운터 노출 여부 (min=0 이면 숨기면 깔끔)
  *
- * MIN/MAX 은 prop 으로 받지 않고 상수 — 서버 검증과 반드시 같은 값이어야 하므로
- * API 가 변경되면 이 상수도 함께 업데이트.
+ * 실제 업로드는 lib/uploads 의 uploadDocuments / uploadReviewPhotos 에서.
+ * 이 컴포넌트는 staging + UI + 개별 파일 validation 책임만.
  */
 export function DocumentsPickerField({
   files,
   onChange,
   uploading = false,
+  allowedMime,
   min,
   max,
+  maxBytes = DEFAULT_MAX_BYTES,
 }: {
   files: StagedDoc[];
   onChange: (next: StagedDoc[]) => void;
   uploading?: boolean;
+  allowedMime: readonly string[];
   min: number;
   max: number;
+  maxBytes?: number;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -44,12 +58,12 @@ export function DocumentsPickerField({
         setErr(`최대 ${max}개`);
         break;
       }
-      if (!(ALLOWED_DOC_MIME as readonly string[]).includes(f.type)) {
-        setErr(`지원 형식: ${ALLOWED_DOC_MIME.join(', ')} (PDF 미지원)`);
+      if (!allowedMime.includes(f.type)) {
+        setErr(`지원 형식: ${allowedMime.join(', ')}`);
         continue;
       }
-      if (f.size > MAX_DOC_BYTES) {
-        setErr(`파일당 최대 ${Math.round(MAX_DOC_BYTES / 1024 / 1024)}MB`);
+      if (f.size > maxBytes) {
+        setErr(`파일당 최대 ${Math.round(maxBytes / 1024 / 1024)}MB`);
         continue;
       }
       next.push({
@@ -68,7 +82,7 @@ export function DocumentsPickerField({
       <input
         ref={inputRef}
         type="file"
-        accept={ALLOWED_DOC_MIME.join(',')}
+        accept={allowedMime.join(',')}
         multiple
         onChange={onPick}
         disabled={files.length >= max}
@@ -102,10 +116,11 @@ export function DocumentsPickerField({
       )}
       <div className="mt-1 text-[12px] text-(--color-text-subtle)">
         현재 {files.length}개 선택됨
-        {files.length < min && ` (최소 ${min}개 필요)`}
+        {min > 0 && files.length < min && ` (최소 ${min}개 필요)`}
+        {` · 최대 ${max}`}
       </div>
       {uploading && (
-        <div className="mt-1 text-[12px] text-(--color-text-muted)">서류 업로드 중…</div>
+        <div className="mt-1 text-[12px] text-(--color-text-muted)">업로드 중…</div>
       )}
     </div>
   );

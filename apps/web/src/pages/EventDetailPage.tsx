@@ -13,7 +13,13 @@ import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PhaseBadge } from '../components/PhaseBadge';
 import { BookmarkButton } from '../components/BookmarkButton';
+import {
+  DocumentsPickerField,
+  REVIEW_PHOTO_MIME,
+  type StagedDoc,
+} from '../components/uploader/DocumentsPickerField';
 import { useCurrentUser } from '../lib/auth-context';
+import { uploadReviewPhotos } from '../lib/uploads';
 
 /**
  * EventDetailPage — A_400 이벤트 상세.
@@ -284,7 +290,9 @@ function ReviewComposer({
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState<number>(0);
   const [body, setBody] = useState('');
+  const [photos, setPhotos] = useState<StagedDoc[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [photosUploading, setPhotosUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const bodyLen = body.trim().length;
@@ -295,15 +303,30 @@ function ReviewComposer({
     setSubmitting(true);
     setError(null);
     try {
-      const created = await createEventReview(eventId, { rating, body: body.trim() });
+      let uploadedPhotos;
+      if (photos.length > 0) {
+        setPhotosUploading(true);
+        try {
+          uploadedPhotos = await uploadReviewPhotos(photos.map((p) => p.file));
+        } finally {
+          setPhotosUploading(false);
+        }
+      }
+      const created = await createEventReview(eventId, {
+        rating,
+        body: body.trim(),
+        ...(uploadedPhotos ? { photos: uploadedPhotos } : {}),
+      });
       onCreated(created);
       setOpen(false);
       setRating(0);
       setBody('');
+      setPhotos([]);
     } catch (err) {
       const msg = (err as Error).message;
       if (msg === 'ALREADY_REVIEWED') setError('이미 이 이벤트에 리뷰를 남겼어요.');
       else if (msg === 'UNAUTHENTICATED') setError('세션이 만료됐어요. 다시 로그인해 주세요.');
+      else if (msg.startsWith('POST /reviews/photos/upload-url')) setError('사진 업로드에 실패했어요.');
       else setError('리뷰 작성에 실패했어요. 잠시 후 다시 시도해 주세요.');
     } finally {
       setSubmitting(false);
@@ -354,6 +377,19 @@ function ReviewComposer({
         maxLength={2000}
         className="w-full resize-y rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-3 text-[13px] leading-[1.55] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-accent) focus:outline-none focus:ring-2 focus:ring-(--color-accent-bg)"
       />
+      <div>
+        <p className="mb-1.5 text-[12px] font-semibold text-(--color-text-muted)">
+          사진 (선택, 최대 5장)
+        </p>
+        <DocumentsPickerField
+          files={photos}
+          onChange={setPhotos}
+          uploading={photosUploading}
+          allowedMime={REVIEW_PHOTO_MIME}
+          min={0}
+          max={5}
+        />
+      </div>
       <div className="flex items-center justify-between gap-3">
         <span className="tabular text-[11px] text-(--color-text-subtle)">
           {bodyLen}/2000
