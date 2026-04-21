@@ -1,11 +1,11 @@
 # Graph Report - .  (2026-04-21)
 
 ## Corpus Check
-- 74 files · ~102,772 words
+- 74 files · ~103,670 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 684 nodes · 866 edges · 98 communities detected
+- 687 nodes · 870 edges · 98 communities detected
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 73 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
@@ -110,7 +110,7 @@
 - [[_COMMUNITY_Community 97|Community 97]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `withCredentials()` - 30 edges
+1. `withCredentials()` - 31 edges
 2. `UI 플로우 와이어프레임 초안 (전체 문서)` - 23 edges
 3. `ADR 0001 — DDL v3 ↔ Terminology v5 Reconciliation` - 18 edges
 4. `Use Cases Index (A_100~A_700)` - 15 edges
@@ -168,8 +168,8 @@ Cohesion: 0.06
 Nodes (36): Asset: favicon.svg (thicker strokes for 16px), Asset: logo-lockup.svg (260×84, mark + Alle + SEOUL), Asset: logo-mark.svg (84×84), Brand Name: Alle (replaces GGdrugs), Alle rollout checklist (8 items), DESIGN.md patch — new Brand section under Product Context, Alle Brand Handoff README, Crossbar uses var(--color-accent) = #E8562D only (+28 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.12
-Nodes (31): applyUploader(), buildQuery(), createBookmark(), createEventReview(), createUploaderEvent(), decideAdminEvent(), decideAdminUploader(), deleteBookmark() (+23 more)
+Cohesion: 0.11
+Nodes (32): applyUploader(), buildQuery(), createBookmark(), createEventReview(), createUploaderEvent(), decideAdminEvent(), decideAdminUploader(), deleteBookmark() (+24 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.11
@@ -228,24 +228,24 @@ Cohesion: 0.43
 Nodes (6): classify_sentiment(), extract_via_openai(), Stage 2 — OpenAI gpt-4o-mini 기반 필터 추출 체인.  규칙 - 인터페이스는 Stage 1 의 extract_merge 와, messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag, summarize_event(), _track_usage()
 
 ### Community 21 - "Community 21"
-Cohesion: 0.4
-Nodes (6): EnvValidationError, loadEnv (full validation), loadPartial (per-service schema), env (BffEnv instance), pino logger (env-aware), prisma (PrismaClient singleton)
-
-### Community 22 - "Community 22"
 Cohesion: 0.53
 Nodes (4): getS3(), objectExists(), presignGet(), presignPut()
 
-### Community 23 - "Community 23"
+### Community 22 - "Community 22"
 Cohesion: 0.67
 Nodes (5): listEvents(), parseBigIntCsv(), parseCsv(), parseIntClamp(), parsePeriod()
 
-### Community 24 - "Community 24"
+### Community 23 - "Community 23"
 Cohesion: 0.47
 Nodes (3): apply(), computePeriodRange(), isoDate()
 
-### Community 25 - "Community 25"
+### Community 24 - "Community 24"
 Cohesion: 0.53
 Nodes (4): formatDateRange(), fromBffItem(), hashToColor(), shortRegion()
+
+### Community 25 - "Community 25"
+Cohesion: 0.4
+Nodes (6): EnvValidationError, loadEnv (full validation), loadPartial (per-service schema), env (BffEnv instance), pino logger (env-aware), prisma (PrismaClient singleton)
 
 ### Community 26 - "Community 26"
 Cohesion: 0.33
@@ -289,15 +289,15 @@ Nodes (0):
 
 ### Community 36 - "Community 36"
 Cohesion: 0.5
-Nodes (4): Brand implementation references (Logo.tsx + public SVGs + handoff), apps/web/public/favicon.svg (thicker-stroke variant), apps/web/public/logo-lockup.svg (raw lockup asset), apps/web/public/logo-mark.svg (raw Line Monogram asset)
+Nodes (0): 
 
 ### Community 37 - "Community 37"
 Cohesion: 0.5
-Nodes (4): events table — unified crawled + uploaded via source_type, WHY: soft delete on users/events/reviews for recovery + partial index perf, WHY: single events table + source_type — avoids dual query paths, A_501 이벤트 리뷰 작성 — new review flow (wireframe 6-1)
+Nodes (4): Brand implementation references (Logo.tsx + public SVGs + handoff), apps/web/public/favicon.svg (thicker-stroke variant), apps/web/public/logo-lockup.svg (raw lockup asset), apps/web/public/logo-mark.svg (raw Line Monogram asset)
 
 ### Community 38 - "Community 38"
-Cohesion: 0.67
-Nodes (0): 
+Cohesion: 0.5
+Nodes (4): events table — unified crawled + uploaded via source_type, WHY: soft delete on users/events/reviews for recovery + partial index perf, WHY: single events table + source_type — avoids dual query paths, A_501 이벤트 리뷰 작성 — new review flow (wireframe 6-1)
 
 ### Community 39 - "Community 39"
 Cohesion: 0.67
@@ -337,7 +337,7 @@ Nodes (3): Filter 5 fixed — region/period/companion/event_type/event_vibe, WHY
 
 ### Community 48 - "Community 48"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): /api → localhost:3000 proxy (rewrite strip), HealthBadge (BFF /api/health poll)
 
 ### Community 49 - "Community 49"
 Cohesion: 1.0
@@ -353,7 +353,7 @@ Nodes (0):
 
 ### Community 52 - "Community 52"
 Cohesion: 1.0
-Nodes (2): /api → localhost:3000 proxy (rewrite strip), HealthBadge (BFF /api/health poll)
+Nodes (0): 
 
 ### Community 53 - "Community 53"
 Cohesion: 1.0
@@ -389,11 +389,11 @@ Nodes (2): Vermilion single accent (#E8562D), 결정: 버밀리언 단색 accent
 
 ### Community 61 - "Community 61"
 Cohesion: 1.0
-Nodes (2): Do-not-edit: DB schema, env keys, internal identifiers, DB v3: 20 tables (regions, users, uploader_profiles, events, ...)
+Nodes (2): Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo), Rationale: skip repo/package rename to avoid full-repo churn
 
 ### Community 62 - "Community 62"
 Cohesion: 1.0
-Nodes (2): Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo), Rationale: skip repo/package rename to avoid full-repo churn
+Nodes (2): Do-not-edit: DB schema, env keys, internal identifiers, DB v3: 20 tables (regions, users, uploader_profiles, events, ...)
 
 ### Community 63 - "Community 63"
 Cohesion: 1.0
@@ -538,15 +538,15 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
 ## Knowledge Gaps
 - **175 isolated node(s):** `BFF env schema (merged)`, `pino logger (env-aware)`, `prisma (PrismaClient singleton)`, `Vite config (React + Tailwind + BFF proxy)`, `/api → localhost:3000 proxy (rewrite strip)` (+170 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 48`** (2 nodes): `BookmarkButton.tsx`, `BookmarkButton()`
+- **Thin community `Community 48`** (2 nodes): `/api → localhost:3000 proxy (rewrite strip)`, `HealthBadge (BFF /api/health poll)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 49`** (2 nodes): `ChatDock.tsx`, `ChatDock()`
+- **Thin community `Community 49`** (2 nodes): `BookmarkButton.tsx`, `BookmarkButton()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 50`** (2 nodes): `ChatHelpPanel.tsx`, `ChatHelpPanel()`
+- **Thin community `Community 50`** (2 nodes): `ChatDock.tsx`, `ChatDock()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 51`** (2 nodes): `FullListPanel.tsx`, `phaseCount()`
+- **Thin community `Community 51`** (2 nodes): `ChatHelpPanel.tsx`, `ChatHelpPanel()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 52`** (2 nodes): `/api → localhost:3000 proxy (rewrite strip)`, `HealthBadge (BFF /api/health poll)`
+- **Thin community `Community 52`** (2 nodes): `FullListPanel.tsx`, `phaseCount()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 53`** (2 nodes): `Icon.tsx`, `Icon()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -564,9 +564,9 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 60`** (2 nodes): `Vermilion single accent (#E8562D)`, `결정: 버밀리언 단색 accent 근거`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (2 nodes): `Do-not-edit: DB schema, env keys, internal identifiers`, `DB v3: 20 tables (regions, users, uploader_profiles, events, ...)`
+- **Thin community `Community 61`** (2 nodes): `Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)`, `Rationale: skip repo/package rename to avoid full-repo churn`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (2 nodes): `Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)`, `Rationale: skip repo/package rename to avoid full-repo churn`
+- **Thin community `Community 62`** (2 nodes): `Do-not-edit: DB schema, env keys, internal identifiers`, `DB v3: 20 tables (regions, users, uploader_profiles, events, ...)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 63`** (2 nodes): `v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video`, `Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.

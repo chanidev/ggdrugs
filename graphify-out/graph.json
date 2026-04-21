@@ -104,7 +104,7 @@
       "label": "cors()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L49",
+      "source_location": "L53",
       "id": "app_cors",
       "community": 2,
       "norm_label": "cors()"
@@ -113,7 +113,7 @@
       "label": "createApp()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L69",
+      "source_location": "L73",
       "id": "app_createapp",
       "community": 2,
       "norm_label": "createapp()"
@@ -141,7 +141,7 @@
       "author": null,
       "contributor": null,
       "id": "env_bffExport",
-      "community": 21,
+      "community": 25,
       "norm_label": "env (bffenv instance)"
     },
     {
@@ -190,7 +190,7 @@
       "author": null,
       "contributor": null,
       "id": "logger_pino",
-      "community": 21,
+      "community": 25,
       "norm_label": "pino logger (env-aware)"
     },
     {
@@ -203,7 +203,7 @@
       "author": null,
       "contributor": null,
       "id": "prisma_client",
-      "community": 21,
+      "community": 25,
       "norm_label": "prisma (prismaclient singleton)"
     },
     {
@@ -698,7 +698,7 @@
       "source_file": "apps\\bff\\src\\lib\\s3.ts",
       "source_location": "L1",
       "id": "apps_bff_src_lib_s3_ts",
-      "community": 22,
+      "community": 21,
       "norm_label": "s3.ts"
     },
     {
@@ -707,7 +707,7 @@
       "source_file": "apps\\bff\\src\\lib\\s3.ts",
       "source_location": "L21",
       "id": "s3_gets3",
-      "community": 22,
+      "community": 21,
       "norm_label": "gets3()"
     },
     {
@@ -716,7 +716,7 @@
       "source_file": "apps\\bff\\src\\lib\\s3.ts",
       "source_location": "L40",
       "id": "s3_publicurl",
-      "community": 22,
+      "community": 21,
       "norm_label": "publicurl()"
     },
     {
@@ -725,7 +725,7 @@
       "source_file": "apps\\bff\\src\\lib\\s3.ts",
       "source_location": "L45",
       "id": "s3_presignput",
-      "community": 22,
+      "community": 21,
       "norm_label": "presignput()"
     },
     {
@@ -734,7 +734,7 @@
       "source_file": "apps\\bff\\src\\lib\\s3.ts",
       "source_location": "L56",
       "id": "s3_presignget",
-      "community": 22,
+      "community": 21,
       "norm_label": "presignget()"
     },
     {
@@ -743,7 +743,7 @@
       "source_file": "apps\\bff\\src\\lib\\s3.ts",
       "source_location": "L65",
       "id": "s3_objectexists",
-      "community": 22,
+      "community": 21,
       "norm_label": "objectexists()"
     },
     {
@@ -1245,7 +1245,7 @@
       "label": "deleteMyReview()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L228",
+      "source_location": "L297",
       "id": "event_reviews_deletemyreview",
       "community": 2,
       "norm_label": "deletemyreview()"
@@ -1274,7 +1274,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_events_ts",
-      "community": 23,
+      "community": 22,
       "norm_label": "events.ts"
     },
     {
@@ -1283,7 +1283,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L43",
       "id": "events_parsecsv",
-      "community": 23,
+      "community": 22,
       "norm_label": "parsecsv()"
     },
     {
@@ -1292,7 +1292,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L51",
       "id": "events_parsebigintcsv",
-      "community": 23,
+      "community": 22,
       "norm_label": "parsebigintcsv()"
     },
     {
@@ -1301,7 +1301,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L64",
       "id": "events_parseintclamp",
-      "community": 23,
+      "community": 22,
       "norm_label": "parseintclamp()"
     },
     {
@@ -1310,7 +1310,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L70",
       "id": "events_parseperiod",
-      "community": 23,
+      "community": 22,
       "norm_label": "parseperiod()"
     },
     {
@@ -1319,7 +1319,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L94",
       "id": "events_listevents",
-      "community": 23,
+      "community": 22,
       "norm_label": "listevents()"
     },
     {
@@ -1362,7 +1362,7 @@
       "label": "parseIntClamp()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "id": "uploader_parseintclamp",
       "community": 12,
       "norm_label": "parseintclamp()"
@@ -1371,7 +1371,7 @@
       "label": "trimStr()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L44",
+      "source_location": "L45",
       "id": "uploader_trimstr",
       "community": 12,
       "norm_label": "trimstr()"
@@ -1380,7 +1380,7 @@
       "label": "parseYmd()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L49",
+      "source_location": "L50",
       "id": "uploader_parseymd",
       "community": 12,
       "norm_label": "parseymd()"
@@ -1389,7 +1389,7 @@
       "label": "todayUtcMidnight()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L62",
+      "source_location": "L63",
       "id": "uploader_todayutcmidnight",
       "community": 12,
       "norm_label": "todayutcmidnight()"
@@ -1398,7 +1398,7 @@
       "label": "computePhase()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L67",
+      "source_location": "L68",
       "id": "uploader_computephase",
       "community": 12,
       "norm_label": "computephase()"
@@ -1407,7 +1407,7 @@
       "label": "shapeUploaderProfile()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L74",
+      "source_location": "L75",
       "id": "uploader_shapeuploaderprofile",
       "community": 12,
       "norm_label": "shapeuploaderprofile()"
@@ -1416,7 +1416,7 @@
       "label": "getMyUploader()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L97",
+      "source_location": "L98",
       "id": "uploader_getmyuploader",
       "community": 12,
       "norm_label": "getmyuploader()"
@@ -1425,7 +1425,7 @@
       "label": "applyUploader()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L120",
+      "source_location": "L121",
       "id": "uploader_applyuploader",
       "community": 12,
       "norm_label": "applyuploader()"
@@ -1434,7 +1434,7 @@
       "label": "setActiveRole()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L208",
+      "source_location": "L209",
       "id": "uploader_setactiverole",
       "community": 12,
       "norm_label": "setactiverole()"
@@ -1443,7 +1443,7 @@
       "label": "listMyUploaderEvents()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L245",
+      "source_location": "L246",
       "id": "uploader_listmyuploaderevents",
       "community": 12,
       "norm_label": "listmyuploaderevents()"
@@ -1452,7 +1452,7 @@
       "label": "validateDocs()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L357",
+      "source_location": "L358",
       "id": "uploader_validatedocs",
       "community": 12,
       "norm_label": "validatedocs()"
@@ -1461,7 +1461,7 @@
       "label": "createUploaderEvent()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L393",
+      "source_location": "L394",
       "id": "uploader_createuploaderevent",
       "community": 12,
       "norm_label": "createuploaderevent()"
@@ -1479,7 +1479,7 @@
       "label": "posterUploadUrl()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploads.ts",
-      "source_location": "L37",
+      "source_location": "L42",
       "id": "uploads_posteruploadurl",
       "community": 2,
       "norm_label": "posteruploadurl()"
@@ -1488,10 +1488,19 @@
       "label": "documentUploadUrl()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\uploads.ts",
-      "source_location": "L89",
+      "source_location": "L94",
       "id": "uploads_documentuploadurl",
       "community": 2,
       "norm_label": "documentuploadurl()"
+    },
+    {
+      "label": "reviewPhotoUploadUrl()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\routes\\uploads.ts",
+      "source_location": "L137",
+      "id": "uploads_reviewphotouploadurl",
+      "community": 2,
+      "norm_label": "reviewphotouploadurl()"
     },
     {
       "label": "Vite config (React + Tailwind + BFF proxy)",
@@ -1516,7 +1525,7 @@
       "author": null,
       "contributor": null,
       "id": "vite_apiProxy",
-      "community": 52,
+      "community": 48,
       "norm_label": "/api \u2192 localhost:3000 proxy (rewrite strip)"
     },
     {
@@ -1547,7 +1556,7 @@
       "source_file": "apps\\web\\src\\components\\BookmarkButton.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_bookmarkbutton_tsx",
-      "community": 48,
+      "community": 49,
       "norm_label": "bookmarkbutton.tsx"
     },
     {
@@ -1556,7 +1565,7 @@
       "source_file": "apps\\web\\src\\components\\BookmarkButton.tsx",
       "source_location": "L14",
       "id": "bookmarkbutton_bookmarkbutton",
-      "community": 48,
+      "community": 49,
       "norm_label": "bookmarkbutton()"
     },
     {
@@ -1565,7 +1574,7 @@
       "source_file": "apps\\web\\src\\components\\ChatDock.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_chatdock_tsx",
-      "community": 49,
+      "community": 50,
       "norm_label": "chatdock.tsx"
     },
     {
@@ -1574,7 +1583,7 @@
       "source_file": "apps\\web\\src\\components\\ChatDock.tsx",
       "source_location": "L19",
       "id": "chatdock_chatdock",
-      "community": 49,
+      "community": 50,
       "norm_label": "chatdock()"
     },
     {
@@ -1583,7 +1592,7 @@
       "source_file": "apps\\web\\src\\components\\ChatHelpPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_chathelppanel_tsx",
-      "community": 50,
+      "community": 51,
       "norm_label": "chathelppanel.tsx"
     },
     {
@@ -1592,7 +1601,7 @@
       "source_file": "apps\\web\\src\\components\\ChatHelpPanel.tsx",
       "source_location": "L7",
       "id": "chathelppanel_chathelppanel",
-      "community": 50,
+      "community": 51,
       "norm_label": "chathelppanel()"
     },
     {
@@ -1664,7 +1673,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_filtersearchpanel_tsx",
-      "community": 24,
+      "community": 23,
       "norm_label": "filtersearchpanel.tsx"
     },
     {
@@ -1673,7 +1682,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L30",
       "id": "filtersearchpanel_isodate",
-      "community": 24,
+      "community": 23,
       "norm_label": "isodate()"
     },
     {
@@ -1682,7 +1691,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L37",
       "id": "filtersearchpanel_computeperiodrange",
-      "community": 24,
+      "community": 23,
       "norm_label": "computeperiodrange()"
     },
     {
@@ -1691,7 +1700,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L124",
       "id": "filtersearchpanel_togglein",
-      "community": 24,
+      "community": 23,
       "norm_label": "togglein()"
     },
     {
@@ -1700,7 +1709,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L143",
       "id": "filtersearchpanel_reset",
-      "community": 24,
+      "community": 23,
       "norm_label": "reset()"
     },
     {
@@ -1709,7 +1718,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L154",
       "id": "filtersearchpanel_apply",
-      "community": 24,
+      "community": 23,
       "norm_label": "apply()"
     },
     {
@@ -1718,7 +1727,7 @@
       "source_file": "apps\\web\\src\\components\\FullListPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_fulllistpanel_tsx",
-      "community": 51,
+      "community": 52,
       "norm_label": "fulllistpanel.tsx"
     },
     {
@@ -1727,7 +1736,7 @@
       "source_file": "apps\\web\\src\\components\\FullListPanel.tsx",
       "source_location": "L83",
       "id": "fulllistpanel_phasecount",
-      "community": 51,
+      "community": 52,
       "norm_label": "phasecount()"
     },
     {
@@ -1740,7 +1749,7 @@
       "author": null,
       "contributor": null,
       "id": "web_HealthBadge",
-      "community": 52,
+      "community": 48,
       "norm_label": "healthbadge (bff /api/health poll)"
     },
     {
@@ -1866,7 +1875,7 @@
       "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_brand_logo_tsx",
-      "community": 38,
+      "community": 39,
       "norm_label": "logo.tsx"
     },
     {
@@ -1875,7 +1884,7 @@
       "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
       "source_location": "L8",
       "id": "logo_logomark",
-      "community": 38,
+      "community": 39,
       "norm_label": "logomark()"
     },
     {
@@ -1884,7 +1893,7 @@
       "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
       "source_location": "L45",
       "id": "logo_logolockup",
-      "community": 38,
+      "community": 39,
       "norm_label": "logolockup()"
     },
     {
@@ -1900,7 +1909,7 @@
       "label": "DocumentsPickerField()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\components\\uploader\\DocumentsPickerField.tsx",
-      "source_location": "L21",
+      "source_location": "L31",
       "id": "documentspickerfield_documentspickerfield",
       "community": 57,
       "norm_label": "documentspickerfield()"
@@ -1911,7 +1920,7 @@
       "source_file": "apps\\web\\src\\components\\uploader\\PosterPickerField.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_uploader_posterpickerfield_tsx",
-      "community": 39,
+      "community": 40,
       "norm_label": "posterpickerfield.tsx"
     },
     {
@@ -1920,7 +1929,7 @@
       "source_file": "apps\\web\\src\\components\\uploader\\PosterPickerField.tsx",
       "source_location": "L33",
       "id": "posterpickerfield_onpick",
-      "community": 39,
+      "community": 40,
       "norm_label": "onpick()"
     },
     {
@@ -1929,7 +1938,7 @@
       "source_file": "apps\\web\\src\\components\\uploader\\PosterPickerField.tsx",
       "source_location": "L55",
       "id": "posterpickerfield_clear",
-      "community": 39,
+      "community": 40,
       "norm_label": "clear()"
     },
     {
@@ -2001,7 +2010,7 @@
       "source_file": "apps\\web\\src\\layout\\MobileTabBar.tsx",
       "source_location": "L1",
       "id": "apps_web_src_layout_mobiletabbar_tsx",
-      "community": 40,
+      "community": 41,
       "norm_label": "mobiletabbar.tsx"
     },
     {
@@ -2010,7 +2019,7 @@
       "source_file": "apps\\web\\src\\layout\\MobileTabBar.tsx",
       "source_location": "L10",
       "id": "mobiletabbar_mobiletabbar",
-      "community": 40,
+      "community": 41,
       "norm_label": "mobiletabbar()"
     },
     {
@@ -2019,7 +2028,7 @@
       "source_file": "apps\\web\\src\\layout\\MobileTabBar.tsx",
       "source_location": "L30",
       "id": "mobiletabbar_tabbtn",
-      "community": 40,
+      "community": 41,
       "norm_label": "tabbtn()"
     },
     {
@@ -2143,7 +2152,7 @@
       "label": "createEventReview()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L175",
+      "source_location": "L182",
       "id": "api_createeventreview",
       "community": 6,
       "norm_label": "createeventreview()"
@@ -2152,7 +2161,7 @@
       "label": "deleteMyReview()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L197",
+      "source_location": "L204",
       "id": "api_deletemyreview",
       "community": 6,
       "norm_label": "deletemyreview()"
@@ -2161,7 +2170,7 @@
       "label": "fetchEventReviews()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L208",
+      "source_location": "L215",
       "id": "api_fetcheventreviews",
       "community": 6,
       "norm_label": "fetcheventreviews()"
@@ -2170,7 +2179,7 @@
       "label": "fetchMe()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L240",
+      "source_location": "L247",
       "id": "api_fetchme",
       "community": 6,
       "norm_label": "fetchme()"
@@ -2179,7 +2188,7 @@
       "label": "devLogin()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L250",
+      "source_location": "L257",
       "id": "api_devlogin",
       "community": 6,
       "norm_label": "devlogin()"
@@ -2188,7 +2197,7 @@
       "label": "sendChat()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L288",
+      "source_location": "L295",
       "id": "api_sendchat",
       "community": 6,
       "norm_label": "sendchat()"
@@ -2197,7 +2206,7 @@
       "label": "logout()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L307",
+      "source_location": "L314",
       "id": "api_logout",
       "community": 6,
       "norm_label": "logout()"
@@ -2206,7 +2215,7 @@
       "label": "createBookmark()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L321",
+      "source_location": "L328",
       "id": "api_createbookmark",
       "community": 6,
       "norm_label": "createbookmark()"
@@ -2215,7 +2224,7 @@
       "label": "deleteBookmark()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L331",
+      "source_location": "L338",
       "id": "api_deletebookmark",
       "community": 6,
       "norm_label": "deletebookmark()"
@@ -2224,7 +2233,7 @@
       "label": "fetchMyBookmarks()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L354",
+      "source_location": "L361",
       "id": "api_fetchmybookmarks",
       "community": 6,
       "norm_label": "fetchmybookmarks()"
@@ -2233,7 +2242,7 @@
       "label": "fetchMyReviews()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L391",
+      "source_location": "L398",
       "id": "api_fetchmyreviews",
       "community": 6,
       "norm_label": "fetchmyreviews()"
@@ -2242,7 +2251,7 @@
       "label": "fetchAdminEvents()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L442",
+      "source_location": "L449",
       "id": "api_fetchadminevents",
       "community": 6,
       "norm_label": "fetchadminevents()"
@@ -2251,7 +2260,7 @@
       "label": "putAdminEventVibes()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L464",
+      "source_location": "L471",
       "id": "api_putadmineventvibes",
       "community": 6,
       "norm_label": "putadmineventvibes()"
@@ -2260,7 +2269,7 @@
       "label": "fetchAdminUploaders()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L523",
+      "source_location": "L530",
       "id": "api_fetchadminuploaders",
       "community": 6,
       "norm_label": "fetchadminuploaders()"
@@ -2269,7 +2278,7 @@
       "label": "fetchAdminEventDocuments()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L560",
+      "source_location": "L567",
       "id": "api_fetchadmineventdocuments",
       "community": 6,
       "norm_label": "fetchadmineventdocuments()"
@@ -2278,7 +2287,7 @@
       "label": "decideAdminEvent()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L576",
+      "source_location": "L583",
       "id": "api_decideadminevent",
       "community": 6,
       "norm_label": "decideadminevent()"
@@ -2287,7 +2296,7 @@
       "label": "decideAdminUploader()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L604",
+      "source_location": "L611",
       "id": "api_decideadminuploader",
       "community": 6,
       "norm_label": "decideadminuploader()"
@@ -2296,7 +2305,7 @@
       "label": "fetchMyUploader()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L653",
+      "source_location": "L660",
       "id": "api_fetchmyuploader",
       "community": 6,
       "norm_label": "fetchmyuploader()"
@@ -2305,7 +2314,7 @@
       "label": "applyUploader()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L665",
+      "source_location": "L672",
       "id": "api_applyuploader",
       "community": 6,
       "norm_label": "applyuploader()"
@@ -2314,7 +2323,7 @@
       "label": "setActiveRole()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L694",
+      "source_location": "L701",
       "id": "api_setactiverole",
       "community": 6,
       "norm_label": "setactiverole()"
@@ -2323,16 +2332,25 @@
       "label": "fetchMyUploaderEvents()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L735",
+      "source_location": "L742",
       "id": "api_fetchmyuploaderevents",
       "community": 6,
       "norm_label": "fetchmyuploaderevents()"
     },
     {
+      "label": "requestReviewPhotoUploadUrl()",
+      "file_type": "code",
+      "source_file": "apps\\web\\src\\lib\\api.ts",
+      "source_location": "L824",
+      "id": "api_requestreviewphotouploadurl",
+      "community": 6,
+      "norm_label": "requestreviewphotouploadurl()"
+    },
+    {
       "label": "requestDocumentUploadUrl()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L809",
+      "source_location": "L846",
       "id": "api_requestdocumentuploadurl",
       "community": 6,
       "norm_label": "requestdocumentuploadurl()"
@@ -2341,7 +2359,7 @@
       "label": "requestPosterUploadUrl()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L832",
+      "source_location": "L869",
       "id": "api_requestposteruploadurl",
       "community": 6,
       "norm_label": "requestposteruploadurl()"
@@ -2350,7 +2368,7 @@
       "label": "uploadToPresignedUrl()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L856",
+      "source_location": "L893",
       "id": "api_uploadtopresignedurl",
       "community": 6,
       "norm_label": "uploadtopresignedurl()"
@@ -2359,7 +2377,7 @@
       "label": "createUploaderEvent()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L871",
+      "source_location": "L908",
       "id": "api_createuploaderevent",
       "community": 6,
       "norm_label": "createuploaderevent()"
@@ -2370,7 +2388,7 @@
       "source_file": "apps\\web\\src\\lib\\auth-context.tsx",
       "source_location": "L1",
       "id": "apps_web_src_lib_auth_context_tsx",
-      "community": 41,
+      "community": 42,
       "norm_label": "auth-context.tsx"
     },
     {
@@ -2379,7 +2397,7 @@
       "source_file": "apps\\web\\src\\lib\\auth-context.tsx",
       "source_location": "L26",
       "id": "auth_context_authprovider",
-      "community": 41,
+      "community": 42,
       "norm_label": "authprovider()"
     },
     {
@@ -2388,7 +2406,7 @@
       "source_file": "apps\\web\\src\\lib\\auth-context.tsx",
       "source_location": "L64",
       "id": "auth_context_usecurrentuser",
-      "community": 41,
+      "community": 42,
       "norm_label": "usecurrentuser()"
     },
     {
@@ -2397,7 +2415,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L1",
       "id": "apps_web_src_lib_event_display_ts",
-      "community": 25,
+      "community": 24,
       "norm_label": "event-display.ts"
     },
     {
@@ -2406,7 +2424,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L24",
       "id": "event_display_hashtocolor",
-      "community": 25,
+      "community": 24,
       "norm_label": "hashtocolor()"
     },
     {
@@ -2415,7 +2433,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L30",
       "id": "event_display_formatdaterange",
-      "community": 25,
+      "community": 24,
       "norm_label": "formatdaterange()"
     },
     {
@@ -2424,7 +2442,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L42",
       "id": "event_display_shortregion",
-      "community": 25,
+      "community": 24,
       "norm_label": "shortregion()"
     },
     {
@@ -2433,7 +2451,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L46",
       "id": "event_display_frombffitem",
-      "community": 25,
+      "community": 24,
       "norm_label": "frombffitem()"
     },
     {
@@ -2442,7 +2460,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L61",
       "id": "event_display_frommockevent",
-      "community": 25,
+      "community": 24,
       "norm_label": "frommockevent()"
     },
     {
@@ -2451,26 +2469,35 @@
       "source_file": "apps\\web\\src\\lib\\uploads.ts",
       "source_location": "L1",
       "id": "apps_web_src_lib_uploads_ts",
-      "community": 42,
+      "community": 36,
       "norm_label": "uploads.ts"
     },
     {
       "label": "uploadPoster()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\uploads.ts",
-      "source_location": "L21",
+      "source_location": "L23",
       "id": "uploads_uploadposter",
-      "community": 42,
+      "community": 36,
       "norm_label": "uploadposter()"
     },
     {
       "label": "uploadDocuments()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\uploads.ts",
-      "source_location": "L30",
+      "source_location": "L32",
       "id": "uploads_uploaddocuments",
-      "community": 42,
+      "community": 36,
       "norm_label": "uploaddocuments()"
+    },
+    {
+      "label": "uploadReviewPhotos()",
+      "file_type": "code",
+      "source_file": "apps\\web\\src\\lib\\uploads.ts",
+      "source_location": "L52",
+      "id": "uploads_uploadreviewphotos",
+      "community": 36,
+      "norm_label": "uploadreviewphotos()"
     },
     {
       "label": "AdminEventsPage.tsx",
@@ -2530,7 +2557,7 @@
       "label": "EventDetailPage()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L25",
+      "source_location": "L31",
       "id": "eventdetailpage_eventdetailpage",
       "community": 18,
       "norm_label": "eventdetailpage()"
@@ -2539,7 +2566,7 @@
       "label": "BackLink()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L65",
+      "source_location": "L71",
       "id": "eventdetailpage_backlink",
       "community": 18,
       "norm_label": "backlink()"
@@ -2548,7 +2575,7 @@
       "label": "LoadingBox()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L79",
+      "source_location": "L85",
       "id": "eventdetailpage_loadingbox",
       "community": 18,
       "norm_label": "loadingbox()"
@@ -2557,7 +2584,7 @@
       "label": "NotFoundBox()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L87",
+      "source_location": "L93",
       "id": "eventdetailpage_notfoundbox",
       "community": 18,
       "norm_label": "notfoundbox()"
@@ -2566,7 +2593,7 @@
       "label": "ErrorBox()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L98",
+      "source_location": "L104",
       "id": "eventdetailpage_errorbox",
       "community": 18,
       "norm_label": "errorbox()"
@@ -2575,7 +2602,7 @@
       "label": "onCreated()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L221",
+      "source_location": "L227",
       "id": "eventdetailpage_oncreated",
       "community": 18,
       "norm_label": "oncreated()"
@@ -2584,7 +2611,7 @@
       "label": "submit()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L293",
+      "source_location": "L301",
       "id": "eventdetailpage_submit",
       "community": 18,
       "norm_label": "submit()"
@@ -2611,7 +2638,7 @@
       "label": "toggleToUploader()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\UploaderNewEventPage.tsx",
-      "source_location": "L137",
+      "source_location": "L138",
       "id": "uploaderneweventpage_toggletouploader",
       "community": 43,
       "norm_label": "toggletouploader()"
@@ -2620,7 +2647,7 @@
       "label": "submit()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\UploaderNewEventPage.tsx",
-      "source_location": "L150",
+      "source_location": "L151",
       "id": "uploaderneweventpage_submit",
       "community": 43,
       "norm_label": "submit()"
@@ -2653,7 +2680,7 @@
       "author": null,
       "contributor": null,
       "id": "config_loadEnv",
-      "community": 21,
+      "community": 25,
       "norm_label": "loadenv (full validation)"
     },
     {
@@ -2666,7 +2693,7 @@
       "author": null,
       "contributor": null,
       "id": "config_loadPartial",
-      "community": 21,
+      "community": 25,
       "norm_label": "loadpartial (per-service schema)"
     },
     {
@@ -2679,7 +2706,7 @@
       "author": null,
       "contributor": null,
       "id": "config_EnvValidationError",
-      "community": 21,
+      "community": 25,
       "norm_label": "envvalidationerror"
     },
     {
@@ -6553,7 +6580,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 62,
+      "community": 61,
       "norm_label": "do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)",
       "id": "alle_donotedit_package_name"
     },
@@ -6566,7 +6593,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 61,
+      "community": 62,
       "norm_label": "do-not-edit: db schema, env keys, internal identifiers",
       "id": "alle_donotedit_internal_ids"
     },
@@ -6618,7 +6645,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 62,
+      "community": 61,
       "norm_label": "rationale: skip repo/package rename to avoid full-repo churn",
       "id": "alle_rationale_no_repo_rename"
     },
@@ -6787,7 +6814,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 61,
+      "community": 62,
       "norm_label": "db v3: 20 tables (regions, users, uploader_profiles, events, ...)",
       "id": "db_v3_tables_20"
     },
@@ -7216,7 +7243,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 37,
       "norm_label": "brand implementation references (logo.tsx + public svgs + handoff)",
       "id": "DESIGN_brand_impl_refs"
     },
@@ -7411,7 +7438,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 37,
       "norm_label": "apps/web/public/logo-mark.svg (raw line monogram asset)",
       "id": "public_logo_mark_svg"
     },
@@ -7424,7 +7451,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 37,
       "norm_label": "apps/web/public/logo-lockup.svg (raw lockup asset)",
       "id": "public_logo_lockup_svg"
     },
@@ -7437,7 +7464,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 37,
       "norm_label": "apps/web/public/favicon.svg (thicker-stroke variant)",
       "id": "public_favicon_svg"
     },
@@ -7463,7 +7490,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 38,
       "norm_label": "a_501 \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1105\u1175\u1107\u1172 \u110c\u1161\u11a8\u1109\u1165\u11bc \u2014 new review flow (wireframe 6-1)",
       "id": "req_v5_usecase_A_501"
     },
@@ -7515,7 +7542,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 38,
       "norm_label": "events table \u2014 unified crawled + uploaded via source_type",
       "id": "db_spec_events_table"
     },
@@ -7554,7 +7581,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 38,
       "norm_label": "why: soft delete on users/events/reviews for recovery + partial index perf",
       "id": "db_spec_rationale_soft_delete"
     },
@@ -7567,7 +7594,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 38,
       "norm_label": "why: single events table + source_type \u2014 avoids dual query paths",
       "id": "db_spec_rationale_unified_events"
     },
@@ -7797,7 +7824,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L38",
+      "source_location": "L42",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_middleware_require_admin_ts",
@@ -7809,7 +7836,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L39",
+      "source_location": "L43",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_middleware_require_uploader_ts",
@@ -7821,7 +7848,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L49",
+      "source_location": "L53",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "app_cors",
@@ -7833,7 +7860,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L69",
+      "source_location": "L73",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "app_createapp",
@@ -9945,7 +9972,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L228",
+      "source_location": "L297",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_event_reviews_ts",
       "_tgt": "event_reviews_deletemyreview",
@@ -9957,7 +9984,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L205",
+      "source_location": "L274",
       "weight": 1.0,
       "_src": "event_reviews_createeventreview",
       "_tgt": "event_reviews_classifyandstoresentiment",
@@ -10137,7 +10164,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L38",
+      "source_location": "L39",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_parseintclamp",
@@ -10149,7 +10176,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L44",
+      "source_location": "L45",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_trimstr",
@@ -10161,7 +10188,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L49",
+      "source_location": "L50",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_parseymd",
@@ -10173,7 +10200,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L62",
+      "source_location": "L63",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_todayutcmidnight",
@@ -10185,7 +10212,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L67",
+      "source_location": "L68",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_computephase",
@@ -10197,7 +10224,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L74",
+      "source_location": "L75",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_shapeuploaderprofile",
@@ -10209,7 +10236,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L97",
+      "source_location": "L98",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_getmyuploader",
@@ -10221,7 +10248,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L120",
+      "source_location": "L121",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_applyuploader",
@@ -10233,7 +10260,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L208",
+      "source_location": "L209",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_setactiverole",
@@ -10245,7 +10272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L245",
+      "source_location": "L246",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_listmyuploaderevents",
@@ -10257,7 +10284,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L357",
+      "source_location": "L358",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_validatedocs",
@@ -10269,7 +10296,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L393",
+      "source_location": "L394",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploader_ts",
       "_tgt": "uploader_createuploaderevent",
@@ -10281,7 +10308,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L247",
+      "source_location": "L248",
       "weight": 1.0,
       "_src": "uploader_listmyuploaderevents",
       "_tgt": "uploader_parseintclamp",
@@ -10293,7 +10320,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L124",
+      "source_location": "L125",
       "weight": 1.0,
       "_src": "uploader_applyuploader",
       "_tgt": "uploader_trimstr",
@@ -10305,7 +10332,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L397",
+      "source_location": "L398",
       "weight": 1.0,
       "_src": "uploader_createuploaderevent",
       "_tgt": "uploader_trimstr",
@@ -10317,7 +10344,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L415",
+      "source_location": "L416",
       "weight": 1.0,
       "_src": "uploader_createuploaderevent",
       "_tgt": "uploader_parseymd",
@@ -10329,7 +10356,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L68",
+      "source_location": "L69",
       "weight": 1.0,
       "_src": "uploader_computephase",
       "_tgt": "uploader_todayutcmidnight",
@@ -10341,7 +10368,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L481",
+      "source_location": "L482",
       "weight": 1.0,
       "_src": "uploader_createuploaderevent",
       "_tgt": "uploader_computephase",
@@ -10353,7 +10380,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L116",
+      "source_location": "L117",
       "weight": 1.0,
       "_src": "uploader_getmyuploader",
       "_tgt": "uploader_shapeuploaderprofile",
@@ -10365,7 +10392,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L170",
+      "source_location": "L171",
       "weight": 1.0,
       "_src": "uploader_applyuploader",
       "_tgt": "uploader_shapeuploaderprofile",
@@ -10377,7 +10404,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploader.ts",
-      "source_location": "L460",
+      "source_location": "L461",
       "weight": 1.0,
       "_src": "uploader_createuploaderevent",
       "_tgt": "uploader_validatedocs",
@@ -10389,7 +10416,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploads.ts",
-      "source_location": "L37",
+      "source_location": "L42",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploads_ts",
       "_tgt": "uploads_posteruploadurl",
@@ -10401,12 +10428,24 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\uploads.ts",
-      "source_location": "L89",
+      "source_location": "L94",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_uploads_ts",
       "_tgt": "uploads_documentuploadurl",
       "source": "apps_bff_src_routes_uploads_ts",
       "target": "uploads_documentuploadurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\routes\\uploads.ts",
+      "source_location": "L137",
+      "weight": 1.0,
+      "_src": "apps_bff_src_routes_uploads_ts",
+      "_tgt": "uploads_reviewphotouploadurl",
+      "source": "apps_bff_src_routes_uploads_ts",
+      "target": "uploads_reviewphotouploadurl",
       "confidence_score": 1.0
     },
     {
@@ -10713,7 +10752,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\components\\uploader\\DocumentsPickerField.tsx",
-      "source_location": "L21",
+      "source_location": "L31",
       "weight": 1.0,
       "_src": "apps_web_src_components_uploader_documentspickerfield_tsx",
       "_tgt": "documentspickerfield_documentspickerfield",
@@ -10965,7 +11004,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L175",
+      "source_location": "L182",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_createeventreview",
@@ -10977,7 +11016,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L197",
+      "source_location": "L204",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_deletemyreview",
@@ -10989,7 +11028,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L208",
+      "source_location": "L215",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetcheventreviews",
@@ -11001,7 +11040,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L240",
+      "source_location": "L247",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchme",
@@ -11013,7 +11052,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L250",
+      "source_location": "L257",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_devlogin",
@@ -11025,7 +11064,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L288",
+      "source_location": "L295",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_sendchat",
@@ -11037,7 +11076,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L307",
+      "source_location": "L314",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_logout",
@@ -11049,7 +11088,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L321",
+      "source_location": "L328",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_createbookmark",
@@ -11061,7 +11100,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L331",
+      "source_location": "L338",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_deletebookmark",
@@ -11073,7 +11112,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L354",
+      "source_location": "L361",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchmybookmarks",
@@ -11085,7 +11124,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L391",
+      "source_location": "L398",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchmyreviews",
@@ -11097,7 +11136,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L442",
+      "source_location": "L449",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchadminevents",
@@ -11109,7 +11148,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L464",
+      "source_location": "L471",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_putadmineventvibes",
@@ -11121,7 +11160,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L523",
+      "source_location": "L530",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchadminuploaders",
@@ -11133,7 +11172,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L560",
+      "source_location": "L567",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchadmineventdocuments",
@@ -11145,7 +11184,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L576",
+      "source_location": "L583",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_decideadminevent",
@@ -11157,7 +11196,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L604",
+      "source_location": "L611",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_decideadminuploader",
@@ -11169,7 +11208,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L653",
+      "source_location": "L660",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchmyuploader",
@@ -11181,7 +11220,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L665",
+      "source_location": "L672",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_applyuploader",
@@ -11193,7 +11232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L694",
+      "source_location": "L701",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_setactiverole",
@@ -11205,7 +11244,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L735",
+      "source_location": "L742",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchmyuploaderevents",
@@ -11217,7 +11256,19 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L809",
+      "source_location": "L824",
+      "weight": 1.0,
+      "_src": "apps_web_src_lib_api_ts",
+      "_tgt": "api_requestreviewphotouploadurl",
+      "source": "apps_web_src_lib_api_ts",
+      "target": "api_requestreviewphotouploadurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\web\\src\\lib\\api.ts",
+      "source_location": "L846",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_requestdocumentuploadurl",
@@ -11229,7 +11280,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L832",
+      "source_location": "L869",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_requestposteruploadurl",
@@ -11241,7 +11292,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L856",
+      "source_location": "L893",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_uploadtopresignedurl",
@@ -11253,7 +11304,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L871",
+      "source_location": "L908",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_createuploaderevent",
@@ -11325,7 +11376,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L181",
+      "source_location": "L188",
       "weight": 1.0,
       "_src": "api_createeventreview",
       "_tgt": "api_withcredentials",
@@ -11337,7 +11388,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L200",
+      "source_location": "L207",
       "weight": 1.0,
       "_src": "api_deletemyreview",
       "_tgt": "api_withcredentials",
@@ -11349,7 +11400,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L217",
+      "source_location": "L224",
       "weight": 1.0,
       "_src": "api_fetcheventreviews",
       "_tgt": "api_withcredentials",
@@ -11361,7 +11412,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L241",
+      "source_location": "L248",
       "weight": 1.0,
       "_src": "api_fetchme",
       "_tgt": "api_withcredentials",
@@ -11373,7 +11424,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L253",
+      "source_location": "L260",
       "weight": 1.0,
       "_src": "api_devlogin",
       "_tgt": "api_withcredentials",
@@ -11385,7 +11436,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L293",
+      "source_location": "L300",
       "weight": 1.0,
       "_src": "api_sendchat",
       "_tgt": "api_withcredentials",
@@ -11397,7 +11448,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L308",
+      "source_location": "L315",
       "weight": 1.0,
       "_src": "api_logout",
       "_tgt": "api_withcredentials",
@@ -11409,7 +11460,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L324",
+      "source_location": "L331",
       "weight": 1.0,
       "_src": "api_createbookmark",
       "_tgt": "api_withcredentials",
@@ -11421,7 +11472,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L334",
+      "source_location": "L341",
       "weight": 1.0,
       "_src": "api_deletebookmark",
       "_tgt": "api_withcredentials",
@@ -11433,7 +11484,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L362",
+      "source_location": "L369",
       "weight": 1.0,
       "_src": "api_fetchmybookmarks",
       "_tgt": "api_withcredentials",
@@ -11445,7 +11496,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L399",
+      "source_location": "L406",
       "weight": 1.0,
       "_src": "api_fetchmyreviews",
       "_tgt": "api_withcredentials",
@@ -11457,7 +11508,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L456",
+      "source_location": "L463",
       "weight": 1.0,
       "_src": "api_fetchadminevents",
       "_tgt": "api_withcredentials",
@@ -11469,7 +11520,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L470",
+      "source_location": "L477",
       "weight": 1.0,
       "_src": "api_putadmineventvibes",
       "_tgt": "api_withcredentials",
@@ -11481,7 +11532,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L536",
+      "source_location": "L543",
       "weight": 1.0,
       "_src": "api_fetchadminuploaders",
       "_tgt": "api_withcredentials",
@@ -11493,7 +11544,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L564",
+      "source_location": "L571",
       "weight": 1.0,
       "_src": "api_fetchadmineventdocuments",
       "_tgt": "api_withcredentials",
@@ -11505,7 +11556,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L583",
+      "source_location": "L590",
       "weight": 1.0,
       "_src": "api_decideadminevent",
       "_tgt": "api_withcredentials",
@@ -11517,7 +11568,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L615",
+      "source_location": "L622",
       "weight": 1.0,
       "_src": "api_decideadminuploader",
       "_tgt": "api_withcredentials",
@@ -11529,7 +11580,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L656",
+      "source_location": "L663",
       "weight": 1.0,
       "_src": "api_fetchmyuploader",
       "_tgt": "api_withcredentials",
@@ -11541,7 +11592,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L672",
+      "source_location": "L679",
       "weight": 1.0,
       "_src": "api_applyuploader",
       "_tgt": "api_withcredentials",
@@ -11553,7 +11604,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L699",
+      "source_location": "L706",
       "weight": 1.0,
       "_src": "api_setactiverole",
       "_tgt": "api_withcredentials",
@@ -11565,7 +11616,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L750",
+      "source_location": "L757",
       "weight": 1.0,
       "_src": "api_fetchmyuploaderevents",
       "_tgt": "api_withcredentials",
@@ -11577,7 +11628,19 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L815",
+      "source_location": "L830",
+      "weight": 1.0,
+      "_src": "api_requestreviewphotouploadurl",
+      "_tgt": "api_withcredentials",
+      "source": "api_withcredentials",
+      "target": "api_requestreviewphotouploadurl",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\web\\src\\lib\\api.ts",
+      "source_location": "L852",
       "weight": 1.0,
       "_src": "api_requestdocumentuploadurl",
       "_tgt": "api_withcredentials",
@@ -11589,7 +11652,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L838",
+      "source_location": "L875",
       "weight": 1.0,
       "_src": "api_requestposteruploadurl",
       "_tgt": "api_withcredentials",
@@ -11601,7 +11664,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L876",
+      "source_location": "L913",
       "weight": 1.0,
       "_src": "api_createuploaderevent",
       "_tgt": "api_withcredentials",
@@ -11745,7 +11808,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\uploads.ts",
-      "source_location": "L21",
+      "source_location": "L23",
       "weight": 1.0,
       "_src": "apps_web_src_lib_uploads_ts",
       "_tgt": "uploads_uploadposter",
@@ -11757,12 +11820,24 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\uploads.ts",
-      "source_location": "L30",
+      "source_location": "L32",
       "weight": 1.0,
       "_src": "apps_web_src_lib_uploads_ts",
       "_tgt": "uploads_uploaddocuments",
       "source": "apps_web_src_lib_uploads_ts",
       "target": "uploads_uploaddocuments",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\web\\src\\lib\\uploads.ts",
+      "source_location": "L52",
+      "weight": 1.0,
+      "_src": "apps_web_src_lib_uploads_ts",
+      "_tgt": "uploads_uploadreviewphotos",
+      "source": "apps_web_src_lib_uploads_ts",
+      "target": "uploads_uploadreviewphotos",
       "confidence_score": 1.0
     },
     {
@@ -11817,7 +11892,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L25",
+      "source_location": "L31",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_eventdetailpage",
@@ -11829,7 +11904,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L65",
+      "source_location": "L71",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_backlink",
@@ -11841,7 +11916,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L79",
+      "source_location": "L85",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_loadingbox",
@@ -11853,7 +11928,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L87",
+      "source_location": "L93",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_notfoundbox",
@@ -11865,7 +11940,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L98",
+      "source_location": "L104",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_errorbox",
@@ -11877,7 +11952,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L221",
+      "source_location": "L227",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_oncreated",
@@ -11889,7 +11964,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L293",
+      "source_location": "L301",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_submit",
@@ -11901,7 +11976,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L299",
+      "source_location": "L320",
       "weight": 1.0,
       "_src": "eventdetailpage_submit",
       "_tgt": "eventdetailpage_oncreated",
@@ -11913,7 +11988,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\UploaderNewEventPage.tsx",
-      "source_location": "L137",
+      "source_location": "L138",
       "weight": 1.0,
       "_src": "apps_web_src_pages_uploaderneweventpage_tsx",
       "_tgt": "uploaderneweventpage_toggletouploader",
@@ -11925,7 +12000,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\UploaderNewEventPage.tsx",
-      "source_location": "L150",
+      "source_location": "L151",
       "weight": 1.0,
       "_src": "apps_web_src_pages_uploaderneweventpage_tsx",
       "_tgt": "uploaderneweventpage_submit",
