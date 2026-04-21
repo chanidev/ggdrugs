@@ -19,7 +19,7 @@ export function Poster({ event }: { event: DisplayEvent }) {
             (e.currentTarget as HTMLImageElement).style.display = 'none';
           }}
         />
-        <span className="absolute inset-x-0 bottom-0 bg-[rgba(26,26,26,0.65)] px-1 py-[2px] text-center font-mono text-[9px] tracking-[0.04em] text-white">
+        <span className="absolute inset-x-0 bottom-0 bg-[color-mix(in_srgb,var(--color-text)_65%,transparent)] px-1 py-[2px] text-center font-mono text-[9px] tracking-[0.04em] text-white">
           {event.categoryLabel}
         </span>
       </div>

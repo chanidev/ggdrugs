@@ -346,13 +346,15 @@ function LoadingNotice() {
 }
 
 function NoticeBox({ tone, children }: { tone: 'warning' | 'error'; children: React.ReactNode }) {
-  const bg =
+  // tone 은 tint 된 배경 + 전체 1px 경계로만 표현. 사이드 스트라이프 금지 (DESIGN.md §Component tokens,
+  // impeccable <absolute_bans>).
+  const toneClass =
     tone === 'warning'
-      ? 'bg-(--color-warning)/10 border-(--color-warning)'
-      : 'bg-(--color-error)/10 border-(--color-error)';
+      ? 'border-(--color-warning)/40 bg-(--color-warning)/10'
+      : 'border-(--color-error)/40 bg-(--color-error)/10';
   return (
     <div className="flex h-full items-center justify-center bg-(--color-surface-alt) p-8">
-      <div className={`max-w-md rounded-(--radius-lg) border-l-4 bg-(--color-surface) p-6 shadow-(--shadow-md) ${bg}`}>
+      <div className={`max-w-md rounded-(--radius-lg) border p-6 shadow-(--shadow-md) ${toneClass}`}>
         {children}
       </div>
     </div>

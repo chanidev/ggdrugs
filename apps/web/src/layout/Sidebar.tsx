@@ -70,21 +70,17 @@ function RailRow({
   active: boolean;
   onClick: () => void;
 }) {
+  // Active 표시는 (1) row bg tint + (2) icon 색 반전 + (3) title 색 accent 세 가지로 충분.
+  // 왼쪽 3px 스트라이프는 impeccable <absolute_bans> 의 side-stripe 패턴 — 제거.
   return (
     <button
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`relative flex w-full items-center gap-3 px-5 py-4 text-left transition-colors ${
+      className={`flex w-full items-center gap-3 px-5 py-4 text-left transition-colors ${
         active ? 'bg-(--color-accent-bg)' : 'hover:bg-(--color-surface-alt)'
       }`}
     >
-      {active && (
-        <span
-          aria-hidden
-          className="absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-r-[2px] bg-(--color-accent)"
-        />
-      )}
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-(--radius-md) transition-colors ${
           active

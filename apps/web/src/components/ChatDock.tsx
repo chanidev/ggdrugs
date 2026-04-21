@@ -92,10 +92,8 @@ export function ChatDock({
             </div>
           )}
           <div className="mb-2 flex items-center gap-2 text-[12px] text-(--color-text-subtle)">
-            <span
-              aria-hidden
-              className="h-1.5 w-1.5 rounded-full bg-(--color-accent) [animation:alle-pulse_1.6s_cubic-bezier(0,0,0.2,1)_infinite]"
-            />
+            {/* static dot — handle pulse 와 중복되지 않도록. DESIGN.md §Motion signature 단일 지점 규칙. */}
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
             <span>자연어로 질문하면 5개 필터로 자동 매핑해 드려요</span>
           </div>
           <div className="mb-2.5 flex flex-wrap gap-1.5">
