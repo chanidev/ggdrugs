@@ -482,3 +482,92 @@ export async function putAdminEventVibes(
     vibes: { vibeId: string; name: string; group: string }[];
   };
 }
+
+// =============================================================
+// Admin — A_700 part 2: 업로더 승급 심사
+// =============================================================
+
+export type UploaderApprovalStatus =
+  | 'pending'
+  | 'approved'
+  | 'revision_requested'
+  | 'rejected';
+
+export interface AdminUploaderItem {
+  uploaderId: string;
+  organizationName: string;
+  contactPhone: string;
+  contactEmail: string;
+  approvalStatus: UploaderApprovalStatus;
+  approvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    userId: string;
+    nickname: string;
+    authProvider: string;
+    activeRole: string;
+  };
+}
+
+export interface AdminUploadersResponse {
+  page: number;
+  limit: number;
+  total: number;
+  byStatus: Record<UploaderApprovalStatus, number>;
+  items: AdminUploaderItem[];
+}
+
+export async function fetchAdminUploaders(
+  query: {
+    status?: UploaderApprovalStatus | 'any';
+    page?: number;
+    limit?: number;
+  } = {},
+  signal?: AbortSignal,
+): Promise<AdminUploadersResponse> {
+  const sp = new URLSearchParams();
+  if (query.status) sp.set('status', query.status);
+  if (query.page) sp.set('page', String(query.page));
+  if (query.limit) sp.set('limit', String(query.limit));
+  const qs = sp.toString();
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(`${BFF_URL}/admin/uploaders${qs ? `?${qs}` : ''}`, init);
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) throw new Error(`GET /admin/uploaders ${res.status}`);
+  return (await res.json()) as AdminUploadersResponse;
+}
+
+export async function decideAdminUploader(
+  uploaderId: string,
+  action: 'approved' | 'revision_requested' | 'rejected',
+): Promise<{
+  uploaderId: string;
+  approvalStatus: UploaderApprovalStatus;
+  approvedAt: string | null;
+  updatedAt: string;
+}> {
+  const res = await fetch(
+    `${BFF_URL}/admin/uploaders/${encodeURIComponent(uploaderId)}/decision`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(
+      `POST /admin/uploaders/${uploaderId}/decision ${res.status}: ${txt.slice(0, 200)}`,
+    );
+  }
+  return (await res.json()) as {
+    uploaderId: string;
+    approvalStatus: UploaderApprovalStatus;
+    approvedAt: string | null;
+    updatedAt: string;
+  };
+}

@@ -1,34 +1,39 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { Header } from '../layout/Header';
 import { PhaseBadge } from '../components/PhaseBadge';
 import { useCurrentUser } from '../lib/auth-context';
 import {
   fetchAdminEvents,
+  fetchAdminUploaders,
   fetchVibes,
   putAdminEventVibes,
+  decideAdminUploader,
   type AdminEventItem,
+  type AdminUploaderItem,
+  type UploaderApprovalStatus,
   type VibeItem,
 } from '../lib/api';
 
 /**
- * A_700 관리자 콘솔 — 이벤트 성향(vibe) 라벨 부여.
+ * A_700 관리자 콘솔 — 탭 2종.
  *
- * 좌측: 이벤트 리스트 (필터: hasVibes=false 기본).
- * 우측: 선택된 이벤트의 vibe 편집 패널 (그룹별 체크박스, 저장).
+ *  1. Events — 이벤트 vibe 라벨 부여 (기존).
+ *  2. Uploaders — 업로더 승급 심사 (A_700 part 2).
  *
  * 인증: /auth/me 의 isAdmin 확인. 서버가 다시 403 하므로 이중 방어.
  */
 
+type AdminTab = 'events' | 'uploaders';
 type HasVibesMode = 'false' | 'true' | 'any';
 
 export function AdminEventsPage() {
   const { user, loading: authLoading } = useCurrentUser();
 
-  if (authLoading) return <Shell>{null}</Shell>;
+  if (authLoading) return <Shell tab="events" onTabChange={() => {}}>{null}</Shell>;
 
   if (!user || !user.isAdmin) {
     return (
-      <Shell>
+      <Shell tab="events" onTabChange={() => {}}>
         <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
           <h1 className="m-0 mb-2 text-[20px] font-bold tracking-[-0.015em]">
             관리자 전용 페이지
@@ -41,14 +46,31 @@ export function AdminEventsPage() {
     );
   }
 
+  return <AdminBody />;
+}
+
+function AdminBody() {
+  const [tab, setTab] = useState<AdminTab>('events');
   return (
-    <Shell>
-      <AdminBody />
+    <Shell tab={tab} onTabChange={setTab}>
+      {tab === 'events' ? <EventsTab /> : <UploadersTab />}
     </Shell>
   );
 }
 
-function Shell({ children }: { children: React.ReactNode }) {
+function Shell({
+  tab,
+  onTabChange,
+  children,
+}: {
+  tab: AdminTab;
+  onTabChange: (t: AdminTab) => void;
+  children: React.ReactNode;
+}) {
+  const TABS: { key: AdminTab; label: string; subtitle: string }[] = [
+    { key: 'events', label: 'Events', subtitle: 'vibe 라벨 부여' },
+    { key: 'uploaders', label: 'Uploaders', subtitle: '업로더 승급 심사' },
+  ];
   return (
     <div className="flex min-h-screen flex-col bg-(--color-surface)">
       <Header />
@@ -57,9 +79,39 @@ function Shell({ children }: { children: React.ReactNode }) {
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
             Admin · A_700
           </p>
-          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">
-            이벤트 성향 라벨 부여
-          </h1>
+          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">관리자 콘솔</h1>
+          {/* Editorial middot 탭 — FullListPanel 과 같은 톤 유지. */}
+          <div
+            role="tablist"
+            aria-label="관리자 탭"
+            className="mt-3 flex flex-wrap items-center gap-y-1"
+          >
+            {TABS.map((t, i) => {
+              const active = tab === t.key;
+              return (
+                <Fragment key={t.key}>
+                  {i > 0 && (
+                    <span aria-hidden className="select-none px-1 text-[12px] text-(--color-text-subtle)">·</span>
+                  )}
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => onTabChange(t.key)}
+                    className={`inline-flex items-center gap-1.5 rounded-(--radius-sm) px-1.5 py-0.5 text-[14px] transition-colors ${
+                      active ? 'text-(--color-accent)' : 'text-(--color-text-muted) hover:text-(--color-text)'
+                    }`}
+                  >
+                    {active && (
+                      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
+                    )}
+                    <span className={active ? 'font-semibold' : 'font-medium'}>{t.label}</span>
+                    <span className="text-[12px] text-(--color-text-subtle)">{t.subtitle}</span>
+                  </button>
+                </Fragment>
+              );
+            })}
+          </div>
         </header>
         {children}
       </main>
@@ -67,7 +119,7 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function AdminBody() {
+function EventsTab() {
   const [hasVibesMode, setHasVibesMode] = useState<HasVibesMode>('false');
   const [q, setQ] = useState('');
   const [qDraft, setQDraft] = useState('');
@@ -426,5 +478,232 @@ function VibeEditor({
         </button>
       </div>
     </div>
+  );
+}
+
+// =============================================================
+// Uploaders Tab — A_700 part 2
+// =============================================================
+
+const UPLOADER_STATUS_LABEL: Record<UploaderApprovalStatus, string> = {
+  pending: '대기',
+  approved: '승인됨',
+  revision_requested: '보완요청',
+  rejected: '반려',
+};
+
+const STATUS_TONE: Record<UploaderApprovalStatus, string> = {
+  pending: 'bg-(--color-warning)/10 text-(--color-warning)',
+  approved: 'bg-(--color-success)/10 text-(--color-success)',
+  revision_requested: 'bg-(--color-warning)/10 text-(--color-warning)',
+  rejected: 'bg-(--color-error)/10 text-(--color-error)',
+};
+
+function UploadersTab() {
+  const [statusFilter, setStatusFilter] = useState<UploaderApprovalStatus | 'any'>('pending');
+  const [page, setPage] = useState(1);
+  const [limit] = useState(20);
+
+  const [items, setItems] = useState<AdminUploaderItem[]>([]);
+  const [total, setTotal] = useState(0);
+  const [byStatus, setByStatus] = useState<Record<UploaderApprovalStatus, number>>({
+    pending: 0,
+    approved: 0,
+    revision_requested: 0,
+    rejected: 0,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<string | null>(null); // "uploaderId:action"
+
+  const reload = useCallback(() => {
+    const ctrl = new AbortController();
+    setLoading(true);
+    setError(null);
+    fetchAdminUploaders({ status: statusFilter, page, limit }, ctrl.signal)
+      .then((r) => {
+        setItems(r.items);
+        setTotal(r.total);
+        setByStatus(r.byStatus);
+      })
+      .catch((e: unknown) => {
+        if ((e as { name?: string }).name === 'AbortError') return;
+        setError(e instanceof Error ? e.message : 'unknown error');
+      })
+      .finally(() => setLoading(false));
+    return () => ctrl.abort();
+  }, [statusFilter, page, limit]);
+
+  useEffect(() => {
+    return reload();
+  }, [reload]);
+
+  const decide = async (
+    uploaderId: string,
+    action: 'approved' | 'revision_requested' | 'rejected',
+  ) => {
+    const key = `${uploaderId}:${action}`;
+    setPendingAction(key);
+    try {
+      await decideAdminUploader(uploaderId, action);
+      // 리스트 리로드 — status 필터가 pending 이면 처리된 행이 사라짐.
+      reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'decision failed');
+    } finally {
+      setPendingAction(null);
+    }
+  };
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
+  const FILTERS: { key: UploaderApprovalStatus | 'any'; label: string }[] = [
+    { key: 'pending', label: `대기 ${byStatus.pending}` },
+    { key: 'revision_requested', label: `보완요청 ${byStatus.revision_requested}` },
+    { key: 'approved', label: `승인됨 ${byStatus.approved}` },
+    { key: 'rejected', label: `반려 ${byStatus.rejected}` },
+    { key: 'any', label: '전체' },
+  ];
+
+  return (
+    <section>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <div className="inline-flex flex-wrap rounded-(--radius-md) border border-(--color-border) p-0.5">
+          {FILTERS.map((opt) => {
+            const active = statusFilter === opt.key;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                onClick={() => {
+                  setPage(1);
+                  setStatusFilter(opt.key);
+                }}
+                className={`h-8 rounded-[6px] px-3 text-[13px] font-medium transition-colors ${
+                  active
+                    ? 'bg-(--color-accent) text-white'
+                    : 'text-(--color-text-muted) hover:text-(--color-text)'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
+        <span className="ml-auto text-[12px] text-(--color-text-subtle)">
+          {total.toLocaleString()}건
+        </span>
+      </div>
+
+      {error && (
+        <div className="mb-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
+          불러오기 실패: {error}
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
+        {loading && items.length === 0 ? (
+          <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+        ) : items.length === 0 ? (
+          <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
+            {statusFilter === 'pending' ? '대기 중인 승급 신청이 없어요.' : '결과 없음'}
+          </div>
+        ) : (
+          <ul className="divide-y divide-(--color-border)">
+            {items.map((u) => (
+              <li key={u.uploaderId} className="p-4">
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex shrink-0 items-center rounded-(--radius-sm) px-2 py-[2px] text-[11px] font-semibold tracking-[0.02em] ${
+                          STATUS_TONE[u.approvalStatus]
+                        }`}
+                      >
+                        {UPLOADER_STATUS_LABEL[u.approvalStatus]}
+                      </span>
+                      <span className="text-[12px] text-(--color-text-subtle)">
+                        uploader_id={u.uploaderId} · user_id={u.user.userId} ·{' '}
+                        {u.user.authProvider}
+                      </span>
+                    </div>
+                    <h3 className="mt-1 text-[15px] font-semibold tracking-[-0.01em]">
+                      {u.organizationName}
+                    </h3>
+                    <dl className="mt-1 grid grid-cols-[72px_1fr] gap-x-3 gap-y-0.5 text-[12px]">
+                      <dt className="text-(--color-text-subtle)">닉네임</dt>
+                      <dd className="m-0 text-(--color-text)">{u.user.nickname}</dd>
+                      <dt className="text-(--color-text-subtle)">이메일</dt>
+                      <dd className="m-0 text-(--color-text)">{u.contactEmail}</dd>
+                      <dt className="text-(--color-text-subtle)">연락처</dt>
+                      <dd className="m-0 tabular text-(--color-text)">{u.contactPhone}</dd>
+                      <dt className="text-(--color-text-subtle)">신청</dt>
+                      <dd className="m-0 tabular text-(--color-text-muted)">
+                        {u.createdAt.slice(0, 19).replace('T', ' ')}
+                      </dd>
+                    </dl>
+                  </div>
+                  {(u.approvalStatus === 'pending' ||
+                    u.approvalStatus === 'revision_requested') && (
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => decide(u.uploaderId, 'approved')}
+                        disabled={pendingAction === `${u.uploaderId}:approved`}
+                        className="inline-flex h-8 w-24 items-center justify-center rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:opacity-40"
+                      >
+                        {pendingAction === `${u.uploaderId}:approved` ? '…' : '승인'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => decide(u.uploaderId, 'revision_requested')}
+                        disabled={pendingAction === `${u.uploaderId}:revision_requested`}
+                        className="inline-flex h-8 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text) transition-colors hover:border-(--color-border-hover) disabled:opacity-40"
+                      >
+                        {pendingAction === `${u.uploaderId}:revision_requested`
+                          ? '…'
+                          : '보완요청'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => decide(u.uploaderId, 'rejected')}
+                        disabled={pendingAction === `${u.uploaderId}:rejected`}
+                        className="inline-flex h-8 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[13px] font-medium text-(--color-error) transition-colors hover:bg-(--color-error)/10 disabled:opacity-40"
+                      >
+                        {pendingAction === `${u.uploaderId}:rejected` ? '…' : '반려'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="mt-4 flex items-center justify-center gap-2">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
+          >
+            이전
+          </button>
+          <span className="text-[13px] text-(--color-text-muted)">
+            {page} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
+          >
+            다음
+          </button>
+        </div>
+      )}
+    </section>
   );
 }
