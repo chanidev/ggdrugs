@@ -10,6 +10,7 @@
  *   `... run-ingest.ts tourapi 20240101`     (TourAPI 전용 backfill — 해당 날짜 이후 전체)
  *   `... run-ingest.ts seoul-culture`
  *   `... run-ingest.ts kcisa`
+ *   `... run-ingest.ts news-naver`           (approved 이벤트 → 네이버 뉴스 검색 매핑)
  *
  * 주기적 배치는 forward-only (오늘 이후) — 이미 종료된 이벤트는 skip.
  * 초기 backfill 은 TourAPI 에 YYYYMMDD 전달로 재수행 가능.
@@ -17,6 +18,7 @@
 import { runTourapiIngest } from './tourapi-ingest.js';
 import { runSeoulCultureIngest } from './seoul-culture-ingest.js';
 import { runKcisaIngest } from './kcisa-ingest.js';
+import { runNewsNaverIngest } from './news-naver-ingest.js';
 import { runBackfillSummaries } from './summarize-events.js';
 import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
@@ -36,6 +38,11 @@ async function main() {
   if (which === 'seoul-culture' || which === 'seoul' || which === 'all')
     results['seoul-culture'] = await runSeoulCultureIngest({ includePast: seoulBackfill });
   if (which === 'kcisa' || which === 'all') results.kcisa = await runKcisaIngest();
+  // news-naver 는 이벤트 ingest 와 독립. 'all' 에 기본 포함하지 않음 — 이벤트 테이블이
+  // 비어있는 dev 첫 기동에서 불필요한 네이버 호출을 피하기 위함. 명시 호출만.
+  if (which === 'news-naver' || which === 'news') {
+    results['news-naver'] = await runNewsNaverIngest({});
+  }
 
   logger.info(results, 'manual ingest completed');
 

@@ -56,6 +56,10 @@ export const externalApiSchema = z.object({
   SEOUL_OPEN_API_KEY: optionalKey,
   /** 한국문화정보원(KCISA) 공연전시정보 API 키. kcisa.kr 발급(URL-인코딩됨). */
   KCISA_API_KEY: optionalKey,
+  /** 네이버 개발자센터 애플리케이션 Client ID — 뉴스 검색 API. 이벤트 관련 기사 매칭에 사용. */
+  NAVER_CLIENT_ID: optionalKey,
+  /** 네이버 개발자센터 애플리케이션 Client Secret. */
+  NAVER_CLIENT_SECRET: optionalKey,
 });
 
 export const openaiSchema = z.object({
