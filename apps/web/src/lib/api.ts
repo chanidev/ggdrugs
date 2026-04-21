@@ -1305,6 +1305,44 @@ export interface AdminAuditLogResponse {
   items: AdminAuditLogItem[];
 }
 
+// =============================================================
+// A_400 — 이벤트 관련 기사
+// =============================================================
+
+export interface EventArticleItem {
+  mappingId: string;
+  articleId: string;
+  title: string;
+  sourceName: string;
+  authorName: string | null;
+  articleCategory: string | null;
+  originalUrl: string;
+  summary: string | null;
+  publishedAt: string | null;
+  relevanceScore: number;
+  matchedAt: string;
+}
+
+export async function fetchEventArticles(
+  eventId: string,
+  limit = 5,
+  signal?: AbortSignal,
+): Promise<EventArticleItem[]> {
+  const init: RequestInit = { method: 'GET' };
+  if (signal) init.signal = signal;
+  const res = await fetch(
+    `${BFF_URL}/events/${encodeURIComponent(eventId)}/articles?limit=${limit}`,
+    withCredentials(init),
+  );
+  if (res.status === 404) return [];
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`GET /events/${eventId}/articles ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as { items: EventArticleItem[] };
+  return data.items;
+}
+
 export async function fetchAdminAuditLogs(
   q: { page?: number; limit?: number; action?: 'any' | 'approved' | 'revision_requested' | 'rejected'; eventId?: string; adminId?: string },
   signal?: AbortSignal,

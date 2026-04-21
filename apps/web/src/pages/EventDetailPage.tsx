@@ -3,10 +3,12 @@ import { Link, useParams } from 'react-router';
 import { Map, MapMarker, useKakaoLoader } from 'react-kakao-maps-sdk';
 import {
   fetchEventDetail,
+  fetchEventArticles,
   fetchEventReviews,
   createEventReview,
   type BffEventDetail,
   type BffReviewItem,
+  type EventArticleItem,
   type EventReviewsResponse,
 } from '../lib/api';
 import { Header } from '../layout/Header';
@@ -184,6 +186,8 @@ function DetailBody({ detail }: { detail: BffEventDetail }) {
       )}
 
       <MiniMap detail={detail} />
+
+      <ArticlesSection eventId={detail.eventId} />
 
       <ReviewsSection eventId={detail.eventId} phase={detail.phase} endDate={detail.endDate} />
 
@@ -644,6 +648,80 @@ function Provenance({ detail }: { detail: BffEventDetail }) {
       <div className="mt-0.5 tabular font-mono">
         최초 수집 {detail.createdAt.slice(0, 10)} · 최근 업데이트 {detail.updatedAt.slice(0, 10)}
       </div>
+    </section>
+  );
+}
+
+/**
+ * A_400 관련 기사 섹션 — event_article_mappings 에서 relevance 순 top-5.
+ * 매핑 데이터가 없으면 섹션을 아예 렌더하지 않는다 (공간 낭비 방지).
+ */
+function ArticlesSection({ eventId }: { eventId: string }) {
+  const [items, setItems] = useState<EventArticleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    setLoading(true);
+    setError(null);
+    fetchEventArticles(eventId, 5, ctrl.signal)
+      .then((r) => setItems(r))
+      .catch((e) => {
+        if ((e as { name?: string }).name === 'AbortError') return;
+        setError(e instanceof Error ? e.message : 'unknown');
+      })
+      .finally(() => setLoading(false));
+    return () => ctrl.abort();
+  }, [eventId]);
+
+  // 로딩 중이거나 매핑이 없으면 섹션 자체를 숨김.
+  if (loading || (items.length === 0 && !error)) return null;
+
+  return (
+    <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
+      <header className="mb-4 flex items-baseline justify-between">
+        <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">관련 기사</h2>
+        <span className="text-[11px] text-(--color-text-subtle)">A_400 · 자동 매칭</span>
+      </header>
+      {error ? (
+        <div className="text-[13px] text-(--color-error)">관련 기사를 불러오지 못했어요.</div>
+      ) : (
+        <ul className="flex flex-col divide-y divide-(--color-border)">
+          {items.map((a) => (
+            <li key={a.mappingId} className="py-3 first:pt-0 last:pb-0">
+              <a
+                href={a.originalUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col gap-1 text-(--color-text) hover:text-(--color-accent)"
+              >
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
+                    {a.sourceName}
+                  </span>
+                  {a.publishedAt && (
+                    <span className="tabular text-[11px] text-(--color-text-subtle)">
+                      {a.publishedAt.slice(0, 10)}
+                    </span>
+                  )}
+                  <span className="ml-auto text-[11px] text-(--color-text-subtle) group-hover:text-(--color-accent)">
+                    원문 열기 ↗
+                  </span>
+                </div>
+                <h3 className="m-0 text-[15px] font-semibold tracking-[-0.01em] group-hover:underline">
+                  {a.title}
+                </h3>
+                {a.summary && (
+                  <p className="m-0 line-clamp-2 text-[13px] text-(--color-text-muted)">
+                    {a.summary}
+                  </p>
+                )}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }
