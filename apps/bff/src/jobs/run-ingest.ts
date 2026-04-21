@@ -19,6 +19,7 @@ import { runTourapiIngest } from './tourapi-ingest.js';
 import { runSeoulCultureIngest } from './seoul-culture-ingest.js';
 import { runKcisaIngest } from './kcisa-ingest.js';
 import { runNewsNaverIngest } from './news-naver-ingest.js';
+import { runEmbedEvents } from './embed-events.js';
 import { runBackfillSummaries } from './summarize-events.js';
 import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
@@ -49,6 +50,13 @@ async function main() {
     if (args.includes('--all')) opts.eventLimit = 'all';
     if (args.includes('--missing')) opts.onlyMissing = true;
     results['news-naver'] = await runNewsNaverIngest(opts);
+  }
+  if (which === 'embed-events' || which === 'embed') {
+    const args = process.argv.slice(2);
+    const opts: { eventLimit?: number | 'all'; onlyMissing?: boolean } = {};
+    if (args.includes('--all')) opts.eventLimit = 'all';
+    if (args.includes('--missing')) opts.onlyMissing = true;
+    results['embed-events'] = await runEmbedEvents(opts);
   }
 
   logger.info(results, 'manual ingest completed');

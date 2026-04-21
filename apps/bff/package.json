@@ -22,6 +22,9 @@
     "ingest:news": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts news-naver",
     "ingest:news:all": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts news-naver --all",
     "ingest:news:missing": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts news-naver --missing",
+    "embed:events": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events",
+    "embed:events:all": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events --all",
+    "embed:events:missing": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events --missing",
     "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts",
     "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
     "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"
