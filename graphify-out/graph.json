@@ -97,7 +97,7 @@
       "source_file": "apps\\bff\\src\\app.ts",
       "source_location": "L1",
       "id": "apps_bff_src_app_ts",
-      "community": 5,
+      "community": 6,
       "norm_label": "app.ts"
     },
     {
@@ -106,7 +106,7 @@
       "source_file": "apps\\bff\\src\\app.ts",
       "source_location": "L29",
       "id": "app_cors",
-      "community": 5,
+      "community": 6,
       "norm_label": "cors()"
     },
     {
@@ -115,7 +115,7 @@
       "source_file": "apps\\bff\\src\\app.ts",
       "source_location": "L49",
       "id": "app_createapp",
-      "community": 5,
+      "community": 6,
       "norm_label": "createapp()"
     },
     {
@@ -128,7 +128,7 @@
       "author": null,
       "contributor": null,
       "id": "env_bffSchema",
-      "community": 55,
+      "community": 57,
       "norm_label": "bff env schema (merged)"
     },
     {
@@ -141,8 +141,44 @@
       "author": null,
       "contributor": null,
       "id": "env_bffExport",
-      "community": 21,
+      "community": 20,
       "norm_label": "env (bffenv instance)"
+    },
+    {
+      "label": "llm-client.ts",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L1",
+      "id": "apps_bff_src_llm_client_ts",
+      "community": 27,
+      "norm_label": "llm-client.ts"
+    },
+    {
+      "label": "isRetriable()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L16",
+      "id": "llm_client_isretriable",
+      "community": 27,
+      "norm_label": "isretriable()"
+    },
+    {
+      "label": "sleep()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L20",
+      "id": "llm_client_sleep",
+      "community": 27,
+      "norm_label": "sleep()"
+    },
+    {
+      "label": "callLlm()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L24",
+      "id": "llm_client_callllm",
+      "community": 27,
+      "norm_label": "callllm()"
     },
     {
       "label": "pino logger (env-aware)",
@@ -154,7 +190,7 @@
       "author": null,
       "contributor": null,
       "id": "logger_pino",
-      "community": 21,
+      "community": 20,
       "norm_label": "pino logger (env-aware)"
     },
     {
@@ -167,7 +203,7 @@
       "author": null,
       "contributor": null,
       "id": "prisma_client",
-      "community": 21,
+      "community": 20,
       "norm_label": "prisma (prismaclient singleton)"
     },
     {
@@ -176,7 +212,7 @@
       "source_file": "apps\\bff\\src\\server.ts",
       "source_location": "L1",
       "id": "apps_bff_src_server_ts",
-      "community": 2,
+      "community": 6,
       "norm_label": "server.ts"
     },
     {
@@ -185,8 +221,44 @@
       "source_file": "apps\\bff\\src\\server.ts",
       "source_location": "L18",
       "id": "server_shutdown",
-      "community": 2,
+      "community": 6,
       "norm_label": "shutdown()"
+    },
+    {
+      "label": "eval-summaries.ts",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L1",
+      "id": "apps_bff_src_jobs_eval_summaries_ts",
+      "community": 28,
+      "norm_label": "eval-summaries.ts"
+    },
+    {
+      "label": "parseArgs()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L23",
+      "id": "eval_summaries_parseargs",
+      "community": 28,
+      "norm_label": "parseargs()"
+    },
+    {
+      "label": "excerpt()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L37",
+      "id": "eval_summaries_excerpt",
+      "community": 28,
+      "norm_label": "excerpt()"
+    },
+    {
+      "label": "main()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L43",
+      "id": "eval_summaries_main",
+      "community": 28,
+      "norm_label": "main()"
     },
     {
       "label": "ingest-common.ts",
@@ -509,25 +581,34 @@
       "source_file": "apps\\bff\\src\\jobs\\summarize-events.ts",
       "source_location": "L1",
       "id": "apps_bff_src_jobs_summarize_events_ts",
-      "community": 30,
+      "community": 29,
       "norm_label": "summarize-events.ts"
+    },
+    {
+      "label": "descriptionMd5()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\jobs\\summarize-events.ts",
+      "source_location": "L18",
+      "id": "summarize_events_descriptionmd5",
+      "community": 29,
+      "norm_label": "descriptionmd5()"
     },
     {
       "label": "summarizeOne()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\jobs\\summarize-events.ts",
-      "source_location": "L21",
+      "source_location": "L31",
       "id": "summarize_events_summarizeone",
-      "community": 30,
+      "community": 29,
       "norm_label": "summarizeone()"
     },
     {
       "label": "runBackfillSummaries()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\jobs\\summarize-events.ts",
-      "source_location": "L42",
+      "source_location": "L47",
       "id": "summarize_events_runbackfillsummaries",
-      "community": 30,
+      "community": 29,
       "norm_label": "runbackfillsummaries()"
     },
     {
@@ -572,7 +653,7 @@
       "source_file": "apps\\bff\\src\\middleware\\require-auth.ts",
       "source_location": "L1",
       "id": "apps_bff_src_middleware_require_auth_ts",
-      "community": 5,
+      "community": 6,
       "norm_label": "require-auth.ts"
     },
     {
@@ -581,7 +662,7 @@
       "source_file": "apps\\bff\\src\\middleware\\require-auth.ts",
       "source_location": "L17",
       "id": "require_auth_parsesid",
-      "community": 5,
+      "community": 6,
       "norm_label": "parsesid()"
     },
     {
@@ -590,7 +671,7 @@
       "source_file": "apps\\bff\\src\\middleware\\require-auth.ts",
       "source_location": "L31",
       "id": "require_auth_resolveauth",
-      "community": 5,
+      "community": 6,
       "norm_label": "resolveauth()"
     },
     {
@@ -599,7 +680,7 @@
       "source_file": "apps\\bff\\src\\middleware\\require-auth.ts",
       "source_location": "L61",
       "id": "require_auth_requireauth",
-      "community": 5,
+      "community": 6,
       "norm_label": "requireauth()"
     },
     {
@@ -608,7 +689,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_auth_ts",
-      "community": 5,
+      "community": 10,
       "norm_label": "auth.ts"
     },
     {
@@ -617,7 +698,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L25",
       "id": "auth_makesessionid",
-      "community": 5,
+      "community": 10,
       "norm_label": "makesessionid()"
     },
     {
@@ -626,7 +707,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L29",
       "id": "auth_setsessioncookie",
-      "community": 5,
+      "community": 10,
       "norm_label": "setsessioncookie()"
     },
     {
@@ -635,7 +716,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L43",
       "id": "auth_clearsessioncookie",
-      "community": 5,
+      "community": 10,
       "norm_label": "clearsessioncookie()"
     },
     {
@@ -644,7 +725,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L50",
       "id": "auth_parsecookievalue",
-      "community": 5,
+      "community": 10,
       "norm_label": "parsecookievalue()"
     },
     {
@@ -653,7 +734,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L60",
       "id": "auth_parsesid",
-      "community": 5,
+      "community": 10,
       "norm_label": "parsesid()"
     },
     {
@@ -662,7 +743,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L64",
       "id": "auth_googleredirecturi",
-      "community": 5,
+      "community": 10,
       "norm_label": "googleredirecturi()"
     },
     {
@@ -671,7 +752,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L69",
       "id": "auth_kakaoredirecturi",
-      "community": 5,
+      "community": 10,
       "norm_label": "kakaoredirecturi()"
     },
     {
@@ -680,7 +761,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L73",
       "id": "auth_issuesessionandredirect",
-      "community": 5,
+      "community": 10,
       "norm_label": "issuesessionandredirect()"
     },
     {
@@ -689,7 +770,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L91",
       "id": "auth_devlogin",
-      "community": 5,
+      "community": 10,
       "norm_label": "devlogin()"
     },
     {
@@ -698,7 +779,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L138",
       "id": "auth_me",
-      "community": 5,
+      "community": 10,
       "norm_label": "me()"
     },
     {
@@ -707,7 +788,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L182",
       "id": "auth_startgoogle",
-      "community": 5,
+      "community": 10,
       "norm_label": "startgoogle()"
     },
     {
@@ -716,7 +797,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L232",
       "id": "auth_googlecallback",
-      "community": 5,
+      "community": 10,
       "norm_label": "googlecallback()"
     },
     {
@@ -725,7 +806,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L316",
       "id": "auth_startkakao",
-      "community": 5,
+      "community": 10,
       "norm_label": "startkakao()"
     },
     {
@@ -734,7 +815,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L362",
       "id": "auth_kakaocallback",
-      "community": 5,
+      "community": 10,
       "norm_label": "kakaocallback()"
     },
     {
@@ -743,7 +824,7 @@
       "source_file": "apps\\bff\\src\\routes\\auth.ts",
       "source_location": "L434",
       "id": "auth_logout",
-      "community": 5,
+      "community": 10,
       "norm_label": "logout()"
     },
     {
@@ -752,7 +833,7 @@
       "source_file": "apps\\bff\\src\\routes\\bookmarks.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_bookmarks_ts",
-      "community": 16,
+      "community": 18,
       "norm_label": "bookmarks.ts"
     },
     {
@@ -761,7 +842,7 @@
       "source_file": "apps\\bff\\src\\routes\\bookmarks.ts",
       "source_location": "L16",
       "id": "bookmarks_parseeventid",
-      "community": 16,
+      "community": 18,
       "norm_label": "parseeventid()"
     },
     {
@@ -770,7 +851,7 @@
       "source_file": "apps\\bff\\src\\routes\\bookmarks.ts",
       "source_location": "L27",
       "id": "bookmarks_addbookmark",
-      "community": 16,
+      "community": 18,
       "norm_label": "addbookmark()"
     },
     {
@@ -779,7 +860,7 @@
       "source_file": "apps\\bff\\src\\routes\\bookmarks.ts",
       "source_location": "L67",
       "id": "bookmarks_removebookmark",
-      "community": 16,
+      "community": 18,
       "norm_label": "removebookmark()"
     },
     {
@@ -788,7 +869,7 @@
       "source_file": "apps\\bff\\src\\routes\\bookmarks.ts",
       "source_location": "L91",
       "id": "bookmarks_listmyreviews",
-      "community": 16,
+      "community": 18,
       "norm_label": "listmyreviews()"
     },
     {
@@ -797,7 +878,7 @@
       "source_file": "apps\\bff\\src\\routes\\bookmarks.ts",
       "source_location": "L150",
       "id": "bookmarks_listmybookmarks",
-      "community": 16,
+      "community": 18,
       "norm_label": "listmybookmarks()"
     },
     {
@@ -806,7 +887,7 @@
       "source_file": "apps\\bff\\src\\routes\\bookmarks.ts",
       "source_location": "L241",
       "id": "bookmarks_parseintclamp",
-      "community": 16,
+      "community": 18,
       "norm_label": "parseintclamp()"
     },
     {
@@ -815,7 +896,7 @@
       "source_file": "apps\\bff\\src\\routes\\chat.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_chat_ts",
-      "community": 5,
+      "community": 6,
       "norm_label": "chat.ts"
     },
     {
@@ -824,7 +905,7 @@
       "source_file": "apps\\bff\\src\\routes\\chat.ts",
       "source_location": "L24",
       "id": "chat_postchat",
-      "community": 5,
+      "community": 6,
       "norm_label": "postchat()"
     },
     {
@@ -833,7 +914,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-detail.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_event_detail_ts",
-      "community": 5,
+      "community": 6,
       "norm_label": "event-detail.ts"
     },
     {
@@ -842,7 +923,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-detail.ts",
       "source_location": "L17",
       "id": "event_detail_geteventdetail",
-      "community": 5,
+      "community": 6,
       "norm_label": "geteventdetail()"
     },
     {
@@ -851,7 +932,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_event_reviews_ts",
-      "community": 17,
+      "community": 6,
       "norm_label": "event-reviews.ts"
     },
     {
@@ -860,43 +941,43 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L9",
       "id": "event_reviews_classifyandstoresentiment",
-      "community": 17,
+      "community": 6,
       "norm_label": "classifyandstoresentiment()"
     },
     {
       "label": "listEventReviews()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L44",
+      "source_location": "L39",
       "id": "event_reviews_listeventreviews",
-      "community": 17,
+      "community": 6,
       "norm_label": "listeventreviews()"
     },
     {
       "label": "parseIntClamp()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L110",
+      "source_location": "L105",
       "id": "event_reviews_parseintclamp",
-      "community": 17,
+      "community": 6,
       "norm_label": "parseintclamp()"
     },
     {
       "label": "createEventReview()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L124",
+      "source_location": "L119",
       "id": "event_reviews_createeventreview",
-      "community": 17,
+      "community": 6,
       "norm_label": "createeventreview()"
     },
     {
       "label": "deleteMyReview()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L233",
+      "source_location": "L228",
       "id": "event_reviews_deletemyreview",
-      "community": 17,
+      "community": 6,
       "norm_label": "deletemyreview()"
     },
     {
@@ -905,7 +986,7 @@
       "source_file": "apps\\bff\\src\\routes\\events-stats.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_events_stats_ts",
-      "community": 5,
+      "community": 6,
       "norm_label": "events-stats.ts"
     },
     {
@@ -914,7 +995,7 @@
       "source_file": "apps\\bff\\src\\routes\\events-stats.ts",
       "source_location": "L18",
       "id": "events_stats_eventsstats",
-      "community": 5,
+      "community": 6,
       "norm_label": "eventsstats()"
     },
     {
@@ -923,7 +1004,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_events_ts",
-      "community": 18,
+      "community": 6,
       "norm_label": "events.ts"
     },
     {
@@ -932,7 +1013,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L43",
       "id": "events_parsecsv",
-      "community": 18,
+      "community": 6,
       "norm_label": "parsecsv()"
     },
     {
@@ -941,7 +1022,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L51",
       "id": "events_parsebigintcsv",
-      "community": 18,
+      "community": 6,
       "norm_label": "parsebigintcsv()"
     },
     {
@@ -950,7 +1031,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L64",
       "id": "events_parseintclamp",
-      "community": 18,
+      "community": 6,
       "norm_label": "parseintclamp()"
     },
     {
@@ -959,7 +1040,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L70",
       "id": "events_parseperiod",
-      "community": 18,
+      "community": 6,
       "norm_label": "parseperiod()"
     },
     {
@@ -968,7 +1049,7 @@
       "source_file": "apps\\bff\\src\\routes\\events.ts",
       "source_location": "L94",
       "id": "events_listevents",
-      "community": 18,
+      "community": 6,
       "norm_label": "listevents()"
     },
     {
@@ -977,7 +1058,7 @@
       "source_file": "apps\\bff\\src\\routes\\lookups.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_lookups_ts",
-      "community": 5,
+      "community": 6,
       "norm_label": "lookups.ts"
     },
     {
@@ -986,7 +1067,7 @@
       "source_file": "apps\\bff\\src\\routes\\lookups.ts",
       "source_location": "L11",
       "id": "lookups_listregions",
-      "community": 5,
+      "community": 6,
       "norm_label": "listregions()"
     },
     {
@@ -995,7 +1076,7 @@
       "source_file": "apps\\bff\\src\\routes\\lookups.ts",
       "source_location": "L41",
       "id": "lookups_listvibes",
-      "community": 5,
+      "community": 6,
       "norm_label": "listvibes()"
     },
     {
@@ -1008,7 +1089,7 @@
       "author": null,
       "contributor": null,
       "id": "vite_config",
-      "community": 56,
+      "community": 58,
       "norm_label": "vite config (react + tailwind + bff proxy)"
     },
     {
@@ -1021,7 +1102,7 @@
       "author": null,
       "contributor": null,
       "id": "vite_apiProxy",
-      "community": 39,
+      "community": 45,
       "norm_label": "/api \u2192 localhost:3000 proxy (rewrite strip)"
     },
     {
@@ -1030,7 +1111,7 @@
       "source_file": "apps\\web\\src\\main.tsx",
       "source_location": "L1",
       "id": "apps_web_src_main_tsx",
-      "community": 57,
+      "community": 59,
       "norm_label": "main.tsx"
     },
     {
@@ -1043,7 +1124,7 @@
       "author": null,
       "contributor": null,
       "id": "web_viteEnv",
-      "community": 58,
+      "community": 60,
       "norm_label": "vite_kakao_map_js_key env typing"
     },
     {
@@ -1052,7 +1133,7 @@
       "source_file": "apps\\web\\src\\components\\BookmarkButton.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_bookmarkbutton_tsx",
-      "community": 40,
+      "community": 41,
       "norm_label": "bookmarkbutton.tsx"
     },
     {
@@ -1061,7 +1142,7 @@
       "source_file": "apps\\web\\src\\components\\BookmarkButton.tsx",
       "source_location": "L14",
       "id": "bookmarkbutton_bookmarkbutton",
-      "community": 40,
+      "community": 41,
       "norm_label": "bookmarkbutton()"
     },
     {
@@ -1070,7 +1151,7 @@
       "source_file": "apps\\web\\src\\components\\ChatDock.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_chatdock_tsx",
-      "community": 41,
+      "community": 42,
       "norm_label": "chatdock.tsx"
     },
     {
@@ -1079,7 +1160,7 @@
       "source_file": "apps\\web\\src\\components\\ChatDock.tsx",
       "source_location": "L19",
       "id": "chatdock_chatdock",
-      "community": 41,
+      "community": 42,
       "norm_label": "chatdock()"
     },
     {
@@ -1088,7 +1169,7 @@
       "source_file": "apps\\web\\src\\components\\ChatHelpPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_chathelppanel_tsx",
-      "community": 42,
+      "community": 43,
       "norm_label": "chathelppanel.tsx"
     },
     {
@@ -1097,7 +1178,7 @@
       "source_file": "apps\\web\\src\\components\\ChatHelpPanel.tsx",
       "source_location": "L7",
       "id": "chathelppanel_chathelppanel",
-      "community": 42,
+      "community": 43,
       "norm_label": "chathelppanel()"
     },
     {
@@ -1151,7 +1232,7 @@
       "source_file": "apps\\web\\src\\components\\EventList.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_eventlist_tsx",
-      "community": 59,
+      "community": 61,
       "norm_label": "eventlist.tsx"
     },
     {
@@ -1160,7 +1241,7 @@
       "source_file": "apps\\web\\src\\components\\EventSummaryPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_eventsummarypanel_tsx",
-      "community": 60,
+      "community": 62,
       "norm_label": "eventsummarypanel.tsx"
     },
     {
@@ -1169,7 +1250,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_filtersearchpanel_tsx",
-      "community": 19,
+      "community": 21,
       "norm_label": "filtersearchpanel.tsx"
     },
     {
@@ -1178,7 +1259,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L30",
       "id": "filtersearchpanel_isodate",
-      "community": 19,
+      "community": 21,
       "norm_label": "isodate()"
     },
     {
@@ -1187,7 +1268,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L37",
       "id": "filtersearchpanel_computeperiodrange",
-      "community": 19,
+      "community": 21,
       "norm_label": "computeperiodrange()"
     },
     {
@@ -1196,7 +1277,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L124",
       "id": "filtersearchpanel_togglein",
-      "community": 19,
+      "community": 21,
       "norm_label": "togglein()"
     },
     {
@@ -1205,7 +1286,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L143",
       "id": "filtersearchpanel_reset",
-      "community": 19,
+      "community": 21,
       "norm_label": "reset()"
     },
     {
@@ -1214,7 +1295,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L154",
       "id": "filtersearchpanel_apply",
-      "community": 19,
+      "community": 21,
       "norm_label": "apply()"
     },
     {
@@ -1223,7 +1304,7 @@
       "source_file": "apps\\web\\src\\components\\FullListPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_fulllistpanel_tsx",
-      "community": 43,
+      "community": 44,
       "norm_label": "fulllistpanel.tsx"
     },
     {
@@ -1232,7 +1313,7 @@
       "source_file": "apps\\web\\src\\components\\FullListPanel.tsx",
       "source_location": "L83",
       "id": "fulllistpanel_phasecount",
-      "community": 43,
+      "community": 44,
       "norm_label": "phasecount()"
     },
     {
@@ -1245,7 +1326,7 @@
       "author": null,
       "contributor": null,
       "id": "web_HealthBadge",
-      "community": 39,
+      "community": 45,
       "norm_label": "healthbadge (bff /api/health poll)"
     },
     {
@@ -1254,7 +1335,7 @@
       "source_file": "apps\\web\\src\\components\\Icon.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_icon_tsx",
-      "community": 44,
+      "community": 46,
       "norm_label": "icon.tsx"
     },
     {
@@ -1263,7 +1344,7 @@
       "source_file": "apps\\web\\src\\components\\Icon.tsx",
       "source_location": "L23",
       "id": "icon_icon",
-      "community": 44,
+      "community": 46,
       "norm_label": "icon()"
     },
     {
@@ -1272,7 +1353,7 @@
       "source_file": "apps\\web\\src\\components\\OverlayPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_overlaypanel_tsx",
-      "community": 45,
+      "community": 47,
       "norm_label": "overlaypanel.tsx"
     },
     {
@@ -1281,7 +1362,7 @@
       "source_file": "apps\\web\\src\\components\\OverlayPanel.tsx",
       "source_location": "L18",
       "id": "overlaypanel_overlaypanel",
-      "community": 45,
+      "community": 47,
       "norm_label": "overlaypanel()"
     },
     {
@@ -1290,7 +1371,7 @@
       "source_file": "apps\\web\\src\\components\\PhaseBadge.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_phasebadge_tsx",
-      "community": 46,
+      "community": 48,
       "norm_label": "phasebadge.tsx"
     },
     {
@@ -1299,7 +1380,7 @@
       "source_file": "apps\\web\\src\\components\\PhaseBadge.tsx",
       "source_location": "L9",
       "id": "phasebadge_phasebadge",
-      "community": 46,
+      "community": 48,
       "norm_label": "phasebadge()"
     },
     {
@@ -1308,7 +1389,7 @@
       "source_file": "apps\\web\\src\\components\\Poster.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_poster_tsx",
-      "community": 61,
+      "community": 63,
       "norm_label": "poster.tsx"
     },
     {
@@ -1317,7 +1398,7 @@
       "source_file": "apps\\web\\src\\components\\SeoulMap.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_seoulmap_tsx",
-      "community": 27,
+      "community": 30,
       "norm_label": "seoulmap.tsx"
     },
     {
@@ -1326,7 +1407,7 @@
       "source_file": "apps\\web\\src\\components\\SeoulMap.tsx",
       "source_location": "L30",
       "id": "seoulmap_geojsontokakaopath",
-      "community": 27,
+      "community": 30,
       "norm_label": "geojsontokakaopath()"
     },
     {
@@ -1335,7 +1416,7 @@
       "source_file": "apps\\web\\src\\components\\SeoulMap.tsx",
       "source_location": "L117",
       "id": "seoulmap_topin",
-      "community": 27,
+      "community": 30,
       "norm_label": "topin()"
     },
     {
@@ -1344,7 +1425,7 @@
       "source_file": "apps\\web\\src\\components\\SeoulMap.tsx",
       "source_location": "L348",
       "id": "seoulmap_noticebox",
-      "community": 27,
+      "community": 30,
       "norm_label": "noticebox()"
     },
     {
@@ -1353,7 +1434,7 @@
       "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_brand_logo_tsx",
-      "community": 31,
+      "community": 33,
       "norm_label": "logo.tsx"
     },
     {
@@ -1362,7 +1443,7 @@
       "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
       "source_location": "L8",
       "id": "logo_logomark",
-      "community": 31,
+      "community": 33,
       "norm_label": "logomark()"
     },
     {
@@ -1371,7 +1452,7 @@
       "source_file": "apps\\web\\src\\components\\brand\\Logo.tsx",
       "source_location": "L45",
       "id": "logo_logolockup",
-      "community": 31,
+      "community": 33,
       "norm_label": "logolockup()"
     },
     {
@@ -1380,7 +1461,7 @@
       "source_file": "apps\\web\\src\\data\\mock.ts",
       "source_location": "L1",
       "id": "apps_web_src_data_mock_ts",
-      "community": 62,
+      "community": 64,
       "norm_label": "mock.ts"
     },
     {
@@ -1434,7 +1515,7 @@
       "source_file": "apps\\web\\src\\layout\\Header.tsx",
       "source_location": "L1",
       "id": "apps_web_src_layout_header_tsx",
-      "community": 47,
+      "community": 49,
       "norm_label": "header.tsx"
     },
     {
@@ -1443,7 +1524,7 @@
       "source_file": "apps\\web\\src\\layout\\Header.tsx",
       "source_location": "L13",
       "id": "header_header",
-      "community": 47,
+      "community": 49,
       "norm_label": "header()"
     },
     {
@@ -1452,7 +1533,7 @@
       "source_file": "apps\\web\\src\\layout\\MobileTabBar.tsx",
       "source_location": "L1",
       "id": "apps_web_src_layout_mobiletabbar_tsx",
-      "community": 32,
+      "community": 34,
       "norm_label": "mobiletabbar.tsx"
     },
     {
@@ -1461,7 +1542,7 @@
       "source_file": "apps\\web\\src\\layout\\MobileTabBar.tsx",
       "source_location": "L10",
       "id": "mobiletabbar_mobiletabbar",
-      "community": 32,
+      "community": 34,
       "norm_label": "mobiletabbar()"
     },
     {
@@ -1470,7 +1551,7 @@
       "source_file": "apps\\web\\src\\layout\\MobileTabBar.tsx",
       "source_location": "L30",
       "id": "mobiletabbar_tabbtn",
-      "community": 32,
+      "community": 34,
       "norm_label": "tabbtn()"
     },
     {
@@ -1479,7 +1560,7 @@
       "source_file": "apps\\web\\src\\layout\\Sidebar.tsx",
       "source_location": "L1",
       "id": "apps_web_src_layout_sidebar_tsx",
-      "community": 33,
+      "community": 35,
       "norm_label": "sidebar.tsx"
     },
     {
@@ -1488,7 +1569,7 @@
       "source_file": "apps\\web\\src\\layout\\Sidebar.tsx",
       "source_location": "L28",
       "id": "sidebar_sidebar",
-      "community": 33,
+      "community": 35,
       "norm_label": "sidebar()"
     },
     {
@@ -1497,7 +1578,7 @@
       "source_file": "apps\\web\\src\\layout\\Sidebar.tsx",
       "source_location": "L126",
       "id": "sidebar_fmt",
-      "community": 33,
+      "community": 35,
       "norm_label": "fmt()"
     },
     {
@@ -1677,7 +1758,7 @@
       "source_file": "apps\\web\\src\\lib\\auth-context.tsx",
       "source_location": "L1",
       "id": "apps_web_src_lib_auth_context_tsx",
-      "community": 34,
+      "community": 36,
       "norm_label": "auth-context.tsx"
     },
     {
@@ -1686,7 +1767,7 @@
       "source_file": "apps\\web\\src\\lib\\auth-context.tsx",
       "source_location": "L26",
       "id": "auth_context_authprovider",
-      "community": 34,
+      "community": 36,
       "norm_label": "authprovider()"
     },
     {
@@ -1695,7 +1776,7 @@
       "source_file": "apps\\web\\src\\lib\\auth-context.tsx",
       "source_location": "L64",
       "id": "auth_context_usecurrentuser",
-      "community": 34,
+      "community": 36,
       "norm_label": "usecurrentuser()"
     },
     {
@@ -1704,7 +1785,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L1",
       "id": "apps_web_src_lib_event_display_ts",
-      "community": 20,
+      "community": 22,
       "norm_label": "event-display.ts"
     },
     {
@@ -1713,7 +1794,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L24",
       "id": "event_display_hashtocolor",
-      "community": 20,
+      "community": 22,
       "norm_label": "hashtocolor()"
     },
     {
@@ -1722,7 +1803,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L30",
       "id": "event_display_formatdaterange",
-      "community": 20,
+      "community": 22,
       "norm_label": "formatdaterange()"
     },
     {
@@ -1731,7 +1812,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L42",
       "id": "event_display_shortregion",
-      "community": 20,
+      "community": 22,
       "norm_label": "shortregion()"
     },
     {
@@ -1740,7 +1821,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L46",
       "id": "event_display_frombffitem",
-      "community": 20,
+      "community": 22,
       "norm_label": "frombffitem()"
     },
     {
@@ -1749,7 +1830,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L61",
       "id": "event_display_frommockevent",
-      "community": 20,
+      "community": 22,
       "norm_label": "frommockevent()"
     },
     {
@@ -1758,7 +1839,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L1",
       "id": "apps_web_src_pages_eventdetailpage_tsx",
-      "community": 15,
+      "community": 17,
       "norm_label": "eventdetailpage.tsx"
     },
     {
@@ -1767,7 +1848,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L25",
       "id": "eventdetailpage_eventdetailpage",
-      "community": 15,
+      "community": 17,
       "norm_label": "eventdetailpage()"
     },
     {
@@ -1776,7 +1857,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L65",
       "id": "eventdetailpage_backlink",
-      "community": 15,
+      "community": 17,
       "norm_label": "backlink()"
     },
     {
@@ -1785,7 +1866,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L79",
       "id": "eventdetailpage_loadingbox",
-      "community": 15,
+      "community": 17,
       "norm_label": "loadingbox()"
     },
     {
@@ -1794,7 +1875,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L87",
       "id": "eventdetailpage_notfoundbox",
-      "community": 15,
+      "community": 17,
       "norm_label": "notfoundbox()"
     },
     {
@@ -1803,7 +1884,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L98",
       "id": "eventdetailpage_errorbox",
-      "community": 15,
+      "community": 17,
       "norm_label": "errorbox()"
     },
     {
@@ -1812,7 +1893,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L221",
       "id": "eventdetailpage_oncreated",
-      "community": 15,
+      "community": 17,
       "norm_label": "oncreated()"
     },
     {
@@ -1821,7 +1902,7 @@
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
       "source_location": "L293",
       "id": "eventdetailpage_submit",
-      "community": 15,
+      "community": 17,
       "norm_label": "submit()"
     },
     {
@@ -1830,7 +1911,7 @@
       "source_file": "apps\\web\\src\\pages\\MyPage.tsx",
       "source_location": "L1",
       "id": "apps_web_src_pages_mypage_tsx",
-      "community": 63,
+      "community": 65,
       "norm_label": "mypage.tsx"
     },
     {
@@ -1843,7 +1924,7 @@
       "author": null,
       "contributor": null,
       "id": "config_loadEnv",
-      "community": 21,
+      "community": 20,
       "norm_label": "loadenv (full validation)"
     },
     {
@@ -1856,7 +1937,7 @@
       "author": null,
       "contributor": null,
       "id": "config_loadPartial",
-      "community": 21,
+      "community": 20,
       "norm_label": "loadpartial (per-service schema)"
     },
     {
@@ -1869,7 +1950,7 @@
       "author": null,
       "contributor": null,
       "id": "config_EnvValidationError",
-      "community": 21,
+      "community": 20,
       "norm_label": "envvalidationerror"
     },
     {
@@ -1878,7 +1959,7 @@
       "source_file": "packages\\config\\src\\schema.ts",
       "source_location": "L1",
       "id": "packages_config_src_schema_ts",
-      "community": 64,
+      "community": 66,
       "norm_label": "schema.ts"
     },
     {
@@ -1894,7 +1975,7 @@
       "label": "ChatMessage",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L51",
+      "source_location": "L53",
       "id": "app_chatmessage",
       "community": 7,
       "norm_label": "chatmessage"
@@ -1912,7 +1993,7 @@
       "label": "ChatRequest",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L56",
+      "source_location": "L58",
       "id": "app_chatrequest",
       "community": 7,
       "norm_label": "chatrequest"
@@ -1921,7 +2002,7 @@
       "label": "SummarizeRequest",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L60",
+      "source_location": "L62",
       "id": "app_summarizerequest",
       "community": 7,
       "norm_label": "summarizerequest"
@@ -1930,7 +2011,7 @@
       "label": "SummarizeResponse",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L68",
+      "source_location": "L70",
       "id": "app_summarizeresponse",
       "community": 7,
       "norm_label": "summarizeresponse"
@@ -1939,7 +2020,7 @@
       "label": "SentimentRequest",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L72",
+      "source_location": "L74",
       "id": "app_sentimentrequest",
       "community": 7,
       "norm_label": "sentimentrequest"
@@ -1948,7 +2029,7 @@
       "label": "SentimentResponse",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L76",
+      "source_location": "L78",
       "id": "app_sentimentresponse",
       "community": 7,
       "norm_label": "sentimentresponse"
@@ -1957,7 +2038,7 @@
       "label": "ChatFilters",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L80",
+      "source_location": "L82",
       "id": "app_chatfilters",
       "community": 7,
       "norm_label": "chatfilters"
@@ -1966,7 +2047,7 @@
       "label": "ChatResponse",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L88",
+      "source_location": "L90",
       "id": "app_chatresponse",
       "community": 7,
       "norm_label": "chatresponse"
@@ -1975,16 +2056,25 @@
       "label": "_stage_label()",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L93",
+      "source_location": "L95",
       "id": "app_stage_label",
       "community": 7,
       "norm_label": "_stage_label()"
     },
     {
+      "label": "_openai_available()",
+      "file_type": "code",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L104",
+      "id": "app_openai_available",
+      "community": 7,
+      "norm_label": "_openai_available()"
+    },
+    {
       "label": "health()",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L99",
+      "source_location": "L110",
       "id": "app_health",
       "community": 7,
       "norm_label": "health()"
@@ -1993,7 +2083,7 @@
       "label": "chat()",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L104",
+      "source_location": "L120",
       "id": "app_chat",
       "community": 7,
       "norm_label": "chat()"
@@ -2002,7 +2092,7 @@
       "label": "_openai_extract()",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L125",
+      "source_location": "L141",
       "id": "app_openai_extract",
       "community": 7,
       "norm_label": "_openai_extract()"
@@ -2011,7 +2101,7 @@
       "label": "summarize()",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L139",
+      "source_location": "L155",
       "id": "app_summarize",
       "community": 7,
       "norm_label": "summarize()"
@@ -2020,7 +2110,7 @@
       "label": "_rule_sentiment()",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L175",
+      "source_location": "L191",
       "id": "app_rule_sentiment",
       "community": 7,
       "norm_label": "_rule_sentiment()"
@@ -2029,7 +2119,7 @@
       "label": "sentiment()",
       "file_type": "code",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L187",
+      "source_location": "L203",
       "id": "app_sentiment",
       "community": 7,
       "norm_label": "sentiment()"
@@ -2039,25 +2129,34 @@
       "file_type": "rationale",
       "source_file": "services\\llm\\app.py",
       "source_location": "L1",
-      "id": "app_rationale_1",
       "community": 7,
-      "norm_label": "alle llm service \u2014 stage 1.5 (multi-turn + vibe \u1106\u1162\u1111\u1175\u11bc, openai \u1109\u1165\u11ab\u1110\u1162\u11a8\u110c\u1165\u11a8 \u110b\u1167\u11ab\u1103\u1169\u11bc \u110c\u116e\u11ab\u1107\u1175).  \u110b\u1175\u11ab\u1110\u1165\u1111\u1166\u110b\u1175\u1109\u1173: p"
+      "norm_label": "alle llm service \u2014 stage 1.5 (multi-turn + vibe \u1106\u1162\u1111\u1175\u11bc, openai \u1109\u1165\u11ab\u1110\u1162\u11a8\u110c\u1165\u11a8 \u110b\u1167\u11ab\u1103\u1169\u11bc \u110c\u116e\u11ab\u1107\u1175).  \u110b\u1175\u11ab\u1110\u1165\u1111\u1166\u110b\u1175\u1109\u1173: p",
+      "id": "app_rationale_1"
     },
     {
-      "label": "\ud604\uc7ac \ud65c\uc131 \uccb4\uc778 \u2014 \ud658\uacbd\ubcc0\uc218\uc5d0 \ub530\ub77c \uacb0\uc815.",
+      "label": "\ud604\uc7ac \ud65c\uc131 \uccb4\uc778 \u2014 \ud658\uacbd\ubcc0\uc218\u00b7\uc608\uc0b0 \uc794\ub7c9\uc5d0 \ub530\ub77c \uacb0\uc815.",
       "file_type": "rationale",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L94",
-      "id": "app_rationale_94",
+      "source_location": "L96",
+      "id": "app_rationale_96",
       "community": 7,
-      "norm_label": "\u1112\u1167\u11ab\u110c\u1162 \u1112\u116a\u11af\u1109\u1165\u11bc \u110e\u1166\u110b\u1175\u11ab \u2014 \u1112\u116a\u11ab\u1100\u1167\u11bc\u1107\u1167\u11ab\u1109\u116e\u110b\u1166 \u1104\u1161\u1105\u1161 \u1100\u1167\u11af\u110c\u1165\u11bc."
+      "norm_label": "\u1112\u1167\u11ab\u110c\u1162 \u1112\u116a\u11af\u1109\u1165\u11bc \u110e\u1166\u110b\u1175\u11ab \u2014 \u1112\u116a\u11ab\u1100\u1167\u11bc\u1107\u1167\u11ab\u1109\u116e\u00b7\u110b\u1168\u1109\u1161\u11ab \u110c\u1161\u11ab\u1105\u1163\u11bc\u110b\u1166 \u1104\u1161\u1105\u1161 \u1100\u1167\u11af\u110c\u1165\u11bc."
+    },
+    {
+      "label": "\ud0a4 \uc788\uace0 \uc77c\uc77c \uc608\uc0b0 \ud55c\ub3c4 \uc804\uc774\uba74 True.",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L105",
+      "id": "app_rationale_105",
+      "community": 7,
+      "norm_label": "\u110f\u1175 \u110b\u1175\u11bb\u1100\u1169 \u110b\u1175\u11af\u110b\u1175\u11af \u110b\u1168\u1109\u1161\u11ab \u1112\u1161\u11ab\u1103\u1169 \u110c\u1165\u11ab\u110b\u1175\u1106\u1167\u11ab true."
     },
     {
       "label": "Stage 2 OpenAI chain \u2014 gpt-4o-mini + structured outputs.      \uc2e4\ud328 \uc2dc \uc608\uc678\ub97c \uc62c\ub824 chat()",
       "file_type": "rationale",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L126",
-      "id": "app_rationale_126",
+      "source_location": "L142",
+      "id": "app_rationale_142",
       "community": 7,
       "norm_label": "stage 2 openai chain \u2014 gpt-4o-mini + structured outputs.      \u1109\u1175\u11af\u1111\u1162 \u1109\u1175 \u110b\u1168\u110b\u116c\u1105\u1173\u11af \u110b\u1169\u11af\u1105\u1167 chat()"
     },
@@ -2065,8 +2164,8 @@
       "label": "\uc774\ubca4\ud2b8 \ud55c \uac74 \u2192 2~3 \ubb38\uc7a5 \ud55c\uad6d\uc5b4 \uc694\uc57d.      OPENAI_API_KEY \uc5c6\uc73c\uba74 title + category \uae30\ubc18 \uac04\ub2e8 \ubb38\uc7a5\uc73c\ub85c fal",
       "file_type": "rationale",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L140",
-      "id": "app_rationale_140",
+      "source_location": "L156",
+      "id": "app_rationale_156",
       "community": 7,
       "norm_label": "\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1112\u1161\u11ab \u1100\u1165\u11ab \u2192 2~3 \u1106\u116e\u11ab\u110c\u1161\u11bc \u1112\u1161\u11ab\u1100\u116e\u11a8\u110b\u1165 \u110b\u116d\u110b\u1163\u11a8.      openai_api_key \u110b\u1165\u11b9\u110b\u1173\u1106\u1167\u11ab title + category \u1100\u1175\u1107\u1161\u11ab \u1100\u1161\u11ab\u1103\u1161\u11ab \u1106\u116e\u11ab\u110c\u1161\u11bc\u110b\u1173\u1105\u1169 fal"
     },
@@ -2074,10 +2173,109 @@
       "label": "\ub9ac\ubdf0 \ubcf8\ubb38 \u2192 positive/negative/neutral \ubd84\ub958. \ub2e8\ubb38 1\ud68c \ud638\ucd9c.",
       "file_type": "rationale",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L188",
-      "id": "app_rationale_188",
+      "source_location": "L204",
+      "id": "app_rationale_204",
       "community": 7,
       "norm_label": "\u1105\u1175\u1107\u1172 \u1107\u1169\u11ab\u1106\u116e\u11ab \u2192 positive/negative/neutral \u1107\u116e\u11ab\u1105\u1172. \u1103\u1161\u11ab\u1106\u116e\u11ab 1\u1112\u116c \u1112\u1169\u110e\u116e\u11af."
+    },
+    {
+      "label": "cost_tracker.py",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L1",
+      "id": "services_llm_cost_tracker_py",
+      "community": 13,
+      "norm_label": "cost_tracker.py"
+    },
+    {
+      "label": "_price_for()",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L33",
+      "id": "cost_tracker_price_for",
+      "community": 13,
+      "norm_label": "_price_for()"
+    },
+    {
+      "label": "CostTracker",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L38",
+      "id": "cost_tracker_costtracker",
+      "community": 13,
+      "norm_label": "costtracker"
+    },
+    {
+      "label": ".__init__()",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L39",
+      "id": "cost_tracker_costtracker_init",
+      "community": 13,
+      "norm_label": ".__init__()"
+    },
+    {
+      "label": "._rollover_if_needed_locked()",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L49",
+      "id": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "community": 13,
+      "norm_label": "._rollover_if_needed_locked()"
+    },
+    {
+      "label": ".track()",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L57",
+      "id": "cost_tracker_costtracker_track",
+      "community": 13,
+      "norm_label": ".track()"
+    },
+    {
+      "label": ".snapshot()",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L79",
+      "id": "cost_tracker_costtracker_snapshot",
+      "community": 13,
+      "norm_label": ".snapshot()"
+    },
+    {
+      "label": ".is_over_budget()",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L98",
+      "id": "cost_tracker_costtracker_is_over_budget",
+      "community": 13,
+      "norm_label": ".is_over_budget()"
+    },
+    {
+      "label": "_daily_budget_usd()",
+      "file_type": "code",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L107",
+      "id": "cost_tracker_daily_budget_usd",
+      "community": 13,
+      "norm_label": "_daily_budget_usd()"
+    },
+    {
+      "label": "OpenAI API \ud638\ucd9c \ube44\uc6a9 \uad00\uce21 + \uc77c\uc77c \uc608\uc0b0 \uac00\ub4dc.  - track(endpoint, prompt_tokens, completion_tok",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L1",
+      "id": "cost_tracker_rationale_1",
+      "community": 13,
+      "norm_label": "openai api \u1112\u1169\u110e\u116e\u11af \u1107\u1175\u110b\u116d\u11bc \u1100\u116a\u11ab\u110e\u1173\u11a8 + \u110b\u1175\u11af\u110b\u1175\u11af \u110b\u1168\u1109\u1161\u11ab \u1100\u1161\u1103\u1173.  - track(endpoint, prompt_tokens, completion_tok"
+    },
+    {
+      "label": "TOKEN_BUDGET_DAILY_USD \ud658\uacbd\ubcc0\uc218. \uc5c6\uc73c\uba74 None (\uac00\ub4dc off).",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L108",
+      "id": "cost_tracker_rationale_108",
+      "community": 13,
+      "norm_label": "token_budget_daily_usd \u1112\u116a\u11ab\u1100\u1167\u11bc\u1107\u1167\u11ab\u1109\u116e. \u110b\u1165\u11b9\u110b\u1173\u1106\u1167\u11ab none (\u1100\u1161\u1103\u1173 off)."
     },
     {
       "label": "filters.py",
@@ -2085,7 +2283,7 @@
       "source_file": "services\\llm\\filters.py",
       "source_location": "L1",
       "id": "services_llm_filters_py",
-      "community": 13,
+      "community": 14,
       "norm_label": "filters.py"
     },
     {
@@ -2094,7 +2292,7 @@
       "source_file": "services\\llm\\filters.py",
       "source_location": "L67",
       "id": "filters_match_any",
-      "community": 13,
+      "community": 14,
       "norm_label": "_match_any()"
     },
     {
@@ -2103,7 +2301,7 @@
       "source_file": "services\\llm\\filters.py",
       "source_location": "L78",
       "id": "filters_match_first",
-      "community": 13,
+      "community": 14,
       "norm_label": "_match_first()"
     },
     {
@@ -2112,7 +2310,7 @@
       "source_file": "services\\llm\\filters.py",
       "source_location": "L86",
       "id": "filters_extract",
-      "community": 13,
+      "community": 14,
       "norm_label": "extract()"
     },
     {
@@ -2121,7 +2319,7 @@
       "source_file": "services\\llm\\filters.py",
       "source_location": "L100",
       "id": "filters_extract_merge",
-      "community": 13,
+      "community": 14,
       "norm_label": "extract_merge()"
     },
     {
@@ -2130,7 +2328,7 @@
       "source_file": "services\\llm\\filters.py",
       "source_location": "L148",
       "id": "filters_compose_reply",
-      "community": 13,
+      "community": 14,
       "norm_label": "compose_reply()"
     },
     {
@@ -2138,36 +2336,36 @@
       "file_type": "rationale",
       "source_file": "services\\llm\\filters.py",
       "source_location": "L1",
-      "id": "filters_rationale_1",
-      "community": 13,
-      "norm_label": "korean keyword \u2192 filter mapping (stage 1 rule-based).  \u110b\u1174\u1103\u1169\u110c\u1165\u11a8\u110b\u1173\u1105\u1169 \u1103\u1161\u11ab\u1109\u116e\u11ab\u1112\u1161\u1100\u1166 \u110b\u1172\u110c\u1175. stage 2 \u110b\u1166\u1109\u1165"
+      "community": 14,
+      "norm_label": "korean keyword \u2192 filter mapping (stage 1 rule-based).  \u110b\u1174\u1103\u1169\u110c\u1165\u11a8\u110b\u1173\u1105\u1169 \u1103\u1161\u11ab\u1109\u116e\u11ab\u1112\u1161\u1100\u1166 \u110b\u1172\u110c\u1175. stage 2 \u110b\u1166\u1109\u1165",
+      "id": "filters_rationale_1"
     },
     {
       "label": "table \uc758 \uac01 \uadf8\ub8f9(\ub3d9\uc758\uc5b4)\uc5d0\uc11c \ud558\ub098\ub77c\ub3c4 \uac78\ub9ac\uba74 \ud574\ub2f9 code \ub97c \uc218\uc9d1.",
       "file_type": "rationale",
       "source_file": "services\\llm\\filters.py",
       "source_location": "L68",
-      "id": "filters_rationale_68",
-      "community": 13,
-      "norm_label": "table \u110b\u1174 \u1100\u1161\u11a8 \u1100\u1173\u1105\u116e\u11b8(\u1103\u1169\u11bc\u110b\u1174\u110b\u1165)\u110b\u1166\u1109\u1165 \u1112\u1161\u1102\u1161\u1105\u1161\u1103\u1169 \u1100\u1165\u11af\u1105\u1175\u1106\u1167\u11ab \u1112\u1162\u1103\u1161\u11bc code \u1105\u1173\u11af \u1109\u116e\u110c\u1175\u11b8."
+      "community": 14,
+      "norm_label": "table \u110b\u1174 \u1100\u1161\u11a8 \u1100\u1173\u1105\u116e\u11b8(\u1103\u1169\u11bc\u110b\u1174\u110b\u1165)\u110b\u1166\u1109\u1165 \u1112\u1161\u1102\u1161\u1105\u1161\u1103\u1169 \u1100\u1165\u11af\u1105\u1175\u1106\u1167\u11ab \u1112\u1162\u1103\u1161\u11bc code \u1105\u1173\u11af \u1109\u116e\u110c\u1175\u11b8.",
+      "id": "filters_rationale_68"
     },
     {
       "label": "\uc0ac\uc6a9\uc790 \ubc1c\ud654\uc5d0\uc11c 5\uac1c \ud544\ud130 \ucd95\uc744 \ubf51\ub294\ub2e4. \uc5c6\uc73c\uba74 \ube48 \uac12.",
       "file_type": "rationale",
       "source_file": "services\\llm\\filters.py",
       "source_location": "L87",
-      "id": "filters_rationale_87",
-      "community": 13,
-      "norm_label": "\u1109\u1161\u110b\u116d\u11bc\u110c\u1161 \u1107\u1161\u11af\u1112\u116a\u110b\u1166\u1109\u1165 5\u1100\u1162 \u1111\u1175\u11af\u1110\u1165 \u110e\u116e\u11a8\u110b\u1173\u11af \u1108\u1169\u11b8\u1102\u1173\u11ab\u1103\u1161. \u110b\u1165\u11b9\u110b\u1173\u1106\u1167\u11ab \u1107\u1175\u11ab \u1100\u1161\u11b9."
+      "community": 14,
+      "norm_label": "\u1109\u1161\u110b\u116d\u11bc\u110c\u1161 \u1107\u1161\u11af\u1112\u116a\u110b\u1166\u1109\u1165 5\u1100\u1162 \u1111\u1175\u11af\u1110\u1165 \u110e\u116e\u11a8\u110b\u1173\u11af \u1108\u1169\u11b8\u1102\u1173\u11ab\u1103\u1161. \u110b\u1165\u11b9\u110b\u1173\u1106\u1167\u11ab \u1107\u1175\u11ab \u1100\u1161\u11b9.",
+      "id": "filters_rationale_87"
     },
     {
       "label": "\ub2e4\uc911 \ud134 \u2014 \ubaa8\ub4e0 user \ubc1c\ud654\uc5d0\uc11c \ucd94\ucd9c\ud55c \ud544\ud130\ub97c \uba38\uc9c0. \ucd5c\uadfc \ubc1c\ud654\uac00 \uc6b0\uc120.      - \ub2e4\uc911 \uac12 \ucd95(companions/eventTypes/v",
       "file_type": "rationale",
       "source_file": "services\\llm\\filters.py",
       "source_location": "L101",
-      "id": "filters_rationale_101",
-      "community": 13,
-      "norm_label": "\u1103\u1161\u110c\u116e\u11bc \u1110\u1165\u11ab \u2014 \u1106\u1169\u1103\u1173\u11ab user \u1107\u1161\u11af\u1112\u116a\u110b\u1166\u1109\u1165 \u110e\u116e\u110e\u116e\u11af\u1112\u1161\u11ab \u1111\u1175\u11af\u1110\u1165\u1105\u1173\u11af \u1106\u1165\u110c\u1175. \u110e\u116c\u1100\u1173\u11ab \u1107\u1161\u11af\u1112\u116a\u1100\u1161 \u110b\u116e\u1109\u1165\u11ab.      - \u1103\u1161\u110c\u116e\u11bc \u1100\u1161\u11b9 \u110e\u116e\u11a8(companions/eventtypes/v"
+      "community": 14,
+      "norm_label": "\u1103\u1161\u110c\u116e\u11bc \u1110\u1165\u11ab \u2014 \u1106\u1169\u1103\u1173\u11ab user \u1107\u1161\u11af\u1112\u116a\u110b\u1166\u1109\u1165 \u110e\u116e\u110e\u116e\u11af\u1112\u1161\u11ab \u1111\u1175\u11af\u1110\u1165\u1105\u1173\u11af \u1106\u1165\u110c\u1175. \u110e\u116c\u1100\u1173\u11ab \u1107\u1161\u11af\u1112\u116a\u1100\u1161 \u110b\u116e\u1109\u1165\u11ab.      - \u1103\u1161\u110c\u116e\u11bc \u1100\u1161\u11b9 \u110e\u116e\u11a8(companions/eventtypes/v",
+      "id": "filters_rationale_101"
     },
     {
       "label": "openai_chain.py",
@@ -2175,34 +2373,43 @@
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L1",
       "id": "services_llm_openai_chain_py",
-      "community": 22,
+      "community": 19,
       "norm_label": "openai_chain.py"
     },
     {
       "label": "classify_sentiment()",
       "file_type": "code",
       "source_file": "services\\llm\\openai_chain.py",
-      "source_location": "L124",
+      "source_location": "L126",
       "id": "openai_chain_classify_sentiment",
-      "community": 22,
+      "community": 19,
       "norm_label": "classify_sentiment()"
+    },
+    {
+      "label": "_track_usage()",
+      "file_type": "code",
+      "source_file": "services\\llm\\openai_chain.py",
+      "source_location": "L143",
+      "id": "openai_chain_track_usage",
+      "community": 19,
+      "norm_label": "_track_usage()"
     },
     {
       "label": "summarize_event()",
       "file_type": "code",
       "source_file": "services\\llm\\openai_chain.py",
-      "source_location": "L140",
+      "source_location": "L155",
       "id": "openai_chain_summarize_event",
-      "community": 22,
+      "community": 19,
       "norm_label": "summarize_event()"
     },
     {
       "label": "extract_via_openai()",
       "file_type": "code",
       "source_file": "services\\llm\\openai_chain.py",
-      "source_location": "L172",
+      "source_location": "L189",
       "id": "openai_chain_extract_via_openai",
-      "community": 22,
+      "community": 19,
       "norm_label": "extract_via_openai()"
     },
     {
@@ -2210,18 +2417,144 @@
       "file_type": "rationale",
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L1",
-      "id": "openai_chain_rationale_1",
-      "community": 22,
-      "norm_label": "stage 2 \u2014 openai gpt-4o-mini \u1100\u1175\u1107\u1161\u11ab \u1111\u1175\u11af\u1110\u1165 \u110e\u116e\u110e\u116e\u11af \u110e\u1166\u110b\u1175\u11ab.  \u1100\u1172\u110e\u1175\u11a8 - \u110b\u1175\u11ab\u1110\u1165\u1111\u1166\u110b\u1175\u1109\u1173\u1102\u1173\u11ab stage 1 \u110b\u1174 extract_merge \u110b\u116a"
+      "community": 19,
+      "norm_label": "stage 2 \u2014 openai gpt-4o-mini \u1100\u1175\u1107\u1161\u11ab \u1111\u1175\u11af\u1110\u1165 \u110e\u116e\u110e\u116e\u11af \u110e\u1166\u110b\u1175\u11ab.  \u1100\u1172\u110e\u1175\u11a8 - \u110b\u1175\u11ab\u1110\u1165\u1111\u1166\u110b\u1175\u1109\u1173\u1102\u1173\u11ab stage 1 \u110b\u1174 extract_merge \u110b\u116a",
+      "id": "openai_chain_rationale_1"
+    },
+    {
+      "label": "messages: [{\"role\": \"user\"|\"assistant\"|\"system\", \"text\": str}, ...]     \ubc18\ud658: Stag",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\openai_chain.py",
+      "source_location": "L190",
+      "id": "openai_chain_rationale_190",
+      "community": 19,
+      "norm_label": "messages: [{\"role\": \"user\"|\"assistant\"|\"system\", \"text\": str}, ...]     \u1107\u1161\u11ab\u1112\u116a\u11ab: stag"
+    },
+    {
+      "label": "summary_guard.py",
+      "file_type": "code",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L1",
+      "id": "services_llm_summary_guard_py",
+      "community": 16,
+      "norm_label": "summary_guard.py"
+    },
+    {
+      "label": "strip_markdown()",
+      "file_type": "code",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L54",
+      "id": "summary_guard_strip_markdown",
+      "community": 16,
+      "norm_label": "strip_markdown()"
+    },
+    {
+      "label": "strip_emoji()",
+      "file_type": "code",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L64",
+      "id": "summary_guard_strip_emoji",
+      "community": 16,
+      "norm_label": "strip_emoji()"
+    },
+    {
+      "label": "normalize_whitespace()",
+      "file_type": "code",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L68",
+      "id": "summary_guard_normalize_whitespace",
+      "community": 16,
+      "norm_label": "normalize_whitespace()"
+    },
+    {
+      "label": "truncate_at_sentence()",
+      "file_type": "code",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L72",
+      "id": "summary_guard_truncate_at_sentence",
+      "community": 16,
+      "norm_label": "truncate_at_sentence()"
+    },
+    {
+      "label": "sanitize_summary()",
+      "file_type": "code",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L89",
+      "id": "summary_guard_sanitize_summary",
+      "community": 16,
+      "norm_label": "sanitize_summary()"
+    },
+    {
+      "label": "AI \uc694\uc57d post-processing \uac00\ub4dc.  \ubaa8\ub378/fallback \uc591\ucabd\uc5d0\uc11c \uacf5\ud1b5\uc73c\ub85c \uc801\uc6a9\ub418\ub294 server-side \uc815\uc81c\uae30. \ud504\ub86c\ud504\ud2b8\uc5d0\ub294 \"\uc774",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L1",
+      "id": "summary_guard_rationale_1",
+      "community": 16,
+      "norm_label": "ai \u110b\u116d\u110b\u1163\u11a8 post-processing \u1100\u1161\u1103\u1173.  \u1106\u1169\u1103\u1166\u11af/fallback \u110b\u1163\u11bc\u110d\u1169\u11a8\u110b\u1166\u1109\u1165 \u1100\u1169\u11bc\u1110\u1169\u11bc\u110b\u1173\u1105\u1169 \u110c\u1165\u11a8\u110b\u116d\u11bc\u1103\u116c\u1102\u1173\u11ab server-side \u110c\u1165\u11bc\u110c\u1166\u1100\u1175. \u1111\u1173\u1105\u1169\u11b7\u1111\u1173\u1110\u1173\u110b\u1166\u1102\u1173\u11ab \"\u110b\u1175"
+    },
+    {
+      "label": "max_len \ucd08\uacfc \uc2dc \uac00\uae4c\uc6b4 \ubb38\uc7a5 \uacbd\uacc4\uc5d0\uc11c \uc790\ub974\uae30. \ubabb \ucc3e\uc73c\uba74 \ud558\ub4dc \uc790\ub974\uace0 '\u2026'.",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L73",
+      "id": "summary_guard_rationale_73",
+      "community": 16,
+      "norm_label": "max_len \u110e\u1169\u1100\u116a \u1109\u1175 \u1100\u1161\u1101\u1161\u110b\u116e\u11ab \u1106\u116e\u11ab\u110c\u1161\u11bc \u1100\u1167\u11bc\u1100\u1168\u110b\u1166\u1109\u1165 \u110c\u1161\u1105\u1173\u1100\u1175. \u1106\u1169\u11ba \u110e\u1161\u11bd\u110b\u1173\u1106\u1167\u11ab \u1112\u1161\u1103\u1173 \u110c\u1161\u1105\u1173\u1100\u1169 '...'."
+    },
+    {
+      "label": "\ubaa8\ub378/fallback \uc591\ucabd \uc694\uc57d\uc5d0 \uc801\uc6a9\ud558\ub294 \ucd5c\uc885 \uc815\uc81c.",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L90",
+      "id": "summary_guard_rationale_90",
+      "community": 16,
+      "norm_label": "\u1106\u1169\u1103\u1166\u11af/fallback \u110b\u1163\u11bc\u110d\u1169\u11a8 \u110b\u116d\u110b\u1163\u11a8\u110b\u1166 \u110c\u1165\u11a8\u110b\u116d\u11bc\u1112\u1161\u1102\u1173\u11ab \u110e\u116c\u110c\u1169\u11bc \u110c\u1165\u11bc\u110c\u1166."
+    },
+    {
+      "label": "\ud604\uc7ac \ud65c\uc131 \uccb4\uc778 \u2014 \ud658\uacbd\ubcc0\uc218\uc5d0 \ub530\ub77c \uacb0\uc815.",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L94",
+      "community": 67,
+      "norm_label": "\u1112\u1167\u11ab\u110c\u1162 \u1112\u116a\u11af\u1109\u1165\u11bc \u110e\u1166\u110b\u1175\u11ab \u2014 \u1112\u116a\u11ab\u1100\u1167\u11bc\u1107\u1167\u11ab\u1109\u116e\u110b\u1166 \u1104\u1161\u1105\u1161 \u1100\u1167\u11af\u110c\u1165\u11bc.",
+      "id": "app_rationale_94"
+    },
+    {
+      "label": "Stage 2 OpenAI chain \u2014 gpt-4o-mini + structured outputs.      \uc2e4\ud328 \uc2dc \uc608\uc678\ub97c \uc62c\ub824 chat()",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L126",
+      "community": 68,
+      "norm_label": "stage 2 openai chain \u2014 gpt-4o-mini + structured outputs.      \u1109\u1175\u11af\u1111\u1162 \u1109\u1175 \u110b\u1168\u110b\u116c\u1105\u1173\u11af \u110b\u1169\u11af\u1105\u1167 chat()",
+      "id": "app_rationale_126"
+    },
+    {
+      "label": "\uc774\ubca4\ud2b8 \ud55c \uac74 \u2192 2~3 \ubb38\uc7a5 \ud55c\uad6d\uc5b4 \uc694\uc57d.      OPENAI_API_KEY \uc5c6\uc73c\uba74 title + category \uae30\ubc18 \uac04\ub2e8 \ubb38\uc7a5\uc73c\ub85c fal",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L140",
+      "community": 69,
+      "norm_label": "\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1112\u1161\u11ab \u1100\u1165\u11ab \u2192 2~3 \u1106\u116e\u11ab\u110c\u1161\u11bc \u1112\u1161\u11ab\u1100\u116e\u11a8\u110b\u1165 \u110b\u116d\u110b\u1163\u11a8.      openai_api_key \u110b\u1165\u11b9\u110b\u1173\u1106\u1167\u11ab title + category \u1100\u1175\u1107\u1161\u11ab \u1100\u1161\u11ab\u1103\u1161\u11ab \u1106\u116e\u11ab\u110c\u1161\u11bc\u110b\u1173\u1105\u1169 fal",
+      "id": "app_rationale_140"
+    },
+    {
+      "label": "\ub9ac\ubdf0 \ubcf8\ubb38 \u2192 positive/negative/neutral \ubd84\ub958. \ub2e8\ubb38 1\ud68c \ud638\ucd9c.",
+      "file_type": "rationale",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L188",
+      "community": 70,
+      "norm_label": "\u1105\u1175\u1107\u1172 \u1107\u1169\u11ab\u1106\u116e\u11ab \u2192 positive/negative/neutral \u1107\u116e\u11ab\u1105\u1172. \u1103\u1161\u11ab\u1106\u116e\u11ab 1\u1112\u116c \u1112\u1169\u110e\u116e\u11af.",
+      "id": "app_rationale_188"
     },
     {
       "label": "messages: [{\"role\": \"user\"|\"assistant\"|\"system\", \"text\": str}, ...]     \ubc18\ud658: Stag",
       "file_type": "rationale",
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L173",
-      "id": "openai_chain_rationale_173",
-      "community": 22,
-      "norm_label": "messages: [{\"role\": \"user\"|\"assistant\"|\"system\", \"text\": str}, ...]     \u1107\u1161\u11ab\u1112\u116a\u11ab: stag"
+      "community": 71,
+      "norm_label": "messages: [{\"role\": \"user\"|\"assistant\"|\"system\", \"text\": str}, ...]     \u1107\u1161\u11ab\u1112\u116a\u11ab: stag",
+      "id": "openai_chain_rationale_173"
     },
     {
       "label": "\ud544\ud130 5\uc885 (region/period/companion/type/vibe)",
@@ -2232,7 +2565,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 65,
+      "community": 72,
       "norm_label": "\u1111\u1175\u11af\u1110\u1165 5\u110c\u1169\u11bc (region/period/companion/type/vibe)",
       "id": "concept_filterFiveTypes"
     },
@@ -2245,7 +2578,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 66,
+      "community": 73,
       "norm_label": "graphify rule: read graph_report first",
       "id": "doc_graphify_rule"
     },
@@ -2258,7 +2591,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 67,
+      "community": 74,
       "norm_label": "gstack workflow think\u2192plan\u2192build\u2192review\u2192test\u2192ship\u2192reflect",
       "id": "doc_gstack_workflow"
     },
@@ -2271,7 +2604,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 35,
+      "community": 37,
       "norm_label": "aesthetic \u2014 editorial + map-first (no mall)",
       "id": "design_aesthetic"
     },
@@ -2284,7 +2617,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 35,
+      "community": 37,
       "norm_label": "pretendard \u1103\u1161\u11ab\u110b\u1175\u11af \u1111\u1162\u1106\u1175\u11af\u1105\u1175 \u110c\u1165\u11ab\u1105\u1163\u11a8",
       "id": "design_typography_pretendard"
     },
@@ -2297,7 +2630,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 49,
+      "community": 51,
       "norm_label": "vermilion single accent (#e8562d)",
       "id": "design_color_vermilion"
     },
@@ -2310,7 +2643,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 68,
+      "community": 75,
       "norm_label": "phase badge tokens (upcoming/ongoing/ended)",
       "id": "design_phase_badge_tokens"
     },
@@ -2323,7 +2656,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 48,
+      "community": 50,
       "norm_label": "signature \u2014 \u1111\u1175\u11ab \u110f\u1173\u11af\u1105\u1165\u1109\u1173\u1110\u1165 \u1107\u116e\u11ab\u1112\u1162 \u110b\u1162\u1102\u1175\u1106\u1166\u110b\u1175\u1109\u1167\u11ab",
       "id": "design_signature_pin_cluster"
     },
@@ -2336,7 +2669,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 48,
+      "community": 50,
       "norm_label": "map pin component tokens",
       "id": "design_map_pin_token"
     },
@@ -2349,7 +2682,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 35,
+      "community": 37,
       "norm_label": "\u1100\u1167\u11af\u110c\u1165\u11bc: \u110b\u1168\u110b\u1163\u11a8/\u1100\u1167\u11af\u110c\u1166 ui \u110c\u1166\u110b\u116c (v5.0)",
       "id": "design_decision_no_payment"
     },
@@ -2362,7 +2695,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 49,
+      "community": 51,
       "norm_label": "\u1100\u1167\u11af\u110c\u1165\u11bc: \u1107\u1165\u1106\u1175\u11af\u1105\u1175\u110b\u1165\u11ab \u1103\u1161\u11ab\u1109\u1162\u11a8 accent \u1100\u1173\u11ab\u1100\u1165",
       "id": "design_decision_vermilion_rationale"
     },
@@ -2375,7 +2708,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "llm wiki + graphify setup guide",
       "id": "llm_wiki_setup_guide"
     },
@@ -2388,7 +2721,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "graphifyy pip package",
       "id": "setup_graphifyy_package"
     },
@@ -2401,7 +2734,7 @@
       "captured_at": null,
       "author": "Andrej Karpathy",
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "karpathy llm wiki pattern",
       "id": "setup_karpathy_llm_wiki"
     },
@@ -2414,7 +2747,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "claude.md auto-load hook",
       "id": "setup_claudemd_autoload"
     },
@@ -2427,7 +2760,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "ggdrugs project overview",
       "id": "readme_ggdrugs"
     },
@@ -2440,7 +2773,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "monorepo directory layout",
       "id": "readme_monorepo_layout"
     },
@@ -2453,7 +2786,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "technology stack table",
       "id": "readme_tech_stack_table"
     },
@@ -2466,7 +2799,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "apps/bff readme",
       "id": "bff_readme"
     },
@@ -2479,7 +2812,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "bff responsibilities",
       "id": "bff_responsibilities"
     },
@@ -2492,7 +2825,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "bff runtime dependencies",
       "id": "bff_dependencies"
     },
@@ -2648,7 +2981,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "d-1 minio object storage",
       "id": "adr0002_d1_minio"
     },
@@ -2661,7 +2994,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "d-2 openai single llm provider",
       "id": "adr0002_d2_openai"
     },
@@ -2674,7 +3007,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "d-3 qdrant single vector store",
       "id": "adr0002_d3_qdrant"
     },
@@ -2713,7 +3046,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "dockerfile directory readme",
       "id": "infra_docker_readme"
     },
@@ -2726,7 +3059,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "llm wiki readme",
       "id": "llm_wiki_readme"
     },
@@ -2739,7 +3072,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "llm wiki schema",
       "id": "llm_wiki_schema"
     },
@@ -2752,7 +3085,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "llm wiki \u1109\u1161\u110b\u116d\u11bc\u1107\u1165\u11b8",
       "id": "llm_wiki_usage"
     },
@@ -2765,7 +3098,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "three-layer architecture (raw/wiki/schema)",
       "id": "llm_wiki_three_layer"
     },
@@ -2778,7 +3111,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "wiki invariants (raw append-only, 1:1 sources)",
       "id": "llm_wiki_invariants"
     },
@@ -2830,7 +3163,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 14,
+      "community": 15,
       "norm_label": "llm wiki raw/ readme",
       "id": "llm_wiki_raw_readme"
     },
@@ -3103,7 +3436,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "minio (object storage)",
       "id": "entity_minio"
     },
@@ -3116,7 +3449,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "openai (llm provider)",
       "id": "entity_openai"
     },
@@ -3129,7 +3462,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "qdrant (vector store)",
       "id": "entity_qdrant"
     },
@@ -3142,7 +3475,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "postgis / postgresql 15",
       "id": "entity_postgis"
     },
@@ -3155,7 +3488,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "prisma orm",
       "id": "entity_prisma"
     },
@@ -3168,7 +3501,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "kakao maps sdk",
       "id": "entity_kakao_maps"
     },
@@ -3181,7 +3514,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "langchain (python)",
       "id": "entity_langchain"
     },
@@ -3194,7 +3527,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "rationale: minio chosen for s3 compatibility, no cloud overhead",
       "id": "rationale_minio_choice"
     },
@@ -3207,7 +3540,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "rationale: single openai provider simplifies ops, embedding included",
       "id": "rationale_openai_single"
     },
@@ -3220,7 +3553,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "rationale: qdrant outperforms pgvector at scale, separates load",
       "id": "rationale_qdrant_single"
     },
@@ -3428,7 +3761,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "decision #4: expected_companion rename",
       "id": "adr0001_d4_expected_companion"
     },
@@ -3467,7 +3800,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 38,
       "norm_label": "decision #7: event_subscriptions table",
       "id": "adr0001_d7_event_subscriptions"
     },
@@ -3519,7 +3852,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "rationale: s3-compat enables migration",
       "id": "adr0002_rationale_s3_migration"
     },
@@ -3532,7 +3865,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "rejected: anthropic (no embeddings)",
       "id": "adr0002_rejected_anthropic"
     },
@@ -3545,7 +3878,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 10,
+      "community": 3,
       "norm_label": "rejected: pgvector single",
       "id": "adr0002_rejected_pgvector"
     },
@@ -3688,7 +4021,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 38,
       "norm_label": "event_subscriptions table (new)",
       "id": "db_event_subscriptions"
     },
@@ -3714,7 +4047,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 36,
+      "community": 38,
       "norm_label": "notifications table",
       "id": "db_notifications"
     },
@@ -3727,7 +4060,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 69,
+      "community": 76,
       "norm_label": "chat_messages table",
       "id": "db_chat_messages"
     },
@@ -3740,7 +4073,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 70,
+      "community": 77,
       "norm_label": "search_logs table",
       "id": "db_search_logs"
     },
@@ -3766,7 +4099,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "event detail & review flow",
       "id": "event_detail_review_flow_topic"
     },
@@ -3779,7 +4112,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_400 event detail page",
       "id": "usecase_a400"
     },
@@ -3792,7 +4125,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_500 mypage calendar",
       "id": "usecase_a500"
     },
@@ -3883,7 +4216,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "5 filter types",
       "id": "filters_5_types_topic"
     },
@@ -3896,7 +4229,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "filter: region",
       "id": "filter_region"
     },
@@ -3909,7 +4242,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "filter: period",
       "id": "filter_period"
     },
@@ -3922,7 +4255,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "filter: companion_type",
       "id": "filter_companion_type"
     },
@@ -3935,7 +4268,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "filter: event_type",
       "id": "filter_event_type"
     },
@@ -3961,7 +4294,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "main page flow",
       "id": "main_page_flow_topic"
     },
@@ -3974,7 +4307,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_200 main page",
       "id": "usecase_a200"
     },
@@ -4091,7 +4424,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "qdrant v1.13.0",
       "id": "tech_qdrant"
     },
@@ -4104,7 +4437,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "minio object storage",
       "id": "tech_minio"
     },
@@ -4169,7 +4502,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "kakao maps / kakao rest api",
       "id": "tech_kakao_maps"
     },
@@ -4182,7 +4515,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "openai models (gpt-4o, gpt-4o-mini, text-embedding-3-small)",
       "id": "tech_openai_models"
     },
@@ -4221,7 +4554,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "term: event_type",
       "id": "term_event_type"
     },
@@ -4247,7 +4580,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "term: companion_type",
       "id": "term_companion_type"
     },
@@ -4260,7 +4593,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "term: expected_companion",
       "id": "term_expected_companion"
     },
@@ -4286,7 +4619,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 71,
+      "community": 78,
       "norm_label": "term: period",
       "id": "term_period"
     },
@@ -4299,7 +4632,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "ui architecture (current)",
       "id": "ui_architecture_topic"
     },
@@ -4312,7 +4645,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "rail + overlay panel layout",
       "id": "ui_rail_overlay_layout"
     },
@@ -4325,7 +4658,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "chatdock component",
       "id": "ui_chatdock"
     },
@@ -4338,7 +4671,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "seoulmap component",
       "id": "ui_seoulmap"
     },
@@ -4351,7 +4684,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "sidebar component (rail + overlay)",
       "id": "ui_sidebar"
     },
@@ -4364,7 +4697,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "tailwind v4 @theme token registration",
       "id": "ui_tailwind_v4_theme"
     },
@@ -4377,7 +4710,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "vite envdir='../..' monorepo root",
       "id": "ui_vite_envdir"
     },
@@ -4390,7 +4723,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "rationale: overlay instead of route switch",
       "id": "ui_overlay_rationale"
     },
@@ -4455,7 +4788,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "use cases index (a_100~a_700)",
       "id": "use_cases_index_topic"
     },
@@ -4468,7 +4801,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_100 signup",
       "id": "usecase_a100"
     },
@@ -4481,7 +4814,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_101 login",
       "id": "usecase_a101"
     },
@@ -4494,7 +4827,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_201 chat search",
       "id": "usecase_a201"
     },
@@ -4507,7 +4840,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_202 filter search",
       "id": "usecase_a202"
     },
@@ -4520,7 +4853,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_203 upcoming events",
       "id": "usecase_a203"
     },
@@ -4533,7 +4866,7 @@
       "captured_at": "2026-04-17",
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "a_300 full list",
       "id": "usecase_a300"
     },
@@ -4559,7 +4892,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "@ggdrugs/config readme",
       "id": "pkg_config_readme"
     },
@@ -4572,7 +4905,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "loadenv() function",
       "id": "pkg_config_loadenv"
     },
@@ -4585,7 +4918,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "schema groups (core/database/redis/qdrant/s3/openai/...)",
       "id": "pkg_config_schemas"
     },
@@ -4598,7 +4931,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "production required keys guard",
       "id": "pkg_config_production_guard"
     },
@@ -4624,7 +4957,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "services/llm readme",
       "id": "svc_llm_readme"
     },
@@ -4637,7 +4970,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 3,
+      "community": 0,
       "norm_label": "llm: chat search (a_201)",
       "id": "svc_llm_chat_search"
     },
@@ -4663,7 +4996,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "llm: photo ai tagging",
       "id": "svc_llm_photo_tagging"
     },
@@ -4676,7 +5009,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 0,
+      "community": 3,
       "norm_label": "provider abstraction layer",
       "id": "svc_llm_provider_abstraction"
     },
@@ -4767,7 +5100,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u1111\u1173\u11af\u1105\u1169\u110b\u116e \u110b\u116a\u110b\u1175\u110b\u1165\u1111\u1173\u1105\u1166\u110b\u1175\u11b7 \u110e\u1169\u110b\u1161\u11ab (\u110c\u1165\u11ab\u110e\u1166 \u1106\u116e\u11ab\u1109\u1165)",
       "id": "choan_wireframe_document"
     },
@@ -4780,7 +5113,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175 (\u110c\u1175\u1103\u1169 \u1100\u1175\u1107\u1169\u11ab \u1112\u116a\u1106\u1167\u11ab)",
       "id": "choan_screen_1_main"
     },
@@ -4793,7 +5126,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "2-1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110c\u1165\u11ab\u110e\u1166\u1106\u1169\u11a8\u1105\u1169\u11a8\u1107\u1169\u1100\u1175_\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_2_1_region_list"
     },
@@ -4806,7 +5139,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "2-2. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110c\u1165\u11ab\u110e\u1166\u1106\u1169\u11a8\u1105\u1169\u11a8\u1107\u1169\u1100\u1175_\u110c\u1175\u110b\u1167\u11a8\u1106\u1167\u11bc \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_2_2_region_detail"
     },
@@ -4819,7 +5152,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "2-3. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110c\u1165\u11ab\u110e\u1166\u1106\u1169\u11a8\u1105\u1169\u11a8\u1107\u1169\u1100\u1175_\u110c\u1175\u110b\u1167\u11a8\u1106\u1167\u11bc \u110f\u1173\u11af\u1105\u1175\u11a8 \u1112\u116e \u110c\u1175\u1103\u1169 \u1107\u1172",
       "id": "choan_screen_2_3_region_map"
     },
@@ -4832,7 +5165,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "3-1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1111\u1175\u11af\u1110\u1165\u1109\u116e\u11ab\u110b\u1171_\u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_3_1_filter"
     },
@@ -4845,7 +5178,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "3-2. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1111\u1175\u11af\u1110\u1165\u1109\u116e\u11ab\u110b\u1171_\u1100\u1167\u11af\u1100\u116a \u1106\u1169\u11a8\u1105\u1169\u11a8",
       "id": "choan_screen_3_2_filter_results"
     },
@@ -4858,7 +5191,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "3-3. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1111\u1175\u11af\u1110\u1165\u1109\u116e\u11ab\u110b\u1171_\u1100\u1167\u11af\u1100\u116a \u1109\u1161\u11bc\u1109\u1166 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_3_3_filter_detail"
     },
@@ -4871,7 +5204,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-1. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_4_1_chat_search"
     },
@@ -4884,7 +5217,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-2. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u1105\u1169\u1100\u1173\u110b\u1175\u11ab \u1112\u116e",
       "id": "choan_screen_4_2_chat_after"
     },
@@ -4897,7 +5230,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-3. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u1106\u1169\u11a8\u1105\u1169\u11a8 \u1107\u1169\u1100\u1175",
       "id": "choan_screen_4_3_chat_list"
     },
@@ -4910,7 +5243,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "4-4. \u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110e\u1162\u1110\u1175\u11bc\u1100\u1165\u11b7\u1109\u1162\u11a8_\u110c\u1175\u1103\u1169 \u1107\u1169\u1100\u1175",
       "id": "choan_screen_4_4_chat_map"
     },
@@ -4923,7 +5256,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "5. \u1105\u1169\u1100\u1173\u110b\u1175\u11ab \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_5_login"
     },
@@ -4936,7 +5269,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_6_my_page"
     },
@@ -4949,7 +5282,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6-1. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175_\u1105\u1175\u1107\u1172 \u1106\u1169\u110b\u1161\u1107\u1169\u1100\u1175 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_6_1_bookmarks"
     },
@@ -4962,7 +5295,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6-2. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175_\u1109\u1165\u11af\u110c\u1165\u11bc \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_6_2_settings"
     },
@@ -4975,7 +5308,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "6-3. \u1106\u1161\u110b\u1175\u1111\u1166\u110b\u1175\u110c\u1175_\u1109\u1165\u11af\u110c\u1165\u11bc_\u1105\u1169\u1100\u1173\u110b\u1161\u110b\u116e\u11ba \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_6_3_logout"
     },
@@ -4988,7 +5321,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-1. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u110b\u1167\u11a8\u1112\u1161\u11af \u1107\u116e\u110b\u1167\u1107\u1161\u11ae\u1100\u1175",
       "id": "choan_screen_7_1_uploader_role_toggle"
     },
@@ -5001,7 +5334,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-2. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_2_uploader_main"
     },
@@ -5014,7 +5347,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-3. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1103\u1173\u11bc\u1105\u1169\u11a8 \u1106\u1169\u11a8\u1105\u1169\u11a8 \u1107\u1169\u1100\u1175",
       "id": "choan_screen_7_3_uploader_register"
     },
@@ -5027,7 +5360,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-4. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u1106\u1166\u110b\u1175\u11ab\u1111\u1166\u110b\u1175\u110c\u1175_\u1100\u116a\u11ab\u1105\u1175 \u1111\u1166\u110b\u1175\u110c\u1175 \u110f\u1173\u11af\u1105\u1175\u11a8 \u1109\u1175",
       "id": "choan_screen_7_4_uploader_registered"
     },
@@ -5040,7 +5373,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-5. \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 \u1111\u1166\u110b\u1175\u110c\u1175_\u110b\u1165\u11b8\u1105\u1169\u1103\u1173 \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_5_uploader_approval"
     },
@@ -5053,7 +5386,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7. \u1100\u116a\u11ab\u1105\u1175\u110c\u1161 \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_admin_page"
     },
@@ -5066,7 +5399,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "7-2. \u1100\u116a\u11ab\u1105\u1175\u110c\u1161 \u1111\u1166\u110b\u1175\u110c\u1175_\u1109\u1173\u11bc\u110b\u1175\u11ab/\u1107\u1161\u11ab\u1105\u1167 \u1100\u116a\u11ab\u1105\u1167\u11ab \u1111\u1166\u110b\u1175\u110c\u1175",
       "id": "choan_screen_7_2_admin_review"
     },
@@ -5079,7 +5412,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110f\u1161\u110f\u1161\u110b\u1169 \u110c\u1175\u1103\u1169 \u1107\u1172 (\u1112\u1162\u11bc\u110c\u1165\u11bc\u1100\u116e\u110b\u1167\u11a8 \u1105\u1166\u110b\u1175\u110b\u1165)",
       "id": "choan_component_map_view"
     },
@@ -5092,7 +5425,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110c\u1161\u110b\u1167\u11ab\u110b\u1165 \u110e\u1162\u1110\u1175\u11bc \u1100\u1165\u11b7\u1109\u1162\u11a8 \u110b\u1175\u11b8\u1105\u1167\u11a8\u110e\u1161\u11bc",
       "id": "choan_component_chat_search_bar"
     },
@@ -5105,7 +5438,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u1111\u1175\u11af\u1110\u1165 \u1111\u1162\u1102\u1165\u11af (5\u110c\u1169\u11bc \u1111\u1175\u11af\u1110\u1165)",
       "id": "choan_component_filter_panel"
     },
@@ -5118,7 +5451,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110c\u1175\u110b\u1167\u11a8 \u1106\u1169\u11a8\u1105\u1169\u11a8 \u1109\u1161\u110b\u1175\u1103\u1173 \u1111\u1162\u1102\u1165\u11af",
       "id": "choan_component_region_list_panel"
     },
@@ -5131,7 +5464,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "ui \u110f\u1165\u11b7\u1111\u1169\u1102\u1165\u11ab\u1110\u1173: \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1161\u11bc\u1109\u1166 \u110f\u1161\u1103\u1173",
       "id": "choan_component_event_detail_card"
     },
@@ -5144,7 +5477,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "\u1111\u1173\u11af\u1105\u1169\u110b\u116e: \u110b\u1175\u11af\u1107\u1161\u11ab \u1109\u1161\u110b\u116d\u11bc\u110c\u1161 (\u110c\u1175\u1103\u1169 \u2192 \u1100\u1165\u11b7\u1109\u1162\u11a8 \u2192 \u1109\u1161\u11bc\u1109\u1166 \u2192 \u1107\u116e\u11a8\u1106\u1161\u110f\u1173)",
       "id": "choan_flow_general_user"
     },
@@ -5157,7 +5490,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "\u1111\u1173\u11af\u1105\u1169\u110b\u116e: \u110b\u1165\u11b8\u1105\u1169\u1103\u1165 (\u110b\u1167\u11a8\u1112\u1161\u11af \u1107\u116e\u110b\u1167 \u2192 \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1103\u1173\u11bc\u1105\u1169\u11a8 \u2192 \u1109\u1173\u11bc\u110b\u1175\u11ab \u1103\u1162\u1100\u1175)",
       "id": "choan_flow_uploader"
     },
@@ -5170,7 +5503,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 5,
       "norm_label": "\u1111\u1173\u11af\u1105\u1169\u110b\u116e: \u1100\u116a\u11ab\u1105\u1175\u110c\u1161 (\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1173\u11bc\u110b\u1175\u11ab/\u1107\u1161\u11ab\u1105\u1167/\u1105\u1161\u1107\u1166\u11af \u1107\u116e\u110b\u1167)",
       "id": "choan_flow_admin"
     },
@@ -5469,7 +5802,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 72,
+      "community": 79,
       "norm_label": "do-not-edit: color/type/radius/shadow/motion tokens already correct",
       "id": "alle_donotedit_tokens"
     },
@@ -5482,7 +5815,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 50,
+      "community": 53,
       "norm_label": "do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)",
       "id": "alle_donotedit_package_name"
     },
@@ -5495,7 +5828,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 51,
+      "community": 52,
       "norm_label": "do-not-edit: db schema, env keys, internal identifiers",
       "id": "alle_donotedit_internal_ids"
     },
@@ -5547,7 +5880,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 50,
+      "community": 53,
       "norm_label": "rationale: skip repo/package rename to avoid full-repo churn",
       "id": "alle_rationale_no_repo_rename"
     },
@@ -5560,7 +5893,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 73,
+      "community": 80,
       "norm_label": "pending decision: rename @ggdrugs/web \u2192 @alle/web? (default no)",
       "id": "alle_pending_decision_package_rename"
     },
@@ -5586,7 +5919,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 74,
+      "community": 81,
       "norm_label": "pending decision: href='/' vs react-router <link> in logo anchor",
       "id": "alle_pending_decision_router_link"
     },
@@ -5690,7 +6023,7 @@
       "captured_at": "2026-04",
       "author": "GGudrugs' Team",
       "contributor": null,
-      "community": 37,
+      "community": 39,
       "norm_label": "db \u1109\u1165\u11af\u1100\u1168 \u1106\u1167\u11bc\u1109\u1166\u1109\u1165 v3 (2026-04)",
       "id": "db_v3_title"
     },
@@ -5716,7 +6049,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 51,
+      "community": 52,
       "norm_label": "db v3: 20 tables (regions, users, uploader_profiles, events, ...)",
       "id": "db_v3_tables_20"
     },
@@ -5729,7 +6062,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 53,
+      "community": 54,
       "norm_label": "db v3 term: event_tendency_labels (renamed to event_vibes in adr 0001)",
       "id": "db_v3_event_tendency_labels"
     },
@@ -5742,7 +6075,7 @@
       "captured_at": "2026-04",
       "author": "\uc7a5\uc6d0\ud300",
       "contributor": null,
-      "community": 37,
+      "community": 39,
       "norm_label": "\u110b\u116d\u1100\u116e\u1109\u1161\u1112\u1161\u11bc\u110c\u1165\u11bc\u110b\u1174\u1109\u1165 v5.0 (\u110c\u1161\u11bc\u110b\u116f\u11ab\u1110\u1175\u11b7, 2026-04)",
       "id": "req_v5_title"
     },
@@ -5768,7 +6101,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 52,
+      "community": 55,
       "norm_label": "v5.0 changes: +a_203, +a_501, +\u110b\u116d\u11bc\u110b\u1165\u110c\u1175\u11b8, filter-term unification, \u2212ai video",
       "id": "req_v5_changes"
     },
@@ -5781,7 +6114,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 52,
+      "community": 55,
       "norm_label": "filter terminology: \u110c\u1175\u110b\u1167\u11a8/\u1100\u1175\u1100\u1161\u11ab/\u110b\u1175\u11ab\u110b\u116f\u11ab\u1100\u116e\u1109\u1165\u11bc/\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110c\u1169\u11bc\u1105\u1172/\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1165\u11bc\u1112\u1163\u11bc",
       "id": "req_v5_filters"
     },
@@ -5794,7 +6127,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 53,
+      "community": 54,
       "norm_label": "term: event_vibe (event vibe labels, admin-assigned)",
       "id": "req_v5_event_vibe"
     },
@@ -5807,7 +6140,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 75,
+      "community": 82,
       "norm_label": "term: companion_type {\u1112\u1169\u11ab\u110c\u1161, \u110b\u1167\u11ab\u110b\u1175\u11ab, \u110e\u1175\u11ab\u1100\u116e, \u1100\u1161\u110c\u1169\u11a8}",
       "id": "req_v5_companion_type"
     },
@@ -5820,7 +6153,7 @@
       "captured_at": "2026-04-18",
       "author": null,
       "contributor": null,
-      "community": 76,
+      "community": 83,
       "norm_label": "god node: ui \u1111\u1173\u11af\u1105\u1169\u110b\u116e \u110b\u116a\u110b\u1175\u110b\u1165\u1111\u1173\u1105\u1166\u110b\u1175\u11b7 \u110e\u1169\u110b\u1161\u11ab (23 edges)",
       "id": "report_god_node_ui_wireframe"
     },
@@ -5833,7 +6166,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 37,
+      "community": 39,
       "norm_label": "god node: adr 0001 ddl v3 \u2194 terminology v5 (18 edges)",
       "id": "report_god_node_adr_0001"
     },
@@ -6145,7 +6478,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 31,
       "norm_label": "brand implementation references (logo.tsx + public svgs + handoff)",
       "id": "DESIGN_brand_impl_refs"
     },
@@ -6288,7 +6621,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 54,
+      "community": 56,
       "norm_label": "three roles: user / uploader / admin with active_role toggle",
       "id": "claude_CLAUDE_roles_uploader_admin"
     },
@@ -6327,7 +6660,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 38,
+      "community": 40,
       "norm_label": "filter 5 fixed \u2014 region/period/companion/event_type/event_vibe",
       "id": "claude_CLAUDE_filter_5"
     },
@@ -6340,7 +6673,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 31,
       "norm_label": "apps/web/public/logo-mark.svg (raw line monogram asset)",
       "id": "public_logo_mark_svg"
     },
@@ -6353,7 +6686,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 31,
       "norm_label": "apps/web/public/logo-lockup.svg (raw lockup asset)",
       "id": "public_logo_lockup_svg"
     },
@@ -6366,7 +6699,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 28,
+      "community": 31,
       "norm_label": "apps/web/public/favicon.svg (thicker-stroke variant)",
       "id": "public_favicon_svg"
     },
@@ -6379,7 +6712,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 38,
+      "community": 40,
       "norm_label": "a_203 \u110b\u1168\u110c\u1165\u11bc \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110c\u1169\u1112\u116c \u2014 new upcoming-events tab",
       "id": "req_v5_usecase_A_203"
     },
@@ -6392,7 +6725,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 29,
+      "community": 32,
       "norm_label": "a_501 \u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1105\u1175\u1107\u1172 \u110c\u1161\u11a8\u1109\u1165\u11bc \u2014 new review flow (wireframe 6-1)",
       "id": "req_v5_usecase_A_501"
     },
@@ -6431,7 +6764,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 38,
+      "community": 40,
       "norm_label": "why: filter 5 unified \u2014 region/period/companion/type/vibe (prevent ad-hoc filters)",
       "id": "req_v5_rationale_filter5_unification"
     },
@@ -6444,7 +6777,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 29,
+      "community": 32,
       "norm_label": "events table \u2014 unified crawled + uploaded via source_type",
       "id": "db_spec_events_table"
     },
@@ -6470,7 +6803,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 54,
+      "community": 56,
       "norm_label": "users + uploader_profiles 1:1 \u2014 single-account multi-role",
       "id": "db_spec_users_uploader_profiles"
     },
@@ -6483,7 +6816,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 29,
+      "community": 32,
       "norm_label": "why: soft delete on users/events/reviews for recovery + partial index perf",
       "id": "db_spec_rationale_soft_delete"
     },
@@ -6496,7 +6829,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 29,
+      "community": 32,
       "norm_label": "why: single events table + source_type \u2014 avoids dual query paths",
       "id": "db_spec_rationale_unified_events"
     },
@@ -6522,7 +6855,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 77,
+      "community": 84,
       "norm_label": "alle logo mark (served, apps/web/public/)",
       "id": "web_public_logo_mark"
     },
@@ -6535,7 +6868,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 78,
+      "community": 85,
       "norm_label": "alle favicon (served, apps/web/public/)",
       "id": "web_public_favicon"
     },
@@ -6548,7 +6881,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 79,
+      "community": 86,
       "norm_label": "alle logo lockup (served, apps/web/public/)",
       "id": "web_public_logo_lockup"
     }
@@ -6735,6 +7068,66 @@
       "target": "prisma_client"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L16",
+      "weight": 1.0,
+      "_src": "apps_bff_src_llm_client_ts",
+      "_tgt": "llm_client_isretriable",
+      "source": "apps_bff_src_llm_client_ts",
+      "target": "llm_client_isretriable",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L20",
+      "weight": 1.0,
+      "_src": "apps_bff_src_llm_client_ts",
+      "_tgt": "llm_client_sleep",
+      "source": "apps_bff_src_llm_client_ts",
+      "target": "llm_client_sleep",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L24",
+      "weight": 1.0,
+      "_src": "apps_bff_src_llm_client_ts",
+      "_tgt": "llm_client_callllm",
+      "source": "apps_bff_src_llm_client_ts",
+      "target": "llm_client_callllm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L36",
+      "weight": 1.0,
+      "_src": "llm_client_callllm",
+      "_tgt": "llm_client_isretriable",
+      "source": "llm_client_isretriable",
+      "target": "llm_client_callllm",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\llm-client.ts",
+      "source_location": "L38",
+      "weight": 1.0,
+      "_src": "llm_client_callllm",
+      "_tgt": "llm_client_sleep",
+      "source": "llm_client_sleep",
+      "target": "llm_client_callllm",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\server.ts",
@@ -6756,6 +7149,66 @@
       "_tgt": "server_shutdown",
       "source": "apps_bff_src_server_ts",
       "target": "server_shutdown",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_src": "apps_bff_src_jobs_eval_summaries_ts",
+      "_tgt": "eval_summaries_parseargs",
+      "source": "apps_bff_src_jobs_eval_summaries_ts",
+      "target": "eval_summaries_parseargs",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L37",
+      "weight": 1.0,
+      "_src": "apps_bff_src_jobs_eval_summaries_ts",
+      "_tgt": "eval_summaries_excerpt",
+      "source": "apps_bff_src_jobs_eval_summaries_ts",
+      "target": "eval_summaries_excerpt",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L43",
+      "weight": 1.0,
+      "_src": "apps_bff_src_jobs_eval_summaries_ts",
+      "_tgt": "eval_summaries_main",
+      "source": "apps_bff_src_jobs_eval_summaries_ts",
+      "target": "eval_summaries_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L44",
+      "weight": 1.0,
+      "_src": "eval_summaries_main",
+      "_tgt": "eval_summaries_parseargs",
+      "source": "eval_summaries_parseargs",
+      "target": "eval_summaries_main",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\jobs\\eval-summaries.ts",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_src": "eval_summaries_main",
+      "_tgt": "eval_summaries_excerpt",
+      "source": "eval_summaries_excerpt",
+      "target": "eval_summaries_main",
       "confidence_score": 1.0
     },
     {
@@ -7482,7 +7935,19 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\jobs\\summarize-events.ts",
-      "source_location": "L21",
+      "source_location": "L18",
+      "weight": 1.0,
+      "_src": "apps_bff_src_jobs_summarize_events_ts",
+      "_tgt": "summarize_events_descriptionmd5",
+      "source": "apps_bff_src_jobs_summarize_events_ts",
+      "target": "summarize_events_descriptionmd5",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\jobs\\summarize-events.ts",
+      "source_location": "L31",
       "weight": 1.0,
       "_src": "apps_bff_src_jobs_summarize_events_ts",
       "_tgt": "summarize_events_summarizeone",
@@ -7494,7 +7959,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\jobs\\summarize-events.ts",
-      "source_location": "L42",
+      "source_location": "L47",
       "weight": 1.0,
       "_src": "apps_bff_src_jobs_summarize_events_ts",
       "_tgt": "summarize_events_runbackfillsummaries",
@@ -8154,7 +8619,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L44",
+      "source_location": "L39",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_event_reviews_ts",
       "_tgt": "event_reviews_listeventreviews",
@@ -8166,7 +8631,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L110",
+      "source_location": "L105",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_event_reviews_ts",
       "_tgt": "event_reviews_parseintclamp",
@@ -8178,7 +8643,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L124",
+      "source_location": "L119",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_event_reviews_ts",
       "_tgt": "event_reviews_createeventreview",
@@ -8190,7 +8655,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L233",
+      "source_location": "L228",
       "weight": 1.0,
       "_src": "apps_bff_src_routes_event_reviews_ts",
       "_tgt": "event_reviews_deletemyreview",
@@ -8202,7 +8667,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L210",
+      "source_location": "L205",
       "weight": 1.0,
       "_src": "event_reviews_createeventreview",
       "_tgt": "event_reviews_classifyandstoresentiment",
@@ -8214,7 +8679,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
-      "source_location": "L55",
+      "source_location": "L50",
       "weight": 1.0,
       "_src": "event_reviews_listeventreviews",
       "_tgt": "event_reviews_parseintclamp",
@@ -9462,7 +9927,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L51",
+      "source_location": "L53",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_chatmessage",
@@ -9474,7 +9939,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_chatrequest",
@@ -9486,7 +9951,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L60",
+      "source_location": "L62",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_summarizerequest",
@@ -9498,7 +9963,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_summarizeresponse",
@@ -9510,7 +9975,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_sentimentrequest",
@@ -9522,7 +9987,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L76",
+      "source_location": "L78",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_sentimentresponse",
@@ -9534,7 +9999,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L80",
+      "source_location": "L82",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_chatfilters",
@@ -9546,7 +10011,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L88",
+      "source_location": "L90",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_chatresponse",
@@ -9558,7 +10023,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L93",
+      "source_location": "L95",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_stage_label",
@@ -9570,7 +10035,19 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L99",
+      "source_location": "L104",
+      "weight": 1.0,
+      "_src": "services_llm_app_py",
+      "_tgt": "app_openai_available",
+      "source": "services_llm_app_py",
+      "target": "app_openai_available",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L110",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_health",
@@ -9582,7 +10059,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L104",
+      "source_location": "L120",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_chat",
@@ -9594,7 +10071,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L125",
+      "source_location": "L141",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_openai_extract",
@@ -9606,7 +10083,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L139",
+      "source_location": "L155",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_summarize",
@@ -9618,7 +10095,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L175",
+      "source_location": "L191",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_rule_sentiment",
@@ -9630,7 +10107,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L187",
+      "source_location": "L203",
       "weight": 1.0,
       "_src": "services_llm_app_py",
       "_tgt": "app_sentiment",
@@ -9654,7 +10131,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L51",
+      "source_location": "L53",
       "weight": 1.0,
       "_src": "app_chatmessage",
       "_tgt": "basemodel",
@@ -9666,7 +10143,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L56",
+      "source_location": "L58",
       "weight": 1.0,
       "_src": "app_chatrequest",
       "_tgt": "basemodel",
@@ -9678,7 +10155,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L60",
+      "source_location": "L62",
       "weight": 1.0,
       "_src": "app_summarizerequest",
       "_tgt": "basemodel",
@@ -9690,7 +10167,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L68",
+      "source_location": "L70",
       "weight": 1.0,
       "_src": "app_summarizeresponse",
       "_tgt": "basemodel",
@@ -9702,7 +10179,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L72",
+      "source_location": "L74",
       "weight": 1.0,
       "_src": "app_sentimentrequest",
       "_tgt": "basemodel",
@@ -9714,7 +10191,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L76",
+      "source_location": "L78",
       "weight": 1.0,
       "_src": "app_sentimentresponse",
       "_tgt": "basemodel",
@@ -9726,7 +10203,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L80",
+      "source_location": "L82",
       "weight": 1.0,
       "_src": "app_chatfilters",
       "_tgt": "basemodel",
@@ -9738,7 +10215,7 @@
       "relation": "inherits",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L88",
+      "source_location": "L90",
       "weight": 1.0,
       "_src": "app_chatresponse",
       "_tgt": "basemodel",
@@ -9750,7 +10227,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L156",
+      "source_location": "L172",
       "weight": 1.0,
       "_src": "app_summarize",
       "_tgt": "app_summarizeresponse",
@@ -9762,7 +10239,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L194",
+      "source_location": "L210",
       "weight": 1.0,
       "_src": "app_sentiment",
       "_tgt": "app_sentimentresponse",
@@ -9774,7 +10251,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L121",
+      "source_location": "L137",
       "weight": 1.0,
       "_src": "app_chat",
       "_tgt": "app_chatfilters",
@@ -9786,7 +10263,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L119",
+      "source_location": "L135",
       "weight": 1.0,
       "_src": "app_chat",
       "_tgt": "app_chatresponse",
@@ -9798,7 +10275,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L100",
+      "source_location": "L114",
       "weight": 1.0,
       "_src": "app_health",
       "_tgt": "app_stage_label",
@@ -9810,19 +10287,67 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L94",
+      "source_location": "L96",
       "weight": 1.0,
-      "_src": "app_rationale_94",
+      "_src": "app_rationale_96",
       "_tgt": "app_stage_label",
       "source": "app_stage_label",
-      "target": "app_rationale_94",
+      "target": "app_rationale_96",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L111",
+      "source_location": "L125",
+      "weight": 1.0,
+      "_src": "app_chat",
+      "_tgt": "app_openai_available",
+      "source": "app_openai_available",
+      "target": "app_chat",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L162",
+      "weight": 1.0,
+      "_src": "app_summarize",
+      "_tgt": "app_openai_available",
+      "source": "app_openai_available",
+      "target": "app_summarize",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L205",
+      "weight": 1.0,
+      "_src": "app_sentiment",
+      "_tgt": "app_openai_available",
+      "source": "app_openai_available",
+      "target": "app_sentiment",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L105",
+      "weight": 1.0,
+      "_src": "app_rationale_105",
+      "_tgt": "app_openai_available",
+      "source": "app_openai_available",
+      "target": "app_rationale_105",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\app.py",
+      "source_location": "L127",
       "weight": 1.0,
       "_src": "app_chat",
       "_tgt": "app_openai_extract",
@@ -9834,31 +10359,31 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L126",
+      "source_location": "L142",
       "weight": 1.0,
-      "_src": "app_rationale_126",
+      "_src": "app_rationale_142",
       "_tgt": "app_openai_extract",
       "source": "app_openai_extract",
-      "target": "app_rationale_126",
+      "target": "app_rationale_142",
       "confidence_score": 1.0
     },
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L140",
+      "source_location": "L156",
       "weight": 1.0,
-      "_src": "app_rationale_140",
+      "_src": "app_rationale_156",
       "_tgt": "app_summarize",
       "source": "app_summarize",
-      "target": "app_rationale_140",
+      "target": "app_rationale_156",
       "confidence_score": 1.0
     },
     {
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L197",
+      "source_location": "L213",
       "weight": 1.0,
       "_src": "app_sentiment",
       "_tgt": "app_rule_sentiment",
@@ -9870,12 +10395,204 @@
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\app.py",
-      "source_location": "L188",
+      "source_location": "L204",
       "weight": 1.0,
-      "_src": "app_rationale_188",
+      "_src": "app_rationale_204",
       "_tgt": "app_sentiment",
       "source": "app_sentiment",
-      "target": "app_rationale_188",
+      "target": "app_rationale_204",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L33",
+      "weight": 1.0,
+      "_src": "services_llm_cost_tracker_py",
+      "_tgt": "cost_tracker_price_for",
+      "source": "services_llm_cost_tracker_py",
+      "target": "cost_tracker_price_for",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L38",
+      "weight": 1.0,
+      "_src": "services_llm_cost_tracker_py",
+      "_tgt": "cost_tracker_costtracker",
+      "source": "services_llm_cost_tracker_py",
+      "target": "cost_tracker_costtracker",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L107",
+      "weight": 1.0,
+      "_src": "services_llm_cost_tracker_py",
+      "_tgt": "cost_tracker_daily_budget_usd",
+      "source": "services_llm_cost_tracker_py",
+      "target": "cost_tracker_daily_budget_usd",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_src": "cost_tracker_rationale_1",
+      "_tgt": "services_llm_cost_tracker_py",
+      "source": "services_llm_cost_tracker_py",
+      "target": "cost_tracker_rationale_1",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker_track",
+      "_tgt": "cost_tracker_price_for",
+      "source": "cost_tracker_price_for",
+      "target": "cost_tracker_costtracker_track",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L39",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker",
+      "_tgt": "cost_tracker_costtracker_init",
+      "source": "cost_tracker_costtracker",
+      "target": "cost_tracker_costtracker_init",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L49",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker",
+      "_tgt": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "source": "cost_tracker_costtracker",
+      "target": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L57",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker",
+      "_tgt": "cost_tracker_costtracker_track",
+      "source": "cost_tracker_costtracker",
+      "target": "cost_tracker_costtracker_track",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L79",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker",
+      "_tgt": "cost_tracker_costtracker_snapshot",
+      "source": "cost_tracker_costtracker",
+      "target": "cost_tracker_costtracker_snapshot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "method",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L98",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker",
+      "_tgt": "cost_tracker_costtracker_is_over_budget",
+      "source": "cost_tracker_costtracker",
+      "target": "cost_tracker_costtracker_is_over_budget",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L70",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker_track",
+      "_tgt": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "source": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "target": "cost_tracker_costtracker_track",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L81",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker_snapshot",
+      "_tgt": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "source": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "target": "cost_tracker_costtracker_snapshot",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L103",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker_is_over_budget",
+      "_tgt": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "source": "cost_tracker_costtracker_rollover_if_needed_locked",
+      "target": "cost_tracker_costtracker_is_over_budget",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker_snapshot",
+      "_tgt": "cost_tracker_daily_budget_usd",
+      "source": "cost_tracker_costtracker_snapshot",
+      "target": "cost_tracker_daily_budget_usd",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L99",
+      "weight": 1.0,
+      "_src": "cost_tracker_costtracker_is_over_budget",
+      "_tgt": "cost_tracker_daily_budget_usd",
+      "source": "cost_tracker_costtracker_is_over_budget",
+      "target": "cost_tracker_daily_budget_usd",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\cost_tracker.py",
+      "source_location": "L108",
+      "weight": 1.0,
+      "_src": "cost_tracker_rationale_108",
+      "_tgt": "cost_tracker_daily_budget_usd",
+      "source": "cost_tracker_daily_budget_usd",
+      "target": "cost_tracker_rationale_108",
       "confidence_score": 1.0
     },
     {
@@ -10026,7 +10743,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\openai_chain.py",
-      "source_location": "L124",
+      "source_location": "L126",
       "weight": 1.0,
       "_src": "services_llm_openai_chain_py",
       "_tgt": "openai_chain_classify_sentiment",
@@ -10038,7 +10755,19 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\openai_chain.py",
-      "source_location": "L140",
+      "source_location": "L143",
+      "weight": 1.0,
+      "_src": "services_llm_openai_chain_py",
+      "_tgt": "openai_chain_track_usage",
+      "source": "services_llm_openai_chain_py",
+      "target": "openai_chain_track_usage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\openai_chain.py",
+      "source_location": "L155",
       "weight": 1.0,
       "_src": "services_llm_openai_chain_py",
       "_tgt": "openai_chain_summarize_event",
@@ -10050,7 +10779,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\openai_chain.py",
-      "source_location": "L172",
+      "source_location": "L189",
       "weight": 1.0,
       "_src": "services_llm_openai_chain_py",
       "_tgt": "openai_chain_extract_via_openai",
@@ -10071,15 +10800,195 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\openai_chain.py",
+      "source_location": "L138",
+      "weight": 1.0,
+      "_src": "openai_chain_classify_sentiment",
+      "_tgt": "openai_chain_track_usage",
+      "source": "openai_chain_classify_sentiment",
+      "target": "openai_chain_track_usage",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\openai_chain.py",
+      "source_location": "L184",
+      "weight": 1.0,
+      "_src": "openai_chain_summarize_event",
+      "_tgt": "openai_chain_track_usage",
+      "source": "openai_chain_track_usage",
+      "target": "openai_chain_summarize_event",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\openai_chain.py",
+      "source_location": "L212",
+      "weight": 1.0,
+      "_src": "openai_chain_extract_via_openai",
+      "_tgt": "openai_chain_track_usage",
+      "source": "openai_chain_track_usage",
+      "target": "openai_chain_extract_via_openai",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
       "source_file": "services\\llm\\openai_chain.py",
-      "source_location": "L173",
+      "source_location": "L190",
       "weight": 1.0,
-      "_src": "openai_chain_rationale_173",
+      "_src": "openai_chain_rationale_190",
       "_tgt": "openai_chain_extract_via_openai",
       "source": "openai_chain_extract_via_openai",
-      "target": "openai_chain_rationale_173",
+      "target": "openai_chain_rationale_190",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L54",
+      "weight": 1.0,
+      "_src": "services_llm_summary_guard_py",
+      "_tgt": "summary_guard_strip_markdown",
+      "source": "services_llm_summary_guard_py",
+      "target": "summary_guard_strip_markdown",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L64",
+      "weight": 1.0,
+      "_src": "services_llm_summary_guard_py",
+      "_tgt": "summary_guard_strip_emoji",
+      "source": "services_llm_summary_guard_py",
+      "target": "summary_guard_strip_emoji",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L68",
+      "weight": 1.0,
+      "_src": "services_llm_summary_guard_py",
+      "_tgt": "summary_guard_normalize_whitespace",
+      "source": "services_llm_summary_guard_py",
+      "target": "summary_guard_normalize_whitespace",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L72",
+      "weight": 1.0,
+      "_src": "services_llm_summary_guard_py",
+      "_tgt": "summary_guard_truncate_at_sentence",
+      "source": "services_llm_summary_guard_py",
+      "target": "summary_guard_truncate_at_sentence",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L89",
+      "weight": 1.0,
+      "_src": "services_llm_summary_guard_py",
+      "_tgt": "summary_guard_sanitize_summary",
+      "source": "services_llm_summary_guard_py",
+      "target": "summary_guard_sanitize_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L1",
+      "weight": 1.0,
+      "_src": "summary_guard_rationale_1",
+      "_tgt": "services_llm_summary_guard_py",
+      "source": "services_llm_summary_guard_py",
+      "target": "summary_guard_rationale_1",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L93",
+      "weight": 1.0,
+      "_src": "summary_guard_sanitize_summary",
+      "_tgt": "summary_guard_strip_markdown",
+      "source": "summary_guard_strip_markdown",
+      "target": "summary_guard_sanitize_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L94",
+      "weight": 1.0,
+      "_src": "summary_guard_sanitize_summary",
+      "_tgt": "summary_guard_strip_emoji",
+      "source": "summary_guard_strip_emoji",
+      "target": "summary_guard_sanitize_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L95",
+      "weight": 1.0,
+      "_src": "summary_guard_sanitize_summary",
+      "_tgt": "summary_guard_normalize_whitespace",
+      "source": "summary_guard_normalize_whitespace",
+      "target": "summary_guard_sanitize_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L96",
+      "weight": 1.0,
+      "_src": "summary_guard_sanitize_summary",
+      "_tgt": "summary_guard_truncate_at_sentence",
+      "source": "summary_guard_truncate_at_sentence",
+      "target": "summary_guard_sanitize_summary",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L73",
+      "weight": 1.0,
+      "_src": "summary_guard_rationale_73",
+      "_tgt": "summary_guard_truncate_at_sentence",
+      "source": "summary_guard_truncate_at_sentence",
+      "target": "summary_guard_rationale_73",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "rationale_for",
+      "confidence": "EXTRACTED",
+      "source_file": "services\\llm\\summary_guard.py",
+      "source_location": "L90",
+      "weight": 1.0,
+      "_src": "summary_guard_rationale_90",
+      "_tgt": "summary_guard_sanitize_summary",
+      "source": "summary_guard_sanitize_summary",
+      "target": "summary_guard_rationale_90",
       "confidence_score": 1.0
     },
     {
