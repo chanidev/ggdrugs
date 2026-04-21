@@ -374,6 +374,8 @@ model Notification {
   scheduledAt    DateTime  @map("scheduled_at") @db.Timestamptz
   isSent         Boolean   @default(false) @map("is_sent")
   sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  /// 사용자가 알림 읽은 시각. NULL 이면 미읽음 (A_500 알림 센터 unread 뱃지).
+  readAt         DateTime? @map("read_at") @db.Timestamptz
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   user  User   @relation(fields: [userId], references: [userId])
@@ -391,6 +393,12 @@ model EventSubscription {
   subscriptionId BigInt   @id @default(autoincrement()) @map("subscription_id")
   userId         BigInt   @map("user_id")
   regionIds      BigInt[] @map("region_ids")
+  /// 빈 배열 = 모든 인원구성 (솔로/커플/친구/가족). 값 있으면 OR 매치.
+  companions     String[] @default([]) @map("companions") @db.VarChar(20)
+  /// 빈 배열 = 모든 이벤트 종류. 값 있으면 OR 매치 (event_categories.category_code).
+  eventTypes     String[] @default([]) @map("event_types") @db.VarChar(30)
+  /// 빈 배열 = 모든 성향. 값 있으면 any-match (event.vibeAssignments 교집합 ≥ 1).
+  vibeIds        BigInt[] @default([]) @map("vibe_ids")
   periodMonths   Int?     @map("period_months") @db.SmallInt // 3 | 6 | null(전체)
   isActive       Boolean  @default(true) @map("is_active")
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
