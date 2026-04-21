@@ -3,9 +3,11 @@ import {
   HeadObjectCommand,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../env.js';
+import { logger } from '../logger.js';
 
 /**
  * MinIO (S3 호환) 공용 클라이언트.
@@ -60,6 +62,31 @@ export async function presignGet(
 ): Promise<string> {
   const cmd = new GetObjectCommand({ Bucket: bucket, Key: key });
   return getSignedUrl(getS3(), cmd, { expiresIn: expiresSeconds });
+}
+
+/**
+ * 고아 객체 정리용 best-effort 일괄 delete. 트랜잭션 rollback 등 업로드 완료 후
+ * DB insert 실패한 경우 호출. 실패해도 throw 하지 않음 (lifecycle rule 에 맡길
+ * 수 있는 수준의 청소).
+ */
+export async function deleteObjects(bucket: string, keys: string[]): Promise<void> {
+  if (keys.length === 0) return;
+  // MinIO 는 DeleteObjectsCommand 에 Content-Md5 헤더를 요구하는데 AWS SDK v3
+  // 는 기본 제공 안 함. 고아 정리는 최대 N=5 정도라 단일 DeleteObjectCommand
+  // 를 Promise.allSettled 로 병렬 — MD5 필요없음.
+  const s3 = getS3();
+  const results = await Promise.allSettled(
+    keys.map((k) => s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: k }))),
+  );
+  const failed = results.filter((r) => r.status === 'rejected');
+  if (failed.length > 0) {
+    logger.warn(
+      { bucket, attempted: keys.length, failed: failed.length },
+      's3: delete orphans partial fail (best-effort)',
+    );
+  } else {
+    logger.info({ bucket, count: keys.length }, 's3: deleted orphaned objects');
+  }
 }
 
 export async function objectExists(bucket: string, key: string): Promise<boolean> {

@@ -609,6 +609,39 @@ export async function decideAdminEvent(
   };
 }
 
+export interface AdminUploaderDetailResponse {
+  uploader: AdminUploaderItem & {
+    user: AdminUploaderItem['user'] & { createdAt: string };
+  };
+  eventStats: Record<UploaderApprovalStatus, number>;
+  recentEvents: Array<{
+    eventId: string;
+    title: string;
+    approvalStatus: UploaderApprovalStatus;
+    phase: EventPhase;
+    startDate: string;
+    endDate: string;
+    createdAt: string;
+    categoryName: string;
+  }>;
+}
+
+export async function fetchAdminUploaderDetail(
+  uploaderId: string,
+  signal?: AbortSignal,
+): Promise<AdminUploaderDetailResponse> {
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(
+    `${BFF_URL}/admin/uploaders/${encodeURIComponent(uploaderId)}`,
+    init,
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (res.status === 404) throw new Error('NOT_FOUND');
+  if (!res.ok) throw new Error(`GET /admin/uploaders/${uploaderId} ${res.status}`);
+  return (await res.json()) as AdminUploaderDetailResponse;
+}
+
 export async function decideAdminUploader(
   uploaderId: string,
   action: 'approved' | 'revision_requested' | 'rejected',

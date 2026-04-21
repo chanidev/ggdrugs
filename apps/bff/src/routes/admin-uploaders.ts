@@ -109,6 +109,113 @@ export async function listAdminUploaders(req: Request, res: Response) {
 }
 
 /**
+ * GET /admin/uploaders/:id — 프로파일 상세 + 이벤트 집계 + 최근 이벤트.
+ *
+ *  기본정보      uploader_profiles 행 + user
+ *  eventStats    approval_status 별 카운트 (사용자가 올린 이벤트 규모 판단)
+ *  recentEvents  최근 5개 이벤트 (title/status/phase/start·end/createdAt)
+ *
+ * 관리자가 승급 결정 내리기 전 "이 사람 뭘 올렸나" 근거 확인용.
+ * 등록 이벤트 없어도 (처음 신청이면) 빈 값 반환.
+ */
+export async function getAdminUploader(req: Request, res: Response) {
+  const uploaderId = parseBigIntParam(req.params.id);
+  if (!uploaderId) {
+    res.status(400).json({ error: 'invalid uploader id' });
+    return;
+  }
+
+  const profile = await prisma.uploaderProfile.findUnique({
+    where: { uploaderId },
+    select: {
+      uploaderId: true,
+      organizationName: true,
+      contactPhone: true,
+      contactEmail: true,
+      approvalStatus: true,
+      approvedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      user: {
+        select: {
+          userId: true,
+          nickname: true,
+          authProvider: true,
+          activeRole: true,
+          createdAt: true,
+        },
+      },
+    },
+  });
+  if (!profile) {
+    res.status(404).json({ error: 'uploader_not_found' });
+    return;
+  }
+
+  const [statusRows, recentRows] = await Promise.all([
+    prisma.event.groupBy({
+      by: ['approvalStatus'],
+      where: { uploaderId, isDeleted: false },
+      _count: { _all: true },
+    }),
+    prisma.event.findMany({
+      where: { uploaderId, isDeleted: false },
+      orderBy: [{ createdAt: 'desc' }, { eventId: 'desc' }],
+      take: 5,
+      select: {
+        eventId: true,
+        title: true,
+        approvalStatus: true,
+        phase: true,
+        startDate: true,
+        endDate: true,
+        createdAt: true,
+        category: { select: { displayName: true } },
+      },
+    }),
+  ]);
+
+  const eventStats: Record<string, number> = {
+    pending: 0,
+    approved: 0,
+    revision_requested: 0,
+    rejected: 0,
+  };
+  for (const row of statusRows) eventStats[row.approvalStatus] = row._count._all;
+
+  res.json({
+    uploader: {
+      uploaderId: profile.uploaderId.toString(),
+      organizationName: profile.organizationName,
+      contactPhone: profile.contactPhone,
+      contactEmail: profile.contactEmail,
+      approvalStatus: profile.approvalStatus,
+      approvedAt: profile.approvedAt?.toISOString() ?? null,
+      createdAt: profile.createdAt.toISOString(),
+      updatedAt: profile.updatedAt.toISOString(),
+      user: {
+        userId: profile.user.userId.toString(),
+        nickname: profile.user.nickname,
+        authProvider: profile.user.authProvider,
+        activeRole: profile.user.activeRole,
+        createdAt: profile.user.createdAt.toISOString(),
+      },
+    },
+    eventStats,
+    recentEvents: recentRows.map((r) => ({
+      eventId: r.eventId.toString(),
+      title: r.title,
+      approvalStatus: r.approvalStatus,
+      phase: r.phase,
+      startDate: r.startDate.toISOString().slice(0, 10),
+      endDate: r.endDate.toISOString().slice(0, 10),
+      createdAt: r.createdAt.toISOString(),
+      categoryName: r.category.displayName,
+    })),
+  });
+}
+
+/**
  * POST /admin/uploaders/:id/decision
  * body: { action: 'approved'|'revision_requested'|'rejected', reason?: string }
  *

@@ -24,6 +24,7 @@ import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
 import { listAdminEventDocuments } from './routes/admin-documents.js';
 import {
   listAdminUploaders,
+  getAdminUploader,
   decideUploader,
   decideEventUpload,
 } from './routes/admin-uploaders.js';
@@ -214,6 +215,12 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireAdmin(req, res, next).catch(next),
     (req, res, next) => listAdminUploaders(req, res).catch(next),
+  );
+  app.get(
+    '/admin/uploaders/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => getAdminUploader(req, res).catch(next),
   );
   app.post(
     '/admin/uploaders/:id/decision',

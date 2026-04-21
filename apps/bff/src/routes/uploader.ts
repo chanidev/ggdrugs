@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
+import { env } from '../env.js';
+import { deleteObjects } from '../lib/s3.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 import type { UploaderRequest } from '../middleware/require-uploader.js';
 
@@ -481,16 +483,32 @@ export async function createUploaderEvent(req: Request, res: Response) {
   }
   const docs = docsResult;
 
+  // 이 시점부터는 고아 객체 리스크 영역 — client 가 이미 S3 에 업로드 완료한 docs/poster 를
+  // 서버 실패 시 정리한다. FK 검증 실패도 포함.
+  async function cleanupOrphans() {
+    await deleteObjects(env.S3_BUCKET_APPROVAL_DOCS, docs.map((d) => d.key));
+    if (posterImageUrl) {
+      const prefix = `/${env.S3_BUCKET_EVENT_POSTERS}/`;
+      const idx = posterImageUrl.indexOf(prefix);
+      if (idx >= 0) {
+        const posterKey = decodeURI(posterImageUrl.slice(idx + prefix.length));
+        await deleteObjects(env.S3_BUCKET_EVENT_POSTERS, [posterKey]);
+      }
+    }
+  }
+
   // FK 검증 — category + region.
   const [category, region] = await Promise.all([
     prisma.eventCategory.findUnique({ where: { categoryCode }, select: { categoryId: true } }),
     prisma.region.findUnique({ where: { regionId }, select: { regionId: true } }),
   ]);
   if (!category) {
+    await cleanupOrphans();
     res.status(400).json({ error: `categoryCode=${categoryCode} 비활성` });
     return;
   }
   if (!region) {
+    await cleanupOrphans();
     res.status(400).json({ error: `regionId=${regionId.toString()} 없음` });
     return;
   }
@@ -499,7 +517,10 @@ export async function createUploaderEvent(req: Request, res: Response) {
 
   // 트랜잭션: event insert + approval_documents N rows.
   // docs.file_path 에 MinIO object key 를 그대로 저장 (GET 은 관리자용 presigned).
-  const created = await prisma.$transaction(async (tx) => {
+  // 실패 시 이미 업로드된 서류/포스터 key 를 고아로 남기지 않도록 catch 에서 정리.
+  let created;
+  try {
+    created = await prisma.$transaction(async (tx) => {
     const event = await tx.event.create({
       data: {
         uploaderId: uploader.uploaderId,
@@ -532,17 +553,21 @@ export async function createUploaderEvent(req: Request, res: Response) {
         createdAt: true,
       },
     });
-    await tx.approvalDocument.createMany({
-      data: docs.map((d) => ({
-        eventId: event.eventId,
-        filePath: d.key,
-        originalFilename: d.originalFilename,
-        mimeType: d.mimeType,
-        fileSizeBytes: d.fileSizeBytes,
-      })),
+      await tx.approvalDocument.createMany({
+        data: docs.map((d) => ({
+          eventId: event.eventId,
+          filePath: d.key,
+          originalFilename: d.originalFilename,
+          mimeType: d.mimeType,
+          fileSizeBytes: d.fileSizeBytes,
+        })),
+      });
+      return event;
     });
-    return event;
-  });
+  } catch (err) {
+    await cleanupOrphans();
+    throw err;
+  }
 
   res.status(201).json({
     event: {
