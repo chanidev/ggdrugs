@@ -1,4 +1,9 @@
-import { S3Client, HeadObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  S3Client,
+  HeadObjectCommand,
+  PutObjectCommand,
+  GetObjectCommand,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../env.js';
 
@@ -44,6 +49,16 @@ export async function presignPut(
   expiresSeconds = 900,
 ): Promise<string> {
   const cmd = new PutObjectCommand({ Bucket: bucket, Key: key, ContentType: contentType });
+  return getSignedUrl(getS3(), cmd, { expiresIn: expiresSeconds });
+}
+
+/** 비공개 버킷에서 짧은 TTL 로 GET URL 발급 — 관리자 서류 열람용. */
+export async function presignGet(
+  bucket: string,
+  key: string,
+  expiresSeconds = 300,
+): Promise<string> {
+  const cmd = new GetObjectCommand({ Bucket: bucket, Key: key });
   return getSignedUrl(getS3(), cmd, { expiresIn: expiresSeconds });
 }
 

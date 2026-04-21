@@ -64,6 +64,11 @@ export async function listAdminEvents(req: Request, res: Response) {
     approvalStatus: approval,
   };
 
+  const sourceRaw = typeof req.query.sourceType === 'string' ? req.query.sourceType : '';
+  if (sourceRaw === 'uploaded' || sourceRaw === 'crawled') {
+    where.sourceType = sourceRaw;
+  }
+
   const phasesRaw = typeof req.query.phase === 'string' ? req.query.phase : '';
   if (phasesRaw) {
     const allowed = new Set(['upcoming', 'ongoing', 'ended']);

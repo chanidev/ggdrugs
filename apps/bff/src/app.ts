@@ -21,6 +21,7 @@ import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
 import { postChat } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
+import { listAdminEventDocuments } from './routes/admin-documents.js';
 import {
   listAdminUploaders,
   decideUploader,
@@ -195,6 +196,12 @@ export function createApp(): Express {
     (req: Request, res: Response, next: NextFunction) => {
       putAdminEventVibes(req, res).catch(next);
     },
+  );
+  app.get(
+    '/admin/events/:id/documents',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => listAdminEventDocuments(req, res).catch(next),
   );
 
   // Admin — 업로더 승급 심사 + 업로드 이벤트 심사 (A_700 part 2)

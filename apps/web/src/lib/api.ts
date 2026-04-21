@@ -424,6 +424,7 @@ export interface AdminEventItem {
 export interface AdminEventsQuery {
   hasVibes?: 'true' | 'false' | 'any';
   approvalStatus?: string;
+  sourceType?: 'uploaded' | 'crawled';
   phase?: EventPhase[];
   regionIds?: string[];
   q?: string;
@@ -445,6 +446,7 @@ export async function fetchAdminEvents(
   const sp = new URLSearchParams();
   if (query.hasVibes) sp.set('hasVibes', query.hasVibes);
   if (query.approvalStatus) sp.set('approvalStatus', query.approvalStatus);
+  if (query.sourceType) sp.set('sourceType', query.sourceType);
   if (query.phase?.length) sp.set('phase', query.phase.join(','));
   if (query.regionIds?.length) sp.set('regionIds', query.regionIds.join(','));
   if (query.q) sp.set('q', query.q);
@@ -537,6 +539,66 @@ export async function fetchAdminUploaders(
   if (res.status === 403) throw new Error('FORBIDDEN');
   if (!res.ok) throw new Error(`GET /admin/uploaders ${res.status}`);
   return (await res.json()) as AdminUploadersResponse;
+}
+
+export interface AdminEventDocumentItem {
+  documentId: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  createdAt: string;
+  previewUrl: string;
+}
+
+export interface AdminEventDocumentsResponse {
+  eventId: string;
+  sourceType: string;
+  expiresIn: number;
+  items: AdminEventDocumentItem[];
+}
+
+export async function fetchAdminEventDocuments(
+  eventId: string,
+  signal?: AbortSignal,
+): Promise<AdminEventDocumentsResponse> {
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(
+    `${BFF_URL}/admin/events/${encodeURIComponent(eventId)}/documents`,
+    init,
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (res.status === 404) throw new Error('NOT_FOUND');
+  if (!res.ok) throw new Error(`GET /admin/events/${eventId}/documents ${res.status}`);
+  return (await res.json()) as AdminEventDocumentsResponse;
+}
+
+export async function decideAdminEvent(
+  eventId: string,
+  action: 'approved' | 'revision_requested' | 'rejected',
+  reason?: string,
+): Promise<{ eventId: string; approvalStatus: UploaderApprovalStatus; reason: string | null }> {
+  const res = await fetch(
+    `${BFF_URL}/admin/events/${encodeURIComponent(eventId)}/decision`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, reason }),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(
+      `POST /admin/events/${eventId}/decision ${res.status}: ${txt.slice(0, 200)}`,
+    );
+  }
+  return (await res.json()) as {
+    eventId: string;
+    approvalStatus: UploaderApprovalStatus;
+    reason: string | null;
+  };
 }
 
 export async function decideAdminUploader(
