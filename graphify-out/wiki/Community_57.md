@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **ChatDock.tsx** (1 connections) — `apps\web\src\components\ChatDock.tsx`
-- **ChatDock()** (1 connections) — `apps\web\src\components\ChatDock.tsx`
+- **BookmarkButton.tsx** (1 connections) — `apps\web\src\components\BookmarkButton.tsx`
+- **BookmarkButton()** (1 connections) — `apps\web\src\components\BookmarkButton.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\ChatDock.tsx`
+- `apps\web\src\components\BookmarkButton.tsx`
 
 ## Audit Trail
 

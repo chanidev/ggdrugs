@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Alle Logo Mark (served, apps/web/public/)** (0 connections) — `apps/web/public/logo-mark.svg`
+- **Do-not-edit: color/type/radius/shadow/motion tokens already correct** (0 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps/web/public/logo-mark.svg`
+- `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Audit Trail
 

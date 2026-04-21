@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **auth-context.tsx** (2 connections) — `apps\web\src\lib\auth-context.tsx`
-- **AuthProvider()** (1 connections) — `apps\web\src\lib\auth-context.tsx`
-- **useCurrentUser()** (1 connections) — `apps\web\src\lib\auth-context.tsx`
+- **MobileTabBar.tsx** (2 connections) — `apps\web\src\layout\MobileTabBar.tsx`
+- **MobileTabBar()** (1 connections) — `apps\web\src\layout\MobileTabBar.tsx`
+- **TabBtn()** (1 connections) — `apps\web\src\layout\MobileTabBar.tsx`
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- `apps\web\src\lib\auth-context.tsx`
+- `apps\web\src\layout\MobileTabBar.tsx`
 
 ## Audit Trail
 

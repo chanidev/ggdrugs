@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag** (0 connections) — `services\llm\openai_chain.py`
+- **TOKEN_BUDGET_DAILY_USD 환경변수. 없으면 None (가드 off).** (0 connections) — `services\llm\cost_tracker.py`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `services\llm\openai_chain.py`
+- `services\llm\cost_tracker.py`
 
 ## Audit Trail
 

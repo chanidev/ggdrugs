@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **Map pin component tokens** (1 connections) — `DESIGN.md`
-- **Signature — 핀 클러스터 분해 애니메이션** (1 connections) — `DESIGN.md`
+- **UploaderPage.tsx** (1 connections) — `apps\web\src\pages\UploaderPage.tsx`
+- **toggleRole()** (1 connections) — `apps\web\src\pages\UploaderPage.tsx`
 
 ## Relationships
 
@@ -13,12 +13,12 @@
 
 ## Source Files
 
-- `DESIGN.md`
+- `apps\web\src\pages\UploaderPage.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 0 (0%)
-- INFERRED: 2 (100%)
+- EXTRACTED: 2 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

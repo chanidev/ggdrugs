@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Term: period** (0 connections) — `llm_wiki/wiki/topics/terminology-glossary.md`
+- **graphify rule: read GRAPH_REPORT first** (0 connections) — `CLAUDE.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `llm_wiki/wiki/topics/terminology-glossary.md`
+- `CLAUDE.md`
 
 ## Audit Trail
 

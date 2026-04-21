@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag** (0 connections) — `services\llm\openai_chain.py`
+- **텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `services\llm\openai_chain.py`
+- `services\llm\app.py`
 
 ## Audit Trail
 

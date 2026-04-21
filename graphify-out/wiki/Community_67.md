@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **EventFormFields.tsx** (1 connections) — `apps\web\src\components\uploader\EventFormFields.tsx`
-- **isEventFormFilled()** (1 connections) — `apps\web\src\components\uploader\EventFormFields.tsx`
+- **DocumentsPickerField.tsx** (1 connections) — `apps\web\src\components\uploader\DocumentsPickerField.tsx`
+- **DocumentsPickerField()** (1 connections) — `apps\web\src\components\uploader\DocumentsPickerField.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\uploader\EventFormFields.tsx`
+- `apps\web\src\components\uploader\DocumentsPickerField.tsx`
 
 ## Audit Trail
 

@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()** (0 connections) — `services\llm\app.py`
+- **키 있고 일일 예산 한도 전이면 True.** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 

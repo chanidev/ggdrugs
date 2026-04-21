@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **MyPage.tsx** (0 connections) — `apps\web\src\pages\MyPage.tsx`
+- **Header.tsx** (0 connections) — `apps\web\src\layout\Header.tsx`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\pages\MyPage.tsx`
+- `apps\web\src\layout\Header.tsx`
 
 ## Audit Trail
 

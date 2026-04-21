@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Header.tsx** (0 connections) — `apps\web\src\layout\Header.tsx`
+- **mock.ts** (0 connections) — `apps\web\src\data\mock.ts`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\layout\Header.tsx`
+- `apps\web\src\data\mock.ts`
 
 ## Audit Trail
 

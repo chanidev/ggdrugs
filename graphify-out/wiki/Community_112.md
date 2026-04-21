@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **God node: UI 플로우 와이어프레임 초안 (23 edges)** (0 connections) — `graphify-out\GRAPH_REPORT.md`
+- **Term: period** (0 connections) — `llm_wiki/wiki/topics/terminology-glossary.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `graphify-out\GRAPH_REPORT.md`
+- `llm_wiki/wiki/topics/terminology-glossary.md`
 
 ## Audit Trail
 

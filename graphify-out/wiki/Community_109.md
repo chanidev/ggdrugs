@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Pending decision: rename @ggdrugs/web → @alle/web? (default no)** (0 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- **phase badge tokens (upcoming/ongoing/ended)** (0 connections) — `DESIGN.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- `DESIGN.md`
 
 ## Audit Trail
 

@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **Three roles: user / uploader / admin with active_role toggle** (1 connections) — `.claude/CLAUDE.md`
-- **users + uploader_profiles 1:1 — single-account multi-role** (1 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
+- **DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)** (1 connections) — `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
+- **Term: event_vibe (event vibe labels, admin-assigned)** (1 connections) — `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
 
 ## Relationships
 
@@ -13,8 +13,8 @@
 
 ## Source Files
 
-- `.claude/CLAUDE.md`
-- `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
+- `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
+- `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
 
 ## Audit Trail
 

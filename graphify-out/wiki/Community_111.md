@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Term: companion_type {혼자, 연인, 친구, 가족}** (0 connections) — `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
+- **search_logs table** (0 connections) — `llm_wiki/wiki/topics/db-schema-overview.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
+- `llm_wiki/wiki/topics/db-schema-overview.md`
 
 ## Audit Trail
 

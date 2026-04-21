@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **UploaderNewEventPage.tsx** (2 connections) — `apps\web\src\pages\UploaderNewEventPage.tsx`
-- **submit()** (1 connections) — `apps\web\src\pages\UploaderNewEventPage.tsx`
-- **toggleToUploader()** (1 connections) — `apps\web\src\pages\UploaderNewEventPage.tsx`
+- **UploaderEventEditPage.tsx** (2 connections) — `apps\web\src\pages\UploaderEventEditPage.tsx`
+- **submit()** (1 connections) — `apps\web\src\pages\UploaderEventEditPage.tsx`
+- **toggleToUploader()** (1 connections) — `apps\web\src\pages\UploaderEventEditPage.tsx`
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- `apps\web\src\pages\UploaderNewEventPage.tsx`
+- `apps\web\src\pages\UploaderEventEditPage.tsx`
 
 ## Audit Trail
 

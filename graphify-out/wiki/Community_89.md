@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **키 있고 일일 예산 한도 전이면 True.** (0 connections) — `services\llm\app.py`
+- **현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 

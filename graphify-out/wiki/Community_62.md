@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **PhaseBadge.tsx** (1 connections) — `apps\web\src\components\PhaseBadge.tsx`
-- **PhaseBadge()** (1 connections) — `apps\web\src\components\PhaseBadge.tsx`
+- **OverlayPanel.tsx** (1 connections) — `apps\web\src\components\OverlayPanel.tsx`
+- **OverlayPanel()** (1 connections) — `apps\web\src\components\OverlayPanel.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\PhaseBadge.tsx`
+- `apps\web\src\components\OverlayPanel.tsx`
 
 ## Audit Trail
 

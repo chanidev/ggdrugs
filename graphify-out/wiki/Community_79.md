@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **VITE_KAKAO_MAP_JS_KEY env typing** (0 connections) — `apps\web\src\vite-env.d.ts`
+- **main.tsx** (0 connections) — `apps\web\src\main.tsx`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\vite-env.d.ts`
+- `apps\web\src\main.tsx`
 
 ## Audit Trail
 

@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **main.tsx** (0 connections) — `apps\web\src\main.tsx`
+- **Vite config (React + Tailwind + BFF proxy)** (0 connections) — `apps\web\vite.config.ts`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\main.tsx`
+- `apps\web\vite.config.ts`
 
 ## Audit Trail
 

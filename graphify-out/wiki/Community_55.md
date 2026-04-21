@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **/api → localhost:3000 proxy (rewrite strip)** (1 connections) — `apps\web\vite.config.ts`
-- **HealthBadge (BFF /api/health poll)** (1 connections) — `apps\web\src\components\HealthBadge.tsx`
+- **subscription-match.ts** (1 connections) — `apps\bff\src\lib\subscription-match.ts`
+- **notifyMatchingSubscribers()** (1 connections) — `apps\bff\src\lib\subscription-match.ts`
 
 ## Relationships
 
@@ -13,13 +13,12 @@
 
 ## Source Files
 
-- `apps\web\src\components\HealthBadge.tsx`
-- `apps\web\vite.config.ts`
+- `apps\bff\src\lib\subscription-match.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 0 (0%)
-- INFERRED: 2 (100%)
+- EXTRACTED: 2 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

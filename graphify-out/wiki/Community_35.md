@@ -4,11 +4,11 @@
 
 ## Key Concepts
 
-- **uploads.ts** (4 connections) — `apps\web\src\lib\uploads.ts`
-- **uploadDocuments()** (1 connections) — `apps\web\src\lib\uploads.ts`
-- **uploadPoster()** (1 connections) — `apps\web\src\lib\uploads.ts`
-- **uploadReviewPhotos()** (1 connections) — `apps\web\src\lib\uploads.ts`
-- **uploadUploaderSignupDocuments()** (1 connections) — `apps\web\src\lib\uploads.ts`
+- **Sidebar.tsx** (4 connections) — `apps\web\src\layout\Sidebar.tsx`
+- **RailRow()** (1 connections) — `apps\web\src\layout\Sidebar.tsx`
+- **Sidebar()** (1 connections) — `apps\web\src\layout\Sidebar.tsx`
+- **StatRow()** (1 connections) — `apps\web\src\layout\Sidebar.tsx`
+- **StatsBlock()** (1 connections) — `apps\web\src\layout\Sidebar.tsx`
 
 ## Relationships
 
@@ -16,7 +16,7 @@
 
 ## Source Files
 
-- `apps\web\src\lib\uploads.ts`
+- `apps\web\src\layout\Sidebar.tsx`
 
 ## Audit Trail
 

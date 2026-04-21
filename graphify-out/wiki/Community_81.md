@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **EventSummaryPanel.tsx** (0 connections) — `apps\web\src\components\EventSummaryPanel.tsx`
+- **EventList.tsx** (0 connections) — `apps\web\src\components\EventList.tsx`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\EventSummaryPanel.tsx`
+- `apps\web\src\components\EventList.tsx`
 
 ## Audit Trail
 

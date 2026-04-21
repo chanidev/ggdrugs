@@ -1,12 +1,13 @@
 # Community 43
 
-> 3 nodes · cohesion 0.67
+> 4 nodes · cohesion 0.50
 
 ## Key Concepts
 
-- **Logo.tsx** (2 connections) — `apps\web\src\components\brand\Logo.tsx`
-- **LogoLockup()** (1 connections) — `apps\web\src\components\brand\Logo.tsx`
-- **LogoMark()** (1 connections) — `apps\web\src\components\brand\Logo.tsx`
+- **events table — unified crawled + uploaded via source_type** (3 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
+- **WHY: soft delete on users/events/reviews for recovery + partial index perf** (1 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
+- **WHY: single events table + source_type — avoids dual query paths** (1 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
+- **A_501 이벤트 리뷰 작성 — new review flow (wireframe 6-1)** (1 connections) — `graphify-out/converted/장원팀_요구사항정의서_5차_81ea2fb0.md`
 
 ## Relationships
 
@@ -14,12 +15,13 @@
 
 ## Source Files
 
-- `apps\web\src\components\brand\Logo.tsx`
+- `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
+- `graphify-out/converted/장원팀_요구사항정의서_5차_81ea2fb0.md`
 
 ## Audit Trail
 
-- EXTRACTED: 4 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 4 (67%)
+- INFERRED: 2 (33%)
 - AMBIGUOUS: 0 (0%)
 
 ---

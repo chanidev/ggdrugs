@@ -1,14 +1,15 @@
 # Community 31
 
-> 5 nodes · cohesion 0.70
+> 6 nodes · cohesion 0.33
 
 ## Key Concepts
 
-- **seed-admin.ts** (4 connections) — `apps\bff\src\jobs\seed-admin.ts`
-- **main()** (4 connections) — `apps\bff\src\jobs\seed-admin.ts`
-- **listAdmins()** (2 connections) — `apps\bff\src\jobs\seed-admin.ts`
-- **parseArgs()** (2 connections) — `apps\bff\src\jobs\seed-admin.ts`
-- **resolveUserId()** (2 connections) — `apps\bff\src\jobs\seed-admin.ts`
+- **Web Domain Configuration Panel** (4 connections) — `image.png`
+- **Registered Domain: http://localhost:9999 (Primary / 기본)** (2 connections) — `image.png`
+- **Registered Domain: http://localhost:5173 (Vite dev server)** (1 connections) — `image.png`
+- **Domain-Only Registration Rule (paths stripped, e.g. https://www.example.com/mypage → https://example.com)** (1 connections) — `image.png`
+- **Kakao Developers App Platform/Web Domain Settings (inferred)** (1 connections) — `image.png`
+- **Primary Domain Badge (기본)** (1 connections) — `image.png`
 
 ## Relationships
 
@@ -16,12 +17,12 @@
 
 ## Source Files
 
-- `apps\bff\src\jobs\seed-admin.ts`
+- `image.png`
 
 ## Audit Trail
 
-- EXTRACTED: 14 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 8 (80%)
+- INFERRED: 2 (20%)
 - AMBIGUOUS: 0 (0%)
 
 ---

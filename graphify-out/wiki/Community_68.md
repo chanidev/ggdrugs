@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **UploaderPage.tsx** (1 connections) — `apps\web\src\pages\UploaderPage.tsx`
-- **toggleRole()** (1 connections) — `apps\web\src\pages\UploaderPage.tsx`
+- **EventFormFields.tsx** (1 connections) — `apps\web\src\components\uploader\EventFormFields.tsx`
+- **isEventFormFilled()** (1 connections) — `apps\web\src\components\uploader\EventFormFields.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\pages\UploaderPage.tsx`
+- `apps\web\src\components\uploader\EventFormFields.tsx`
 
 ## Audit Trail
 

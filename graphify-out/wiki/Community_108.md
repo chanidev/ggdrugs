@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Do-not-edit: color/type/radius/shadow/motion tokens already correct** (0 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- **gstack workflow Think→Plan→Build→Review→Test→Ship→Reflect** (0 connections) — `CLAUDE.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- `CLAUDE.md`
 
 ## Audit Trail
 

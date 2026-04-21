@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **UploaderDetailPanel.tsx** (1 connections) — `apps\web\src\components\admin\UploaderDetailPanel.tsx`
-- **decide()** (1 connections) — `apps\web\src\components\admin\UploaderDetailPanel.tsx`
+- **PhaseBadge.tsx** (1 connections) — `apps\web\src\components\PhaseBadge.tsx`
+- **PhaseBadge()** (1 connections) — `apps\web\src\components\PhaseBadge.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\admin\UploaderDetailPanel.tsx`
+- `apps\web\src\components\PhaseBadge.tsx`
 
 ## Audit Trail
 

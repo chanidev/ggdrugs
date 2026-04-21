@@ -1,15 +1,15 @@
 # Community 30
 
-> 6 nodes · cohesion 0.33
+> 6 nodes · cohesion 0.40
 
 ## Key Concepts
 
-- **Web Domain Configuration Panel** (4 connections) — `image.png`
-- **Registered Domain: http://localhost:9999 (Primary / 기본)** (2 connections) — `image.png`
-- **Registered Domain: http://localhost:5173 (Vite dev server)** (1 connections) — `image.png`
-- **Domain-Only Registration Rule (paths stripped, e.g. https://www.example.com/mypage → https://example.com)** (1 connections) — `image.png`
-- **Kakao Developers App Platform/Web Domain Settings (inferred)** (1 connections) — `image.png`
-- **Primary Domain Badge (기본)** (1 connections) — `image.png`
+- **loadPartial (per-service schema)** (3 connections) — `packages\config\src\index.ts`
+- **env (BffEnv instance)** (3 connections) — `apps\bff\src\env.ts`
+- **EnvValidationError** (2 connections) — `packages\config\src\index.ts`
+- **loadEnv (full validation)** (2 connections) — `packages\config\src\index.ts`
+- **pino logger (env-aware)** (1 connections) — `apps\bff\src\logger.ts`
+- **prisma (PrismaClient singleton)** (1 connections) — `apps\bff\src\prisma.ts`
 
 ## Relationships
 
@@ -17,12 +17,15 @@
 
 ## Source Files
 
-- `image.png`
+- `apps\bff\src\env.ts`
+- `apps\bff\src\logger.ts`
+- `apps\bff\src\prisma.ts`
+- `packages\config\src\index.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 8 (80%)
-- INFERRED: 2 (20%)
+- EXTRACTED: 10 (83%)
+- INFERRED: 2 (17%)
 - AMBIGUOUS: 0 (0%)
 
 ---

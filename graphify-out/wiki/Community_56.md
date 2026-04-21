@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **BookmarkButton.tsx** (1 connections) — `apps\web\src\components\BookmarkButton.tsx`
-- **BookmarkButton()** (1 connections) — `apps\web\src\components\BookmarkButton.tsx`
+- **/api → localhost:3000 proxy (rewrite strip)** (1 connections) — `apps\web\vite.config.ts`
+- **HealthBadge (BFF /api/health poll)** (1 connections) — `apps\web\src\components\HealthBadge.tsx`
 
 ## Relationships
 
@@ -13,12 +13,13 @@
 
 ## Source Files
 
-- `apps\web\src\components\BookmarkButton.tsx`
+- `apps\web\src\components\HealthBadge.tsx`
+- `apps\web\vite.config.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 2 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 0 (0%)
+- INFERRED: 2 (100%)
 - AMBIGUOUS: 0 (0%)
 
 ---

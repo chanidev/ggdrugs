@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- **events table — unified crawled + uploaded via source_type** (3 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
-- **WHY: soft delete on users/events/reviews for recovery + partial index perf** (1 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
-- **WHY: single events table + source_type — avoids dual query paths** (1 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
-- **A_501 이벤트 리뷰 작성 — new review flow (wireframe 6-1)** (1 connections) — `graphify-out/converted/장원팀_요구사항정의서_5차_81ea2fb0.md`
+- **Brand implementation references (Logo.tsx + public SVGs + handoff)** (3 connections) — `DESIGN.md`
+- **apps/web/public/favicon.svg (thicker-stroke variant)** (1 connections) — `apps/web/public/favicon.svg`
+- **apps/web/public/logo-lockup.svg (raw lockup asset)** (1 connections) — `apps/web/public/logo-lockup.svg`
+- **apps/web/public/logo-mark.svg (raw Line Monogram asset)** (1 connections) — `apps/web/public/logo-mark.svg`
 
 ## Relationships
 
@@ -15,13 +15,15 @@
 
 ## Source Files
 
-- `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
-- `graphify-out/converted/장원팀_요구사항정의서_5차_81ea2fb0.md`
+- `DESIGN.md`
+- `apps/web/public/favicon.svg`
+- `apps/web/public/logo-lockup.svg`
+- `apps/web/public/logo-mark.svg`
 
 ## Audit Trail
 
-- EXTRACTED: 4 (67%)
-- INFERRED: 2 (33%)
+- EXTRACTED: 6 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

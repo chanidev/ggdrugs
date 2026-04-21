@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Vite config (React + Tailwind + BFF proxy)** (0 connections) — `apps\web\vite.config.ts`
+- **BFF env schema (merged)** (0 connections) — `apps\bff\src\env.ts`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\vite.config.ts`
+- `apps\bff\src\env.ts`
 
 ## Audit Trail
 

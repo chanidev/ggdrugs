@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **search_logs table** (0 connections) — `llm_wiki/wiki/topics/db-schema-overview.md`
+- **필터 5종 (region/period/companion/type/vibe)** (0 connections) — `CLAUDE.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `llm_wiki/wiki/topics/db-schema-overview.md`
+- `CLAUDE.md`
 
 ## Audit Trail
 

@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- **AdminEventsPage.tsx** (3 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
-- **AdminEventsPage()** (1 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
-- **save()** (1 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
-- **toggle()** (1 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
+- **SeoulMap.tsx** (3 connections) — `apps\web\src\components\SeoulMap.tsx`
+- **geojsonToKakaoPath()** (1 connections) — `apps\web\src\components\SeoulMap.tsx`
+- **NoticeBox()** (1 connections) — `apps\web\src\components\SeoulMap.tsx`
+- **toPin()** (1 connections) — `apps\web\src\components\SeoulMap.tsx`
 
 ## Relationships
 
@@ -15,7 +15,7 @@
 
 ## Source Files
 
-- `apps\web\src\pages\AdminEventsPage.tsx`
+- `apps\web\src\components\SeoulMap.tsx`
 
 ## Audit Trail
 

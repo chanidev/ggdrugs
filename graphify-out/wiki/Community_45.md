@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **MobileTabBar.tsx** (2 connections) — `apps\web\src\layout\MobileTabBar.tsx`
-- **MobileTabBar()** (1 connections) — `apps\web\src\layout\MobileTabBar.tsx`
-- **TabBtn()** (1 connections) — `apps\web\src\layout\MobileTabBar.tsx`
+- **PosterPickerField.tsx** (2 connections) — `apps\web\src\components\uploader\PosterPickerField.tsx`
+- **clear()** (1 connections) — `apps\web\src\components\uploader\PosterPickerField.tsx`
+- **onPick()** (1 connections) — `apps\web\src\components\uploader\PosterPickerField.tsx`
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- `apps\web\src\layout\MobileTabBar.tsx`
+- `apps\web\src\components\uploader\PosterPickerField.tsx`
 
 ## Audit Trail
 

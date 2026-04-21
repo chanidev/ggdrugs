@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **schema.ts** (0 connections) — `packages\config\src\schema.ts`
+- **MyPage.tsx** (0 connections) — `apps\web\src\pages\MyPage.tsx`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `packages\config\src\schema.ts`
+- `apps\web\src\pages\MyPage.tsx`
 
 ## Audit Trail
 

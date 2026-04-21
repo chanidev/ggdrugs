@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **DocumentsPickerField.tsx** (1 connections) — `apps\web\src\components\uploader\DocumentsPickerField.tsx`
-- **DocumentsPickerField()** (1 connections) — `apps\web\src\components\uploader\DocumentsPickerField.tsx`
+- **NotificationBell.tsx** (1 connections) — `apps\web\src\components\notifications\NotificationBell.tsx`
+- **NotificationBell()** (1 connections) — `apps\web\src\components\notifications\NotificationBell.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\uploader\DocumentsPickerField.tsx`
+- `apps\web\src\components\notifications\NotificationBell.tsx`
 
 ## Audit Trail
 

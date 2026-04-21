@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal** (0 connections) — `services\llm\app.py`
+- **Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 

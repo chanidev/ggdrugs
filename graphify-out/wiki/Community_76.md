@@ -1,10 +1,11 @@
 # Community 76
 
-> 1 nodes · cohesion 1.00
+> 2 nodes · cohesion 1.00
 
 ## Key Concepts
 
-- **BFF env schema (merged)** (0 connections) — `apps\bff\src\env.ts`
+- **Three roles: user / uploader / admin with active_role toggle** (1 connections) — `.claude/CLAUDE.md`
+- **users + uploader_profiles 1:1 — single-account multi-role** (1 connections) — `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
 
 ## Relationships
 
@@ -12,12 +13,13 @@
 
 ## Source Files
 
-- `apps\bff\src\env.ts`
+- `.claude/CLAUDE.md`
+- `graphify-out/converted/DB_설계_명세서_v3_c653fe26.md`
 
 ## Audit Trail
 
 - EXTRACTED: 0 (0%)
-- INFERRED: 0 (0%)
+- INFERRED: 2 (100%)
 - AMBIGUOUS: 0 (0%)
 
 ---

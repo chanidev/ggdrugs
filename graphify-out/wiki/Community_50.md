@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **Aesthetic — editorial + map-first (no mall)** (2 connections) — `DESIGN.md`
-- **결정: 예약/결제 UI 제외 (v5.0)** (1 connections) — `DESIGN.md`
-- **Pretendard 단일 패밀리 전략** (1 connections) — `DESIGN.md`
+- **UploaderNewEventPage.tsx** (2 connections) — `apps\web\src\pages\UploaderNewEventPage.tsx`
+- **submit()** (1 connections) — `apps\web\src\pages\UploaderNewEventPage.tsx`
+- **toggleToUploader()** (1 connections) — `apps\web\src\pages\UploaderNewEventPage.tsx`
 
 ## Relationships
 
@@ -14,12 +14,12 @@
 
 ## Source Files
 
-- `DESIGN.md`
+- `apps\web\src\pages\UploaderNewEventPage.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 2 (50%)
-- INFERRED: 2 (50%)
+- EXTRACTED: 4 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

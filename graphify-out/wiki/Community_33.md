@@ -1,14 +1,14 @@
 # Community 33
 
-> 5 nodes · cohesion 0.50
+> 5 nodes · cohesion 0.40
 
 ## Key Concepts
 
-- **AppShell.tsx** (4 connections) — `apps\web\src\layout\AppShell.tsx`
-- **chatFiltersToQuery()** (2 connections) — `apps\web\src\layout\AppShell.tsx`
-- **rangeForPeriod()** (2 connections) — `apps\web\src\layout\AppShell.tsx`
-- **handleChatSubmit()** (1 connections) — `apps\web\src\layout\AppShell.tsx`
-- **toggleSection()** (1 connections) — `apps\web\src\layout\AppShell.tsx`
+- **ErrorBoundary** (4 connections) — `apps\web\src\components\ErrorBoundary.tsx`
+- **ErrorBoundary.tsx** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
+- **.componentDidCatch()** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
+- **.getDerivedStateFromError()** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
+- **.render()** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
 
 ## Relationships
 
@@ -16,11 +16,11 @@
 
 ## Source Files
 
-- `apps\web\src\layout\AppShell.tsx`
+- `apps\web\src\components\ErrorBoundary.tsx`
 
 ## Audit Trail
 
-- EXTRACTED: 10 (100%)
+- EXTRACTED: 8 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

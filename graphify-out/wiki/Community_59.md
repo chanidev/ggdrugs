@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **FullListPanel.tsx** (1 connections) — `apps\web\src\components\FullListPanel.tsx`
-- **phaseCount()** (1 connections) — `apps\web\src\components\FullListPanel.tsx`
+- **ChatHelpPanel.tsx** (1 connections) — `apps\web\src\components\ChatHelpPanel.tsx`
+- **ChatHelpPanel()** (1 connections) — `apps\web\src\components\ChatHelpPanel.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\FullListPanel.tsx`
+- `apps\web\src\components\ChatHelpPanel.tsx`
 
 ## Audit Trail
 

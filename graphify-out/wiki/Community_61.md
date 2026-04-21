@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **OverlayPanel.tsx** (1 connections) — `apps\web\src\components\OverlayPanel.tsx`
-- **OverlayPanel()** (1 connections) — `apps\web\src\components\OverlayPanel.tsx`
+- **Icon.tsx** (1 connections) — `apps\web\src\components\Icon.tsx`
+- **Icon()** (1 connections) — `apps\web\src\components\Icon.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\OverlayPanel.tsx`
+- `apps\web\src\components\Icon.tsx`
 
 ## Audit Trail
 

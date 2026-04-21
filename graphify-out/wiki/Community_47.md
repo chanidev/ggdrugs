@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **NotificationsPage.tsx** (2 connections) — `apps\web\src\pages\NotificationsPage.tsx`
-- **onItemClick()** (1 connections) — `apps\web\src\pages\NotificationsPage.tsx`
-- **onMarkAll()** (1 connections) — `apps\web\src\pages\NotificationsPage.tsx`
+- **auth-context.tsx** (2 connections) — `apps\web\src\lib\auth-context.tsx`
+- **AuthProvider()** (1 connections) — `apps\web\src\lib\auth-context.tsx`
+- **useCurrentUser()** (1 connections) — `apps\web\src\lib\auth-context.tsx`
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- `apps\web\src\pages\NotificationsPage.tsx`
+- `apps\web\src\lib\auth-context.tsx`
 
 ## Audit Trail
 

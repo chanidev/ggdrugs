@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Alle Logo Lockup (served, apps/web/public/)** (0 connections) — `apps/web/public/logo-lockup.svg`
+- **Pending decision: href='/' vs react-router <Link> in Logo anchor** (0 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps/web/public/logo-lockup.svg`
+- `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Audit Trail
 

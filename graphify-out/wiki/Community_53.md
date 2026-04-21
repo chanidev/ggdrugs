@@ -1,12 +1,12 @@
 # Community 53
 
-> 3 nodes · cohesion 0.67
+> 3 nodes · cohesion 1.00
 
 ## Key Concepts
 
-- **Filter 5 fixed — region/period/companion/event_type/event_vibe** (2 connections) — `.claude/CLAUDE.md`
-- **WHY: filter 5 unified — region/period/companion/type/vibe (prevent ad-hoc filters)** (1 connections) — `graphify-out/converted/장원팀_요구사항정의서_5차_81ea2fb0.md`
-- **A_203 예정 이벤트 조회 — new upcoming-events tab** (1 connections) — `graphify-out/converted/장원팀_요구사항정의서_5차_81ea2fb0.md`
+- **DB 설계 명세서 v3 (2026-04)** (2 connections) — `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
+- **God node: ADR 0001 DDL v3 ↔ Terminology v5 (18 edges)** (2 connections) — `graphify-out\GRAPH_REPORT.md`
+- **요구사항정의서 v5.0 (장원팀, 2026-04)** (2 connections) — `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
 
 ## Relationships
 
@@ -14,13 +14,14 @@
 
 ## Source Files
 
-- `.claude/CLAUDE.md`
-- `graphify-out/converted/장원팀_요구사항정의서_5차_81ea2fb0.md`
+- `graphify-out\GRAPH_REPORT.md`
+- `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
+- `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
 
 ## Audit Trail
 
-- EXTRACTED: 2 (50%)
-- INFERRED: 2 (50%)
+- EXTRACTED: 0 (0%)
+- INFERRED: 6 (100%)
 - AMBIGUOUS: 0 (0%)
 
 ---

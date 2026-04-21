@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **NotificationBell.tsx** (1 connections) — `apps\web\src\components\notifications\NotificationBell.tsx`
-- **NotificationBell()** (1 connections) — `apps\web\src\components\notifications\NotificationBell.tsx`
+- **UploadReviewPanel.tsx** (1 connections) — `apps\web\src\components\admin\UploadReviewPanel.tsx`
+- **decide()** (1 connections) — `apps\web\src\components\admin\UploadReviewPanel.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\notifications\NotificationBell.tsx`
+- `apps\web\src\components\admin\UploadReviewPanel.tsx`
 
 ## Audit Trail
 

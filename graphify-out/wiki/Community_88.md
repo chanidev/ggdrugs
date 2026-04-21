@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.** (0 connections) — `services\llm\app.py`
+- **schema.ts** (0 connections) — `packages\config\src\schema.ts`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `services\llm\app.py`
+- `packages\config\src\schema.ts`
 
 ## Audit Trail
 

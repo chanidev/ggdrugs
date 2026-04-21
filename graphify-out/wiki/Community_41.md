@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- **Brand implementation references (Logo.tsx + public SVGs + handoff)** (3 connections) — `DESIGN.md`
-- **apps/web/public/favicon.svg (thicker-stroke variant)** (1 connections) — `apps/web/public/favicon.svg`
-- **apps/web/public/logo-lockup.svg (raw lockup asset)** (1 connections) — `apps/web/public/logo-lockup.svg`
-- **apps/web/public/logo-mark.svg (raw Line Monogram asset)** (1 connections) — `apps/web/public/logo-mark.svg`
+- **AdminEventsPage.tsx** (3 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
+- **AdminEventsPage()** (1 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
+- **save()** (1 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
+- **toggle()** (1 connections) — `apps\web\src\pages\AdminEventsPage.tsx`
 
 ## Relationships
 
@@ -15,10 +15,7 @@
 
 ## Source Files
 
-- `DESIGN.md`
-- `apps/web/public/favicon.svg`
-- `apps/web/public/logo-lockup.svg`
-- `apps/web/public/logo-mark.svg`
+- `apps\web\src\pages\AdminEventsPage.tsx`
 
 ## Audit Trail
 

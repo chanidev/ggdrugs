@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.** (0 connections) — `services\llm\app.py`
+- **이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 

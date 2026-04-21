@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **PosterPickerField.tsx** (2 connections) — `apps\web\src\components\uploader\PosterPickerField.tsx`
-- **clear()** (1 connections) — `apps\web\src\components\uploader\PosterPickerField.tsx`
-- **onPick()** (1 connections) — `apps\web\src\components\uploader\PosterPickerField.tsx`
+- **Logo.tsx** (2 connections) — `apps\web\src\components\brand\Logo.tsx`
+- **LogoLockup()** (1 connections) — `apps\web\src\components\brand\Logo.tsx`
+- **LogoMark()** (1 connections) — `apps\web\src\components\brand\Logo.tsx`
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\uploader\PosterPickerField.tsx`
+- `apps\web\src\components\brand\Logo.tsx`
 
 ## Audit Trail
 

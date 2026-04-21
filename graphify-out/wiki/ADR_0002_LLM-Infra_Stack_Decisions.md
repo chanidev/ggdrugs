@@ -1,6 +1,6 @@
 # ADR 0002 LLM/Infra Stack Decisions
 
-> 36 nodes · cohesion 0.06
+> 33 nodes · cohesion 0.07
 
 ## Key Concepts
 
@@ -11,7 +11,6 @@
 - **D-3 Qdrant single vector store** (5 connections) — `docs/decisions/0002-stack-decisions.md`
 - **BFF runtime dependencies** (4 connections) — `apps/bff/README.md`
 - **Schema Groups (core/database/redis/qdrant/s3/openai/...)** (4 connections) — `packages/config/README.md`
-- **ggdrugs (Internal Identifier)** (4 connections) — `README.md`
 - **Qdrant v1.13.0** (4 connections) — `llm_wiki/wiki/topics/tech-stack.md`
 - **Qdrant (vector store)** (3 connections) — `docs/decisions/0002-stack-decisions.md`
 - **@ggdrugs/config README** (3 connections) — `packages/config/README.md`
@@ -29,7 +28,8 @@
 - **OpenAI Models (gpt-4o, gpt-4o-mini, text-embedding-3-small)** (2 connections) — `llm_wiki/wiki/topics/tech-stack.md`
 - **ChatDock Component** (2 connections) — `llm_wiki/wiki/topics/ui-architecture.md`
 - **Rationale: S3-compat enables migration** (1 connections) — `llm_wiki/wiki/topics/adr-0002-stack-decisions.md`
-- *... and 11 more nodes in this community*
+- **Rejected: pgvector single** (1 connections) — `llm_wiki/wiki/topics/adr-0002-stack-decisions.md`
+- *... and 8 more nodes in this community*
 
 ## Relationships
 
@@ -43,7 +43,6 @@
 - `apps/bff/README.md`
 - `apps/web/README.md`
 - `docs/decisions/0002-stack-decisions.md`
-- `infra/docker/README.md`
 - `llm_wiki/wiki/topics/adr-0002-stack-decisions.md`
 - `llm_wiki/wiki/topics/tech-stack.md`
 - `llm_wiki/wiki/topics/ui-architecture.md`
@@ -53,8 +52,8 @@
 
 ## Audit Trail
 
-- EXTRACTED: 77 (84%)
-- INFERRED: 15 (16%)
+- EXTRACTED: 73 (85%)
+- INFERRED: 13 (15%)
 - AMBIGUOUS: 0 (0%)
 
 ---

@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **TOKEN_BUDGET_DAILY_USD 환경변수. 없으면 None (가드 off).** (0 connections) — `services\llm\cost_tracker.py`
+- **리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `services\llm\cost_tracker.py`
+- `services\llm\app.py`
 
 ## Audit Trail
 

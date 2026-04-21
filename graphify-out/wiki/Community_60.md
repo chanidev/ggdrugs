@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **Icon.tsx** (1 connections) — `apps\web\src\components\Icon.tsx`
-- **Icon()** (1 connections) — `apps\web\src\components\Icon.tsx`
+- **FullListPanel.tsx** (1 connections) — `apps\web\src\components\FullListPanel.tsx`
+- **phaseCount()** (1 connections) — `apps\web\src\components\FullListPanel.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\Icon.tsx`
+- `apps\web\src\components\FullListPanel.tsx`
 
 ## Audit Trail
 

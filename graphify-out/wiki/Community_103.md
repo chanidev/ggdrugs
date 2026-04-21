@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **gstack workflow Think→Plan→Build→Review→Test→Ship→Reflect** (0 connections) — `CLAUDE.md`
+- **현재 활성 체인 — 환경변수에 따라 결정.** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `CLAUDE.md`
+- `services\llm\app.py`
 
 ## Audit Trail
 

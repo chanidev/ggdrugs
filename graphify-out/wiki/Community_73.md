@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)** (1 connections) — `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
-- **Term: event_vibe (event vibe labels, admin-assigned)** (1 connections) — `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
+- **Do-not-edit: DB schema, env keys, internal identifiers** (1 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- **DB v3: 20 tables (regions, users, uploader_profiles, events, ...)** (1 connections) — `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 ## Source Files
 
 - `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
-- `graphify-out\converted\장원팀_요구사항정의서_5차_81ea2fb0.md`
+- `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Audit Trail
 

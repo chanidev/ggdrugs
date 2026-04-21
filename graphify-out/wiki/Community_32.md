@@ -1,14 +1,14 @@
 # Community 32
 
-> 5 nodes · cohesion 0.40
+> 5 nodes · cohesion 0.70
 
 ## Key Concepts
 
-- **ErrorBoundary** (4 connections) — `apps\web\src\components\ErrorBoundary.tsx`
-- **ErrorBoundary.tsx** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
-- **.componentDidCatch()** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
-- **.getDerivedStateFromError()** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
-- **.render()** (1 connections) — `apps\web\src\components\ErrorBoundary.tsx`
+- **seed-admin.ts** (4 connections) — `apps\bff\src\jobs\seed-admin.ts`
+- **main()** (4 connections) — `apps\bff\src\jobs\seed-admin.ts`
+- **listAdmins()** (2 connections) — `apps\bff\src\jobs\seed-admin.ts`
+- **parseArgs()** (2 connections) — `apps\bff\src\jobs\seed-admin.ts`
+- **resolveUserId()** (2 connections) — `apps\bff\src\jobs\seed-admin.ts`
 
 ## Relationships
 
@@ -16,11 +16,11 @@
 
 ## Source Files
 
-- `apps\web\src\components\ErrorBoundary.tsx`
+- `apps\bff\src\jobs\seed-admin.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 8 (100%)
+- EXTRACTED: 14 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

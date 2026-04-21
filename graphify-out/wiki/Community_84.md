@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **mock.ts** (0 connections) — `apps\web\src\data\mock.ts`
+- **AuditLogsTab.tsx** (0 connections) — `apps\web\src\components\admin\AuditLogsTab.tsx`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\data\mock.ts`
+- `apps\web\src\components\admin\AuditLogsTab.tsx`
 
 ## Audit Trail
 

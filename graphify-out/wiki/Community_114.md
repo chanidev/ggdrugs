@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Alle Favicon (served, apps/web/public/)** (0 connections) — `apps/web/public/favicon.svg`
+- **Pending decision: rename @ggdrugs/web → @alle/web? (default no)** (0 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps/web/public/favicon.svg`
+- `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Audit Trail
 

@@ -1,10 +1,10 @@
-# Community 105
+# Community 119
 
 > 1 nodes · cohesion 1.00
 
 ## Key Concepts
 
-- **messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag** (0 connections) — `services\llm\openai_chain.py`
+- **Alle Favicon (served, apps/web/public/)** (0 connections) — `apps/web/public/favicon.svg`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `services\llm\openai_chain.py`
+- `apps/web/public/favicon.svg`
 
 ## Audit Trail
 

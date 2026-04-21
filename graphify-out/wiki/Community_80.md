@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **EventList.tsx** (0 connections) — `apps\web\src\components\EventList.tsx`
+- **VITE_KAKAO_MAP_JS_KEY env typing** (0 connections) — `apps\web\src\vite-env.d.ts`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\EventList.tsx`
+- `apps\web\src\vite-env.d.ts`
 
 ## Audit Trail
 

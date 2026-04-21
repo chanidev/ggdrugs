@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **ChatHelpPanel.tsx** (1 connections) — `apps\web\src\components\ChatHelpPanel.tsx`
-- **ChatHelpPanel()** (1 connections) — `apps\web\src\components\ChatHelpPanel.tsx`
+- **ChatDock.tsx** (1 connections) — `apps\web\src\components\ChatDock.tsx`
+- **ChatDock()** (1 connections) — `apps\web\src\components\ChatDock.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\ChatHelpPanel.tsx`
+- `apps\web\src\components\ChatDock.tsx`
 
 ## Audit Trail
 

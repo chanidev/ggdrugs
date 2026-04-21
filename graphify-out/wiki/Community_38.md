@@ -4,10 +4,10 @@
 
 ## Key Concepts
 
-- **eval-summaries.ts** (3 connections) — `apps\bff\src\jobs\eval-summaries.ts`
-- **main()** (3 connections) — `apps\bff\src\jobs\eval-summaries.ts`
-- **excerpt()** (2 connections) — `apps\bff\src\jobs\eval-summaries.ts`
-- **parseArgs()** (2 connections) — `apps\bff\src\jobs\eval-summaries.ts`
+- **llm-client.ts** (3 connections) — `apps\bff\src\llm-client.ts`
+- **callLlm()** (3 connections) — `apps\bff\src\llm-client.ts`
+- **isRetriable()** (2 connections) — `apps\bff\src\llm-client.ts`
+- **sleep()** (2 connections) — `apps\bff\src\llm-client.ts`
 
 ## Relationships
 
@@ -15,7 +15,7 @@
 
 ## Source Files
 
-- `apps\bff\src\jobs\eval-summaries.ts`
+- `apps\bff\src\llm-client.ts`
 
 ## Audit Trail
 

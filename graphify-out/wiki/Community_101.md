@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **필터 5종 (region/period/companion/type/vibe)** (0 connections) — `CLAUDE.md`
+- **messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag** (0 connections) — `services\llm\openai_chain.py`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `CLAUDE.md`
+- `services\llm\openai_chain.py`
 
 ## Audit Trail
 

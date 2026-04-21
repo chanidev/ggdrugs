@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **Do-not-edit: DB schema, env keys, internal identifiers** (1 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
-- **DB v3: 20 tables (regions, users, uploader_profiles, events, ...)** (1 connections) — `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
+- **Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)** (1 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- **Rationale: skip repo/package rename to avoid full-repo churn** (1 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Relationships
 
@@ -13,13 +13,12 @@
 
 ## Source Files
 
-- `graphify-out\converted\DB_설계_명세서_v3_c653fe26.md`
 - `llm_wiki\raw\design_handoff_alle_brand\README.md`
 
 ## Audit Trail
 
-- EXTRACTED: 0 (0%)
-- INFERRED: 2 (100%)
+- EXTRACTED: 2 (100%)
+- INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 
 ---

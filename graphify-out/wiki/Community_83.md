@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **AuditLogsTab.tsx** (0 connections) — `apps\web\src\components\admin\AuditLogsTab.tsx`
+- **Poster.tsx** (0 connections) — `apps\web\src\components\Poster.tsx`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\admin\AuditLogsTab.tsx`
+- `apps\web\src\components\Poster.tsx`
 
 ## Audit Trail
 

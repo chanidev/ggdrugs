@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **Pending decision: href='/' vs react-router <Link> in Logo anchor** (0 connections) — `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- **chat_messages table** (0 connections) — `llm_wiki/wiki/topics/db-schema-overview.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `llm_wiki\raw\design_handoff_alle_brand\README.md`
+- `llm_wiki/wiki/topics/db-schema-overview.md`
 
 ## Audit Trail
 

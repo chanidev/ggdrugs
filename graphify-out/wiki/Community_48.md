@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **UploaderEventEditPage.tsx** (2 connections) — `apps\web\src\pages\UploaderEventEditPage.tsx`
-- **submit()** (1 connections) — `apps\web\src\pages\UploaderEventEditPage.tsx`
-- **toggleToUploader()** (1 connections) — `apps\web\src\pages\UploaderEventEditPage.tsx`
+- **NotificationsPage.tsx** (2 connections) — `apps\web\src\pages\NotificationsPage.tsx`
+- **onItemClick()** (1 connections) — `apps\web\src\pages\NotificationsPage.tsx`
+- **onMarkAll()** (1 connections) — `apps\web\src\pages\NotificationsPage.tsx`
 
 ## Relationships
 
@@ -14,7 +14,7 @@
 
 ## Source Files
 
-- `apps\web\src\pages\UploaderEventEditPage.tsx`
+- `apps\web\src\pages\NotificationsPage.tsx`
 
 ## Audit Trail
 

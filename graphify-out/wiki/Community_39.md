@@ -1,13 +1,13 @@
 # Community 39
 
-> 4 nodes · cohesion 0.50
+> 4 nodes · cohesion 0.83
 
 ## Key Concepts
 
-- **SeoulMap.tsx** (3 connections) — `apps\web\src\components\SeoulMap.tsx`
-- **geojsonToKakaoPath()** (1 connections) — `apps\web\src\components\SeoulMap.tsx`
-- **NoticeBox()** (1 connections) — `apps\web\src\components\SeoulMap.tsx`
-- **toPin()** (1 connections) — `apps\web\src\components\SeoulMap.tsx`
+- **eval-summaries.ts** (3 connections) — `apps\bff\src\jobs\eval-summaries.ts`
+- **main()** (3 connections) — `apps\bff\src\jobs\eval-summaries.ts`
+- **excerpt()** (2 connections) — `apps\bff\src\jobs\eval-summaries.ts`
+- **parseArgs()** (2 connections) — `apps\bff\src\jobs\eval-summaries.ts`
 
 ## Relationships
 
@@ -15,11 +15,11 @@
 
 ## Source Files
 
-- `apps\web\src\components\SeoulMap.tsx`
+- `apps\bff\src\jobs\eval-summaries.ts`
 
 ## Audit Trail
 
-- EXTRACTED: 6 (100%)
+- EXTRACTED: 10 (100%)
 - INFERRED: 0 (0%)
 - AMBIGUOUS: 0 (0%)
 

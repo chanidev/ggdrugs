@@ -4,7 +4,7 @@
 
 ## Key Concepts
 
-- **phase badge tokens (upcoming/ongoing/ended)** (0 connections) — `DESIGN.md`
+- **Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()** (0 connections) — `services\llm\app.py`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `DESIGN.md`
+- `services\llm\app.py`
 
 ## Audit Trail
 

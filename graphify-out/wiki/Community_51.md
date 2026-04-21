@@ -4,9 +4,9 @@
 
 ## Key Concepts
 
-- **event_subscriptions table (new)** (2 connections) — `llm_wiki/wiki/topics/db-schema-overview.md`
-- **Decision #7: event_subscriptions table** (1 connections) — `llm_wiki/wiki/topics/adr-0001-terminology-reconciliation.md`
-- **notifications table** (1 connections) — `llm_wiki/wiki/topics/db-schema-overview.md`
+- **Aesthetic — editorial + map-first (no mall)** (2 connections) — `DESIGN.md`
+- **결정: 예약/결제 UI 제외 (v5.0)** (1 connections) — `DESIGN.md`
+- **Pretendard 단일 패밀리 전략** (1 connections) — `DESIGN.md`
 
 ## Relationships
 
@@ -14,13 +14,12 @@
 
 ## Source Files
 
-- `llm_wiki/wiki/topics/adr-0001-terminology-reconciliation.md`
-- `llm_wiki/wiki/topics/db-schema-overview.md`
+- `DESIGN.md`
 
 ## Audit Trail
 
-- EXTRACTED: 4 (100%)
-- INFERRED: 0 (0%)
+- EXTRACTED: 2 (50%)
+- INFERRED: 2 (50%)
 - AMBIGUOUS: 0 (0%)
 
 ---

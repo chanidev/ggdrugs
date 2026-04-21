@@ -1,10 +1,10 @@
-# Community 105
+# Community 117
 
 > 1 nodes · cohesion 1.00
 
 ## Key Concepts
 
-- **messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag** (0 connections) — `services\llm\openai_chain.py`
+- **God node: UI 플로우 와이어프레임 초안 (23 edges)** (0 connections) — `graphify-out\GRAPH_REPORT.md`
 
 ## Relationships
 
@@ -12,7 +12,7 @@
 
 ## Source Files
 
-- `services\llm\openai_chain.py`
+- `graphify-out\GRAPH_REPORT.md`
 
 ## Audit Trail
 

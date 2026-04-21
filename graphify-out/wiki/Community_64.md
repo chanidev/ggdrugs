@@ -4,8 +4,8 @@
 
 ## Key Concepts
 
-- **UploadReviewPanel.tsx** (1 connections) — `apps\web\src\components\admin\UploadReviewPanel.tsx`
-- **decide()** (1 connections) — `apps\web\src\components\admin\UploadReviewPanel.tsx`
+- **UploaderDetailPanel.tsx** (1 connections) — `apps\web\src\components\admin\UploaderDetailPanel.tsx`
+- **decide()** (1 connections) — `apps\web\src\components\admin\UploaderDetailPanel.tsx`
 
 ## Relationships
 
@@ -13,7 +13,7 @@
 
 ## Source Files
 
-- `apps\web\src\components\admin\UploadReviewPanel.tsx`
+- `apps\web\src\components\admin\UploaderDetailPanel.tsx`
 
 ## Audit Trail
 
