@@ -1278,3 +1278,51 @@ export async function updateUploaderEvent(
   }
   return (await res.json()) as UpdatedUploaderEvent;
 }
+
+// =============================================================
+// A_700c — 관리자 감사 로그
+// =============================================================
+
+export interface AdminAuditLogItem {
+  logId: string;
+  eventId: string;
+  eventTitle: string;
+  eventAvailable: boolean;
+  eventCurrentStatus: string | null;
+  organizationName: string | null;
+  adminId: string;
+  adminNickname: string;
+  action: 'approved' | 'revision_requested' | 'rejected';
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface AdminAuditLogResponse {
+  page: number;
+  limit: number;
+  total: number;
+  byAction: { approved: number; revision_requested: number; rejected: number };
+  items: AdminAuditLogItem[];
+}
+
+export async function fetchAdminAuditLogs(
+  q: { page?: number; limit?: number; action?: 'any' | 'approved' | 'revision_requested' | 'rejected'; eventId?: string; adminId?: string },
+  signal?: AbortSignal,
+): Promise<AdminAuditLogResponse> {
+  const params = new URLSearchParams();
+  if (q.page) params.set('page', String(q.page));
+  if (q.limit) params.set('limit', String(q.limit));
+  if (q.action && q.action !== 'any') params.set('action', q.action);
+  if (q.eventId) params.set('eventId', q.eventId);
+  if (q.adminId) params.set('adminId', q.adminId);
+  const init: RequestInit = { method: 'GET' };
+  if (signal) init.signal = signal;
+  const res = await fetch(`${BFF_URL}/admin/audit-logs?${params.toString()}`, withCredentials(init));
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`GET /admin/audit-logs ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as AdminAuditLogResponse;
+}

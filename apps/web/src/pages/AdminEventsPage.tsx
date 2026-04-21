@@ -3,6 +3,7 @@ import { Header } from '../layout/Header';
 import { PhaseBadge } from '../components/PhaseBadge';
 import { UploadReviewPanel } from '../components/admin/UploadReviewPanel';
 import { UploaderDetailPanel } from '../components/admin/UploaderDetailPanel';
+import { AuditLogsTab } from '../components/admin/AuditLogsTab';
 import { useCurrentUser } from '../lib/auth-context';
 import {
   fetchAdminEvents,
@@ -24,7 +25,7 @@ import {
  * 인증: /auth/me 의 isAdmin 확인. 서버가 다시 403 하므로 이중 방어.
  */
 
-type AdminTab = 'events' | 'upload-review' | 'uploaders';
+type AdminTab = 'events' | 'upload-review' | 'uploaders' | 'audit-logs';
 type HasVibesMode = 'false' | 'true' | 'any';
 
 export function AdminEventsPage() {
@@ -57,6 +58,7 @@ function AdminBody() {
       {tab === 'events' && <EventsTab />}
       {tab === 'upload-review' && <UploadReviewsTab />}
       {tab === 'uploaders' && <UploadersTab />}
+      {tab === 'audit-logs' && <AuditLogsTab />}
     </Shell>
   );
 }
@@ -74,6 +76,7 @@ function Shell({
     { key: 'events', label: 'Events', subtitle: 'vibe 라벨 부여' },
     { key: 'upload-review', label: 'Uploads', subtitle: '업로드 이벤트 심사' },
     { key: 'uploaders', label: 'Uploaders', subtitle: '업로더 승급 심사' },
+    { key: 'audit-logs', label: 'Audit', subtitle: '승인 결정 히스토리' },
   ];
   return (
     <div className="flex min-h-screen flex-col bg-(--color-surface)">
