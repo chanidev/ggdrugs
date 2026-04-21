@@ -161,3 +161,20 @@ Stage 2 OpenAI (gpt-4o-mini) 기반 자동 enrichment 파이프라인 구축.
   접기** 2-레이어로 재편. ReviewCard 에 SentimentBadge (긍정/부정/보통 색
   뱃지). AI 뱃지는 accent-bg 칩으로 출처 표시.
 - 커밋 `7d58960`.
+
+## 2026-04-21T18:30  sweep  post-AI-enhancement wiki drift fix
+이전 lint(04-19) 이후 96 커밋 ship — 요약 팝업 / 업로더 / 관리자 / 구독·알림 / 뉴스 파이프라인 / ADR 0003 PII / Qdrant 의미 검색. wiki 재작성.
+
+- 신규 topics 3건:
+  - `topics/semantic-search.md` — Qdrant 의미 검색 (G-8)
+  - `topics/news-article-pipeline.md` — Naver + Google News + embedding rerank (G-9)
+  - `topics/subscriptions-notifications.md` — 5축 매칭 + 2단계 dedup (G-10)
+- 기존 topics 갱신:
+  - `topics/uploader-flow.md` — PII identity 섹션 + Event Edit 섹션 (G-11, G-12) + C-8 해소 + S-5 ADR 0003 링크
+  - `topics/admin-flow.md` — Audit Logs 섹션 + 4탭 구조 + C-9 해소 (G-13)
+  - `topics/event-detail-review-flow.md` — A_500 팝업 스펙 충족 노트 (C-9)
+  - `topics/ui-architecture.md` — 모바일 반영 현황 업데이트 (C-7)
+- `index.md` — 신규 3 topic 링크 추가
+- `lint-report.md` 는 이전 sweep 결과 덮어쓴 상태.
+
+graphify cross-check: 844 nodes / 1081 edges / 121 communities (2026-04-21).

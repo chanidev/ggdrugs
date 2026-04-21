@@ -2,7 +2,7 @@
 title: 상세·예약 플로우
 type: topic
 created: 2026-04-17
-updated: 2026-04-17
+updated: 2026-04-21
 sources: [2026-04-17_ui-flow-draft, 2026-04-17_requirements-v5]
 related:
   - ../sources/2026-04-17_ui-flow-draft.md
@@ -21,15 +21,16 @@ related:
 
 ## Key points
 
-- **상세 페이지(A_400)**:
+- **상세 페이지(A_400)** — 구현 완료:
   - 최상단 포스터 + 북마크 버튼.
-  - 개요 / 프로그램 / 관련 기사·이슈 링크 섹션.
+  - 개요 / AI 요약 / mini map / **관련 기사 섹션** (news_articles top-5 by relevance) / 리뷰 섹션.
   - AI 비디오 섹션은 v5.0에서 제거됨.
-  - 하단 '마이페이지 저장' 버튼 (또 다른 북마크 진입점).
-- **마이페이지 캘린더(A_500)**:
-  - 월간 캘린더에 저장된 이벤트 배지.
-  - 배지 클릭 → 우측 팝업에 이벤트명·장소·기간·가격·대상 요약.
-  - 팝업 내 '상세 보기'/'리뷰 작성' 버튼.
+  - 관련 기사 ingest: Naver 뉴스 검색 + Google News RSS fallback + embedding cosine rerank → `news-article-pipeline.md` 참조.
+- **마이페이지 캘린더(A_500)** — 스펙 충족 구현(2026-04-21, `9fc959e`):
+  - 월간 캘린더에 저장된 이벤트 배지. phase 별 점 색상 구분.
+  - 배지 클릭 → 우측 팝업 `CalendarSummaryCard` 에 **이벤트명·장소·기간·가격·대상·요약(aiSummary)** 6필드 전부 노출.
+  - 추가 UX 힌트: **관련 기사 N건** 배지 (articleCount > 0 일 때만, 스펙 밖).
+  - 팝업 내 '상세 보기' → `/events/:id`, '리뷰 작성/수정' → `/events/:id#review` (리뷰 섹션으로 스크롤 + composer focus). GG-REVIEW-001 따라 phase==='ended' 일 때만 활성, 기존 리뷰 있으면 '수정' 레이블.
 - **리뷰 작성(A_501)** — v5.0 신규:
   - **이벤트 종료일 이후에만 활성화** (GG-REVIEW-001).
   - 별점 1~5 필수 (GG-REVIEW-002).
@@ -42,8 +43,9 @@ related:
 
 - ~~리뷰 작성 시점~~ → **해소**: 이벤트 종료일 이후 활성화(GG-REVIEW-001).
 - ~~"예약 페이지" 해석~~ → **해소**: 예약 개념은 본 서비스에 없음, 북마크 + 리뷰만 존재.
-- GG-REVIEW-004 사진 첨부와 DDL의 photos/photo_albums 관계 미정 — reviews 테이블에 사진 FK가 없어 매핑 방식 확정 필요 (`db-schema-overview.md` 8번 이슈 참조).
-- 리뷰의 sentiment(긍정/부정/중립) AI 분류 시점 — 저장 동기? 비동기 배치? 명세 없음.
+- ~~A_500 팝업 스펙 미충족~~ → **해소** (2026-04-21): 6필드 전부 + 분리 CTA ship.
+- ~~사진 첨부 매핑~~ → **해소**: `review_photos` 테이블 (review_id FK) 로 1:N 매핑, MinIO presigned PUT + 5장 제한 구현.
+- ~~리뷰 sentiment 분류 시점~~ → **해소**: 저장 직후 fire-and-forget 으로 services/llm `/sentiment` 호출. 실패해도 리뷰 저장엔 영향 없음.
 
 ## References
 

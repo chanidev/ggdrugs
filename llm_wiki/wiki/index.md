@@ -36,6 +36,9 @@ See [log.md](log.md) for chronological activity.
 - [인증 흐름](topics/auth-flow.md) — Google/Kakao OAuth + dev stub + 쿠키 세션
 - [이벤트 Ingest 파이프라인](topics/ingest-pipeline.md) — TourAPI + Seoul + KCISA 다중 소스
 - [AI Enrichment](topics/ai-enrichment.md) — 이벤트 요약 + 리뷰 감성 분류 (gpt-4o-mini)
+- [Qdrant 의미 검색 레이어](topics/semantic-search.md) — 이벤트 embedding + /chat kNN suggestions
+- [뉴스 기사 파이프라인 (A_400)](topics/news-article-pipeline.md) — Naver + Google News + embedding rerank
+- [구독·알림 센터 (A_203 / A_500)](topics/subscriptions-notifications.md) — 5축 매칭 + 2단계 dedup + 알림 fan-out
 
 ## Entities
 <!-- 외부 의존성: API, 서비스, 조직. 각 페이지에 endpoint·키·장애시 동작. -->
