@@ -571,3 +571,176 @@ export async function decideAdminUploader(
     updatedAt: string;
   };
 }
+
+// =============================================================
+// Uploader self — A_600 / A_601 / A_602
+// =============================================================
+
+export interface MyUploaderProfile {
+  uploaderId: string;
+  organizationName: string;
+  contactPhone: string;
+  contactEmail: string;
+  approvalStatus: UploaderApprovalStatus;
+  approvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 본인 업로더 프로파일 조회. 프로파일 없으면 null. */
+export async function fetchMyUploader(
+  signal?: AbortSignal,
+): Promise<MyUploaderProfile | null> {
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(`${BFF_URL}/me/uploader`, init);
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`GET /me/uploader ${res.status}`);
+  const data = (await res.json()) as { uploader: MyUploaderProfile };
+  return data.uploader;
+}
+
+export async function applyUploader(body: {
+  organizationName: string;
+  contactPhone: string;
+  contactEmail: string;
+}): Promise<{ uploader: MyUploaderProfile; resubmitted?: boolean }> {
+  const res = await fetch(
+    `${BFF_URL}/me/uploader/apply`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 409) {
+    const data = (await res.json().catch(() => ({}))) as { status?: string };
+    throw new Error(`ALREADY_APPLIED:${data.status ?? 'unknown'}`);
+  }
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`POST /me/uploader/apply ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as {
+    uploader: MyUploaderProfile;
+    resubmitted?: boolean;
+  };
+}
+
+/** user ↔ uploader 역할 토글. uploader 전환은 approved 이어야 함. */
+export async function setActiveRole(
+  role: 'user' | 'uploader',
+): Promise<{ activeRole: 'user' | 'uploader' }> {
+  const res = await fetch(
+    `${BFF_URL}/me/active-role`,
+    withCredentials({
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role }),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) {
+    const data = (await res.json().catch(() => ({}))) as { status?: string };
+    throw new Error(`UPLOADER_NOT_APPROVED:${data.status ?? 'unknown'}`);
+  }
+  if (!res.ok) throw new Error(`PUT /me/active-role ${res.status}`);
+  return (await res.json()) as { activeRole: 'user' | 'uploader' };
+}
+
+export interface MyUploaderEventItem {
+  eventId: string;
+  title: string;
+  phase: EventPhase;
+  approvalStatus: UploaderApprovalStatus;
+  startDate: string;
+  endDate: string;
+  posterImageUrl: string | null;
+  createdAt: string;
+  category: { code: string; name: string };
+  region: { regionId: string; sido: string; sigungu: string | null };
+}
+
+export interface MyUploaderEventsResponse {
+  page: number;
+  limit: number;
+  total: number;
+  byStatus: Record<UploaderApprovalStatus, number>;
+  items: MyUploaderEventItem[];
+}
+
+export async function fetchMyUploaderEvents(
+  query: {
+    approvalStatus?: UploaderApprovalStatus | 'any';
+    phase?: EventPhase[];
+    page?: number;
+    limit?: number;
+  } = {},
+  signal?: AbortSignal,
+): Promise<MyUploaderEventsResponse> {
+  const sp = new URLSearchParams();
+  if (query.approvalStatus) sp.set('approvalStatus', query.approvalStatus);
+  if (query.phase?.length) sp.set('phase', query.phase.join(','));
+  if (query.page) sp.set('page', String(query.page));
+  if (query.limit) sp.set('limit', String(query.limit));
+  const qs = sp.toString();
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(`${BFF_URL}/me/uploader/events${qs ? `?${qs}` : ''}`, init);
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) throw new Error(`GET /me/uploader/events ${res.status}`);
+  return (await res.json()) as MyUploaderEventsResponse;
+}
+
+export type NewUploaderEventBody = {
+  title: string;
+  categoryCode: string;
+  regionId: string;
+  description?: string | null;
+  startDate: string;
+  endDate: string;
+  addressDetail?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  operatingHours?: string | null;
+  targetAudience?: string | null;
+  admissionFee?: string | null;
+  expectedCompanionPrimary?: 'family' | 'friend' | 'couple' | 'solo' | null;
+  expectedCompanionSecondary?: 'family' | 'friend' | 'couple' | 'solo' | null;
+  posterImageUrl?: string | null;
+};
+
+export interface CreatedUploaderEvent {
+  eventId: string;
+  title: string;
+  approvalStatus: UploaderApprovalStatus;
+  phase: EventPhase;
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+}
+
+export async function createUploaderEvent(
+  body: NewUploaderEventBody,
+): Promise<CreatedUploaderEvent> {
+  const res = await fetch(
+    `${BFF_URL}/uploader/events`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(`FORBIDDEN:${data.error ?? 'unknown'}`);
+  }
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`POST /uploader/events ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as { event: CreatedUploaderEvent };
+  return data.event;
+}

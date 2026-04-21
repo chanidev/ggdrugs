@@ -4,6 +4,8 @@ import { AppShell } from './layout/AppShell';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { MyPage } from './pages/MyPage';
 import { AdminEventsPage } from './pages/AdminEventsPage';
+import { UploaderPage } from './pages/UploaderPage';
+import { UploaderNewEventPage } from './pages/UploaderNewEventPage';
 import { AuthProvider } from './lib/auth-context';
 import './styles/index.css';
 
@@ -23,6 +25,8 @@ createRoot(rootEl).render(
         <Route path="/events/:id" element={<EventDetailPage />} />
         <Route path="/me" element={<MyPage />} />
         <Route path="/admin" element={<AdminEventsPage />} />
+        <Route path="/uploader" element={<UploaderPage />} />
+        <Route path="/uploader/new" element={<UploaderNewEventPage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,

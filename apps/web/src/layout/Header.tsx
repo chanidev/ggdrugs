@@ -37,6 +37,8 @@ function AuthArea() {
   }
 
   if (user) {
+    // 업로더 링크는 active_role=uploader 일 때만. 신청 진입은 /me 나 직접 URL 로.
+    // 승인 안 된 상태에서도 /uploader 는 접근 가능(신청 폼). Header 미노출 이유: 기본 탐색 UX 어지럽힘 방지.
     return (
       <div className="flex items-center gap-2">
         {user.isAdmin && (
@@ -46,6 +48,15 @@ function AuthArea() {
             aria-label="관리자 콘솔"
           >
             Admin
+          </Link>
+        )}
+        {user.activeRole === 'uploader' && (
+          <Link
+            to="/uploader"
+            className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-accent)/40 bg-(--color-accent)/5 px-3 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/10 md:inline-flex"
+            aria-label="업로더 콘솔"
+          >
+            Uploader
           </Link>
         )}
         <Link
