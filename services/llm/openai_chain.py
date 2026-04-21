@@ -28,6 +28,7 @@ from summary_guard import sanitize_summary
 from cost_tracker import tracker as _cost_tracker
 
 MODEL = os.environ.get("OPENAI_MODEL_FAST", "gpt-4o-mini")
+EMBED_MODEL = os.environ.get("OPENAI_MODEL_EMBEDDING", "text-embedding-3-small")
 
 _ALLOWED_COMPANIONS = sorted({v for _, v in COMPANION_TABLE})
 _ALLOWED_EVENT_TYPES = sorted({v for _, v in EVENT_TYPE_TABLE})
@@ -231,3 +232,29 @@ def extract_via_openai(messages: list[dict[str, str]]) -> dict[str, Any]:
         "vibes": list(data.get("vibes") or []),
         "regionHints": list(data.get("regionHints") or []),
     }
+
+
+def embed_texts(texts: list[str]) -> list[list[float]]:
+    """
+    임베딩 배치 호출 — text-embedding-3-small (1536 dim) 기본.
+
+    빈 문자열은 호출 전에 단일 공백 으로 치환 (OpenAI 가 빈 입력을 거절).
+    입력 순서와 동일한 순서로 vector list 반환. 실패 시 OpenAIError 계열 예외를 상위로.
+    """
+    if not texts:
+        return []
+    clean = [t if (t and t.strip()) else " " for t in texts]
+    client = OpenAI()
+    resp = client.embeddings.create(model=EMBED_MODEL, input=clean)
+    # usage 는 prompt_tokens 만 (임베딩은 출력 없음).
+    usage = getattr(resp, "usage", None)
+    if usage:
+        _cost_tracker.track(
+            endpoint="embed",
+            prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
+            completion_tokens=0,
+            model=EMBED_MODEL,
+        )
+    # data 는 입력 순서를 보존 — index 기반 정렬 불필요. 그래도 안전하게 index 로 sort.
+    items = sorted(resp.data, key=lambda d: d.index)
+    return [list(d.embedding) for d in items]

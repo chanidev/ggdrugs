@@ -22,9 +22,12 @@ from datetime import date
 from typing import Any
 
 # USD per million tokens — 모델별. 확장 시 dict 에 추가.
+# 임베딩은 입력 토큰만 과금 (output=0).
 _PRICING_PER_MTOK: dict[str, dict[str, float]] = {
     "gpt-4o-mini": {"input": 0.150, "output": 0.600},
     "gpt-4o":      {"input": 2.500, "output": 10.00},
+    "text-embedding-3-small": {"input": 0.020, "output": 0.0},
+    "text-embedding-3-large": {"input": 0.130, "output": 0.0},
 }
 
 _DEFAULT_MODEL = "gpt-4o-mini"

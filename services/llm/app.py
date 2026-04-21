@@ -79,6 +79,16 @@ class SentimentResponse(BaseModel):
     sentiment: str  # "positive" | "negative" | "neutral"
 
 
+class EmbedRequest(BaseModel):
+    texts: list[str]
+
+
+class EmbedResponse(BaseModel):
+    model: str
+    dim: int
+    vectors: list[list[float]]
+
+
 class ChatFilters(BaseModel):
     eventTypes: list[str] = []
     companions: list[str] = []
@@ -211,3 +221,30 @@ def sentiment(req: SentimentRequest) -> SentimentResponse:
         except Exception:
             pass
     return SentimentResponse(sentiment=_rule_sentiment(req.text))
+
+
+@app.post("/embed", response_model=EmbedResponse)
+def embed(req: EmbedRequest) -> EmbedResponse:
+    """
+    텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.
+
+    OPENAI_API_KEY 없거나 예산 초과면 503 (호출자가 keyword-only fallback 책임).
+    이벤트-기사 relevance 재랭킹 등 소비자. 배치 권장(1회 호출 / 여러 텍스트).
+    """
+    from fastapi import HTTPException
+
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="embedding unavailable (no key or over budget)")
+    if not req.texts:
+        return EmbedResponse(model="", dim=0, vectors=[])
+    if len(req.texts) > 256:
+        raise HTTPException(status_code=400, detail="max 256 texts per call")
+
+    try:
+        from openai_chain import EMBED_MODEL, embed_texts
+        vectors = embed_texts(req.texts)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"embedding failed: {e.__class__.__name__}")
+
+    dim = len(vectors[0]) if vectors else 0
+    return EmbedResponse(model=EMBED_MODEL, dim=dim, vectors=vectors)
