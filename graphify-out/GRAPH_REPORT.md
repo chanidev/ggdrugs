@@ -1,11 +1,11 @@
 # Graph Report - .  (2026-04-21)
 
 ## Corpus Check
-- 85 files · ~118,409 words
+- 86 files · ~119,176 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 779 nodes · 991 edges · 108 communities detected
+- 783 nodes · 997 edges · 108 communities detected
 - Extraction: 92% EXTRACTED · 8% INFERRED · 0% AMBIGUOUS · INFERRED: 75 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
@@ -120,7 +120,7 @@
 - [[_COMMUNITY_Community 107|Community 107]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `withCredentials()` - 44 edges
+1. `withCredentials()` - 45 edges
 2. `UI 플로우 와이어프레임 초안 (전체 문서)` - 23 edges
 3. `ADR 0001 — DDL v3 ↔ Terminology v5 Reconciliation` - 18 edges
 4. `Use Cases Index (A_100~A_700)` - 15 edges
@@ -159,11 +159,11 @@ Nodes (83): A_700 Dual-Tab Structure, Event Approval Queue, LLM Delegation Guard
 
 ### Community 1 - "Community 1"
 Cohesion: 0.05
-Nodes (21): listAdminAuditLogs(), parseBigIntQuery(), parseIntClamp(), listAdminEvents(), parseBigIntCsv(), parseIntClamp(), listEvents(), parseBigIntCsv() (+13 more)
+Nodes (23): listAdminAuditLogs(), parseBigIntQuery(), parseIntClamp(), listAdminEvents(), parseBigIntCsv(), parseIntClamp(), listEventArticles(), parseIntClamp() (+15 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.08
-Nodes (45): applyUploader(), buildQuery(), createBookmark(), createEventReview(), createSubscription(), createUploaderEvent(), decideAdminEvent(), decideAdminUploader() (+37 more)
+Nodes (46): applyUploader(), buildQuery(), createBookmark(), createEventReview(), createSubscription(), createUploaderEvent(), decideAdminEvent(), decideAdminUploader() (+38 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.07
@@ -247,27 +247,27 @@ Nodes (6): addBookmark(), listMyBookmarks(), listMyReviews(), parseEventId(), pa
 
 ### Community 23 - "Community 23"
 Cohesion: 0.38
-Nodes (3): apply(), computePeriodRange(), isoDate()
+Nodes (4): listMyNotifications(), markNotificationRead(), parseBigIntParam(), parseIntClamp()
 
 ### Community 24 - "Community 24"
+Cohesion: 0.38
+Nodes (3): apply(), computePeriodRange(), isoDate()
+
+### Community 25 - "Community 25"
 Cohesion: 0.33
 Nodes (2): eachCoveredDate(), ymd()
 
-### Community 25 - "Community 25"
+### Community 26 - "Community 26"
 Cohesion: 0.43
 Nodes (6): classify_sentiment(), extract_via_openai(), Stage 2 — OpenAI gpt-4o-mini 기반 필터 추출 체인.  규칙 - 인터페이스는 Stage 1 의 extract_merge 와, messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag, summarize_event(), _track_usage()
 
-### Community 26 - "Community 26"
-Cohesion: 0.4
-Nodes (6): EnvValidationError, loadEnv (full validation), loadPartial (per-service schema), env (BffEnv instance), pino logger (env-aware), prisma (PrismaClient singleton)
-
 ### Community 27 - "Community 27"
-Cohesion: 0.47
-Nodes (4): classifyAndStoreSentiment(), createEventReview(), listEventReviews(), parseIntClamp()
-
-### Community 28 - "Community 28"
 Cohesion: 0.53
 Nodes (4): formatDateRange(), fromBffItem(), hashToColor(), shortRegion()
+
+### Community 28 - "Community 28"
+Cohesion: 0.4
+Nodes (6): EnvValidationError, loadEnv (full validation), loadPartial (per-service schema), env (BffEnv instance), pino logger (env-aware), prisma (PrismaClient singleton)
 
 ### Community 29 - "Community 29"
 Cohesion: 0.33
@@ -443,11 +443,11 @@ Nodes (2): Do-not-edit: DB schema, env keys, internal identifiers, DB v3: 20 tab
 
 ### Community 72 - "Community 72"
 Cohesion: 1.0
-Nodes (2): v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video, Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향
+Nodes (2): DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001), Term: event_vibe (event vibe labels, admin-assigned)
 
 ### Community 73 - "Community 73"
 Cohesion: 1.0
-Nodes (2): DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001), Term: event_vibe (event vibe labels, admin-assigned)
+Nodes (2): v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video, Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향
 
 ### Community 74 - "Community 74"
 Cohesion: 1.0
@@ -626,9 +626,9 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 71`** (2 nodes): `Do-not-edit: DB schema, env keys, internal identifiers`, `DB v3: 20 tables (regions, users, uploader_profiles, events, ...)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (2 nodes): `v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video`, `Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향`
+- **Thin community `Community 72`** (2 nodes): `DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)`, `Term: event_vibe (event vibe labels, admin-assigned)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (2 nodes): `DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)`, `Term: event_vibe (event vibe labels, admin-assigned)`
+- **Thin community `Community 73`** (2 nodes): `v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video`, `Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 74`** (2 nodes): `Three roles: user / uploader / admin with active_role toggle`, `users + uploader_profiles 1:1 — single-account multi-role`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -707,7 +707,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `ADR 0002 — Stack Decisions (MinIO/OpenAI/Qdrant)` connect `Community 4` to `Community 6`?**
   _High betweenness centrality (0.022) - this node is a cross-community bridge._
 - **Why does `Technology stack table` connect `Community 6` to `Community 8`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
+  _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **What connects `BFF env schema (merged)`, `pino logger (env-aware)`, `prisma (PrismaClient singleton)` to the rest of the system?**
   _189 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**

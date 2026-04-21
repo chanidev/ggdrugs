@@ -104,7 +104,7 @@
       "label": "cors()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L70",
+      "source_location": "L71",
       "id": "app_cors",
       "community": 1,
       "norm_label": "cors()"
@@ -113,7 +113,7 @@
       "label": "createApp()",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L90",
+      "source_location": "L91",
       "id": "app_createapp",
       "community": 1,
       "norm_label": "createapp()"
@@ -141,7 +141,7 @@
       "author": null,
       "contributor": null,
       "id": "env_bffExport",
-      "community": 26,
+      "community": 28,
       "norm_label": "env (bffenv instance)"
     },
     {
@@ -190,7 +190,7 @@
       "author": null,
       "contributor": null,
       "id": "logger_pino",
-      "community": 26,
+      "community": 28,
       "norm_label": "pino logger (env-aware)"
     },
     {
@@ -203,7 +203,7 @@
       "author": null,
       "contributor": null,
       "id": "prisma_client",
-      "community": 26,
+      "community": 28,
       "norm_label": "prisma (prismaclient singleton)"
     },
     {
@@ -1278,6 +1278,33 @@
       "norm_label": "postchat()"
     },
     {
+      "label": "event-articles.ts",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\routes\\event-articles.ts",
+      "source_location": "L1",
+      "id": "apps_bff_src_routes_event_articles_ts",
+      "community": 1,
+      "norm_label": "event-articles.ts"
+    },
+    {
+      "label": "parseIntClamp()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\routes\\event-articles.ts",
+      "source_location": "L17",
+      "id": "event_articles_parseintclamp",
+      "community": 1,
+      "norm_label": "parseintclamp()"
+    },
+    {
+      "label": "listEventArticles()",
+      "file_type": "code",
+      "source_file": "apps\\bff\\src\\routes\\event-articles.ts",
+      "source_location": "L23",
+      "id": "event_articles_listeventarticles",
+      "community": 1,
+      "norm_label": "listeventarticles()"
+    },
+    {
       "label": "event-detail.ts",
       "file_type": "code",
       "source_file": "apps\\bff\\src\\routes\\event-detail.ts",
@@ -1301,7 +1328,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_event_reviews_ts",
-      "community": 27,
+      "community": 1,
       "norm_label": "event-reviews.ts"
     },
     {
@@ -1310,7 +1337,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L11",
       "id": "event_reviews_classifyandstoresentiment",
-      "community": 27,
+      "community": 1,
       "norm_label": "classifyandstoresentiment()"
     },
     {
@@ -1319,7 +1346,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L41",
       "id": "event_reviews_listeventreviews",
-      "community": 27,
+      "community": 1,
       "norm_label": "listeventreviews()"
     },
     {
@@ -1328,7 +1355,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L110",
       "id": "event_reviews_parseintclamp",
-      "community": 27,
+      "community": 1,
       "norm_label": "parseintclamp()"
     },
     {
@@ -1337,7 +1364,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L124",
       "id": "event_reviews_createeventreview",
-      "community": 27,
+      "community": 1,
       "norm_label": "createeventreview()"
     },
     {
@@ -1346,7 +1373,7 @@
       "source_file": "apps\\bff\\src\\routes\\event-reviews.ts",
       "source_location": "L305",
       "id": "event_reviews_deletemyreview",
-      "community": 27,
+      "community": 1,
       "norm_label": "deletemyreview()"
     },
     {
@@ -1454,7 +1481,7 @@
       "source_file": "apps\\bff\\src\\routes\\notifications.ts",
       "source_location": "L1",
       "id": "apps_bff_src_routes_notifications_ts",
-      "community": 1,
+      "community": 23,
       "norm_label": "notifications.ts"
     },
     {
@@ -1463,7 +1490,7 @@
       "source_file": "apps\\bff\\src\\routes\\notifications.ts",
       "source_location": "L14",
       "id": "notifications_parseintclamp",
-      "community": 1,
+      "community": 23,
       "norm_label": "parseintclamp()"
     },
     {
@@ -1472,7 +1499,7 @@
       "source_file": "apps\\bff\\src\\routes\\notifications.ts",
       "source_location": "L20",
       "id": "notifications_parsebigintparam",
-      "community": 1,
+      "community": 23,
       "norm_label": "parsebigintparam()"
     },
     {
@@ -1481,7 +1508,7 @@
       "source_file": "apps\\bff\\src\\routes\\notifications.ts",
       "source_location": "L30",
       "id": "notifications_listmynotifications",
-      "community": 1,
+      "community": 23,
       "norm_label": "listmynotifications()"
     },
     {
@@ -1490,7 +1517,7 @@
       "source_file": "apps\\bff\\src\\routes\\notifications.ts",
       "source_location": "L84",
       "id": "notifications_unreadcount",
-      "community": 1,
+      "community": 23,
       "norm_label": "unreadcount()"
     },
     {
@@ -1499,7 +1526,7 @@
       "source_file": "apps\\bff\\src\\routes\\notifications.ts",
       "source_location": "L92",
       "id": "notifications_marknotificationread",
-      "community": 1,
+      "community": 23,
       "norm_label": "marknotificationread()"
     },
     {
@@ -1508,7 +1535,7 @@
       "source_file": "apps\\bff\\src\\routes\\notifications.ts",
       "source_location": "L116",
       "id": "notifications_markallnotificationsread",
-      "community": 1,
+      "community": 23,
       "norm_label": "markallnotificationsread()"
     },
     {
@@ -1961,7 +1988,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_filtersearchpanel_tsx",
-      "community": 23,
+      "community": 24,
       "norm_label": "filtersearchpanel.tsx"
     },
     {
@@ -1970,7 +1997,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L32",
       "id": "filtersearchpanel_isodate",
-      "community": 23,
+      "community": 24,
       "norm_label": "isodate()"
     },
     {
@@ -1979,7 +2006,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L39",
       "id": "filtersearchpanel_computeperiodrange",
-      "community": 23,
+      "community": 24,
       "norm_label": "computeperiodrange()"
     },
     {
@@ -1988,7 +2015,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L130",
       "id": "filtersearchpanel_togglein",
-      "community": 23,
+      "community": 24,
       "norm_label": "togglein()"
     },
     {
@@ -1997,7 +2024,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L149",
       "id": "filtersearchpanel_reset",
-      "community": 23,
+      "community": 24,
       "norm_label": "reset()"
     },
     {
@@ -2006,7 +2033,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L160",
       "id": "filtersearchpanel_subscribe",
-      "community": 23,
+      "community": 24,
       "norm_label": "subscribe()"
     },
     {
@@ -2015,7 +2042,7 @@
       "source_file": "apps\\web\\src\\components\\FilterSearchPanel.tsx",
       "source_location": "L190",
       "id": "filtersearchpanel_apply",
-      "community": 23,
+      "community": 24,
       "norm_label": "apply()"
     },
     {
@@ -2226,7 +2253,7 @@
       "source_file": "apps\\web\\src\\components\\calendar\\MonthCalendar.tsx",
       "source_location": "L1",
       "id": "apps_web_src_components_calendar_monthcalendar_tsx",
-      "community": 24,
+      "community": 25,
       "norm_label": "monthcalendar.tsx"
     },
     {
@@ -2235,7 +2262,7 @@
       "source_file": "apps\\web\\src\\components\\calendar\\MonthCalendar.tsx",
       "source_location": "L30",
       "id": "monthcalendar_ymd",
-      "community": 24,
+      "community": 25,
       "norm_label": "ymd()"
     },
     {
@@ -2244,7 +2271,7 @@
       "source_file": "apps\\web\\src\\components\\calendar\\MonthCalendar.tsx",
       "source_location": "L37",
       "id": "monthcalendar_firstcellofmonthgrid",
-      "community": 24,
+      "community": 25,
       "norm_label": "firstcellofmonthgrid()"
     },
     {
@@ -2253,7 +2280,7 @@
       "source_file": "apps\\web\\src\\components\\calendar\\MonthCalendar.tsx",
       "source_location": "L43",
       "id": "monthcalendar_eachcovereddate",
-      "community": 24,
+      "community": 25,
       "norm_label": "eachcovereddate()"
     },
     {
@@ -2262,7 +2289,7 @@
       "source_file": "apps\\web\\src\\components\\calendar\\MonthCalendar.tsx",
       "source_location": "L101",
       "id": "monthcalendar_prev",
-      "community": 24,
+      "community": 25,
       "norm_label": "prev()"
     },
     {
@@ -2271,7 +2298,7 @@
       "source_file": "apps\\web\\src\\components\\calendar\\MonthCalendar.tsx",
       "source_location": "L105",
       "id": "monthcalendar_next",
-      "community": 24,
+      "community": 25,
       "norm_label": "next()"
     },
     {
@@ -2280,7 +2307,7 @@
       "source_file": "apps\\web\\src\\components\\calendar\\MonthCalendar.tsx",
       "source_location": "L109",
       "id": "monthcalendar_totoday",
-      "community": 24,
+      "community": 25,
       "norm_label": "totoday()"
     },
     {
@@ -2914,10 +2941,19 @@
       "norm_label": "updateuploaderevent()"
     },
     {
+      "label": "fetchEventArticles()",
+      "file_type": "code",
+      "source_file": "apps\\web\\src\\lib\\api.ts",
+      "source_location": "L1326",
+      "id": "api_fetcheventarticles",
+      "community": 2,
+      "norm_label": "fetcheventarticles()"
+    },
+    {
       "label": "fetchAdminAuditLogs()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L1308",
+      "source_location": "L1346",
       "id": "api_fetchadminauditlogs",
       "community": 2,
       "norm_label": "fetchadminauditlogs()"
@@ -2955,7 +2991,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L1",
       "id": "apps_web_src_lib_event_display_ts",
-      "community": 28,
+      "community": 27,
       "norm_label": "event-display.ts"
     },
     {
@@ -2964,7 +3000,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L24",
       "id": "event_display_hashtocolor",
-      "community": 28,
+      "community": 27,
       "norm_label": "hashtocolor()"
     },
     {
@@ -2973,7 +3009,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L30",
       "id": "event_display_formatdaterange",
-      "community": 28,
+      "community": 27,
       "norm_label": "formatdaterange()"
     },
     {
@@ -2982,7 +3018,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L42",
       "id": "event_display_shortregion",
-      "community": 28,
+      "community": 27,
       "norm_label": "shortregion()"
     },
     {
@@ -2991,7 +3027,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L46",
       "id": "event_display_frombffitem",
-      "community": 28,
+      "community": 27,
       "norm_label": "frombffitem()"
     },
     {
@@ -3000,7 +3036,7 @@
       "source_file": "apps\\web\\src\\lib\\event-display.ts",
       "source_location": "L61",
       "id": "event_display_frommockevent",
-      "community": 28,
+      "community": 27,
       "norm_label": "frommockevent()"
     },
     {
@@ -3097,7 +3133,7 @@
       "label": "EventDetailPage()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L31",
+      "source_location": "L33",
       "id": "eventdetailpage_eventdetailpage",
       "community": 20,
       "norm_label": "eventdetailpage()"
@@ -3106,7 +3142,7 @@
       "label": "BackLink()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L71",
+      "source_location": "L73",
       "id": "eventdetailpage_backlink",
       "community": 20,
       "norm_label": "backlink()"
@@ -3115,7 +3151,7 @@
       "label": "LoadingBox()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L85",
+      "source_location": "L87",
       "id": "eventdetailpage_loadingbox",
       "community": 20,
       "norm_label": "loadingbox()"
@@ -3124,7 +3160,7 @@
       "label": "NotFoundBox()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L93",
+      "source_location": "L95",
       "id": "eventdetailpage_notfoundbox",
       "community": 20,
       "norm_label": "notfoundbox()"
@@ -3133,7 +3169,7 @@
       "label": "ErrorBox()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L104",
+      "source_location": "L106",
       "id": "eventdetailpage_errorbox",
       "community": 20,
       "norm_label": "errorbox()"
@@ -3142,7 +3178,7 @@
       "label": "onCreated()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L227",
+      "source_location": "L231",
       "id": "eventdetailpage_oncreated",
       "community": 20,
       "norm_label": "oncreated()"
@@ -3151,7 +3187,7 @@
       "label": "submit()",
       "file_type": "code",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L301",
+      "source_location": "L305",
       "id": "eventdetailpage_submit",
       "community": 20,
       "norm_label": "submit()"
@@ -3274,7 +3310,7 @@
       "author": null,
       "contributor": null,
       "id": "config_loadEnv",
-      "community": 26,
+      "community": 28,
       "norm_label": "loadenv (full validation)"
     },
     {
@@ -3287,7 +3323,7 @@
       "author": null,
       "contributor": null,
       "id": "config_loadPartial",
-      "community": 26,
+      "community": 28,
       "norm_label": "loadpartial (per-service schema)"
     },
     {
@@ -3300,7 +3336,7 @@
       "author": null,
       "contributor": null,
       "id": "config_EnvValidationError",
-      "community": 26,
+      "community": 28,
       "norm_label": "envvalidationerror"
     },
     {
@@ -3723,7 +3759,7 @@
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L1",
       "id": "services_llm_openai_chain_py",
-      "community": 25,
+      "community": 26,
       "norm_label": "openai_chain.py"
     },
     {
@@ -3732,7 +3768,7 @@
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L137",
       "id": "openai_chain_classify_sentiment",
-      "community": 25,
+      "community": 26,
       "norm_label": "classify_sentiment()"
     },
     {
@@ -3741,7 +3777,7 @@
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L154",
       "id": "openai_chain_track_usage",
-      "community": 25,
+      "community": 26,
       "norm_label": "_track_usage()"
     },
     {
@@ -3750,7 +3786,7 @@
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L166",
       "id": "openai_chain_summarize_event",
-      "community": 25,
+      "community": 26,
       "norm_label": "summarize_event()"
     },
     {
@@ -3759,7 +3795,7 @@
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L200",
       "id": "openai_chain_extract_via_openai",
-      "community": 25,
+      "community": 26,
       "norm_label": "extract_via_openai()"
     },
     {
@@ -3767,7 +3803,7 @@
       "file_type": "rationale",
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L1",
-      "community": 25,
+      "community": 26,
       "norm_label": "stage 2 \u2014 openai gpt-4o-mini \u1100\u1175\u1107\u1161\u11ab \u1111\u1175\u11af\u1110\u1165 \u110e\u116e\u110e\u116e\u11af \u110e\u1166\u110b\u1175\u11ab.  \u1100\u1172\u110e\u1175\u11a8 - \u110b\u1175\u11ab\u1110\u1165\u1111\u1166\u110b\u1175\u1109\u1173\u1102\u1173\u11ab stage 1 \u110b\u1174 extract_merge \u110b\u116a",
       "id": "openai_chain_rationale_1"
     },
@@ -3776,7 +3812,7 @@
       "file_type": "rationale",
       "source_file": "services\\llm\\openai_chain.py",
       "source_location": "L201",
-      "community": 25,
+      "community": 26,
       "norm_label": "messages: [{\"role\": \"user\"|\"assistant\"|\"system\", \"text\": str}, ...]     \u1107\u1161\u11ab\u1112\u116a\u11ab: stag",
       "id": "openai_chain_rationale_201"
     },
@@ -7759,7 +7795,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 73,
+      "community": 72,
       "norm_label": "db v3 term: event_tendency_labels (renamed to event_vibes in adr 0001)",
       "id": "db_v3_event_tendency_labels"
     },
@@ -7798,7 +7834,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 72,
+      "community": 73,
       "norm_label": "v5.0 changes: +a_203, +a_501, +\u110b\u116d\u11bc\u110b\u1165\u110c\u1175\u11b8, filter-term unification, \u2212ai video",
       "id": "req_v5_changes"
     },
@@ -7811,7 +7847,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 72,
+      "community": 73,
       "norm_label": "filter terminology: \u110c\u1175\u110b\u1167\u11a8/\u1100\u1175\u1100\u1161\u11ab/\u110b\u1175\u11ab\u110b\u116f\u11ab\u1100\u116e\u1109\u1165\u11bc/\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u110c\u1169\u11bc\u1105\u1172/\u110b\u1175\u1107\u1166\u11ab\u1110\u1173 \u1109\u1165\u11bc\u1112\u1163\u11bc",
       "id": "req_v5_filters"
     },
@@ -7824,7 +7860,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 73,
+      "community": 72,
       "norm_label": "term: event_vibe (event vibe labels, admin-assigned)",
       "id": "req_v5_event_vibe"
     },
@@ -8639,6 +8675,18 @@
       "source_location": "L10",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
+      "_tgt": "apps_bff_src_routes_event_articles_ts",
+      "source": "apps_bff_src_app_ts",
+      "target": "apps_bff_src_routes_event_articles_ts",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "imports_from",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\app.ts",
+      "source_location": "L11",
+      "weight": 1.0,
+      "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_lookups_ts",
       "source": "apps_bff_src_app_ts",
       "target": "apps_bff_src_routes_lookups_ts",
@@ -8648,7 +8696,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L11",
+      "source_location": "L12",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_auth_ts",
@@ -8660,7 +8708,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L20",
+      "source_location": "L21",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_middleware_require_auth_ts",
@@ -8672,7 +8720,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L21",
+      "source_location": "L22",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_bookmarks_ts",
@@ -8684,7 +8732,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L22",
+      "source_location": "L23",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_chat_ts",
@@ -8696,7 +8744,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L23",
+      "source_location": "L24",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_admin_events_ts",
@@ -8708,7 +8756,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L24",
+      "source_location": "L25",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_admin_documents_ts",
@@ -8720,7 +8768,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L25",
+      "source_location": "L26",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_admin_uploaders_ts",
@@ -8732,7 +8780,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L31",
+      "source_location": "L32",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_admin_audit_ts",
@@ -8744,7 +8792,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L32",
+      "source_location": "L33",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_uploader_ts",
@@ -8756,7 +8804,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L41",
+      "source_location": "L42",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_uploads_ts",
@@ -8768,7 +8816,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L47",
+      "source_location": "L48",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_middleware_require_admin_ts",
@@ -8780,7 +8828,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L48",
+      "source_location": "L49",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_middleware_require_uploader_ts",
@@ -8792,7 +8840,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L52",
+      "source_location": "L53",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_subscriptions_ts",
@@ -8804,7 +8852,7 @@
       "relation": "imports_from",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L58",
+      "source_location": "L59",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "apps_bff_src_routes_notifications_ts",
@@ -8816,7 +8864,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L70",
+      "source_location": "L71",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "app_cors",
@@ -8828,7 +8876,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\app.ts",
-      "source_location": "L90",
+      "source_location": "L91",
       "weight": 1.0,
       "_src": "apps_bff_src_app_ts",
       "_tgt": "app_createapp",
@@ -11071,6 +11119,42 @@
     {
       "relation": "contains",
       "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\routes\\event-articles.ts",
+      "source_location": "L17",
+      "weight": 1.0,
+      "_src": "apps_bff_src_routes_event_articles_ts",
+      "_tgt": "event_articles_parseintclamp",
+      "source": "apps_bff_src_routes_event_articles_ts",
+      "target": "event_articles_parseintclamp",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\routes\\event-articles.ts",
+      "source_location": "L23",
+      "weight": 1.0,
+      "_src": "apps_bff_src_routes_event_articles_ts",
+      "_tgt": "event_articles_listeventarticles",
+      "source": "apps_bff_src_routes_event_articles_ts",
+      "target": "event_articles_listeventarticles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\bff\\src\\routes\\event-articles.ts",
+      "source_location": "L45",
+      "weight": 1.0,
+      "_src": "event_articles_listeventarticles",
+      "_tgt": "event_articles_parseintclamp",
+      "source": "event_articles_parseintclamp",
+      "target": "event_articles_listeventarticles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
       "source_file": "apps\\bff\\src\\routes\\event-detail.ts",
       "source_location": "L17",
       "weight": 1.0,
@@ -13148,7 +13232,19 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L1308",
+      "source_location": "L1326",
+      "weight": 1.0,
+      "_src": "apps_web_src_lib_api_ts",
+      "_tgt": "api_fetcheventarticles",
+      "source": "apps_web_src_lib_api_ts",
+      "target": "api_fetcheventarticles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\web\\src\\lib\\api.ts",
+      "source_location": "L1346",
       "weight": 1.0,
       "_src": "apps_web_src_lib_api_ts",
       "_tgt": "api_fetchadminauditlogs",
@@ -13664,7 +13760,19 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\lib\\api.ts",
-      "source_location": "L1320",
+      "source_location": "L1335",
+      "weight": 1.0,
+      "_src": "api_fetcheventarticles",
+      "_tgt": "api_withcredentials",
+      "source": "api_withcredentials",
+      "target": "api_fetcheventarticles",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "source_file": "apps\\web\\src\\lib\\api.ts",
+      "source_location": "L1358",
       "weight": 1.0,
       "_src": "api_fetchadminauditlogs",
       "_tgt": "api_withcredentials",
@@ -13892,7 +14000,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L31",
+      "source_location": "L33",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_eventdetailpage",
@@ -13904,7 +14012,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L71",
+      "source_location": "L73",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_backlink",
@@ -13916,7 +14024,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L85",
+      "source_location": "L87",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_loadingbox",
@@ -13928,7 +14036,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L93",
+      "source_location": "L95",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_notfoundbox",
@@ -13940,7 +14048,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L104",
+      "source_location": "L106",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_errorbox",
@@ -13952,7 +14060,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L227",
+      "source_location": "L231",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_oncreated",
@@ -13964,7 +14072,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L301",
+      "source_location": "L305",
       "weight": 1.0,
       "_src": "apps_web_src_pages_eventdetailpage_tsx",
       "_tgt": "eventdetailpage_submit",
@@ -13976,7 +14084,7 @@
       "relation": "calls",
       "confidence": "EXTRACTED",
       "source_file": "apps\\web\\src\\pages\\EventDetailPage.tsx",
-      "source_location": "L320",
+      "source_location": "L324",
       "weight": 1.0,
       "_src": "eventdetailpage_submit",
       "_tgt": "eventdetailpage_oncreated",
