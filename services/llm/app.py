@@ -36,6 +36,8 @@ from pydantic import BaseModel, Field
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env", override=False)
 
 import filters as filter_rules
+from summary_guard import sanitize_summary
+from cost_tracker import tracker as cost_tracker
 
 app = FastAPI(title="alle-llm", version="0.2.0")
 
@@ -91,13 +93,27 @@ class ChatResponse(BaseModel):
 
 
 def _stage_label() -> str:
-    """현재 활성 체인 — 환경변수에 따라 결정."""
-    return "stage2-openai" if os.environ.get("OPENAI_API_KEY") else "stage1-rules"
+    """현재 활성 체인 — 환경변수·예산 잔량에 따라 결정."""
+    if not os.environ.get("OPENAI_API_KEY"):
+        return "stage1-rules"
+    if cost_tracker.is_over_budget():
+        return "stage1-rules-budget-cap"
+    return "stage2-openai"
+
+
+def _openai_available() -> bool:
+    """키 있고 일일 예산 한도 전이면 True."""
+    return bool(os.environ.get("OPENAI_API_KEY")) and not cost_tracker.is_over_budget()
 
 
 @app.get("/health")
 def health() -> dict[str, Any]:
-    return {"ok": True, "service": "alle-llm", "stage": _stage_label()}
+    return {
+        "ok": True,
+        "service": "alle-llm",
+        "stage": _stage_label(),
+        "cost": cost_tracker.snapshot(),
+    }
 
 
 @app.post("/chat", response_model=ChatResponse)
@@ -105,8 +121,8 @@ def chat(req: ChatRequest) -> ChatResponse:
     user_texts = [m.text for m in req.messages if m.role == "user"]
     last_user = user_texts[-1] if user_texts else ""
 
-    # Stage 2 OpenAI 연동은 선택적 — 키 없으면 규칙 기반으로 fallback.
-    if os.environ.get("OPENAI_API_KEY"):
+    # Stage 2 OpenAI 연동은 선택적 — 키 없거나 일일 예산 초과 시 규칙 기반 fallback.
+    if _openai_available():
         try:
             extracted = _openai_extract(req.messages)
         except Exception:
@@ -143,7 +159,7 @@ def summarize(req: SummarizeRequest) -> SummarizeResponse:
     OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fallback.
     description 이 있을수록 품질↑, 없어도 최소한의 요약은 반환.
     """
-    if os.environ.get("OPENAI_API_KEY"):
+    if _openai_available():
         try:
             from openai_chain import summarize_event
             text = summarize_event(
@@ -156,7 +172,7 @@ def summarize(req: SummarizeRequest) -> SummarizeResponse:
             return SummarizeResponse(summary=text)
         except Exception:
             pass  # fallback below
-    # Fallback: 키 없음 또는 실패.
+    # Fallback: 키 없음 또는 실패. sanitize 로 마크다운/이모지/길이 통일.
     parts = [req.title]
     if req.categoryName:
         parts.append(f"{req.categoryName} 행사")
@@ -165,7 +181,7 @@ def summarize(req: SummarizeRequest) -> SummarizeResponse:
     if req.vibes:
         parts.append(f"분위기: {', '.join(req.vibes)}")
     fallback = ". ".join(parts) + "."
-    return SummarizeResponse(summary=fallback)
+    return SummarizeResponse(summary=sanitize_summary(fallback))
 
 
 _POSITIVE_WORDS = ["좋", "최고", "만족", "추천", "재밌", "신남", "굿", "행복", "훌륭"]
@@ -186,7 +202,7 @@ def _rule_sentiment(text: str) -> str:
 @app.post("/sentiment", response_model=SentimentResponse)
 def sentiment(req: SentimentRequest) -> SentimentResponse:
     """리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출."""
-    if os.environ.get("OPENAI_API_KEY"):
+    if _openai_available():
         try:
             from openai_chain import classify_sentiment
             label = classify_sentiment(req.text)

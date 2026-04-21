@@ -24,6 +24,8 @@ from filters import (  # noqa: F401 — ALLOW 값 참조
     VIBE_TABLE,
     SEOUL_GU,
 )
+from summary_guard import sanitize_summary
+from cost_tracker import tracker as _cost_tracker
 
 MODEL = os.environ.get("OPENAI_MODEL_FAST", "gpt-4o-mini")
 
@@ -133,8 +135,21 @@ def classify_sentiment(text: str) -> str:
         temperature=0,
         max_tokens=30,
     )
+    _track_usage("sentiment", resp)
     content = resp.choices[0].message.content or "{}"
     return json.loads(content).get("sentiment", "neutral")
+
+
+def _track_usage(endpoint: str, resp: Any) -> None:
+    usage = getattr(resp, "usage", None)
+    if not usage:
+        return
+    _cost_tracker.track(
+        endpoint=endpoint,
+        prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
+        completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
+        model=MODEL,
+    )
 
 
 def summarize_event(
@@ -166,7 +181,9 @@ def summarize_event(
         temperature=0.3,
         max_tokens=220,
     )
-    return (resp.choices[0].message.content or "").strip()
+    _track_usage("summarize", resp)
+    raw = (resp.choices[0].message.content or "").strip()
+    return sanitize_summary(raw)
 
 
 def extract_via_openai(messages: list[dict[str, str]]) -> dict[str, Any]:
@@ -192,6 +209,7 @@ def extract_via_openai(messages: list[dict[str, str]]) -> dict[str, Any]:
         temperature=0,  # 결정론적.
         max_tokens=400,
     )
+    _track_usage("chat", resp)
     content = resp.choices[0].message.content or "{}"
     data = json.loads(content)
     # 스키마 강제라 키는 전부 존재. 그래도 방어적으로 fill.

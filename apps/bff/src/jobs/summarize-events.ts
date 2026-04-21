@@ -1,6 +1,7 @@
+import { createHash } from 'node:crypto';
 import { prisma } from '../prisma.js';
-import { env } from '../env.js';
 import { logger } from '../logger.js';
+import { callLlm } from '../llm-client.js';
 
 /**
  * events.ai_summary backfill — description 이 있고 ai_summary 가 없는 행을 대상으로
@@ -8,7 +9,16 @@ import { logger } from '../logger.js';
  *
  * 동시성 5, failure 시 해당 행 skip (다음 실행에서 재시도).
  * 재실행 시 이미 ai_summary 있는 행은 건너뛴다 (WHERE ai_summary IS NULL).
+ *
+ * description_hash 캐시: 성공 시 MD5(description) 을 함께 저장. description 이 변경되면
+ * DB 트리거(fn_invalidate_ai_summary_on_description_change) 가 ai_summary / ai_summary_at /
+ * description_hash 를 NULL 로 되돌리므로, 다음 backfill 에서 자동 재요약 대상이 된다.
  */
+
+function descriptionMd5(desc: string | null): string | null {
+  if (!desc) return null;
+  return createHash('md5').update(desc, 'utf8').digest('hex');
+}
 
 interface SummarizeInput {
   title: string;
@@ -19,13 +29,8 @@ interface SummarizeInput {
 }
 
 async function summarizeOne(input: SummarizeInput): Promise<string | null> {
-  const res = await fetch(`${env.LLM_SERVICE_URL}/summarize`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(input),
-  });
-  if (!res.ok) return null;
-  const data = (await res.json()) as { summary?: string };
+  const data = await callLlm<{ summary?: string }>('/summarize', input);
+  if (!data) return null;
   const s = (data.summary ?? '').trim();
   return s.length > 0 ? s : null;
 }
@@ -97,7 +102,11 @@ export async function runBackfillSummaries(options: BackfillOptions = {}): Promi
         if (summary) {
           await prisma.event.update({
             where: { eventId: r.eventId },
-            data: { aiSummary: summary, aiSummaryAt: new Date() },
+            data: {
+              aiSummary: summary,
+              aiSummaryAt: new Date(),
+              descriptionHash: descriptionMd5(r.description),
+            },
           });
           updated++;
         } else {

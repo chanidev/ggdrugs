@@ -1,20 +1,15 @@
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
-import { env } from '../env.js';
 import { logger } from '../logger.js';
+import { callLlm } from '../llm-client.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
 /** 리뷰 작성 후 fire-and-forget 으로 LLM sentiment 분류 → DB 업데이트. */
 async function classifyAndStoreSentiment(reviewId: bigint, text: string): Promise<void> {
   try {
-    const res = await fetch(`${env.LLM_SERVICE_URL}/sentiment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json; charset=utf-8' },
-      body: JSON.stringify({ text }),
-    });
-    if (!res.ok) return;
-    const data = (await res.json()) as { sentiment?: string };
+    const data = await callLlm<{ sentiment?: string }>('/sentiment', { text });
+    if (!data) return;
     const s = data.sentiment;
     if (s !== 'positive' && s !== 'negative' && s !== 'neutral') return;
     await prisma.review.update({ where: { reviewId }, data: { sentiment: s } });
