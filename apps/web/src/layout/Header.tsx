@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { LogoLockup } from '../components/brand/Logo';
 import { Icon } from '../components/Icon';
+import { NotificationBell } from '../components/notifications/NotificationBell';
 import { useCurrentUser } from '../lib/auth-context';
 
 /**
@@ -59,6 +60,7 @@ function AuthArea() {
             Uploader
           </Link>
         )}
+        <NotificationBell />
         <Link
           to="/me"
           className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] text-(--color-text) transition-colors hover:border-(--color-border-hover) sm:inline-flex"

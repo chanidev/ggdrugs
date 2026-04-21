@@ -6,6 +6,7 @@ import { MyPage } from './pages/MyPage';
 import { AdminEventsPage } from './pages/AdminEventsPage';
 import { UploaderPage } from './pages/UploaderPage';
 import { UploaderNewEventPage } from './pages/UploaderNewEventPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { AuthProvider } from './lib/auth-context';
 import './styles/index.css';
 
@@ -27,6 +28,7 @@ createRoot(rootEl).render(
         <Route path="/admin" element={<AdminEventsPage />} />
         <Route path="/uploader" element={<UploaderPage />} />
         <Route path="/uploader/new" element={<UploaderNewEventPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,

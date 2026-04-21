@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { PERIODS, COMPANIONS, TYPES } from '../data/mock';
 import {
+  createSubscription,
   fetchEvents,
   fetchRegions,
   fetchVibes,
@@ -9,6 +10,7 @@ import {
   type RegionItem,
   type VibeItem,
 } from '../lib/api';
+import { useCurrentUser } from '../lib/auth-context';
 import { fromBffItem, type DisplayEvent } from '../lib/event-display';
 import { Icon } from './Icon';
 import { EventList } from './EventList';
@@ -85,6 +87,8 @@ export function FilterSearchPanel({
   onSelectEvent?: (id: string) => void;
   activeEventId?: string | null;
 }) {
+  const { user } = useCurrentUser();
+
   const [regions, setRegions] = useState<RegionItem[]>([]);
   const [vibes, setVibes] = useState<VibeItem[]>([]);
   const [lookupError, setLookupError] = useState<string | null>(null);
@@ -96,6 +100,8 @@ export function FilterSearchPanel({
   const [vibe, setVibe] = useState<Set<string>>(new Set());
 
   const [applied, setApplied] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribeMsg, setSubscribeMsg] = useState<string | null>(null);
   const [listState, setListState] = useState<{
     loading: boolean;
     error: string | null;
@@ -149,6 +155,36 @@ export function FilterSearchPanel({
     setApplied(false);
     setListState({ loading: false, error: null, data: null });
     onReset?.();
+  };
+
+  const subscribe = async () => {
+    setSubscribing(true);
+    setSubscribeMsg(null);
+    // period chip 은 1/3/6/전체 인데 DB 구독은 periodMonths 숫자. 대략 매핑.
+    const periodMonthsMap: Record<string, number | null> = {
+      today: 1,
+      weekend: 1,
+      week: 1,
+      month: 3,
+    };
+    const periodMonths = period ? periodMonthsMap[period] ?? null : null;
+    try {
+      await createSubscription({
+        regionIds: Array.from(region),
+        companions: Array.from(companion) as ('solo' | 'couple' | 'friend' | 'family')[],
+        eventTypes: Array.from(type),
+        vibeIds: Array.from(vibe),
+        periodMonths,
+      });
+      setSubscribeMsg('구독 생성됨 — 마이페이지 > 구독 탭에서 관리');
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg === 'UNAUTHENTICATED') setSubscribeMsg('로그인이 필요해요');
+      else if (msg === 'MAX_SUBSCRIPTIONS_REACHED') setSubscribeMsg('구독 최대 20개 — 마이페이지에서 정리');
+      else setSubscribeMsg(`실패: ${msg}`);
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   const apply = () => {
@@ -228,36 +264,52 @@ export function FilterSearchPanel({
         </FilterBlock>
       </div>
 
-      <div className="flex items-center gap-2.5 border-t border-(--color-border) bg-(--color-surface) px-5 py-3.5">
-        <div className="flex-1 text-[13px] text-(--color-text-muted)">
-          {totalActive === 0 ? (
-            <>
-              필터를 선택하면 <strong className="font-semibold text-(--color-text)">적용</strong>할 수 있어요
-            </>
-          ) : (
-            <>
-              <strong className="tabular font-semibold text-(--color-text)">{totalActive}</strong>
-              개 조건 선택됨
-            </>
+      <div className="flex flex-col gap-1.5 border-t border-(--color-border) bg-(--color-surface) px-5 py-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="flex-1 text-[13px] text-(--color-text-muted)">
+            {totalActive === 0 ? (
+              <>
+                필터를 선택하면 <strong className="font-semibold text-(--color-text)">적용</strong>할 수 있어요
+              </>
+            ) : (
+              <>
+                <strong className="tabular font-semibold text-(--color-text)">{totalActive}</strong>
+                개 조건 선택됨
+              </>
+            )}
+          </div>
+          {totalActive > 0 && (
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex h-8 items-center rounded-(--radius-md) bg-transparent px-2.5 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
+            >
+              초기화
+            </button>
           )}
-        </div>
-        {totalActive > 0 && (
+          {user && totalActive > 0 && (
+            <button
+              type="button"
+              onClick={() => void subscribe()}
+              disabled={subscribing}
+              title="새 이벤트가 조건에 맞으면 알림"
+              className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-2.5 text-[13px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
+            >
+              {subscribing ? '…' : '이 조건 구독'}
+            </button>
+          )}
           <button
             type="button"
-            onClick={reset}
-            className="inline-flex h-8 items-center rounded-(--radius-md) bg-transparent px-2.5 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
+            disabled={totalActive === 0}
+            onClick={apply}
+            className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
           >
-            초기화
+            적용 <Icon name="arrow" size={14} />
           </button>
+        </div>
+        {subscribeMsg && (
+          <div className="text-[11px] text-(--color-text-subtle)">{subscribeMsg}</div>
         )}
-        <button
-          type="button"
-          disabled={totalActive === 0}
-          onClick={apply}
-          className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          적용 <Icon name="arrow" size={14} />
-        </button>
       </div>
 
       {applied && (
