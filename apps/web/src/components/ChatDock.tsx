@@ -1,9 +1,13 @@
 import { SUGGESTIONS } from '../data/mock';
 import { Icon } from './Icon';
+import { PhaseBadge } from './PhaseBadge';
+import type { ChatSuggestion } from '../lib/api';
 
 export interface ChatMessage {
   role: 'user' | 'assistant';
   text: string;
+  /** assistant 메시지에만 실림 — Qdrant 의미 검색으로 뽑힌 이벤트 후보. */
+  suggestions?: ChatSuggestion[];
 }
 
 /**
@@ -11,15 +15,19 @@ export interface ChatMessage {
  *
  * - 가로 가운데, 아래에서 24px 위. width: min(820, 100% - 48px).
  * - 상단 탭 handle: 접기/펼치기. pulse 인디케이터.
- * - Collapsible 영역: 메시지 목록 + eyebrow + 추천 suggestion chips.
+ * - Collapsible 영역: 메시지 목록 + 각 assistant 메시지 아래 AI 의미 검색 후보 strip
+ *   + eyebrow + 추천 suggestion chips.
  * - Input row: sparkles 아이콘 + 검색 버튼.
  *
- * 실제 LLM 연동은 services/llm 준비 후. onSubmit 은 현재 mock echo.
+ * 응답 shape: { reply, filters, suggestions } — AppShell 에서 setMessages 할 때
+ * assistant 메시지에 suggestions 동봉, 본 컴포넌트가 클릭 시 onSuggestionClick 으로
+ * eventId 전달 (→ summary panel 오픈).
  */
 export function ChatDock({
   value,
   onChange,
   onSubmit,
+  onSuggestionClick,
   messages,
   collapsed,
   onToggleCollapsed,
@@ -27,6 +35,8 @@ export function ChatDock({
   value: string;
   onChange: (v: string) => void;
   onSubmit: (text: string) => void;
+  /** 제안 이벤트 클릭 시 (AppShell 이 summary panel 을 열도록). */
+  onSuggestionClick?: (eventId: string) => void;
   messages: ChatMessage[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
@@ -72,21 +82,26 @@ export function ChatDock({
           }`}
         >
           {messages.length > 0 && (
-            <div className="mb-2.5 flex max-h-[160px] flex-col gap-2 overflow-y-auto rounded-(--radius-lg) bg-(--color-surface-alt) px-3.5 py-2.5">
+            <div className="mb-2.5 flex max-h-[260px] flex-col gap-2 overflow-y-auto rounded-(--radius-lg) bg-(--color-surface-alt) px-3.5 py-2.5">
               {messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <span
-                    className={`inline-block max-w-[80%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
-                      m.role === 'user'
-                        ? 'rounded-br-[4px] bg-(--color-accent) text-white'
-                        : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
-                    }`}
-                  >
-                    {m.text}
-                  </span>
+                <div key={i} className="flex flex-col gap-1.5">
+                  <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <span
+                      className={`inline-block max-w-[80%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
+                        m.role === 'user'
+                          ? 'rounded-br-[4px] bg-(--color-accent) text-white'
+                          : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
+                      }`}
+                    >
+                      {m.text}
+                    </span>
+                  </div>
+                  {m.role === 'assistant' && m.suggestions && m.suggestions.length > 0 && (
+                    <SuggestionsRow
+                      items={m.suggestions}
+                      onClick={(eid) => onSuggestionClick?.(eid)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -94,7 +109,7 @@ export function ChatDock({
           <div className="mb-2 flex items-center gap-2 text-[12px] text-(--color-text-subtle)">
             {/* static dot — handle pulse 와 중복되지 않도록. DESIGN.md §Motion signature 단일 지점 규칙. */}
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
-            <span>자연어로 질문하면 5개 필터로 자동 매핑해 드려요</span>
+            <span>자연어로 질문하면 5개 필터 + AI 의미 검색 후보를 함께 드려요</span>
           </div>
           <div className="mb-2.5 flex flex-wrap gap-1.5">
             {SUGGESTIONS.map((s) => (
@@ -135,5 +150,52 @@ export function ChatDock({
         </div>
       </div>
     </form>
+  );
+}
+
+/**
+ * AI 답변 아래 붙는 이벤트 후보 strip — Qdrant kNN 결과 상위 N.
+ * 가로 스크롤 카드. 클릭 → summary panel 오픈.
+ */
+function SuggestionsRow({
+  items,
+  onClick,
+}: {
+  items: ChatSuggestion[];
+  onClick: (eventId: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1">
+      <p className="m-0 pl-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-(--color-text-subtle)">
+        AI 후보 {items.length}건 · 의미 기반
+      </p>
+      <div className="flex gap-1.5 overflow-x-auto pb-1">
+        {items.map((s) => (
+          <button
+            key={s.eventId}
+            type="button"
+            onClick={() => onClick(s.eventId)}
+            className="flex w-[220px] shrink-0 flex-col gap-1 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-2.5 py-2 text-left transition-colors hover:border-(--color-accent) hover:bg-(--color-accent-bg)"
+          >
+            <div className="flex items-center gap-1.5">
+              <PhaseBadge phase={s.phase} />
+              <span className="truncate text-[10.5px] text-(--color-text-subtle)">
+                {s.category.name} · {s.region.sigunguName ?? s.region.sidoName}
+              </span>
+              <span className="tabular ml-auto text-[10px] text-(--color-text-subtle)">
+                {(s.score * 100).toFixed(0)}%
+              </span>
+            </div>
+            <h4 className="m-0 line-clamp-2 text-[12.5px] font-medium leading-[1.35] text-(--color-text)">
+              {s.title}
+            </h4>
+            <span className="tabular text-[10.5px] text-(--color-text-subtle)">
+              {s.startDate}
+              {s.startDate !== s.endDate && ` ~ ${s.endDate}`}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

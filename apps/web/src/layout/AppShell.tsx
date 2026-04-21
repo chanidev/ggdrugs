@@ -111,7 +111,16 @@ export function AppShell() {
     (async () => {
       try {
         const reply = await sendChat(history);
-        setMessages((prev) => [...prev, { role: 'assistant', text: reply.reply }]);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: 'assistant',
+            text: reply.reply,
+            ...(reply.suggestions && reply.suggestions.length > 0
+              ? { suggestions: reply.suggestions }
+              : {}),
+          },
+        ]);
         const q = chatFiltersToQuery(reply.filters);
         if (q) {
           setMapFilter(q);
@@ -184,6 +193,7 @@ export function AppShell() {
               value={chatValue}
               onChange={setChatValue}
               onSubmit={handleChatSubmit}
+              onSuggestionClick={setSelectedEventId}
               messages={messages}
               collapsed={dockCollapsed}
               onToggleCollapsed={() => setDockCollapsed((c) => !c)}

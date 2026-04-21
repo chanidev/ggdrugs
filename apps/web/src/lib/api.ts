@@ -293,9 +293,23 @@ export interface ChatFilters {
   vibeIds: string[];
 }
 
+export interface ChatSuggestion {
+  eventId: string;
+  title: string;
+  phase: EventPhase;
+  startDate: string;
+  endDate: string;
+  region: { sidoName: string; sigunguName: string | null };
+  category: { code: string; name: string };
+  posterImageUrl: string | null;
+  score: number;
+}
+
 export interface ChatReply {
   reply: string;
   filters: ChatFilters;
+  /** Qdrant 의미 검색으로 뽑아준 이벤트 후보 (최대 5개). 비어있을 수 있음. */
+  suggestions: ChatSuggestion[];
 }
 
 export async function sendChat(
