@@ -252,6 +252,18 @@ async function processEvent(
     return;
   }
 
+  // 이 이벤트의 기존 매핑을 먼저 비운다 — 이번 실행의 scoring 이 authoritative.
+  // scoring 알고리즘 변경(V1 kw-only → V2 embedding 결합) 시 stale 매핑 제거 보장.
+  // articles 는 다른 이벤트와 공유될 수 있어 기사 자체는 남긴다 (orphan 은 후속 정리).
+  try {
+    await prisma.eventArticleMapping.deleteMany({ where: { eventId: event.eventId } });
+  } catch (err) {
+    log.warn(
+      { eventId: event.eventId.toString(), err: err instanceof Error ? err.message : String(err) },
+      'stale mapping cleanup failed — 계속 진행',
+    );
+  }
+
   // 1차 keyword pre-filter. 0점은 즉시 drop — embedding 비용 낭비 방지.
   const normalize = (rawItems: NaverNewsItem[]) =>
     rawItems.map((item) => {
