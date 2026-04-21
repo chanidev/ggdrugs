@@ -691,6 +691,15 @@ function ApprovedBody({
                         공개 페이지
                       </Link>
                     )}
+                    {(e.approvalStatus === 'revision_requested' ||
+                      e.approvalStatus === 'rejected') && (
+                      <Link
+                        to={`/uploader/events/${e.eventId}/edit`}
+                        className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-accent) bg-(--color-accent-bg) px-3 text-[12px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/15"
+                      >
+                        수정 재제출
+                      </Link>
+                    )}
                   </div>
                 </li>
               );

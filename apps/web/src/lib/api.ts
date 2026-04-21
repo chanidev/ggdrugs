@@ -1163,3 +1163,118 @@ export async function createUploaderEvent(
   const data = (await res.json()) as { event: CreatedUploaderEvent };
   return data.event;
 }
+
+// =============================================================
+// A_601b — 업로더 이벤트 수정 재제출 (revision_requested / rejected)
+// =============================================================
+
+export interface UploaderEventDocumentPreview {
+  documentId: string;
+  originalFilename: string;
+  mimeType: string;
+  fileSizeBytes: number;
+  /** 5분짜리 presigned GET URL */
+  previewUrl: string;
+}
+
+export interface UploaderEventDetail {
+  eventId: string;
+  title: string;
+  categoryCode: string;
+  regionId: string;
+  regionLabel: string;
+  description: string | null;
+  startDate: string;
+  endDate: string;
+  addressDetail: string | null;
+  latitude: string | null;
+  longitude: string | null;
+  operatingHours: string | null;
+  targetAudience: string | null;
+  admissionFee: string | null;
+  expectedCompanionPrimary: 'family' | 'friend' | 'couple' | 'solo' | null;
+  expectedCompanionSecondary: 'family' | 'friend' | 'couple' | 'solo' | null;
+  posterImageUrl: string | null;
+  approvalStatus: UploaderApprovalStatus;
+  phase: EventPhase;
+  createdAt: string;
+  updatedAt: string;
+  documents: UploaderEventDocumentPreview[];
+  latestDecision: {
+    action: string;
+    reason: string | null;
+    decidedAt: string;
+  } | null;
+}
+
+export async function fetchUploaderEvent(
+  eventId: string,
+  signal?: AbortSignal,
+): Promise<UploaderEventDetail> {
+  const init: RequestInit = { method: 'GET' };
+  if (signal) init.signal = signal;
+  const res = await fetch(`${BFF_URL}/uploader/events/${encodeURIComponent(eventId)}`, withCredentials(init));
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (res.status === 404) throw new Error('NOT_FOUND');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`GET /uploader/events/${eventId} ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  const data = (await res.json()) as { event: UploaderEventDetail };
+  return data.event;
+}
+
+export type UpdateUploaderEventBody = {
+  title: string;
+  categoryCode: string;
+  regionId: string;
+  description?: string | null;
+  startDate: string;
+  endDate: string;
+  addressDetail?: string | null;
+  operatingHours?: string | null;
+  targetAudience?: string | null;
+  admissionFee?: string | null;
+  expectedCompanionPrimary?: 'family' | 'friend' | 'couple' | 'solo' | null;
+  expectedCompanionSecondary?: 'family' | 'friend' | 'couple' | 'solo' | null;
+  /** 새 포스터 URL. 있으면 교체. undefined = 유지, clearPoster=true 와 병행 불가. */
+  posterImageUrl?: string | null;
+  /** true 면 기존 포스터 제거. posterImageUrl 과 병행 X. */
+  clearPoster?: boolean;
+  /** 제공 시 서류 전체 교체. 미제공 시 기존 유지. */
+  approvalDocuments?: UploaderDocumentMeta[];
+};
+
+export interface UpdatedUploaderEvent {
+  eventId: string;
+  approvalStatus: UploaderApprovalStatus;
+  phase: EventPhase;
+  resubmitted: true;
+}
+
+export async function updateUploaderEvent(
+  eventId: string,
+  body: UpdateUploaderEventBody,
+): Promise<UpdatedUploaderEvent> {
+  const res = await fetch(
+    `${BFF_URL}/uploader/events/${encodeURIComponent(eventId)}`,
+    withCredentials({
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify(body),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (res.status === 404) throw new Error('NOT_FOUND');
+  if (res.status === 409) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string; status?: string };
+    throw new Error(`NOT_EDITABLE:${data.status ?? 'unknown'}`);
+  }
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`PATCH /uploader/events/${eventId} ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as UpdatedUploaderEvent;
+}
