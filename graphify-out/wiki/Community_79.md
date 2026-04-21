@@ -1,0 +1,25 @@
+# Community 79
+
+> 1 nodes · cohesion 1.00
+
+## Key Concepts
+
+- **VITE_KAKAO_MAP_JS_KEY env typing** (0 connections) — `apps\web\src\vite-env.d.ts`
+
+## Relationships
+
+- No strong cross-community connections detected
+
+## Source Files
+
+- `apps\web\src\vite-env.d.ts`
+
+## Audit Trail
+
+- EXTRACTED: 0 (0%)
+- INFERRED: 0 (0%)
+- AMBIGUOUS: 0 (0%)
+
+---
+
+*Part of the graphify knowledge wiki. See [[index]] to navigate.*
