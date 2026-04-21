@@ -3,6 +3,7 @@ import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
 import { presignGet } from '../lib/s3.js';
+import { notifyMatchingSubscribers } from '../lib/subscription-match.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 import type { AdminRequest } from '../middleware/require-admin.js';
 
@@ -378,6 +379,11 @@ export async function decideEventUpload(req: Request, res: Response) {
       },
     }),
   ]);
+
+  // A_203: 승인 시점에 매칭 구독자에게 알림 fire-and-forget.
+  if (action === 'approved') {
+    void notifyMatchingSubscribers(eventId);
+  }
 
   res.json({
     eventId: eventId.toString(),

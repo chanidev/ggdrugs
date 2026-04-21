@@ -46,6 +46,18 @@ import {
   requireUploaderApproved,
   requireUploaderActive,
 } from './middleware/require-uploader.js';
+import {
+  listMySubscriptions,
+  createSubscription,
+  toggleSubscription,
+  deleteSubscription,
+} from './routes/subscriptions.js';
+import {
+  listMyNotifications,
+  unreadCount,
+  markNotificationRead,
+  markAllNotificationsRead,
+} from './routes/notifications.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -251,6 +263,48 @@ export function createApp(): Express {
     '/me/uploader/documents/upload-url',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => uploaderSignupDocumentUploadUrl(req, res).catch(next),
+  );
+
+  // A_203 구독 + A_500 알림 센터
+  app.get(
+    '/me/subscriptions',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMySubscriptions(req, res).catch(next),
+  );
+  app.post(
+    '/me/subscriptions',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => createSubscription(req, res).catch(next),
+  );
+  app.patch(
+    '/me/subscriptions/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => toggleSubscription(req, res).catch(next),
+  );
+  app.delete(
+    '/me/subscriptions/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => deleteSubscription(req, res).catch(next),
+  );
+  app.get(
+    '/me/notifications',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyNotifications(req, res).catch(next),
+  );
+  app.get(
+    '/me/notifications/unread-count',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => unreadCount(req, res).catch(next),
+  );
+  app.post(
+    '/me/notifications/:id/read',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => markNotificationRead(req, res).catch(next),
+  );
+  app.post(
+    '/me/notifications/read-all',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => markAllNotificationsRead(req, res).catch(next),
   );
   app.put(
     '/me/active-role',
