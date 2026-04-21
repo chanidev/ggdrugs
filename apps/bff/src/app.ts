@@ -7,6 +7,7 @@ import { listEvents } from './routes/events.js';
 import { eventsStats } from './routes/events-stats.js';
 import { getEventDetail } from './routes/event-detail.js';
 import { listEventReviews, createEventReview, deleteMyReview } from './routes/event-reviews.js';
+import { listEventArticles } from './routes/event-articles.js';
 import { listRegions, listVibes } from './routes/lookups.js';
 import {
   devLogin,
@@ -127,6 +128,9 @@ export function createApp(): Express {
   );
   app.get('/events/:id/reviews', (req: Request, res: Response, next: NextFunction) => {
     listEventReviews(req, res).catch(next);
+  });
+  app.get('/events/:id/articles', (req: Request, res: Response, next: NextFunction) => {
+    listEventArticles(req, res).catch(next);
   });
   app.post(
     '/events/:id/reviews',
