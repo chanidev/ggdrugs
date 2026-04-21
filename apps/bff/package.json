@@ -20,7 +20,8 @@
     "ingest:seoul": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts seoul-culture",
     "ingest:kcisa": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts kcisa",
     "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts",
-    "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts"
+    "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
+    "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"
   },
   "dependencies": {
     "@ggdrugs/config": "workspace:*",

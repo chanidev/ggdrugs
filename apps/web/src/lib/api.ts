@@ -232,6 +232,8 @@ export interface CurrentUser {
   userId: string;
   nickname: string;
   activeRole: 'user' | 'uploader' | 'admin';
+  /** admin_profiles.is_active=true 인 경우에만 true. UI 에서 관리자 링크 노출 판단. */
+  isAdmin: boolean;
 }
 
 /** 현재 세션의 사용자. 401 이면 null (비로그인). 그 외 에러는 throw. */
@@ -399,4 +401,84 @@ export async function fetchMyReviews(
   if (res.status === 401) throw new Error('UNAUTHENTICATED');
   if (!res.ok) throw new Error(`GET /me/reviews ${res.status}`);
   return (await res.json()) as MyReviewsResponse;
+}
+
+// =============================================================
+// Admin — A_700 vibe 라벨 부여
+// =============================================================
+
+export interface AdminEventItem {
+  eventId: string;
+  title: string;
+  phase: EventPhase;
+  approvalStatus: string;
+  startDate: string;
+  endDate: string;
+  posterImageUrl: string | null;
+  aiSummary: string | null;
+  category: { code: string; name: string };
+  region: { regionId: string; sido: string; sigungu: string | null };
+  vibes: { vibeId: string; name: string; group: string }[];
+}
+
+export interface AdminEventsQuery {
+  hasVibes?: 'true' | 'false' | 'any';
+  approvalStatus?: string;
+  phase?: EventPhase[];
+  regionIds?: string[];
+  q?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface AdminEventsResponse {
+  page: number;
+  limit: number;
+  total: number;
+  items: AdminEventItem[];
+}
+
+export async function fetchAdminEvents(
+  query: AdminEventsQuery = {},
+  signal?: AbortSignal,
+): Promise<AdminEventsResponse> {
+  const sp = new URLSearchParams();
+  if (query.hasVibes) sp.set('hasVibes', query.hasVibes);
+  if (query.approvalStatus) sp.set('approvalStatus', query.approvalStatus);
+  if (query.phase?.length) sp.set('phase', query.phase.join(','));
+  if (query.regionIds?.length) sp.set('regionIds', query.regionIds.join(','));
+  if (query.q) sp.set('q', query.q);
+  if (query.page) sp.set('page', String(query.page));
+  if (query.limit) sp.set('limit', String(query.limit));
+  const qs = sp.toString();
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(`${BFF_URL}/admin/events${qs ? `?${qs}` : ''}`, init);
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) throw new Error(`GET /admin/events ${res.status}`);
+  return (await res.json()) as AdminEventsResponse;
+}
+
+export async function putAdminEventVibes(
+  eventId: string,
+  vibeIds: string[],
+): Promise<{ eventId: string; vibes: { vibeId: string; name: string; group: string }[] }> {
+  const res = await fetch(
+    `${BFF_URL}/admin/events/${encodeURIComponent(eventId)}/vibes`,
+    withCredentials({
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vibeIds }),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`PUT /admin/events/${eventId}/vibes ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as {
+    eventId: string;
+    vibes: { vibeId: string; name: string; group: string }[];
+  };
 }

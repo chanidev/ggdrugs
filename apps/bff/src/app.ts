@@ -20,6 +20,8 @@ import {
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
 import { postChat } from './routes/chat.js';
+import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
+import { requireAdmin } from './middleware/require-admin.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -151,6 +153,32 @@ export function createApp(): Express {
   app.post('/chat', (req: Request, res: Response, next: NextFunction) => {
     postChat(req, res).catch(next);
   });
+
+  // Admin — vibe 라벨 부여 (requireAuth → requireAdmin 체인).
+  app.get(
+    '/admin/events',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAdmin(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      listAdminEvents(req, res).catch(next);
+    },
+  );
+  app.put(
+    '/admin/events/:id/vibes',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAdmin(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      putAdminEventVibes(req, res).catch(next);
+    },
+  );
 
   // Auth — Google OAuth (real) + dev-login stub (dev only).
   app.get('/auth/google', (req: Request, res: Response, next: NextFunction) => {

@@ -39,6 +39,15 @@ function AuthArea() {
   if (user) {
     return (
       <div className="flex items-center gap-2">
+        {user.isAdmin && (
+          <Link
+            to="/admin"
+            className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-accent)/40 bg-(--color-accent)/5 px-3 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/10 md:inline-flex"
+            aria-label="관리자 콘솔"
+          >
+            Admin
+          </Link>
+        )}
         <Link
           to="/me"
           className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] text-(--color-text) transition-colors hover:border-(--color-border-hover) sm:inline-flex"

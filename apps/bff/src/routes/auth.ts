@@ -151,6 +151,7 @@ export async function me(req: Request, res: Response) {
           nickname: true,
           activeRole: true,
           isDeleted: true,
+          adminProfile: { select: { isActive: true } },
         },
       },
     },
@@ -171,6 +172,7 @@ export async function me(req: Request, res: Response) {
       userId: row.user.userId.toString(),
       nickname: row.user.nickname,
       activeRole: row.user.activeRole,
+      isAdmin: !!row.user.adminProfile?.isActive,
     },
   });
 }
