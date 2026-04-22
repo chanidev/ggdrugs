@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
 import { callLlm } from '../llm-client.js';
+import { runEmbedEvents } from './embed-events.js';
 
 /**
  * events.ai_summary backfill — description 이 있고 ai_summary 가 없는 행을 대상으로
@@ -109,6 +110,14 @@ export async function runBackfillSummaries(options: BackfillOptions = {}): Promi
             },
           });
           updated++;
+          // aiSummary 가 embed 텍스트의 핵심이므로 갱신됐으면 Qdrant 에 재임베딩.
+          // 같은 워커 안에서 await — 동시성이 summarize 와 동일 pool(5) 로 bound 된다.
+          // 실패는 삼킨다 (주기 embed:events:missing 배치가 커버).
+          try {
+            await runEmbedEvents({ onlyEventId: r.eventId });
+          } catch {
+            // no-op
+          }
         } else {
           errors++;
         }

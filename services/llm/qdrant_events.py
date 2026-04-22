@@ -134,6 +134,30 @@ def upsert_events(
         return 0
 
 
+def delete_events(ids: list[int | str]) -> int:
+    """
+    Batch delete by point id. Qdrant 에 없는 id 는 조용히 no-op.
+    반환: 요청 id 수 (실제 삭제 확인은 상위에서 stats 로 확인).
+    """
+    client = _get_client()
+    if client is None:
+        return 0
+    if not ensure_collection():
+        return 0
+    if not ids:
+        return 0
+    try:
+        from qdrant_client.models import PointIdsList
+        client.delete(
+            collection_name=_COLLECTION,
+            points_selector=PointIdsList(points=ids),
+            wait=True,
+        )
+        return len(ids)
+    except Exception:
+        return 0
+
+
 def collection_stats() -> dict[str, Any]:
     """관측용 — points 수, dim, status. 실패 시 {available: False}."""
     client = _get_client()

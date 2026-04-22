@@ -123,6 +123,15 @@ class EventUpsertResponse(BaseModel):
     collection: str
 
 
+class EventDeleteRequest(BaseModel):
+    ids: list[int]
+
+
+class EventDeleteResponse(BaseModel):
+    requested: int
+    collection: str
+
+
 class ChatFilters(BaseModel):
     eventTypes: list[str] = []
     companions: list[str] = []
@@ -339,3 +348,18 @@ def events_upsert(req: EventUpsertRequest) -> EventUpsertResponse:
 
     n = upsert_events([it.model_dump() for it in req.items])
     return EventUpsertResponse(upserted=n, collection="alle-events")
+
+
+@app.post("/events/delete", response_model=EventDeleteResponse)
+def events_delete(req: EventDeleteRequest) -> EventDeleteResponse:
+    """
+    Qdrant alle-events 에서 eventId 기준 포인트 삭제. 이벤트가 거절/수정요청/재제출/삭제로
+    approved 상태를 벗어날 때 호출. 없는 id 는 조용히 no-op.
+    """
+    from fastapi import HTTPException
+    from qdrant_events import delete_events
+
+    if len(req.ids) > 256:
+        raise HTTPException(status_code=400, detail="max 256 ids per call")
+    delete_events(list(req.ids))
+    return EventDeleteResponse(requested=len(req.ids), collection="alle-events")

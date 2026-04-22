@@ -134,6 +134,24 @@ async function callUpsert(
   }
 }
 
+/**
+ * Qdrant alle-events 에서 단건/배치 삭제. 승인 취소 · 재제출 · 소프트 삭제에서 호출.
+ * 네트워크 실패는 무시 (주기 reconcile 배치가 훗날 재확인).
+ */
+export async function deleteEventEmbeddings(eventIds: bigint[]): Promise<void> {
+  if (eventIds.length === 0) return;
+  const url = `${env.LLM_SERVICE_URL}/events/delete`;
+  try {
+    await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids: eventIds.map((id) => Number(id)) }),
+    });
+  } catch {
+    // no-op
+  }
+}
+
 export async function runEmbedEvents(
   opts: { eventLimit?: number | 'all'; onlyMissing?: boolean; onlyEventId?: bigint } = {},
 ): Promise<EmbedEventsResult> {
