@@ -161,7 +161,7 @@ function EventsTab() {
         hasVibes: hasVibesMode,
         page,
         limit,
-        q: q || undefined,
+        ...(q ? { q } : {}),
       },
       ctrl.signal,
     )

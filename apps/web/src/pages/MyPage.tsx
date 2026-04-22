@@ -226,7 +226,7 @@ function CalendarTab() {
                   <CalendarSummaryCard
                     event={b.event}
                     phase={b.event.phase}
-                    reviewedRating={reviewOfThis?.rating}
+                    {...(reviewOfThis ? { reviewedRating: reviewOfThis.rating } : {})}
                   />
                 </li>
               );
