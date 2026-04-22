@@ -4,14 +4,13 @@ import { prisma } from '../prisma.js';
 /**
  * A_400 관련 기사 — 이벤트 상세에 붙는 뉴스 매핑 조회.
  *
- * GET /events/:id/articles?limit=5
+ * GET /events/:id/articles?limit=5&offset=0
  *
- * event_article_mappings 에서 relevance_score DESC 로 top-N. 본문은 반환하지 않고
+ * event_article_mappings 에서 relevance_score DESC 로 정렬. 본문은 반환하지 않고
  * 제목 · 출처 · 발행일 · 원문 URL 만. 요약(summary) 이 있으면 preview 용으로 보냄.
  *
- * 현재는 매핑 데이터를 채우는 ingest 파이프라인이 없음 (N-2 에서 구현 예정).
- * 그래도 API 는 먼저 열어둔다 — 매핑이 들어오는 즉시 UI 가 자동으로 비어있음→리스트로
- * 전환되도록.
+ * limit × offset 기반 페이징. 상세 페이지는 5건씩 페이지 네비게이션 사용, 요약 패널은
+ * limit=3 단일 요청.
  */
 
 function parseIntClamp(raw: unknown, fallback: number, min: number, max: number): number {
@@ -43,31 +42,39 @@ export async function listEventArticles(req: Request, res: Response) {
   }
 
   const limit = parseIntClamp(req.query.limit, 5, 1, 20);
+  const offset = parseIntClamp(req.query.offset, 0, 0, 10_000);
 
-  const rows = await prisma.eventArticleMapping.findMany({
-    where: { eventId },
-    orderBy: [{ relevanceScore: 'desc' }, { matchedAt: 'desc' }],
-    take: limit,
-    select: {
-      mappingId: true,
-      relevanceScore: true,
-      matchedAt: true,
-      article: {
-        select: {
-          articleId: true,
-          sourceName: true,
-          authorName: true,
-          articleCategory: true,
-          title: true,
-          originalUrl: true,
-          summary: true,
-          publishedAt: true,
+  const [total, rows] = await Promise.all([
+    prisma.eventArticleMapping.count({ where: { eventId } }),
+    prisma.eventArticleMapping.findMany({
+      where: { eventId },
+      orderBy: [{ relevanceScore: 'desc' }, { matchedAt: 'desc' }],
+      skip: offset,
+      take: limit,
+      select: {
+        mappingId: true,
+        relevanceScore: true,
+        matchedAt: true,
+        article: {
+          select: {
+            articleId: true,
+            sourceName: true,
+            authorName: true,
+            articleCategory: true,
+            title: true,
+            originalUrl: true,
+            summary: true,
+            publishedAt: true,
+          },
         },
       },
-    },
-  });
+    }),
+  ]);
 
   res.json({
+    total,
+    limit,
+    offset,
     items: rows.map((r) => ({
       mappingId: r.mappingId.toString(),
       articleId: r.article.articleId.toString(),

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { fetchEventDetail, type BffEventDetail } from '../lib/api';
+import {
+  fetchEventDetail,
+  fetchEventArticles,
+  type BffEventDetail,
+  type EventArticleItem,
+} from '../lib/api';
 import { Icon } from './Icon';
 import { PhaseBadge } from './PhaseBadge';
 import { BookmarkButton } from './BookmarkButton';
@@ -166,7 +171,7 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
             {detail.articleCount > 0 && (
               <span
                 className="ml-auto inline-flex items-center gap-1 rounded-full bg-(--color-accent-bg) px-2 py-0.5 text-[11px] font-medium text-(--color-accent)"
-                title={`관련 기사 ${detail.articleCount}건 — 상세 페이지에서 전체 보기`}
+                title={`관련 기사 ${detail.articleCount}건 — 아래 상위 3건, 전체는 상세 페이지`}
               >
                 <span className="tabular">{detail.articleCount}</span>
                 <span>관련 기사</span>
@@ -185,8 +190,103 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
             </p>
           </section>
         )}
+
+        {detail.articleCount > 0 && (
+          <ArticlesMiniList eventId={detail.eventId} total={detail.articleCount} />
+        )}
       </div>
     </article>
+  );
+}
+
+/**
+ * 요약 패널용 관련 기사 미니 리스트 — relevance 순 top-3.
+ * 전체 리스트는 EventDetailPage 의 ArticlesSection.
+ */
+function ArticlesMiniList({ eventId, total }: { eventId: string; total: number }) {
+  const [items, setItems] = useState<EventArticleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    setLoading(true);
+    setError(null);
+    fetchEventArticles(eventId, 3, ctrl.signal)
+      .then((r) => setItems(r))
+      .catch((e) => {
+        if ((e as { name?: string }).name === 'AbortError') return;
+        setError(e instanceof Error ? e.message : 'unknown');
+      })
+      .finally(() => setLoading(false));
+    return () => ctrl.abort();
+  }, [eventId]);
+
+  if (loading) {
+    return (
+      <section className="flex flex-col gap-1.5">
+        <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+          관련 기사
+        </p>
+        <div className="flex flex-col gap-2">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="animate-pulse rounded-(--radius-md) bg-(--color-surface-alt) p-3">
+              <div className="mb-1.5 h-3 w-1/3 rounded-(--radius-sm) bg-(--color-surface)" />
+              <div className="h-4 w-5/6 rounded-(--radius-sm) bg-(--color-surface)" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="flex flex-col gap-1.5">
+        <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+          관련 기사
+        </p>
+        <p className="m-0 text-[12px] text-(--color-error)">기사를 불러오지 못했어요.</p>
+      </section>
+    );
+  }
+
+  if (items.length === 0) return null;
+
+  return (
+    <section className="flex flex-col gap-1.5">
+      <p className="m-0 flex items-baseline justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+        <span>관련 기사</span>
+        {total > items.length && (
+          <span className="font-normal normal-case tracking-normal">
+            상위 {items.length}건 · 총 {total}건
+          </span>
+        )}
+      </p>
+      <ul className="flex flex-col gap-1.5">
+        {items.map((a) => (
+          <li key={a.mappingId}>
+            <a
+              href={a.originalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex flex-col gap-1 rounded-(--radius-md) bg-(--color-surface-alt) p-3 transition-colors hover:bg-(--color-surface-warm)"
+            >
+              <div className="flex items-baseline gap-2 text-[11px] text-(--color-text-subtle)">
+                <span className="font-semibold uppercase tracking-[0.04em]">{a.sourceName}</span>
+                {a.publishedAt && <span className="tabular">{a.publishedAt.slice(0, 10)}</span>}
+                <span className="ml-auto text-(--color-text-subtle) group-hover:text-(--color-accent)">
+                  원문 ↗
+                </span>
+              </div>
+              <h4 className="m-0 line-clamp-2 text-[13px] font-semibold leading-[1.35] text-(--color-text) group-hover:text-(--color-accent)">
+                {a.title}
+              </h4>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 
