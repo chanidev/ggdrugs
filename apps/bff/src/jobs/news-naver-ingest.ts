@@ -35,8 +35,10 @@ import { callLlm } from '../llm-client.js';
 
 const SEARCH_URL = 'https://openapi.naver.com/v1/search/news.json';
 const DISPLAY = 20; // 이벤트당 최대 검색 결과
-const MIN_SCORE_KEYWORD_ONLY = 0.5; // embedding 없을 때
-const MIN_SCORE_WITH_EMBEDDING = 0.55; // embedding 결합 후
+const MIN_SCORE_KEYWORD_ONLY = 0.55; // embedding 없을 때
+const MIN_SCORE_WITH_EMBEDDING = 0.6; // embedding 결합 후. 2026-04 샘플링: 0.55-0.60 구간
+// 노이즈 ~50% (같은 기관의 다른 행사, 일반 키워드 매칭) → 0.60 으로 상향. 0.60+ 구간은
+// 노이즈가 유의하게 낮고 drift 가 있어도 "관련 기관/시리즈" 범주에 머무름.
 const PER_EVENT_MAX_MAPPINGS = 8;
 const KEYWORD_HIT_THRESHOLD = 2;
 const KEYWORD_WEIGHT = 0.4;

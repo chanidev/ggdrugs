@@ -27,6 +27,7 @@
     "embed:events:missing": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events --missing",
     "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts",
     "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
+    "audit:news-mappings": "dotenv -e ../../.env -- tsx src/jobs/audit-news-mappings.ts",
     "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"
   },
   "dependencies": {
