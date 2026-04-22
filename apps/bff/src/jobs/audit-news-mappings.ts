@@ -220,6 +220,33 @@ function renderMarkdown(dist: Distribution[], samples: Sample[], totalMappings: 
   return lines.join('\n');
 }
 
+/**
+ * news-naver ingest 등이 끝난 뒤 자동 호출용 경량 감사.
+ * 샘플은 찍지 않고 분포/드리프트 지표만 계산해서 logger 로 흘림. 스테일 밴드
+ * (< MIN_SCORE_WITH_EMBEDDING, 현재 0.60) 가 0 이 아니면 warn.
+ */
+export async function auditMappingDistributionQuick(minScore = 0.6): Promise<{
+  total: number;
+  perBand: { band: string; count: number }[];
+  staleBelowThreshold: number;
+}> {
+  const total = await prisma.eventArticleMapping.count();
+  const edges = [0.5, 0.55, 0.6, 0.65, 0.7, 0.8, 0.9, 1.01];
+  const perBand: { band: string; count: number }[] = [];
+  for (let i = 0; i < edges.length - 1; i++) {
+    const lo = edges[i]!;
+    const hi = edges[i + 1]!;
+    const count = await prisma.eventArticleMapping.count({
+      where: { relevanceScore: { gte: lo, lt: hi } },
+    });
+    perBand.push({ band: `${lo.toFixed(2)}-${hi.toFixed(2)}`, count });
+  }
+  const staleBelowThreshold = await prisma.eventArticleMapping.count({
+    where: { relevanceScore: { lt: minScore } },
+  });
+  return { total, perBand, staleBelowThreshold };
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const [total, dist, samples] = await Promise.all([

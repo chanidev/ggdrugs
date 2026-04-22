@@ -21,6 +21,7 @@ import { runKcisaIngest } from './kcisa-ingest.js';
 import { runNewsNaverIngest } from './news-naver-ingest.js';
 import { runEmbedEvents } from './embed-events.js';
 import { runBackfillSummaries } from './summarize-events.js';
+import { auditMappingDistributionQuick } from './audit-news-mappings.js';
 import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
 
@@ -50,6 +51,23 @@ async function main() {
     if (args.includes('--all')) opts.eventLimit = 'all';
     if (args.includes('--missing')) opts.onlyMissing = true;
     results['news-naver'] = await runNewsNaverIngest(opts);
+
+    // 후속 품질 감사: 분포 + 스테일(threshold 이하) 집계. 0 이 아니면 warn —
+    // threshold 변경 과도기에 남아있거나, 저장 로직 버그로 기준치 이하가 새로 들어온
+    // 경우 즉시 감지.
+    try {
+      const audit = await auditMappingDistributionQuick();
+      if (audit.staleBelowThreshold > 0) {
+        logger.warn({ audit }, 'post-news-ingest audit — below-threshold mappings present');
+      } else {
+        logger.info({ audit }, 'post-news-ingest audit — distribution ok');
+      }
+    } catch (err) {
+      logger.warn(
+        { err: err instanceof Error ? err.message : String(err) },
+        'post-news-ingest audit failed — ingest 자체는 성공',
+      );
+    }
   }
   if (which === 'embed-events' || which === 'embed') {
     const args = process.argv.slice(2);
