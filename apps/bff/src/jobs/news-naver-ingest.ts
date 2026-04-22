@@ -41,6 +41,9 @@ const PER_EVENT_MAX_MAPPINGS = 8;
 const KEYWORD_HIT_THRESHOLD = 2;
 const KEYWORD_WEIGHT = 0.4;
 const EMBEDDING_WEIGHT = 0.6;
+// Backfill 병렬도. Naver 공식 제한 10 req/sec — 이벤트당 최대 2회 호출(quoted → unquoted
+// fallback) 가정하면 5 concurrent 에서 worst-case 10 req/s 로 수렴. 안전 마진 두고 4.
+const WORKER_CONCURRENCY = Number(process.env.NEWS_INGEST_CONCURRENCY ?? 4);
 
 interface NaverNewsItem {
   title: string;
@@ -446,14 +449,28 @@ export async function runNewsNaverIngest(
 
   // embedding 사용 가능 여부는 services/llm health probe 로 체크. 실패해도 keyword-only 진행.
   const useEmbedding = await probeEmbedding();
-  log.info({ count: events.length, useEmbedding }, 'start');
+  const concurrency = Math.max(1, opts.eventLimit === 'all' ? WORKER_CONCURRENCY : 1);
+  log.info({ count: events.length, useEmbedding, concurrency }, 'start');
 
-  for (const ev of events) {
-    await processEvent(ev, result, useEmbedding);
-    result.eventsProcessed += 1;
-    // rate limit 여유 — 네이버 공식 제한 10 req/sec, 일일 25k.
-    await new Promise((r) => setTimeout(r, 120));
-  }
+  let cursor = 0;
+  let lastReport = Date.now();
+  const worker = async () => {
+    while (true) {
+      const idx = cursor++;
+      if (idx >= events.length) return;
+      await processEvent(events[idx]!, result, useEmbedding);
+      result.eventsProcessed += 1;
+      const now = Date.now();
+      if (now - lastReport > 30_000) {
+        lastReport = now;
+        log.info(
+          { processed: result.eventsProcessed, total: events.length, ...result },
+          'progress',
+        );
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: concurrency }, () => worker()));
 
   log.info(result, 'done');
   return result;
