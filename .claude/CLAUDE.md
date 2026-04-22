@@ -31,10 +31,12 @@
 - [x] MinIO 버킷 4종 생성 (approval-docs, review-photos, event-posters, user-photos)
 - [x] PostgreSQL extensions 활성화 (postgis, pg_trgm, unaccent, citext)
 
-**Phase 1 진입 조건**:
+**Phase 1 진입 조건** (완료):
 - [x] 요구사항정의서 v5.0 최종 확정 (ADR 0001로 DDL 정합성 해소)
 - [x] 이벤트 성향 라벨 도메인 확정 (event_vibes 마스터 시드 데이터 — 20260418 seed_master_data 마이그레이션)
-- [ ] OpenAI API 키 (팀 공용 조직 계정) 확보 (ADR 0002 운영 항목)
+- [x] OpenAI API 키 확보 — 개발용 Project 키 `.env` 반영, 동작 확인. **팀 공용 조직 계정 전환은 프로덕션 배포 전 이관** (ADR 0002 운영 섹션)
+
+Phase 1 은 2026-04 중 진입 완료. 현재 BFF · Web · LLM 모두 구동, approved 이벤트 4,111건 중 1,810건 뉴스 매핑 (44% 커버리지).
 
 ---
 
