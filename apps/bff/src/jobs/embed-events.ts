@@ -135,7 +135,7 @@ async function callUpsert(
 }
 
 export async function runEmbedEvents(
-  opts: { eventLimit?: number | 'all'; onlyMissing?: boolean } = {},
+  opts: { eventLimit?: number | 'all'; onlyMissing?: boolean; onlyEventId?: bigint } = {},
 ): Promise<EmbedEventsResult> {
   const result: EmbedEventsResult = {
     eventsConsidered: 0,
@@ -149,8 +149,14 @@ export async function runEmbedEvents(
     isDeleted: false,
     approvalStatus: 'approved',
   };
+  if (opts.onlyEventId) where.eventId = opts.onlyEventId;
 
-  const take: number | undefined = opts.eventLimit === 'all' ? undefined : (opts.eventLimit ?? 200);
+  // onlyEventId 모드는 항상 단건 — take 무시.
+  const take: number | undefined = opts.onlyEventId
+    ? undefined
+    : opts.eventLimit === 'all'
+      ? undefined
+      : (opts.eventLimit ?? 200);
 
   const events = (await prisma.event.findMany({
     where,
