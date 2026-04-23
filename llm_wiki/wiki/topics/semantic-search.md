@@ -70,6 +70,26 @@ LLM/Qdrant 503/502 → `suggestions: []` (채팅은 계속). compose-retreat 실
 
 기존 ended-event leak 버그 (5e51503) — phase 필터 없어 종료 이벤트가 후보로 leak → fix.
 
+### Grounded followup (v3.5 — 2026-04-23)
+
+Referential 쿼리 ("그 중에 무료인 거?", "아까 그 전시 언제까지야?", "2번째 이벤트는?") 지원.
+
+**Flow**:
+1. **Client → BFF**: 직전 assistant 턴의 `suggestions` 를 요약(`eventId/title/category/region/startDate/endDate`)으로 담아 `last_suggestions` 필드에 첨부. AppShell `handleChatSubmit` 이 messages 스캔 후 최신 suggestions 를 추출.
+2. **BFF → LLM**: `last_suggestions` 를 LLM 요청에 forward. `/chat` 와 `/chat/stream` 양쪽 지원.
+3. **LLM**: system prompt 에 `[직전 제안]` 블록 주입 (1~10건 리스트 — title · category · region · dates). `_SCHEMA` 에 `referencesLast: boolean` 필드 (required) 추가. few-shot 예시 2건 추가 (그 중에 주말만 / 2번째 전시 위치).
+4. **LLM 판단**: user 발화가 직전 목록을 가리키면 `referencesLast=true`, reply 는 그 목록 안에서 답변. eventId 는 reply 에 노출하지 않음 (title 로 지칭).
+5. **BFF 분기**: `referencesLast && last_suggestions.length > 0` → `groundedRerank(lastSuggestions)` 호출. hybrid 검색(vector/keyword) skip, Prisma 로 fresh phase/date/vibes 로드 + 동일 rerank 파이프라인(Article RAG 포함) 재실행. retreat 도 skip (의도적으로 같은 pool 답하려는 상황).
+6. **Client UI**: 동일 `suggestions` 이벤트로 상위 5건 재표시. filters/regionIds 도 메타에 붙어 지도에 반영.
+
+**Degradation**:
+- `referencesLast=true` 지만 pool 이 phase/period 필터로 0건 → 빈 suggestions (retreat 생략 — 이미 확인된 후보의 기간 미스이므로 follow-up 에서 해결).
+- LLM 이 잘못 true 판정 → rerank 는 마지막 턴 기준으로 다시 정렬만 (실해 없음).
+
+**비용**: `[직전 제안]` system context ~1KB 추가 + rerank 는 이미 돌고 있어 Δcost ~$0.00005/req.
+
+**참고 위치**: `services/llm/app.py::LastSuggestion`, `openai_chain.py::_format_last_suggestions`, `apps/bff/src/routes/chat.ts::groundedRerank`, `apps/web/src/lib/api/chat.ts::toLastSuggestionRef`, `AppShell.tsx::handleChatSubmit` (messages 역방향 스캔으로 lastRefs 도출).
+
 ### Prompt injection 방어 (v3.4 — 2026-04-23)
 
 LLM 체인이 user 입력을 그대로 받는 모든 지점에서 방어막 추가.
@@ -200,6 +220,7 @@ aiSummary 가 있을수록 임베딩 품질이 좋아지므로 `summarize-events
 - ~~Hybrid search — pg_trgm 키워드 + vector 결합~~ → **해소** (2026-04-23 v3.3): Qdrant vector + pg_trgm `word_similarity` 병렬 fetch, eventId union + max(score). Keyword 는 마지막 user 발화 120자로 집중, threshold 0.30. rerank 재사용.
 - ~~Prompt injection 방어 — 사용자 입력 sanitize / role isolation~~ → **해소** (2026-04-23 v3.4): LLM 체인 모든 입력 지점에 `_sanitize_user_text` 적용 (제어/zero-width/bidi 제거 + 길이 cap). System prompt §보안 블록 추가. Pydantic `max_length` + BFF `validateChatBody` 이중 게이트.
 - ~~Streaming 개선 후속 — AbortController 로 중복 submit 취소~~ → **해소** (2026-04-23 v3.4): AppShell 에 `chatStreamAbortRef`, 새 submit 시 기존 stream abort. `streamChat` 이 signal 체크 + `AbortError` 전파. reader loop 에서 `signal.aborted` 폴링. 연속 취소 시 UI 오염 없음.
+- ~~Grounded followup — "그 중에 무료인 거?" referential 질문~~ → **해소** (2026-04-23 v3.5): last_suggestions 필드 client → BFF → LLM 전달, `_SCHEMA.referencesLast` + `[직전 제안]` system block + `groundedRerank` 분기. eventId 노출 방지 (title 로만 지칭).
 - ~~Streaming SSE — 응답 first-token 체감 latency~~ → **해소** (2026-04-23 v3.1):
   `/chat/stream` (LLM) + `/chat/stream` (BFF proxy) + Web `streamChat()`. `_SCHEMA`
   의 `reply` 를 properties 맨 앞에 두어 structured output stream 이 reply 텍스트를
@@ -208,7 +229,6 @@ aiSummary 가 있을수록 임베딩 품질이 좋아지므로 `summarize-events
   `meta`, `suggestions`, `reply_override`, `done`, `error`. AppShell `handleChatSubmit`
   이 placeholder 메시지 생성 후 델타 누적.
 - 후속 (v4 후보):
-  - **Grounded followup** — "그 중에 무료인 거?" 같은 referential 후속 질문 — 직전 turn 의 suggestions 을 LLM 에 컨텍스트로 재전달.
   - **Streaming reconnect** — 네트워크 blip 시 stream 중단 → 자동 재연결 (last reply_delta 이후부터 이어받기). 현재는 error 반환만.
   - **retreat/delta 경합 UI** — 현재 `retreatApplied` 플래그로 차단만. 이상적으로 SSE 서버가 retreat 발동 시점에 delta 중단하거나 `reply_sealed` 이벤트 emit.
   - **pg_trgm GIN index** — 현재 seq scan 으로 4k 이벤트 ~5ms, 데이터 성장 시 `CREATE INDEX idx_events_title_trgm ON events USING GIN (title gin_trgm_ops)` 후보.

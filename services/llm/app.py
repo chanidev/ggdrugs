@@ -74,10 +74,26 @@ class UserSignals(BaseModel):
     recent_bookmarks: int = 0
 
 
+class LastSuggestion(BaseModel):
+    """v3.5 — grounded followup. 직전 turn 에 보여준 이벤트 요약.
+
+    eventId 는 BFF 가 referencesLast=true 시 rerank pool 로 사용. LLM system prompt
+    에는 title/category/region/dates 만 노출 (id 노출 시 reply 에 섞일 위험).
+    """
+    eventId: str = Field(max_length=40)
+    title: str = Field(default="", max_length=200)
+    category: str = Field(default="", max_length=30)
+    region: str = Field(default="", max_length=40)
+    startDate: str = Field(default="", max_length=10)
+    endDate: str = Field(default="", max_length=10)
+
+
 class ChatRequest(BaseModel):
     # v3.4 — history 총 길이·개수 cap. BFF 가 주는 history 는 UI 세션 하나 분량이라 20 로 충분.
     messages: list[ChatMessage] = Field(max_length=30)
     user_signals: UserSignals | None = None
+    # v3.5 — grounded followup. 직전 assistant turn 에 보여준 suggestions.
+    last_suggestions: list[LastSuggestion] = Field(default_factory=list, max_length=10)
 
 
 class SummarizeRequest(BaseModel):
@@ -183,6 +199,8 @@ class ChatResponse(BaseModel):
     specificDate: str | None = None
     # v3 — 다음 user 발화 후보 칩 2~3개. 12자 이하.
     followups: list[str] = []
+    # v3.5 — grounded followup. true 면 BFF 가 기존 suggestion pool 에서 rerank 만 재실행.
+    referencesLast: bool = False
 
 
 class RetreatRequest(BaseModel):
@@ -269,7 +287,11 @@ def chat(req: ChatRequest) -> ChatResponse:
     llm_reply: str = ""
     if _openai_available():
         try:
-            extracted = _openai_extract(req.messages, user_signals=req.user_signals)
+            extracted = _openai_extract(
+                req.messages,
+                user_signals=req.user_signals,
+                last_suggestions=req.last_suggestions,
+            )
             llm_reply = (extracted.get("reply") or "").strip() if isinstance(extracted, dict) else ""
         except Exception:
             extracted = None
@@ -281,6 +303,7 @@ def chat(req: ChatRequest) -> ChatResponse:
 
     followups = list(extracted.get("followups") or []) if isinstance(extracted, dict) else []
     specific_date = extracted.get("specificDate") if isinstance(extracted, dict) else None
+    refs_last = bool(extracted.get("referencesLast") or False) if isinstance(extracted, dict) else False
 
     return ChatResponse(
         reply=reply,
@@ -293,6 +316,7 @@ def chat(req: ChatRequest) -> ChatResponse:
         ),
         specificDate=specific_date,
         followups=followups,
+        referencesLast=refs_last,
     )
 
 
@@ -300,11 +324,13 @@ def _openai_extract(
     messages: list[ChatMessage],
     *,
     user_signals: UserSignals | None = None,
+    last_suggestions: list[LastSuggestion] | None = None,
 ) -> dict[str, Any]:
     """
     Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.
 
-    user_signals 가 있으면 LLM 시스템 컨텍스트에 추가 — 'priorityHint' 로만 사용.
+    user_signals 가 있으면 LLM 시스템 컨텍스트에 priorityHint.
+    last_suggestions 가 있으면 [직전 제안] 블록 + referencesLast 탐지.
 
     실패 시 예외를 올려 chat() 가 규칙 기반으로 fallback.
     """
@@ -312,7 +338,8 @@ def _openai_extract(
 
     payload = [{"role": m.role, "text": m.text} for m in messages]
     sig = user_signals.model_dump() if user_signals else None
-    return extract_via_openai(payload, user_signals=sig)
+    last = [s.model_dump() for s in (last_suggestions or [])] or None
+    return extract_via_openai(payload, user_signals=sig, last_suggestions=last)
 
 
 @app.post("/chat/stream")
@@ -342,7 +369,10 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
 
                 payload = [{"role": m.role, "text": m.text} for m in req.messages]
                 sig = req.user_signals.model_dump() if req.user_signals else None
-                for kind, value in extract_via_openai_stream(payload, user_signals=sig):
+                last = [s.model_dump() for s in req.last_suggestions] or None
+                for kind, value in extract_via_openai_stream(
+                    payload, user_signals=sig, last_suggestions=last
+                ):
                     if kind == "delta":
                         sent_reply += value
                         yield _sse_event("reply_delta", {"text": value})
@@ -365,6 +395,7 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
                 "reply": fallback_reply,
                 "followups": [],
                 "specificDate": None,
+                "referencesLast": False,
             }
         else:
             # LLM 이 보낸 최종 reply 가 이미 흘려보낸 sent_reply 와 다르면 누락분 보완.
@@ -383,6 +414,7 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
             },
             "specificDate": final_extracted.get("specificDate"),
             "followups": list(final_extracted.get("followups") or [])[:3],
+            "referencesLast": bool(final_extracted.get("referencesLast") or False),
             "reply": sent_reply,
         }
         yield _sse_event("meta", meta)

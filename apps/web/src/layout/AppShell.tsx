@@ -11,7 +11,14 @@ import { ChatDock, type ChatMessage } from '../components/ChatDock';
 import { HealthBadge } from '../components/HealthBadge';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { EventSummaryPanel } from '../components/EventSummaryPanel';
-import { streamChat, type ChatFilters, type EventListQuery, type EventPhase } from '../lib/api';
+import {
+  streamChat,
+  toLastSuggestionRef,
+  type ChatFilters,
+  type EventListQuery,
+  type EventPhase,
+  type LastSuggestionRef,
+} from '../lib/api';
 
 /** periodKey → {start, end} (YYYY-MM-DD). FilterSearchPanel 로직과 동일 의미. */
 function rangeForPeriod(key: ChatFilters['periodKey']): { start: string; end: string } | null {
@@ -125,6 +132,19 @@ export function AppShell() {
     setMessages(history);
     setChatValue('');
     if (dockCollapsed) setDockCollapsed(false);
+
+    // v3.5 — grounded followup: 직전 assistant 턴에서 suggestions 를 받았다면 요약으로
+    // 보내 LLM 이 referential 질문("그 중에", "아까 그거") 을 인식할 수 있게.
+    const lastRefs: LastSuggestionRef[] = (() => {
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const m = messages[i];
+        if (m.role !== 'assistant') continue;
+        if (!m.suggestions || m.suggestions.length === 0) continue;
+        return m.suggestions.map(toLastSuggestionRef);
+      }
+      return [];
+    })();
+
     // placeholder assistant 메시지 — streamChat 델타를 이 텍스트에 누적.
     const placeholderIndex = history.length; // user 메시지 바로 뒤
     setMessages((prev) => [...prev, { role: 'assistant', text: '' }]);
@@ -191,6 +211,7 @@ export function AppShell() {
           },
           },
           controller.signal,
+          lastRefs.length > 0 ? lastRefs : undefined,
         );
       } catch (err) {
         // AbortError — 사용자가 새 메시지를 submit 해서 의도적으로 끊은 경우. UI 건드리지 않음.

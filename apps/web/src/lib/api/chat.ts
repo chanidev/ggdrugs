@@ -38,19 +38,49 @@ export interface ChatReply {
   specificDate?: string | null;
   /** v3 — 다음 user 발화 후보 칩 2~3개 (각 ≤14자). */
   followups?: string[];
+  /** v3.5 — LLM 이 직전 제안을 가리킨다고 판단 + 클라가 last_suggestions 보냈을 때 true. */
+  referencesLast?: boolean;
   /** Qdrant 의미 검색으로 뽑아준 이벤트 후보 (최대 5개). 비어있을 수 있음. */
   suggestions: ChatSuggestion[];
 }
 
+/** v3.5 — 클라이언트가 보내는 직전 turn 의 suggestions 요약. */
+export interface LastSuggestionRef {
+  eventId: string;
+  title: string;
+  category: string;
+  region: string;
+  startDate: string;
+  endDate: string;
+}
+
+/** ChatSuggestion → LastSuggestionRef (요약 필드만 추출). */
+export function toLastSuggestionRef(s: ChatSuggestion): LastSuggestionRef {
+  return {
+    eventId: s.eventId,
+    title: s.title,
+    category: s.category.name,
+    region: s.region.sigunguName ?? s.region.sidoName,
+    startDate: s.startDate,
+    endDate: s.endDate,
+  };
+}
+
 export async function sendChat(
   messages: { role: 'user' | 'assistant' | 'system'; text: string }[],
+  lastSuggestions?: LastSuggestionRef[],
 ): Promise<ChatReply> {
   const res = await fetch(
     `${BFF_URL}/chat`,
     withCredentials({
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({
+        messages,
+        ...(lastSuggestions && lastSuggestions.length > 0
+          ? { last_suggestions: lastSuggestions }
+          : {}),
+      }),
     }),
   );
   if (res.status === 502) throw new Error('LLM_UNREACHABLE');
@@ -74,6 +104,7 @@ export interface ChatStreamHandlers {
     filters: ChatFilters;
     specificDate: string | null;
     followups: string[];
+    referencesLast: boolean;
   }) => void;
   /** Qdrant + rerank 결과. meta 뒤 도착. 0건일 수 있음. */
   onSuggestions?: (items: ChatSuggestion[]) => void;
@@ -90,6 +121,7 @@ export async function streamChat(
   messages: { role: 'user' | 'assistant' | 'system'; text: string }[],
   handlers: ChatStreamHandlers,
   signal?: AbortSignal,
+  lastSuggestions?: LastSuggestionRef[],
 ): Promise<void> {
   // 이미 abort 된 signal 로 호출되면 즉시 AbortError 전파.
   if (signal?.aborted) {
@@ -104,7 +136,12 @@ export async function streamChat(
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
       },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({
+        messages,
+        ...(lastSuggestions && lastSuggestions.length > 0
+          ? { last_suggestions: lastSuggestions }
+          : {}),
+      }),
       signal,
     }),
   );
@@ -173,12 +210,14 @@ function dispatchSseEvent(event: string, data: unknown, h: ChatStreamHandlers) {
       filters: ChatFilters;
       specificDate: string | null;
       followups?: string[];
+      referencesLast?: boolean;
     };
     h.onMeta?.({
       reply: m.reply ?? '',
       filters: m.filters,
       specificDate: m.specificDate ?? null,
       followups: m.followups ?? [],
+      referencesLast: m.referencesLast === true,
     });
   } else if (event === 'suggestions' && typeof data === 'object' && data !== null) {
     const items = (data as { items?: ChatSuggestion[] }).items;

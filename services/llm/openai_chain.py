@@ -77,14 +77,34 @@ _FEWSHOT = """예시:
   {
     filters: {companions:["family"], eventTypes:["festival"], periodKey:"weekend"},
     specificDate: null,
+    referencesLast: false,
     reply: "이번 주말 · 가족 동행 · 축제 기준으로 찾아봤어요. 결과를 함께 보여드릴게요.",
     followups: ["이번 달 전체로", "혼자 가도 좋은 거", "성수동·홍대 위주로"]
+  }
+
+- (직전 제안 3건 후) "그 중에 주말에 하는 거만":
+  {
+    filters: {periodKey:"weekend"},
+    specificDate: null,
+    referencesLast: true,
+    reply: "직전에 본 세 건 중 주말 운영 일정 기준으로 다시 추려봤어요.",
+    followups: ["이번 주 전체", "가족이랑은", "다시 보여줘"]
+  }
+
+- (직전 제안 후) "2번째 전시 어디서 해?":
+  {
+    filters: {},
+    specificDate: null,
+    referencesLast: true,
+    reply: "말씀하신 전시의 위치 정보는 상세 카드에서 확인하실 수 있어요. 여기에 같은 목록 다시 고정해둘게요.",
+    followups: ["다른 전시 보기", "야간 운영만", "이번 주말로"]
   }
 
 - "강남 데이트 분위기 잔잔한 전시":
   {
     filters: {regionHints:["강남구"], companions:["couple"], eventTypes:["exhibition"], vibes:["정적"]},
     specificDate: null,
+    referencesLast: false,
     reply: "강남구 · 연인 동행 · 전시 · 정적 분위기로 좁혔어요. 마음에 드는 것 있는지 확인해 보세요.",
     followups: ["야간 운영 위주", "공연도 같이", "다른 구도 보기"]
   }
@@ -93,6 +113,7 @@ _FEWSHOT = """예시:
   {
     filters: {companions:["solo"], vibes:["정적"]},
     specificDate: null,
+    referencesLast: false,
     reply: "혼자 · 정적 분위기 기준으로 추려봤어요. 종류(전시·교육 등)도 알려주시면 더 정확히 좁혀드려요.",
     followups: ["전시만 보기", "교육·강좌 보기", "이번 주말로"]
   }
@@ -101,6 +122,7 @@ _FEWSHOT = """예시:
   {
     filters: {regionHints:["종로구"], eventTypes:["performance"], periodKey:"tomorrow"},
     specificDate: null,
+    referencesLast: false,
     reply: "종로구 · 내일 · 공연 기준으로 찾아봤어요.",
     followups: ["주말까지 넓게", "친구랑 같이", "전시도 함께"]
   }
@@ -109,6 +131,7 @@ _FEWSHOT = """예시:
   {
     filters: {companions:["friend"], eventTypes:["festival"], periodKey:"weekend"},
     specificDate: null,
+    referencesLast: false,
     reply: "친구 동행으로 바꿔서 이번 주말 축제만 다시 추려봤어요. (가족 조건은 빼드렸어요.)",
     followups: ["야외 활동 위주", "체험형 강조", "다음 주로 미루기"]
   }
@@ -117,6 +140,7 @@ _FEWSHOT = """예시:
   {
     filters: {periodKey:"weekend", vibes:["활동적"]},
     specificDate: "2026-04-25",
+    referencesLast: false,
     reply: "이번 주 토요일(4/25) 활동적 분위기로 찾아봤어요. 한강 근처는 영등포·용산·마포·성동·강서·송파 권역에서 확인해 주세요.",
     followups: ["일요일도 보기", "가족이랑은", "전시도 함께"]
   }
@@ -125,6 +149,7 @@ _FEWSHOT = """예시:
   {
     filters: {periodKey:"today"},
     specificDate: null,
+    referencesLast: false,
     reply: "오늘 진행 중인 이벤트로 좁혀봤어요. 동행이나 종류를 알려주시면 더 정확하게 추천드릴게요.",
     followups: ["가족이랑", "혼자서", "이번 주말로"]
   }
@@ -154,6 +179,16 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시
 - 예: "5월 1일" → 올해 "2026-05-01", "다음주 토요일" / "이번주 일요일" / "내일" → 절대 날짜 계산.
 - 절대 추측하지 말 것 — "이번 주말" 같은 모호한 표현은 specificDate 없이 periodKey="weekend" 로만.
 - 오늘 컨텍스트 절대 날짜를 활용해 정확히 계산.
+
+[referencesLast — 불리언]
+- 입력에 `[직전 제안]` 블록이 주어지고, 사용자 최근 발화가 그 목록을 명시적·묵시적으로
+  가리키면 true. 그렇지 않으면 false.
+- true 예: "그 중에 무료인 거 있어?", "아까 그 전시 언제까지야?", "2번째 이벤트는 어디야?",
+  "방금 본 거 다 주말이야?", "그거 말고 다른 거".
+- false 예: "이번 주말 가족 축제" (새 쿼리), "강남 공연" (새 축 추가).
+- true 일 때 reply 는 직전 제안 목록 안에서 답하거나 (예: "그 중 A, B 두 건이 주말에
+  진행돼요") / 모르는 축(가격·정원 등)은 "그 정보는 제 데이터에 없어요" 로 정직하게.
+- 후보 id 를 reply 에 숫자나 eventId 로 드러내지 말 것 — "첫번째" 대신 "X 축제" 처럼 title 로 지칭.
 
 [reply 작성 규칙 — 어기면 실패]
 - 1~2 문장, 250자 이내, 존댓말 (~요/~습니다).
@@ -244,6 +279,33 @@ def _sanitize_signal_value(v: Any, *, max_len: int = 80) -> str:
     return s.strip()
 
 
+def _format_last_suggestions(items: list[dict[str, Any]] | None) -> str:
+    """
+    직전 턴에 보여줬던 suggestions → '[직전 제안]' system prompt 블록.
+
+    referential 쿼리("그 중에", "아까 그거") 시 LLM 이 이 목록을 컨텍스트로 활용.
+    title/category/region/dates 만 넣고 eventId 는 노출 안 함 — LLM 이 reply 에
+    raw id 언급하는 걸 막기 위해 (referencesLast 플래그로 BFF 가 이후 매핑).
+    """
+    if not items:
+        return ""
+    lines: list[str] = []
+    for i, it in enumerate(items[:10], start=1):
+        title = _sanitize_user_text(str(it.get("title") or ""), max_len=80).replace("\n", " ")
+        cat = _sanitize_user_text(str(it.get("category") or ""), max_len=20)
+        region = _sanitize_user_text(str(it.get("region") or ""), max_len=30)
+        dates = f"{it.get('startDate','')}~{it.get('endDate','')}"
+        parts = [p for p in [title, cat, region, dates] if p and p != "~"]
+        lines.append(f"{i}. " + " · ".join(parts))
+    if not lines:
+        return ""
+    return (
+        "[직전 제안 — 마지막 assistant turn 에 보여준 이벤트 목록]\n"
+        + "\n".join(lines)
+        + "\n사용자가 이 목록을 명시·묵시로 가리키면 referencesLast=true, reply 는 이 목록 안에서 답변."
+    )
+
+
 def _format_user_signals(sig: dict[str, Any]) -> str:
     """user_signals → priorityHint 시스템 컨텍스트 한 블록.
 
@@ -322,6 +384,13 @@ _SCHEMA = {
                 "description": "사용자가 명시한 단일 날짜 ISO YYYY-MM-DD. 모호하면 null.",
                 "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
             },
+            "referencesLast": {
+                "type": "boolean",
+                "description": (
+                    "사용자 최근 발화가 '[직전 제안]' 블록의 이벤트들을 가리키면 true. "
+                    "'그 중에', '아까 그거', '2번째', '방금 본' 같은 referential 표현."
+                ),
+            },
             "followups": {
                 "type": "array",
                 "description": "다음 user 발화 후보 칩 2~3개. 각 12자 이하.",
@@ -332,7 +401,7 @@ _SCHEMA = {
         },
         "required": [
             "reply", "companions", "eventTypes", "periodKey", "vibes", "regionHints",
-            "specificDate", "followups",
+            "specificDate", "referencesLast", "followups",
         ],
     },
 }
@@ -450,6 +519,7 @@ def extract_via_openai(
     messages: list[dict[str, str]],
     *,
     user_signals: dict[str, Any] | None = None,
+    last_suggestions: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """
     messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]
@@ -471,6 +541,9 @@ def extract_via_openai(
     sys_prompt = _build_system_prompt()
     if user_signals:
         sys_prompt += "\n\n" + _format_user_signals(user_signals)
+    last_block = _format_last_suggestions(last_suggestions)
+    if last_block:
+        sys_prompt += "\n\n" + last_block
 
     chat = [{"role": "system", "content": sys_prompt}]
     for m in messages:
@@ -504,6 +577,7 @@ def _parse_chat_extract(raw_json: str) -> dict[str, Any]:
         "vibes": list(data.get("vibes") or []),
         "regionHints": list(data.get("regionHints") or []),
         "specificDate": data.get("specificDate"),
+        "referencesLast": bool(data.get("referencesLast") or False),
         "reply": (data.get("reply") or "").strip(),
         "followups": [s.strip() for s in (data.get("followups") or []) if s and s.strip()][:3],
     }
@@ -513,6 +587,7 @@ def extract_via_openai_stream(
     messages: list[dict[str, str]],
     *,
     user_signals: dict[str, Any] | None = None,
+    last_suggestions: list[dict[str, Any]] | None = None,
 ) -> Iterator[tuple[str, Any]]:
     """
     스트리밍 버전. `reply` 텍스트가 생성되는 즉시 ("delta", str) 를 yield,
@@ -528,6 +603,9 @@ def extract_via_openai_stream(
     sys_prompt = _build_system_prompt()
     if user_signals:
         sys_prompt += "\n\n" + _format_user_signals(user_signals)
+    last_block = _format_last_suggestions(last_suggestions)
+    if last_block:
+        sys_prompt += "\n\n" + last_block
 
     chat = [{"role": "system", "content": sys_prompt}]
     for m in messages:
