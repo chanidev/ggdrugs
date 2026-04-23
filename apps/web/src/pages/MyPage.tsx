@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PhaseBadge } from '../components/PhaseBadge';
@@ -12,12 +12,15 @@ import {
   fetchMyBookmarks,
   fetchMyReviews,
   fetchMySubscriptions,
+  fetchMyUploader,
+  setActiveRole,
   toggleSubscription,
   deleteSubscription,
   deleteMyReview,
   type BookmarkListItem,
   type MyReviewItem,
   type MySubscription,
+  type MyUploaderProfile,
 } from '../lib/api';
 
 /**
@@ -60,13 +63,17 @@ export function MyPage() {
 
   return (
     <PageShell>
-      <header className="mb-6">
-        <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-          마이페이지
-        </p>
-        <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">
-          <span className="text-(--color-accent)">•</span> {user.nickname} 님
-        </h1>
+      {/* GG-ROLE-001: 마이페이지 우측 상단 역할 전환 버튼 상시 노출. */}
+      <header className="mb-6 flex items-end justify-between gap-4">
+        <div>
+          <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+            마이페이지
+          </p>
+          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">
+            <span className="text-(--color-accent)">•</span> {user.nickname} 님
+          </h1>
+        </div>
+        <RoleToggleButton />
       </header>
 
       <div
@@ -92,7 +99,196 @@ export function MyPage() {
       {tab === 'bookmarks' && <BookmarksList />}
       {tab === 'reviews' && <ReviewsList />}
       {tab === 'subscriptions' && <SubscriptionsList />}
+
+      <SessionFooter />
     </PageShell>
+  );
+}
+
+/**
+ * GG-ROLE-001 우측 상단 역할 전환 버튼.
+ *
+ * 4 상태 (uploader_profile + active_role 조합):
+ *   1. uploader_profile null              → "업로더 신청"      → /uploader (ApplyForm 노출)
+ *   2. status='pending'                   → "심사 중"           → /uploader (콘솔에서 진행 확인)
+ *   3. status∈{revision_requested,rejected} → "보완하여 재신청" → /uploader (ApplyForm 재진입)
+ *   4. status='approved' + activeRole='user'      → "업로더로 전환"     → setActiveRole('uploader') + /uploader
+ *   5. status='approved' + activeRole='uploader'  → "사용자로 돌아가기" → setActiveRole('user') + 머무름
+ *
+ * 비로그인 호출 케이스는 부모 (MyPage) 에서 이미 user 검사 후 진입하므로 처리 안 함.
+ */
+function RoleToggleButton() {
+  const { user, refresh } = useCurrentUser();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<MyUploaderProfile | null | 'loading'>(
+    'loading',
+  );
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchMyUploader()
+      .then((p) => {
+        if (!cancelled) setProfile(p);
+      })
+      .catch(() => {
+        if (!cancelled) setProfile(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (profile === 'loading' || !user) {
+    return (
+      <span
+        aria-hidden
+        className="inline-block h-9 w-32 animate-pulse rounded-(--radius-md) bg-(--color-surface-alt)"
+      />
+    );
+  }
+
+  // 1. 미신청
+  if (!profile) {
+    return (
+      <Link
+        to="/uploader"
+        className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-accent)/40 bg-(--color-accent)/5 px-3 text-[13px] font-medium text-(--color-accent) hover:bg-(--color-accent)/10"
+      >
+        업로더 신청 <Icon name="arrow" size={12} />
+      </Link>
+    );
+  }
+
+  // 2. 심사 중
+  if (profile.approvalStatus === 'pending') {
+    return (
+      <Link
+        to="/uploader"
+        className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 text-[13px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover)"
+        title="관리자 심사 진행 중 — 콘솔에서 상세 확인"
+      >
+        업로더 심사 중
+      </Link>
+    );
+  }
+
+  // 3. 보완 / 반려
+  if (
+    profile.approvalStatus === 'revision_requested' ||
+    profile.approvalStatus === 'rejected'
+  ) {
+    const label = profile.approvalStatus === 'rejected' ? '반려' : '보완 요청';
+    return (
+      <Link
+        to="/uploader"
+        className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-warning)/40 bg-(--color-warning)/5 px-3 text-[13px] font-medium text-(--color-warning) hover:bg-(--color-warning)/10"
+        title={`${label}됨 — 보완하여 재신청`}
+      >
+        {label} · 재신청
+      </Link>
+    );
+  }
+
+  // 4 / 5. approved → 토글
+  const isUploaderMode = user.activeRole === 'uploader';
+  const onToggle = async () => {
+    setPending(true);
+    try {
+      await setActiveRole(isUploaderMode ? 'user' : 'uploader');
+      await refresh();
+      if (!isUploaderMode) navigate('/uploader');
+    } catch (e) {
+      window.alert(`전환 실패: ${(e as Error).message}`);
+    } finally {
+      setPending(false);
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={() => void onToggle()}
+      disabled={pending}
+      className={
+        isUploaderMode
+          ? 'inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40'
+          : 'inline-flex h-9 items-center rounded-(--radius-md) bg-(--color-accent) px-4 text-[13px] font-medium text-white hover:bg-(--color-accent-hover) disabled:opacity-40'
+      }
+    >
+      {pending
+        ? '전환 중…'
+        : isUploaderMode
+          ? '사용자로 돌아가기'
+          : '업로더로 전환'}
+    </button>
+  );
+}
+
+/**
+ * ADR 0004 D-3 — 세션 관리. 로그아웃 두 옵션 노출.
+ * 단일 디바이스 로그아웃 (기존 동작) + 모든 디바이스 로그아웃 (전체 세션 폐기).
+ * 보안 사고 의심 시 후자 사용 — admin revoke (D-6) 와 별개로 본인이 직접 cleanup.
+ */
+function SessionFooter() {
+  const { logout, logoutAll } = useCurrentUser();
+  const [pending, setPending] = useState<'one' | 'all' | null>(null);
+
+  const onLogout = async () => {
+    setPending('one');
+    try {
+      await logout();
+      window.location.href = '/';
+    } catch (e) {
+      window.alert(`로그아웃 실패: ${(e as Error).message}`);
+      setPending(null);
+    }
+  };
+
+  const onLogoutAll = async () => {
+    if (
+      !window.confirm(
+        '모든 디바이스에서 로그아웃할까요? 다른 기기·브라우저의 세션도 모두 끊겨요.',
+      )
+    )
+      return;
+    setPending('all');
+    try {
+      const r = await logoutAll();
+      window.alert(`${r.deleted}개 세션을 끊었어요.`);
+      window.location.href = '/';
+    } catch (e) {
+      window.alert(`로그아웃 실패: ${(e as Error).message}`);
+      setPending(null);
+    }
+  };
+
+  return (
+    <section className="mt-10 border-t border-(--color-border) pt-6">
+      <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
+        세션 관리
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => void onLogout()}
+          disabled={pending !== null}
+          className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
+        >
+          {pending === 'one' ? '로그아웃 중…' : '이 디바이스 로그아웃'}
+        </button>
+        <button
+          type="button"
+          onClick={() => void onLogoutAll()}
+          disabled={pending !== null}
+          className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-error) hover:text-(--color-error) disabled:opacity-40"
+        >
+          {pending === 'all' ? '전체 로그아웃 중…' : '모든 디바이스 로그아웃'}
+        </button>
+      </div>
+      <p className="m-0 mt-2 text-[11.5px] text-(--color-text-subtle)">
+        분실·탈취가 의심되면 모든 디바이스 로그아웃을 사용하세요.
+      </p>
+    </section>
   );
 }
 

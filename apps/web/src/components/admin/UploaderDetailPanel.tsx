@@ -39,6 +39,8 @@ export function UploaderDetailPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<null | string>(null);
+  // ADR 0005 E-8: reason 은 BFF 에선 모두 optional. UX 상 반려/보완요청은 강제 (audit 가치).
+  const [reason, setReason] = useState('');
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -58,7 +60,8 @@ export function UploaderDetailPanel({
     setPending(action);
     setError(null);
     try {
-      await decideAdminUploader(uploaderId, action);
+      await decideAdminUploader(uploaderId, action, reason);
+      setReason('');
       onDecided();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'decision failed');
@@ -264,11 +267,29 @@ export function UploaderDetailPanel({
 
       {canDecide && (
         <section className="border-t border-(--color-border) pt-3">
-          <div className="flex flex-wrap items-center justify-end gap-1.5">
+          {/* ADR 0005 E-8: 반려/보완요청은 reason 필수 (UX 강제), 승인은 optional. */}
+          <label className="block">
+            <span className="m-0 mb-1 block text-[11px] font-semibold uppercase tracking-[0.05em] text-(--color-text-subtle)">
+              사유 <span className="text-(--color-text-muted)">(반려·보완요청 시 필수, 승인은 선택)</span>
+            </span>
+            <textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value.slice(0, 2000))}
+              rows={3}
+              maxLength={2000}
+              placeholder="감사 로그에 그대로 기록됩니다 (admin_audit_logs.payload.reason)"
+              className="w-full resize-y rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-2 text-[13px] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-border-hover) focus:outline-none"
+            />
+            <span className="tabular m-0 mt-0.5 block text-right text-[10px] text-(--color-text-subtle)">
+              {reason.trim().length} / 2000
+            </span>
+          </label>
+          <div className="mt-2 flex flex-wrap items-center justify-end gap-1.5">
             <button
               type="button"
               onClick={() => decide('rejected')}
-              disabled={pending !== null}
+              disabled={pending !== null || reason.trim().length === 0}
+              title={reason.trim().length === 0 ? '사유를 입력해 주세요' : ''}
               className="inline-flex h-9 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[13px] font-medium text-(--color-error) hover:bg-(--color-error)/10 disabled:opacity-40"
             >
               {pending === 'rejected' ? '…' : '반려'}
@@ -276,7 +297,8 @@ export function UploaderDetailPanel({
             <button
               type="button"
               onClick={() => decide('revision_requested')}
-              disabled={pending !== null}
+              disabled={pending !== null || reason.trim().length === 0}
+              title={reason.trim().length === 0 ? '사유를 입력해 주세요' : ''}
               className="inline-flex h-9 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text) hover:border-(--color-border-hover) disabled:opacity-40"
             >
               {pending === 'revision_requested' ? '…' : '보완요청'}

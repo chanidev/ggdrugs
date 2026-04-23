@@ -1,5 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { fetchMe, devLogin as apiDevLogin, logout as apiLogout, type CurrentUser } from './api';
+import {
+  fetchMe,
+  devLogin as apiDevLogin,
+  logout as apiLogout,
+  logoutAll as apiLogoutAll,
+  type CurrentUser,
+} from './api';
 
 /**
  * 글로벌 auth 컨텍스트 — /auth/me 로 현재 세션 사용자 동기화.
@@ -18,6 +24,8 @@ interface AuthContextValue {
   loading: boolean;
   login: (nickname: string) => Promise<CurrentUser>;
   logout: () => Promise<void>;
+  /** ADR 0004 D-3: 모든 디바이스 일괄 로그아웃. 응답 deleted = 끊긴 세션 수. */
+  logoutAll: () => Promise<{ deleted: number }>;
   refresh: () => Promise<void>;
 }
 
@@ -54,8 +62,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const logoutAll = useCallback(async () => {
+    const result = await apiLogoutAll();
+    setUser(null);
+    return result;
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refresh }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, logoutAll, refresh }}>
       {children}
     </AuthContext.Provider>
   );

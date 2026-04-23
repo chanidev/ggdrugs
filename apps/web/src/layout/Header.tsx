@@ -38,8 +38,8 @@ function AuthArea() {
   }
 
   if (user) {
-    // 업로더 링크는 active_role=uploader 일 때만. 신청 진입은 /me 나 직접 URL 로.
-    // 승인 안 된 상태에서도 /uploader 는 접근 가능(신청 폼). Header 미노출 이유: 기본 탐색 UX 어지럽힘 방지.
+    // 업로더 링크는 active_role=uploader 일 때만 (콘솔 직행). 미승인/미신청 상태의 신청 진입점은
+    // /me 우측 상단 RoleToggleButton (GG-ROLE-001) 이 담당. Header 는 탐색 동선 단순화 위해 비노출.
     return (
       <div className="flex items-center gap-2">
         {user.isAdmin && (
