@@ -170,17 +170,19 @@
 - **상세 / 마이페이지 / 업로더 / 관리자**: grid-disciplined — 12 col grid, max-width 1200px, gutter 24px.
 - **모바일(≤640px)**: list/map 토글 전환 (동시 표시 X).
 
-### 모바일 메인 레이아웃 정책 (2026-04-23 박제, 코드 ship 미정)
+### 모바일 메인 레이아웃 정책 (2026-04-23 박제, **코드 ship 완료** `6747b88` / `b453817` 검증)
 
 데스크톱의 rail+overlay panel 패턴은 모바일에서 작동 불가. 모바일 메인은 다음 구조로 결정:
 
 - **기본 viewport**: 지도 100% 풀스크린. 핀 클러스터 직접 탭.
-- **하단 BottomSheet**: 50vh peek (현재 영역 이벤트 list) ↔ 90vh full (필터 + 채팅 + 전체목록 통합). 드래그 + tap-to-toggle.
-- **상단 floating header**: 로고 + 알림 + 마이페이지 link (60px → 48px h-12, blur 배경 surface/80 + backdrop-blur-md, surface 위에 떠있음).
-- **필터 / 채팅 / 전체목록**: 셋 다 BottomSheet 내부 탭 (rail 의 inline accordion 패턴 — 모바일에서도 그대로 활용).
-- **이벤트 핀 탭**: BottomSheet 가 자동으로 50vh peek 으로 전환되며 해당 이벤트 EventSummaryPanel inline 노출 (panel 별도 floating X).
+- **하단 BottomSheet**: 3 snap — **min 10vh** (핸들만 노출, 풀 지도 모드) ↔ **peek 52vh** (목록/필터/채팅 탭 콘텐츠) ↔ **full 90vh** (시트가 화면 거의 전체 차지). 드래그 + tap-to-toggle. ESC 로 한 단계 축소.
+- **상단 floating header**: 로고 + 알림 + 마이페이지 link (h-12, surface/85 + backdrop-blur-md). z-40.
+- **필터 / 채팅 / 전체목록**: 셋 다 BottomSheet 내부 탭 (rail 의 inline accordion 패턴 — 모바일에서도 그대로 활용). 활성 탭은 vermillion underline.
+- **이벤트 핀 탭**: BottomSheet 가 자동으로 peek 으로 전환되며 해당 이벤트 `EventSummaryContent` inline 노출 (탭 콘텐츠 대체, "← 목록으로" 로 복귀).
 
-코드 ship 미정 — 별도 sprint 진입 시 본 정책 기준 구현. 현재 데스크톱 코드는 그대로 유지.
+구현: `apps/web/src/layout/MobileShell.tsx` + `apps/web/src/components/mobile/BottomSheet.tsx` + `EventSummaryPanel.tsx::EventSummaryContent` 추출. AppShell 은 desktop body (`hidden md:flex`) + MobileShell (`md:hidden`) 동시 렌더, 같은 state 공유.
+
+검증: `apps/web/scripts/verify-mobile-shell.mjs` (Playwright iPhone 12 viewport, 7 snapshot — peek/full snap 정확 픽셀, drag, tab 전환, 이벤트 선택). 통과.
 
 **비-목표** (모바일에서 의도적으로 안 함):
 - bottom tab bar (Instagram-style) — Alle 는 단일 페이지 발견 흐름이 핵심

@@ -1,38 +1,42 @@
 # Wiki Lint Report
 
-**Generated**: 2026-04-23 12:30 (Phase 1 마감 sweep — Audit 통합 + 쿨다운 + A_100 자동 복귀 + 정책 박제 + 추천 + fetchWithRetry sprint 후)
-**Scope**: `wiki/` 전체 (4 sources + **22 topics** + 5 entities, index/log 제외) — admin-account-management + recommendations 추가
-**Graphify cross-check**: `graphify-out/` **931 nodes / 1227 edges / 132 communities** (이전 905/1177/131 대비 +26/+50/+1)
-**이전 lint**: 2026-04-23 sprint 2 (11:50) — Contradictions 0 / Gaps 0. 이후 5 commit ship 추가 (Audit 통합 / 쿨다운 / bulk action 박제 / A_100 자동 복귀 + G-2/3/4 박제 / G-5 추천 / fetchWithRetry).
+**Generated**: 2026-04-23 sprint 4 (모바일 메인 ship + chat v3 prompt 강화 + AI 후보 종료 leak fix sprint 후)
+**Scope**: `wiki/` 전체 (4 sources + **22 topics** + 5 entities, index/log 제외) + `DESIGN.md` 모바일 정책 cross-check
+**이전 lint**: 2026-04-23 sprint 3 (12:30) — Phase 1 lint queue 5건 모두 closed. 이후 8 commit + 1 미커밋 sprint.
 
 ---
 
 ## 요약
 
-| 카테고리 | 이전(11:50) | 현재(12:30) |
+| 카테고리 | 이전(12:30) | 현재 |
 |---|---|---|
-| Contradictions | 0 | **0** — 본 sprint 의 모든 변경이 이미 wiki 본문에도 반영됨 (각 commit 의 "문서" 단계에서 함께 갱신) |
+| Contradictions | 0 | **0** — 본 sprint 의 ship 6건 모두 wiki/DESIGN 동시 갱신 (이번 lint sweep 에서 drift 정리) |
 | Stale refs | 0 | 0 |
-| Orphans | 0 | 0 — admin-account-management.md / recommendations.md 모두 index 등재 |
+| Orphans | 0 | 0 |
 | Gaps | 0 | 0 |
 | Over-large pages | 0 | 0 |
-| Implementation status | 미착수 2행 (PostGIS / 모바일) | **미착수 2행 + 부분 해소 1** — 소스 쿼터·레이트리밋 transient retry ship, quota 카운트 추적은 미완 |
+| Implementation status | 미착수 2행 + 부분 1 | **미착수 2행 (모바일 ship 으로 1건 close)** |
 
-**상태**: Phase 1 lint queue 5개 모두 처리 완료. 현 sprint 의 모든 ship 항목이 commit 내 "문서" 단계에서 wiki 와 함께 갱신되어 후속 drift 없음. 잔여 미착수는 Phase 2 또는 운영 트리거 대기.
+**상태**: 본 sprint 의 ship 항목 → 이번 lint sweep 에서 4 wiki 파일 갱신 (main-page-flow / ui-architecture / semantic-search / DESIGN). 잔여 미착수는 Phase 2 prod 통합 (KYC / 사업자번호) 또는 운영 트리거 대기.
 
 ---
 
-## 1. Contradictions — ✅ 0건
+## 1. Contradictions — ✅ 0건 (이번 sweep 에서 fix 4건)
 
-본 sprint 의 모든 ship 이 commit-단위 wiki 동시 갱신을 따름:
+본 sprint 8 commit 의 wiki drift 점검 + 정리:
 
-- **ADR 0004/0005 박제 + 코드 ship** (`9cafc2a`/`d023857`/`66b49aa`) — 전체 sweep 으로 정합
-- **Audit 통합 뷰** (`f11c42d`) — admin-flow §Audit 본문 동시 갱신, OQ 해소
-- **rejected 쿨다운** (`f2175bf`) — roles-and-active-role OQ #6 해소
-- **bulk action 박제** (`83e858c`) — admin-flow OQ 해소
-- **A_100 자동 복귀 + 정책 박제** (`6ec5884`) — auth-flow §A_100 + use-cases-index sweep + ingest/news-article OQ 박제
-- **G-5 추천** (`27c2fb5`) — recommendations.md 신규 + auth-flow OQ 해소 + db-schema-overview user_taste_profiles 사용처 cross-ref (본 sweep 에서 추가)
-- **fetchWithRetry** (`7d54020`) — ingest-pipeline OQ 부분 해소
+| Commit | Drift 발견 | Fix 적용 |
+|---|---|---|
+| `6627d1f` quota-counter | ingest-pipeline.md 이미 박제 (이전 sprint sweep) | drift 없음 |
+| `648e6da` 추천 hybrid | recommendations.md 이미 §Hybrid 박제 | drift 없음 |
+| `663e571` admin Audit | admin-flow.md 갱신 완료 (이전 sprint) | drift 없음 |
+| `3971220` DESIGN.md 모바일 박제 + KYC mock | DESIGN.md "코드 ship 미정" 표기 | **fix** — sprint 4 에서 ship 완료, "코드 ship 완료 `6747b88`" 로 갱신 |
+| `6747b88` 모바일 BottomSheet shell | main-page-flow.md 가 2026-04-17 초기 상태 (BottomSheet 언급 0); ui-architecture.md "Phase 2 후보 유지" stale | **fix** — main-page-flow §Shell 분기 추가 (desktop+mobile 양 트리), ui-architecture §모바일 대응 "ship 완료" 갱신 |
+| `b453817` playwright 검증 스크립트 | 신규 자산, 박제 필요 | DESIGN.md / ui-architecture / main-page-flow 에 검증 ref 추가 |
+| `5e51503` chat ended leak fix | semantic-search.md 가 reply rule-based echo + suggestions filter 부재 상태로 stale | **fix** — semantic-search §결합 v3 재작성 (5-step 파이프라인) |
+| `1995333` LLM prompt 강화 1차 | semantic-search OQ "rule-based echo" 미해소 | **fix** — OQ 해소 표기 + v3 followups/specificDate/retreat/rerank/personalization 박제 |
+
+미커밋 (chat v3 — followups, specificDate, retreat endpoint, rerank, personalization, web UI 칩/matchReason) 도 위 semantic-search v3 재작성에 미리 박제. commit 시 "wiki 동시" 단계 생략 가능.
 
 ---
 
@@ -42,7 +46,7 @@
 
 ## 3. Orphans — ✅ 0건
 
-신규 topic 2건 모두 `wiki/index.md` 등재 (admin-account-management = 시스템 흐름 + ADR 색인, recommendations = 시스템 흐름).
+신규 파일 0건 (모두 기존 topic 갱신). `MobileShell.tsx` / `BottomSheet.tsx` / `EventSummaryContent` 같은 코드 산출물은 main-page-flow + ui-architecture References 에 등재.
 
 ---
 
@@ -52,55 +56,45 @@
 
 ## 5. Implementation Status
 
-### 본 sprint (04-23 sprint 2 → 3) 변경
+### sprint 3 → sprint 4 변경
 
 | 항목 | 이전 | 현재 | 근거 |
 |---|---|---|---|
-| ADR 0004 D-1 user soft-delete 패턴 | 정책만 박제 | ✅ ADR 0005 E-5 ship | admin-users.ts softDeleteUser |
-| ADR 0004 D-6 admin revoke scope | 'full' 만 | ✅ 'full' \| 'security' | ADR 0005 E-3 chk_admin_scope rebuild |
-| `decideUploader` audit | 0 행 작성 | ✅ admin_audit_logs `uploader_decision` | ADR 0005 E-8 |
-| 회원/admin 관리 UI | backend-only | ✅ Members 탭 (5 액션 + audit) | ADR 0005 E-7 정정 |
-| 마이페이지 역할 전환 버튼 (GG-ROLE-001) | 미구현 | ✅ RoleToggleButton 5 상태 분기 | MyPage.tsx |
-| Audit 탭 source toggle | approval_logs only | ✅ 이벤트 심사 / Admin 작업 토글 | AuditLogsTab.tsx |
-| rejected uploader 재신청 쿨다운 | 없음 | ✅ 7d (uploader_profiles.updatedAt 기준) | applyUploader + RoleToggleButton |
-| bulk action 정책 | 미정 (OQ) | ✅ 미지원 결정 박제 | admin-flow.md |
-| A_100 원 액션 자동 복귀 | 미구현 | ✅ returnTo 쿠키 + parseReturnTo 화이트리스트 | auth.ts + auth-redirect.ts |
-| ended 이벤트 retention | 미정 (OQ) | ✅ 유지 결정 박제 | ingest-pipeline.md |
-| 기사 retention | 미정 (OQ) | ✅ 유지 결정 박제 | news-article-pipeline.md |
-| admin scope content_only/uploader_review_only | placeholder | ✅ 의미 결정 박제 (분기 코드는 후속) | admin-account-management.md |
-| user_taste_profiles 사용 (G-5) | 0 사용처 | ✅ 일일 집계 + /me/recommendations + 마이페이지 추천 탭 | aggregate-taste-profiles.ts + me-recommendations.ts |
-| 소스 쿼터·레이트리밋 (transient) | 미구현 | ✅ fetchWithRetry (429/5xx/네트워크 retry + Retry-After) 4 runner 적용 | jobs/lib/fetch-with-retry.ts |
+| 모바일 메인 레이아웃 | 정책 박제 (DESIGN.md), 코드 미ship | ✅ ship 완료 | `6747b88` MobileShell + BottomSheet + AppShell 분기, `b453817` Playwright 검증 |
+| chat suggestions ended leak | 종료 이벤트 leak | ✅ phase != ended + period 교집합 강제 | `5e51503` |
+| chat reply LLM 위임 | rule-based echo | ✅ LLM 직접 생성 + few-shot 6개 + 오늘 날짜/요일/계절 컨텍스트 | `1995333` |
+| chat v3 — followups + specificDate + retreat + rerank + personalization | 미구현 | 🟡 **코드 ship 완료 (미커밋)** | services/llm openai_chain.py + app.py + apps/bff/src/routes/chat.ts + apps/web 칩/matchReason UI |
+| KYC mock 인터페이스 정리 | inline | ✅ `apps/web/src/lib/identity-verification.ts` 추출 (Phase 2 prod swap 단일 지점) | `3971220` |
+| 추천 가중치 (bookmark 1.0 / review 1.5) + 시간 감쇠 (half-life 30d) | 균등 weight | ✅ `aggregate-taste-profiles.ts` SQL `SUM(weight * EXP(...))` | `3971220` |
 
 ### 여전히 🔴 미착수 — Phase 2 또는 트리거 대기
 
 | 항목 | 비고 |
 |---|---|
-| 일 quota 소진 카운트·임계 알림 | provider 별 quota 추적 미구현. 호출자 throw → scheduler Promise.allSettled source-level 격리만 |
-| 모바일 메인 레이아웃 | rail+panel → 바텀시트 Phase 2. DESIGN.md review 후 |
+| ~~모바일 메인 레이아웃~~ | ✅ 본 sprint ship — close |
 | PostGIS geom 전환 | 지도 viewport bbox / 반경 검색 도입 결정 시 |
-| 본인인증 prod (PASS/NICE/카카오) | ADR 0003 §개인 업로더 본인인증 후속 (현재 dev mock) |
+| 본인인증 prod (PASS/NICE/카카오) | ADR 0003 §개인 업로더 본인인증 후속 (현재 dev mock, 인터페이스만 분리됨 — Phase 2 swap 1지점) |
 | 사업자번호 정부 API 검증 | ADR 0003 후속 |
 | 서울 외 지역 확장 | UX 결정 |
 | 클러스터 정렬 기준 (거리/인기/최신) | UX 결정 |
-| 추천 가중치·시간 감쇠·Qdrant 기반 personalized kNN | recommendations.md OQ — 만족도 측정 후 결정 |
-| `admin_audit_logs` + `approval_logs` 통합 audit reporting | source toggle 은 ship, 통합 dashboard 는 별도 |
+| chat v3 — Streaming / Article RAG / Hybrid search / Grounded followup / Prompt injection 방어 | semantic-search.md OQ 후속 (v4 후보) |
 
 ---
 
 ## 6. Over-large / low-confidence — 해당 없음
 
-모든 topic 파일 < 250줄. graphify INFERRED 평균 confidence 0.81, < 0.6 zero — 조치 불필요.
+모든 topic 파일 < 270줄. semantic-search.md 가 chat v3 추가로 길어졌으나 (118 → 150줄 예상) 단일 도메인 — 분할 불필요.
 
 ---
 
 ## 권장 우선순위 (다음 sprint)
 
-본 sprint 로 Phase 1 lint queue 전체 closed. 다음 sprint 후보:
-
-1. **Phase 2 진입** — 모바일 메인 레이아웃 또는 본인인증 prod 통합 (둘 중 큰 영역)
-2. **추천 시스템 정교화** — Qdrant 기반 personalized kNN (recommendations.md OQ)
-3. **일 quota 추적·알림** — provider 별 일일 호출 카운트 + 임계 도달 시 warn
-4. **admin Audit dashboard** — approval_logs + admin_audit_logs 통합 시각화 (source toggle 은 ship)
+1. **chat v3 미커밋 commit** — 본 lint sweep 에서 wiki 미리 박제했으므로 commit 메시지 + 검증 스크립트 확장만 남음.
+2. **Streaming SSE** — gpt-4o-mini /chat 응답 SSE stream → 체감 latency 개선 (현 ~1.5s).
+3. **Article RAG** — 1810건 매핑된 기사 본문을 chat reply 근거로 인용 (event_article_mappings 활용).
+4. **Hybrid search** — pg_trgm 키워드 검색 + vector 결합 (CLAUDE.md 에 pg_trgm 활성화 명시됨).
+5. **Phase 2 prod 진입** — 본인인증 PASS/NICE/카카오 통합 (인터페이스 1지점만 swap).
+6. **Prompt injection 방어** — 사용자 입력 sanitize + role isolation.
 
 ---
 
@@ -111,3 +105,4 @@
 - graphify `graph.json` 의 node count / edge count 트렌드를 log.md 에 자동 append.
 - `admin_audit_logs` 의 daily summary (action 별 count + 최근 24h reason 샘플) → admin 모니터링.
 - 추천 만족도 측정 (CTR / convert rate) — Qdrant 전환 트리거 신호.
+- chat /chat → /events/rerank → /chat/compose-retreat 호출 카운트 + cost 로 LLM 운영 비용 dashboard.
