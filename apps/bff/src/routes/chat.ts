@@ -3,12 +3,14 @@ import { env } from '../env.js';
 import { logger } from '../logger.js';
 import { prisma } from '../prisma.js';
 
+type PeriodKey = 'today' | 'weekend' | 'week' | 'month' | null;
+
 interface LlmChatResponse {
   reply: string;
   filters: {
     eventTypes: string[];
     companions: string[];
-    periodKey: string | null;
+    periodKey: PeriodKey;
     vibes: string[];
     regionHints: string[];
   };
@@ -32,7 +34,58 @@ interface ChatSuggestion {
   score: number;
 }
 
-const SEMANTIC_LIMIT = 5;
+// 최종 사용자에게 노출할 후보 수.
+const SEMANTIC_DISPLAY_LIMIT = 5;
+// Qdrant 에서 가져올 over-fetch 수 — phase!='ended' / period 필터로 다수 drop 되므로
+// 충분한 후보 풀 확보. 데이터 측정: top 50 중 active 비율 ~30% → 30 over-fetch 면
+// 평균 ~9개 active 확보, top 5 cap 가능.
+const SEMANTIC_OVERFETCH = 30;
+
+/**
+ * periodKey → {start, end} Date 객체. AppShell.tsx 의 rangeForPeriod 와 동일 의미
+ * (Asia/Seoul 기준, 자정 정렬). UTC Date 로 반환 — Prisma DateTime 비교용.
+ *
+ * Note: Date 자체는 UTC ms. 'today' = 오늘 자정 ~ 자정+1d 직전.
+ */
+function rangeForPeriod(key: PeriodKey): { start: Date; end: Date } | null {
+  if (!key) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startOfDay = (d: Date) => {
+    const r = new Date(d);
+    r.setHours(0, 0, 0, 0);
+    return r;
+  };
+  const endOfDay = (d: Date) => {
+    const r = new Date(d);
+    r.setHours(23, 59, 59, 999);
+    return r;
+  };
+  const add = (d: Date, n: number) => {
+    const r = new Date(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  };
+  if (key === 'today') return { start: startOfDay(today), end: endOfDay(today) };
+  if (key === 'weekend') {
+    const day = today.getDay();
+    const sat = add(today, (6 - day + 7) % 7);
+    const sun = add(sat, 1);
+    return { start: startOfDay(sat), end: endOfDay(sun) };
+  }
+  if (key === 'week') {
+    const day = today.getDay() || 7;
+    const mon = add(today, -(day - 1));
+    const sun = add(mon, 6);
+    return { start: startOfDay(mon), end: endOfDay(sun) };
+  }
+  if (key === 'month') {
+    const start = new Date(today.getFullYear(), today.getMonth(), 1);
+    const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    return { start: startOfDay(start), end: endOfDay(end) };
+  }
+  return null;
+}
 
 /**
  * POST /chat — services/llm 의 /chat 프록시 + regionHints/vibes → ID 해상도
@@ -140,7 +193,7 @@ async function semanticSuggestions(opts: {
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify({
         query,
-        limit: SEMANTIC_LIMIT,
+        limit: SEMANTIC_OVERFETCH,
         score_threshold: 0.25,
         filter: Object.keys(filter).length ? filter : null,
       }),
@@ -164,11 +217,23 @@ async function semanticSuggestions(opts: {
     .filter((v): v is bigint => v !== null);
   if (eventIds.length === 0) return [];
 
+  // Qdrant kNN 은 phase / 날짜를 모름. BFF resolve 단계에서 강제 적용:
+  //  - phase='ended' 는 어떤 추천 맥락에서도 부적합 → 항상 제외
+  //  - periodKey 있으면 그 범위와 이벤트 기간이 겹치는 것만 (endDate >= start AND startDate <= end)
+  const periodRange = rangeForPeriod(opts.filters.periodKey);
+
   const rows = await prisma.event.findMany({
     where: {
       eventId: { in: eventIds },
       approvalStatus: 'approved',
       isDeleted: false,
+      phase: { not: 'ended' },
+      ...(periodRange
+        ? {
+            startDate: { lte: periodRange.end },
+            endDate: { gte: periodRange.start },
+          }
+        : {}),
     },
     select: {
       eventId: true,
@@ -202,5 +267,6 @@ async function semanticSuggestions(opts: {
       posterImageUrl: r.posterImageUrl,
       score: scoreById.get(r.eventId.toString()) ?? 0,
     }))
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => b.score - a.score)
+    .slice(0, SEMANTIC_DISPLAY_LIMIT);
 }
