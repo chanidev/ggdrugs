@@ -40,7 +40,8 @@ function maskCiHash(v: string | null, scope: string): string | null {
  *   POST /admin/events/:id/decision                       — 업로드 이벤트 승인/보완/반려
  *
  * 승인 결정 액션: approved | revision_requested | rejected.
- * approval_logs 에는 이벤트 심사만 기록 (uploader 승급 로그는 테이블 미정의 — 후속).
+ * 이벤트 심사 → approval_logs (event-scoped).
+ * uploader 승급 → admin_audit_logs (action='uploader_decision', ADR 0005 E-8).
  */
 
 const DECISION_ACTIONS = new Set(['approved', 'revision_requested', 'rejected']);
@@ -285,6 +286,7 @@ export async function getAdminUploader(req: Request, res: Response) {
  * approved 로 전이 시 approvedAt=now. rejected/revision_requested 는 approvedAt null.
  */
 export async function decideUploader(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
   const uploaderId = parseBigIntParam(req.params.id);
   if (!uploaderId) {
     res.status(400).json({ error: 'invalid uploader id' });
@@ -295,6 +297,11 @@ export async function decideUploader(req: Request, res: Response) {
     res.status(400).json({ error: `action 은 ${[...DECISION_ACTIONS].join('|')} 중 하나` });
     return;
   }
+  // ADR 0005 E-8: optional reason 0~2000자. 빈 문자열은 null 로 저장 (audit row 의 noise 감소).
+  const reasonRaw = (req.body ?? {}).reason;
+  const reasonTrim =
+    typeof reasonRaw === 'string' ? reasonRaw.trim().slice(0, 2000) : '';
+  const reason = reasonTrim.length > 0 ? reasonTrim : null;
 
   const existing = await prisma.uploaderProfile.findUnique({
     where: { uploaderId },
@@ -305,25 +312,39 @@ export async function decideUploader(req: Request, res: Response) {
     return;
   }
 
-  const updated = await prisma.uploaderProfile.update({
-    where: { uploaderId },
-    data: {
-      approvalStatus: action,
-      approvedAt: action === 'approved' ? new Date() : null,
-    },
-    select: {
-      uploaderId: true,
-      approvalStatus: true,
-      approvedAt: true,
-      updatedAt: true,
-    },
-  });
+  // ADR 0005 E-8: update + admin_audit_logs.create 같은 트랜잭션.
+  // target_id = uploader.user_id (admin_audit_logs 의 일관성 — user 기준).
+  const [updated, audit] = await prisma.$transaction([
+    prisma.uploaderProfile.update({
+      where: { uploaderId },
+      data: {
+        approvalStatus: action,
+        approvedAt: action === 'approved' ? new Date() : null,
+      },
+      select: {
+        uploaderId: true,
+        approvalStatus: true,
+        approvedAt: true,
+        updatedAt: true,
+      },
+    }),
+    prisma.adminAuditLog.create({
+      data: {
+        adminId: auth.userId,
+        action: 'uploader_decision',
+        targetId: existing.userId,
+        payload: { uploaderId: uploaderId.toString(), action, reason },
+      },
+      select: { auditId: true },
+    }),
+  ]);
 
   res.json({
     uploaderId: updated.uploaderId.toString(),
     approvalStatus: updated.approvalStatus,
     approvedAt: updated.approvedAt?.toISOString() ?? null,
     updatedAt: updated.updatedAt.toISOString(),
+    auditId: audit.auditId.toString(),
   });
 }
 

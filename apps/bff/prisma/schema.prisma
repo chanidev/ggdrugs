@@ -74,6 +74,7 @@ model User {
   photoAlbums        PhotoAlbum[]
   tasteProfiles      UserTasteProfile[]
   authSessions       AuthSession[]
+  adminAuditLogs     AdminAuditLog[]
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -557,6 +558,27 @@ model AuthSession {
   @@index([userId],    map: "idx_auth_sessions_user")
   @@index([expiresAt], map: "idx_auth_sessions_expires")
   @@map("auth_sessions")
+}
+
+// =============================================================
+// 19b. ADMIN_AUDIT_LOGS  (ADR 0004 §결정 D-6)
+// admin 측 보안·운영 액션 감사용 범용 테이블. 첫 사용처는 revoke_sessions.
+// 향후 user soft-delete (D-1), 권한 변경 등도 같은 스키마에 기록.
+// =============================================================
+model AdminAuditLog {
+  auditId   BigInt   @id @default(autoincrement()) @map("audit_id")
+  adminId   BigInt   @map("admin_id") // user_id (admin 자격은 admin_profiles 별도 검증)
+  action    String   @db.VarChar(50)  // 'revoke_sessions' (현재). enum CHECK 없음 — 확장 자유.
+  targetId  BigInt?  @map("target_id") // action 마다 의미 다름. revoke_sessions → user_id.
+  payload   Json     @default("{}")    // { count, reason, ... }
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  admin User @relation(fields: [adminId], references: [userId])
+
+  @@index([action, createdAt(sort: Desc)],  map: "idx_admin_audit_action_created")
+  @@index([adminId, createdAt(sort: Desc)], map: "idx_admin_audit_admin_created")
+  @@index([targetId],                        map: "idx_admin_audit_target")
+  @@map("admin_audit_logs")
 }
 
 // =============================================================

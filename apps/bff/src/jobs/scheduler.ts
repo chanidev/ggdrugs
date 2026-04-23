@@ -5,6 +5,7 @@ import { runBackfillSummaries } from './summarize-events.js';
 import { runNewsNaverIngest } from './news-naver-ingest.js';
 import { runEmbedEvents } from './embed-events.js';
 import { auditMappingDistributionQuick } from './audit-news-mappings.js';
+import { runSessionSweep } from './session-sweep.js';
 import { logger } from '../logger.js';
 import { env } from '../env.js';
 
@@ -23,6 +24,7 @@ import { env } from '../env.js';
  *   3. news-naver 매핑 (onlyMissing=true, eventLimit='all') — 관련 기사 upsert
  *   4. embed-events (onlyMissing=true, eventLimit='all') — Qdrant alle-events 반영
  *   5. audit quick — 분포 + below-threshold 집계, 있으면 warn
+ *   6. session sweep (ADR 0004 D-5) — 만료된 auth_sessions 행 정리 (grace 7d)
  *
  * 업로더 제출 이벤트는 별도 경로(admin-uploaders.ts 승인 훅) 로 동일 2~5단계를 단건 처리.
  *
@@ -86,6 +88,15 @@ async function runAll(): Promise<void> {
     }
   } catch (err) {
     log.warn({ err: err instanceof Error ? err.message : String(err) }, 'audit failed');
+  }
+
+  // ADR 0004 D-5: 만료된 auth_sessions 정리. lazy 401 안전망이 보안은 보장하므로 실패해도
+  // warn 만 — 다음 라운드에서 재시도.
+  try {
+    const sweep = await runSessionSweep();
+    log.info({ sweep }, 'post-ingest session sweep done');
+  } catch (err) {
+    log.warn({ err: err instanceof Error ? err.message : String(err) }, 'session sweep failed');
   }
 }
 

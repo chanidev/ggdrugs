@@ -13,6 +13,7 @@ import {
   devLogin,
   me,
   logout,
+  logoutAll,
   startGoogle,
   googleCallback,
   startKakao,
@@ -30,6 +31,15 @@ import {
   decideEventUpload,
 } from './routes/admin-uploaders.js';
 import { listAdminAuditLogs } from './routes/admin-audit.js';
+import {
+  revokeUserSessions,
+  promoteToAdmin,
+  demoteAdmin,
+  changeAdminScope,
+  softDeleteUser,
+  listAdminUsers,
+  getAdminUser,
+} from './routes/admin-users.js';
 import {
   getMyUploader,
   applyUploader,
@@ -260,6 +270,54 @@ export function createApp(): Express {
     (req, res, next) => requireAdmin(req, res, next).catch(next),
     (req, res, next) => listAdminAuditLogs(req, res).catch(next),
   );
+  // ADR 0005 E-7 (정정): Members 탭 백킹 — 회원 목록 + 상세 조회.
+  app.get(
+    '/admin/users',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => listAdminUsers(req, res).catch(next),
+  );
+  app.get(
+    '/admin/users/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => getAdminUser(req, res).catch(next),
+  );
+  // ADR 0004 D-6 (ADR 0005 E-3 정정): 강제 세션 폐기 — scope IN ('full','security').
+  app.post(
+    '/admin/users/:id/revoke-sessions',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => revokeUserSessions(req, res).catch(next),
+  );
+  // ADR 0005 E-2: admin 승급 — scope='full' 만 통과 (라우트 안에서 추가 검증).
+  app.post(
+    '/admin/users/:id/promote',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => promoteToAdmin(req, res).catch(next),
+  );
+  // ADR 0005 E-4: admin 박탈.
+  app.post(
+    '/admin/users/:id/demote',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => demoteAdmin(req, res).catch(next),
+  );
+  // ADR 0005 E-4: admin scope 변경.
+  app.put(
+    '/admin/users/:id/admin-scope',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => changeAdminScope(req, res).catch(next),
+  );
+  // ADR 0005 E-5 (ADR 0004 D-1 활성화): user soft-delete + 세션 정리 + audit 동봉.
+  app.post(
+    '/admin/users/:id/soft-delete',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => softDeleteUser(req, res).catch(next),
+  );
 
   // Uploader — 본인 프로파일/신청/역할 토글/이벤트 업로드
   app.get(
@@ -387,6 +445,10 @@ export function createApp(): Express {
   });
   app.post('/auth/logout', (req: Request, res: Response, next: NextFunction) => {
     logout(req, res).catch(next);
+  });
+  // ADR 0004 D-3: 본인의 모든 디바이스 일괄 로그아웃 (요청 디바이스 포함).
+  app.post('/auth/logout-all', (req: Request, res: Response, next: NextFunction) => {
+    logoutAll(req, res).catch(next);
   });
 
   // Error handler — 일관된 JSON 에러 응답

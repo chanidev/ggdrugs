@@ -28,6 +28,7 @@
     "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts",
     "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
     "audit:news-mappings": "dotenv -e ../../.env -- tsx src/jobs/audit-news-mappings.ts",
+    "sweep:sessions": "dotenv -e ../../.env -- tsx src/jobs/session-sweep.ts",
     "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"
   },
   "dependencies": {

@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import crypto from 'node:crypto';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
+import { nextExpiresAt } from '../middleware/require-auth.js';
 
 /**
  * Auth 루트 — dev-login stub + Google OAuth (authorization code flow).
@@ -145,6 +146,7 @@ export async function me(req: Request, res: Response) {
     where: { sessionId: sid },
     select: {
       expiresAt: true,
+      createdAt: true,
       user: {
         select: {
           userId: true,
@@ -161,9 +163,13 @@ export async function me(req: Request, res: Response) {
     res.status(401).json({ error: 'unauthenticated' });
     return;
   }
-  // sliding expiry — 요청마다 lastSeenAt 갱신 (fire & forget).
+  // ADR 0004 D-4: lastSeenAt + sliding expiresAt (cap 30d) 동일 statement (fire & forget).
+  const now = new Date();
   prisma.authSession
-    .update({ where: { sessionId: sid }, data: { lastSeenAt: new Date() } })
+    .update({
+      where: { sessionId: sid },
+      data: { lastSeenAt: now, expiresAt: nextExpiresAt(row.createdAt, now) },
+    })
     .catch(() => {
       /* 조용히 skip */
     });
@@ -440,4 +446,32 @@ export async function logout(req: Request, res: Response) {
   }
   clearSessionCookie(res);
   res.json({ ok: true });
+}
+
+/**
+ * ADR 0004 D-3: 본인의 모든 디바이스 세션 일괄 로그아웃.
+ * 요청 디바이스 포함 — 쿠키도 같이 만료.
+ * 인증 실패면 200 ok/0 (idempotent — 이미 로그아웃 상태에서도 안전).
+ */
+export async function logoutAll(req: Request, res: Response) {
+  const sid = parseSid(req);
+  if (!sid) {
+    clearSessionCookie(res);
+    res.json({ ok: true, deleted: 0 });
+    return;
+  }
+  const session = await prisma.authSession.findUnique({
+    where: { sessionId: sid },
+    select: { userId: true },
+  });
+  if (!session) {
+    clearSessionCookie(res);
+    res.json({ ok: true, deleted: 0 });
+    return;
+  }
+  const result = await prisma.authSession.deleteMany({
+    where: { userId: session.userId },
+  });
+  clearSessionCookie(res);
+  res.json({ ok: true, deleted: result.count });
 }
