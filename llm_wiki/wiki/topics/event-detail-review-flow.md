@@ -2,12 +2,13 @@
 title: 상세·예약 플로우
 type: topic
 created: 2026-04-17
-updated: 2026-04-21
+updated: 2026-04-22
 sources: [2026-04-17_ui-flow-draft, 2026-04-17_requirements-v5]
 related:
   - ../sources/2026-04-17_ui-flow-draft.md
   - ../sources/2026-04-17_requirements-v5.md
   - main-page-flow.md
+  - news-article-pipeline.md
   - use-cases-index.md
 ---
 
@@ -23,7 +24,7 @@ related:
 
 - **상세 페이지(A_400)** — 구현 완료:
   - 최상단 포스터 + 북마크 버튼.
-  - 개요 / AI 요약 / mini map / **관련 기사 섹션** (news_articles top-5 by relevance) / 리뷰 섹션.
+  - 개요 / AI 요약 / mini map / **관련 기사 섹션** / 리뷰 섹션.
   - AI 비디오 섹션은 v5.0에서 제거됨.
   - 관련 기사 ingest: Naver 뉴스 검색 + Google News RSS fallback + embedding cosine rerank → `news-article-pipeline.md` 참조.
 - **마이페이지 캘린더(A_500)** — 스펙 충족 구현(2026-04-21, `9fc959e`):
@@ -38,6 +39,30 @@ related:
   - 사진 ≤5장, JPG/PNG, 각 10MB 이하 (GG-REVIEW-004).
   - 1인 1이벤트 1리뷰, 수정·삭제 가능 (GG-REVIEW-005).
   - 상세페이지 사용자 리뷰 섹션에 노출 (GG-REVIEW-006).
+
+## 관련 기사 노출 (UI, 2026-04-22 ship)
+
+요약 패널 (A_300 사이드 패널) 과 상세 페이지 (A_400) 가 노출 깊이를 달리해 뉴스 매핑을 보여준다.
+상세 파이프라인은 [news-article-pipeline.md](news-article-pipeline.md) — 여기서는 UI 면.
+
+| 화면 | 컴포넌트 | 호출 | 노출 | 출처 |
+|---|---|---|---|---|
+| 메인 요약 패널 (A_300) | `ArticlesMiniList` (`apps/web/src/components/EventSummaryPanel.tsx`) | `fetchEventArticlesPage(id, { limit: 3, offset: 0 })` | top-3 미니 카드, total > 3 시 "전체 N건 보기" → 상세 이동 | 커밋 `03da473` |
+| 이벤트 상세 (A_400) | `ArticlesSection` (`apps/web/src/pages/EventDetailPage.tsx::676`) | `fetchEventArticlesPage(id, { limit: 5, offset: page*5 })` | 페이지당 5건 + 이전/다음 버튼 + total 배지 | 커밋 `03da473` |
+| 캘린더 팝업 (A_500) | `CalendarSummaryCard` header 우측 | `_count.articleMappings` (이벤트 detail 응답에 동봉) | 배지 (count > 0 일 때만) | 기존 |
+
+API 시그니처 (요약):
+```
+GET /events/:id/articles?limit=5&offset=0
+→ { items: Article[], total, limit, offset }
+  Article: { mappingId, title, sourceName, authorName, articleCategory,
+             originalUrl, summary, publishedAt, relevanceScore, matchedAt }
+```
+정렬은 `relevance_score DESC, matched_at DESC`. 비공개·삭제 이벤트는 404. 자세한 정의는
+[news-article-pipeline.md §BFF API](news-article-pipeline.md) 참조.
+
+매핑이 0 건이면 ArticlesSection / ArticlesMiniList 모두 섹션 자체를 hide — 빈 슬롯으로
+공간을 낭비하지 않는다.
 
 ## Open questions / contradictions
 

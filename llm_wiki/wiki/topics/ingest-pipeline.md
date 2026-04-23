@@ -2,11 +2,14 @@
 title: 이벤트 Ingest 파이프라인
 type: topic
 created: 2026-04-19
-updated: 2026-04-19
+updated: 2026-04-22
 sources: []
 related:
   - db-schema-overview.md
   - event-state-machine.md
+  - news-article-pipeline.md
+  - semantic-search.md
+  - ai-enrichment.md
   - ../entities/tourapi.md
   - ../entities/seoul-open-data.md
   - ../entities/kcisa.md
@@ -43,9 +46,36 @@ Alle 의 이벤트 데이터는 **3개 공공/문화 API 를 forward-looking 일
 7. **approval_status = 'approved' (crawled)** — 수집 소스는 자동 승인 상태로 저장 (업로더 등록만 pending 시작).
 8. **`prisma.event.upsert`** on `(source_type, external_source_id)` → insert or update (`title`, `description`, `start_date`, `end_date`, `poster_image_url`, `lat`, `lng` 등).
 
-### `daily-batch` orchestrator (`run-ingest.ts`)
+### `daily-batch` orchestrator (`run-ingest.ts` + `scheduler.ts::runAll`)
 
-`pnpm ingest` 는 tourapi → seoul-culture → kcisa 순차 실행. 각 러너 별도 카운터 `{fetched, upserted, skipped, errors}` 리턴, 최종 집계 log.
+CLI `pnpm ingest` 는 tourapi → seoul-culture → kcisa 순차 실행. 각 러너 별도 카운터
+`{fetched, upserted, skipped, errors}` 리턴, 최종 집계 log.
+
+스케줄러 경로(`scheduler.ts::runAll()`) 는 3 소스를 **`Promise.allSettled` 병렬** 로 돌린 뒤
+아래 §후속 파이프라인 4단계를 직렬로 추가 호출한다.
+
+### 후속 파이프라인 (공공 소스 자동 매핑/임베딩, 커밋 `d289b9d`)
+
+공공 소스 이벤트는 `approvalStatus='approved'` 로 바로 DB 인서트 — admin 승인 훅이 안 탄다.
+이 갭을 메우기 위해 ingest 직후 동일 워커 안에서 4단계를 직렬 실행. 각 단계는 독립 try/catch
+로 감싸져 있어 한 단계가 실패해도 다음 단계는 진행되고, scheduler 자체는 죽지 않음.
+
+| 단계 | 호출 | 효과 | 실패 정책 |
+|---|---|---|---|
+| 1 | `runBackfillSummaries({})` | aiSummary 비어있는 신규 행에 gpt-4o-mini 요약 부여 | warn 로그, 다음 단계 진행 |
+| 2 | `runNewsNaverIngest({ onlyMissing: true, eventLimit: 'all' })` | 매핑 0 인 approved 이벤트에 Naver 뉴스 매핑 | warn 로그, 다음 단계 진행 |
+| 3 | `runEmbedEvents({ onlyMissing: true, eventLimit: 'all' })` | Qdrant `alle-events` 에 누락 포인트 upsert | warn 로그, 다음 단계 진행 |
+| 4 | `auditMappingDistributionQuick()` | 분포 + `staleBelowThreshold` 집계 | `> 0` 이면 warn, 0 이면 info |
+
+**왜 직렬인가**: 1단계가 만든 aiSummary 가 3단계 embed 텍스트의 핵심 입력이고, 2단계가 만든
+매핑이 4단계 감사의 입력이기 때문. 동시성은 각 단계 내부 pool (summarize 5, news 4, embed 8)
+로 흡수.
+
+업로더 제출 이벤트는 별도 경로 — `admin-uploaders.ts` 승인 훅이 동일 2~3 단계를 단건 처리.
+1단계(요약) 는 향후 옵션 (현재는 업로더가 직접 description 작성).
+
+→ 검색 인덱스 동기화 전체 그림은 [semantic-search.md §실시간 동기화 (3축)](semantic-search.md) 참조.
+→ 매핑 품질 감사 상세는 [news-article-pipeline.md §품질 감사](news-article-pipeline.md) 참조.
 
 ### forward-looking 전환 (2026-04-18 커밋 `95820e1`)
 

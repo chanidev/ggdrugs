@@ -2,12 +2,13 @@
 title: 인증 흐름 (Auth Flow)
 type: topic
 created: 2026-04-19
-updated: 2026-04-19
+updated: 2026-04-23
 sources: [2026-04-17_requirements-v5]
 related:
   - terminology-glossary.md
   - roles-and-active-role.md
   - db-schema-overview.md
+  - ../../docs/decisions/0004-session-invalidation-policy.md
   - ../entities/google.md
   - ../entities/kakao.md
 ---
@@ -88,11 +89,30 @@ POST /auth/dev-login {"nickname":"chan"}
 - 모든 fetch 가 `withCredentials({ credentials: 'include' })` 로 쿠키 전송.
 - Header (`layout/Header.tsx`) 로그인 버튼: `<a href="/api/auth/kakao">` + `<a href="/api/auth/google">` 두 개. 로그인 상태에선 nickname(→ `/me` 링크) + 로그아웃.
 
+## Session invalidation 정책 (ADR 0004 결정, 코드 ship 별도 PR)
+
+본 §은 정책 박제 — 코드 적용은 별도 PR. 정책 본문 / 폐기 대안은 [ADR 0004](../../docs/decisions/0004-session-invalidation-policy.md).
+
+| # | 영역 | 결정 | 코드 후속 |
+|---|---|---|---|
+| D-1 | Soft-delete 시 정리 | **활성화 (ADR 0005 E-5 ship)** — `users.update isDeleted=true` 트랜잭션에 `authSession.deleteMany({userId})` + `admin_audit_logs.action='user_soft_delete'` 동봉 | `POST /admin/users/:id/soft-delete` (admin-users.ts) |
+| D-2 | 역할 토글 | 현행 유지 — `requireAuth`/`resolveAuth` 가 매 요청 user.activeRole 재조회로 즉시 반영 | 변경 없음 |
+| D-3 | 로그아웃 범위 | 기존 `POST /auth/logout` (단일) + 신규 `POST /auth/logout-all` (전체 디바이스) 두 옵션. UI 에 두 버튼. | `routes/auth.ts` 핸들러 1건 추가 |
+| D-4 | 만료 정책 | Hybrid: sliding 7d + absolute cap 30d. `expires_at = MIN(now()+7d, created_at+30d)` 매 요청 갱신. `auth_sessions.created_at` 은 이미 존재 — 마이그레이션 불필요 | middleware + `/me` update 식 변경 |
+| D-5 | 만료 cleanup | `scheduler.ts::runAll()` 후속 단계로 `runSessionSweep()` 추가. `expires_at < now() - 7d` DELETE | `jobs/session-sweep.ts` 신설 |
+| D-6 | Admin 강제 폐기 | `POST /admin/users/:id/revoke-sessions` (scope IN ('full','security') + reason 10~500자) + `admin_audit_logs` 기록. `security` scope 는 ADR 0005 E-3 에서 추가됨. | admin-users.ts `revokeUserSessions` |
+
+**명명**: lint-report 가 사용했던 "JWT revoke" 표현은 부정확 — 본 시스템은 opaque random + DB
+lookup. 본 ADR 부터 "session invalidation / revocation" 으로 통일.
+
 ## Open questions
 
-- **Session revocation** — 관리자가 user 를 deleted 처리하면 기존 세션은 여전히 유효 (resolveAuth 에서 `isDeleted` 체크로 차단하지만 대부분 공개 엔드포인트는 resolveAuth 쓰지 않음). 차단 정책 확정 필요.
-- **Sliding expiry 실제 동작** — `last_seen_at` 갱신은 있지만 `expires_at` 자체는 고정. 장기 활성 사용자 자동 연장이 되지 않음. 정책 결정 필요.
+- ~~**Session revocation**~~ → **해소 (ADR 0004 D-1, D-6)**: soft-delete 시 명시 deleteMany +
+  admin 강제 폐기 API 신설.
+- ~~**Sliding expiry 실제 동작**~~ → **해소 (ADR 0004 D-4)**: hybrid sliding 7d + cap 30d.
 - **`user_taste_profiles`, 알림** 등과 세션 레이어 관계 미정.
+- **Admin 권한 세분화** — D-6 의 `scope='security'` 가 admin 권한 모델 ADR (별도) 의 결과에
+  의존. 현재는 'full' 만 통과.
 
 ## References
 

@@ -178,3 +178,256 @@ Stage 2 OpenAI (gpt-4o-mini) 기반 자동 enrichment 파이프라인 구축.
 - `lint-report.md` 는 이전 sweep 결과 덮어쓴 상태.
 
 graphify cross-check: 844 nodes / 1081 edges / 121 communities (2026-04-21).
+
+## 2026-04-22T13:45  lint  검색 인덱스 자동화 + 뉴스 품질 감사 후 drift
+이전 lint(04-21) 이후 10 커밋 ship — A_400 관련 기사 페이징, 검색 인덱스 3축 자동 동기화
+(승인 훅 upsert / 탈락 훅 delete / aiSummary 변경 re-embed), 뉴스 매핑 threshold 0.55→0.60 +
+품질 감사 CLI + 스케줄러 후속 파이프라인 연결.
+
+- Contradictions: **3 신규** (C-10 threshold 수치, C-11 semantic-search 동기화 3축, C-12
+  ingest-pipeline post-batch 체인). 이전 3건 (C-7~9) 모두 해소 확인.
+- Stale refs: 0 (S-5 해소).
+- Gaps: **2 신규** (G-14 요약 패널/페이징 UI, G-15 품질 감사 topic). 이전 6건 (G-8~13)
+  모두 topic 생성으로 해소.
+- Implementation status 3행 변경 + 4행 신규.
+- 미착수 4행 유지 (세션 무효화 ADR / 관리자 계정 ADR / PostGIS / 모바일 메인).
+
+graphify cross-check: 847 nodes / 1084 edges / 121 communities (2026-04-22 재빌드).
+
+## 2026-04-23T00:00  sweep  04-22 lint 의 punch list 5건 wiki 본문 반영
+이전 lint(04-22) 가 식별한 C-10/11/12 + G-14/15 전부 topic 본문에 반영. 코드 변경 없음 — wiki only.
+
+- `topics/news-article-pipeline.md`:
+  - C-10: §Final score 의 threshold 를 `MIN_SCORE_WITH_EMBEDDING=0.60` / `MIN_SCORE_KEYWORD_ONLY=0.55`
+    로 갱신 + 샘플링/779 행 정리 근거 각주. §Health 의 0.55 문구도 0.60/0.55 로 동기화.
+  - §자동화 (3-갈래) → (4-갈래) 로 확장 — daily-batch 후속 훅(공공 소스 경로) 신규 항목,
+    `--missing` 단독은 50건 한정 + `--all --missing` 전체 backfill 주의 추가.
+  - §BFF API: `?offset=` 파라미터 / response shape `{ items, total, limit, offset }` / 호출자
+    구분(요약 패널 limit=3, 상세 페이징 limit=5) 보강.
+  - G-15: §품질 감사 섹션 신설 — 자동(스케줄러+ingest 직후) / 수동(CLI) / 스테일 정리 운영.
+  - Open questions: backfill pending → 1810/4111 해소 표기, score drift → 부분 해소 표기.
+- `topics/semantic-search.md`:
+  - §엔드포인트: `POST /events/delete` 항목 추가.
+  - C-11: §실시간 동기화 (3축) 섹션 신설 — 승인 upsert / 탈락 delete / aiSummary 변경 re-embed
+    트리거 표 + 공공 소스 경로 cross-ref.
+  - §Scoring 결합: threshold 0.55 → 0.60/0.55 로 동기화.
+  - Open questions: Qdrant 자동 삭제 항목 해소 표기.
+- `topics/ingest-pipeline.md`:
+  - C-12: §`daily-batch` orchestrator 갱신 — CLI 경로와 scheduler 경로 분리, scheduler 가
+    Promise.allSettled 병렬임을 명시.
+  - §후속 파이프라인 (공공 소스 자동 매핑/임베딩) 섹션 신설 — 4 단계 표 + 직렬 이유 + 업로더
+    경로 비교 + cross-ref 2건 (semantic-search 동기화, news-article-pipeline 감사).
+  - frontmatter `related:` 에 news-article-pipeline / semantic-search / ai-enrichment 추가.
+- `topics/event-detail-review-flow.md`:
+  - G-14: §관련 기사 노출 (UI) 섹션 신설 — 3 화면 (요약 패널 / 상세 / 캘린더 팝업) 컴포넌트 ·
+    호출 · 노출 깊이 · 커밋 표 + API 시그니처 요약 + 빈 상태 hide 정책. news-article-pipeline
+    으로 cross-ref.
+  - frontmatter `related:` 에 news-article-pipeline 추가.
+- `lint-report.md`: 04-23 시점으로 갱신 — Contradictions 0 / Gaps 0, 권장 우선 순서를 다음
+  sprint 후보 4건 (세션 무효화 / 관리자 ADR / PostGIS / 모바일) 으로 재정렬.
+
+graphify cross-check: 코드 변경 없음 — 847 nodes / 1084 edges / 121 communities 유지.
+
+## 2026-04-23T01:00  decision  ADR 0004 Accepted — 세션 무효화 정책
+04-22 lint-report 의 미착수 4행 중 첫 번째 항목 정책 결정 + 박제. 코드 변경 없음 — 결정과
+구현을 별도 PR 로 분리하는 ADR 0003 패턴 답습.
+
+- 신규: `docs/decisions/0004-session-invalidation-policy.md` (Accepted, 2026-04-23).
+- 정정: lint-report 가 사용했던 "JWT revoke" 표현을 "session invalidation/revocation" 으로
+  통일. 본 시스템은 opaque random + DB lookup 방식 server-side session 이라 JWT 가 아님.
+- 6개 결정 (D-1 ~ D-6):
+  - D-1 soft-delete 시 `authSession.deleteMany({userId})` 명시 + audit_logs 기록.
+  - D-2 역할 토글은 현행 유지 — 매 요청 user.activeRole 재조회로 즉시 반영.
+  - D-3 로그아웃은 단일 (현행) + 신규 `POST /auth/logout-all` 두 옵션.
+  - D-4 만료는 hybrid (sliding 7d + absolute cap 30d). `auth_sessions.created_at` 컬럼 1건
+    마이그레이션.
+  - D-5 만료 cleanup cron — `scheduler.ts::runAll()` 후속 단계로 `runSessionSweep()` 추가
+    (`expires_at < now() - 7d` DELETE, 7d grace).
+  - D-6 admin 강제 폐기 `POST /admin/users/:id/revoke-sessions` (scope='full' + reason 필수)
+    + audit_logs.
+- 갱신: `wiki/topics/auth-flow.md` — §Session invalidation 정책 신설 (6 결정 표 + 명명 정정),
+  Open questions 의 Session revocation / Sliding expiry 항목 해소 표기, frontmatter `related:`
+  에 ADR 0004 canonical 링크 추가.
+- 갱신: `wiki/index.md` — §아키텍처 결정 섹션을 "(ADR 위키 미러)" → "(ADR 색인)" 으로 rename.
+  ADR 0003 + ADR 0004 canonical 링크 추가 (둘 다 wiki 미러 없이 canonical only — 0003 패턴
+  답습, 0004 는 auth-flow 에 결정 표 미러).
+
+graphify cross-check: 코드 미변경 — 재빌드 불필요. 다음 sprint 에서 D-1/3/4/5/6 코드 ship 시
+재빌드.
+
+## 2026-04-23T03:00  feature  ADR 0004 코드 ship — D-3/D-4/D-5/D-6 + admin_audit_logs 신설
+ADR 0004 의 "PR-2 코드 ship" 항목 4개 (D-3 logout-all, D-4 sliding+cap, D-5 sweep cron, D-6 admin
+revoke) 일괄 ship. typecheck BFF/Web 양쪽 통과. DB 마이그레이션은 docker 기동 후 적용 (`pnpm
+prisma migrate deploy`).
+
+ADR 정정 사항 (실제 코드 사실 확인 후 ADR 0004 본문 갱신):
+- D-1 격하 — admin user soft-delete 라우트가 미존재해 본 ship 범위 외. 향후 admin user 관리
+  ADR 시점에 패턴 적용 강제.
+- D-4 마이그레이션 불필요 — `auth_sessions.created_at` 은 `20260419200000_add_auth_sessions`
+  가 처음부터 포함. 로직만 코드에 추가.
+- D-6 사전조건 — `admin_audit_logs` 테이블이 미존재 (`approval_logs` 는 event-scoped). 본 ADR
+  ship 의 일부로 minimal 범용 audit 테이블 신설 (`target_id` nullable + JSONB payload, action
+  CHECK 제약 없음 — 향후 admin user 관리 ADR 등에서 컬럼 추가 없이 확장 가능).
+
+코드 변경:
+- 신규: `apps/bff/prisma/migrations/20260423092543_admin_audit_logs/migration.sql` (테이블 1개 +
+  인덱스 3개). schema.prisma 에 `AdminAuditLog` 모델 추가, `User.adminAuditLogs[]` 역방향
+  relation.
+- D-4: `apps/bff/src/middleware/require-auth.ts` — `nextExpiresAt(createdAt, now) =
+  MIN(now+SLIDING_TTL, createdAt+ABSOLUTE_CAP)` 헬퍼 export, `touchSession()` 가 lastSeenAt +
+  expiresAt 단일 UPDATE 로 갱신. resolveAuth/requireAuth 둘 다 적용. `apps/bff/src/routes/auth.ts`
+  의 `/me` 핸들러도 동일 식 적용 (last_seen_at 만 갱신하던 기존 로직 교체).
+- D-3: `routes/auth.ts::logoutAll` 추가 — sid 의 user 의 모든 authSession deleteMany + 쿠키
+  만료. idempotent. `app.ts` 에 `POST /auth/logout-all` 라우트 추가. `apps/web/src/lib/api.ts`
+  에 `logoutAll()` 추가, `auth-context.tsx` 에 `logoutAll` wrapper + 컨텍스트 노출. MyPage 하단에
+  `SessionFooter` 섹션 신설 — "이 디바이스 로그아웃" / "모든 디바이스 로그아웃" 두 버튼 + confirm
+  다이얼로그.
+- D-5: `apps/bff/src/jobs/session-sweep.ts` 신설 — `runSessionSweep()` export +
+  `pnpm sweep:sessions` CLI. grace 7d (`expires_at < now() - 7d` DELETE). `scheduler.ts::runAll()`
+  의 후속 파이프라인 마지막 단계로 통합 (단계 6). `package.json` script 추가.
+- D-6: `apps/bff/src/routes/admin-users.ts` 신설 — `revokeUserSessions` 핸들러. scope='full'
+  검증 + reason 10~500자 검증 + user 존재 확인 + `$transaction([deleteMany, auditLog.create])` +
+  delete count 사후 update. `app.ts` 에 `POST /admin/users/:id/revoke-sessions` 라우트 (requireAuth
+  → requireAdmin 체인). `admin_audit_logs.admin_id` 는 `users(user_id)` FK (approval_logs 동일
+  컨벤션) — `auth.userId` 사용, `admin_profiles.admin_id` 가 아님에 주의.
+
+문서 정정:
+- `docs/decisions/0004-session-invalidation-policy.md` — D-1 격하 / D-4 마이그레이션 불필요 명시
+  / D-6 admin_audit_logs 신설 SQL 본 ADR 범위 흡수 / §마이그레이션 / §Phase 분리 표 모두 정정.
+- `wiki/topics/auth-flow.md` — §Session invalidation 정책 표 동일 정정 반영.
+
+검증: `corepack pnpm typecheck` 양쪽 (apps/bff, apps/web) PASS. DB 마이그레이션은 docker 기동
+후 `pnpm --filter bff exec dotenv -e ../../.env -- prisma migrate deploy`.
+
+graphify: 코드 변경 sprint — 다음 lint/sweep 시점에 재빌드.
+
+## 2026-04-23T10:00  decision+feature  ADR 0005 Accepted + 코드 ship — 관리자 계정 관리 + 작업 감사
+ADR 0004 가 남긴 dependency 2건 (D-1 user soft-delete 패턴, D-6 의 `scope='security'` placeholder)
++ `seed:admin` CLI only 한계 + `decideUploader` audit 결여 (`admin_uploaders.ts:43` 코멘트로
+박제되어 있던 후속) 통합 해소. ADR 0003 패턴 (결정·코드 분리) 대신 ADR 0004 후반부의 단순 ship
+pattern 따라 **본 ADR 은 결정·코드 같은 PR**.
+
+8개 결정 (E-1 ~ E-8):
+- E-1 bootstrap = seed:admin CLI 유지 (변경 없음).
+- E-2 런타임 admin 생성 = peer-promote, scope='full' 만 허용 — `POST /admin/users/:id/promote`
+  신설.
+- E-3 scope 도메인에 `security` 추가 — chk_admin_scope rebuild 마이그레이션 1건. ADR 0004 D-6
+  통과 권한이 `'full' OR 'security'` 로 확장.
+- E-4 박탈 = `is_active=false` 토글 only (`deactivated_at` 컬럼 미신설) — `POST
+  /admin/users/:id/demote` + `PUT /admin/users/:id/admin-scope` 신설.
+- E-5 user soft-delete (ADR 0004 D-1 활성화) — `POST /admin/users/:id/soft-delete` 신설.
+  E-5a/b/c sub-rules: 일반 user / uploader 보유 user 정상 처리, admin_profile.isActive=true
+  보유 user 차단 (먼저 demote 강제, 409 `admin_profile_active_must_demote_first`).
+- E-6 audit action 5종 정의 (`admin_promote/admin_demote/admin_scope_change/user_soft_delete/
+  uploader_decision`) + 기존 `revoke_sessions`. payload JSONB 표준 정의.
+- E-7 UI 미포함 — backend-only 5 endpoint. `/admin/users` 페이지는 별도 sprint.
+- E-8 decideUploader 보강 — optional `reason: string (0~2000자)` 추가 + `admin_audit_logs.create
+  action='uploader_decision'` 동봉. 기존 코멘트 "uploader 승급 로그는 테이블 미정의 — 후속" 해소.
+
+코드 변경:
+- 신규: `apps/bff/prisma/migrations/20260423100428_admin_scope_security/migration.sql` —
+  chk_admin_scope drop & recreate.
+- 신규: `docs/decisions/0005-admin-account-management.md` (Accepted).
+- 확장: `apps/bff/src/routes/admin-users.ts` — promoteToAdmin / demoteAdmin / changeAdminScope /
+  softDeleteUser 4 endpoint + ADMIN_SCOPE_DOMAIN 상수 + parseReason 헬퍼 + requireFullScopeAndTarget
+  공통 가드. revokeUserSessions 의 권한을 `'full' OR 'security'` 로 확장 (ADR 0004 D-6 정정 반영).
+- 보강: `apps/bff/src/routes/admin-uploaders.ts::decideUploader` — auth/reason body 받기 +
+  `$transaction([uploaderProfile.update, adminAuditLog.create])` 트랜잭션화. 응답에 auditId 추가.
+- 라우팅: `apps/bff/src/app.ts` — 4 endpoint 추가 (promote/demote/admin-scope/soft-delete) +
+  revoke-sessions 코멘트 정정.
+
+문서 정정:
+- `docs/decisions/0004-session-invalidation-policy.md` — D-1 활성화 표기 (ship 위치 admin-users.ts),
+  D-6 권한을 `'full' OR 'security'` 로 정정.
+- `wiki/topics/auth-flow.md` — §Session invalidation 정책 표 D-1/D-6 행 동일 정정.
+- `wiki/topics/admin-account-management.md` (신규) — ADR 0005 결정 미러 + 5 endpoint 표 +
+  audit_logs payload 표준 + scope 도메인 표 + 업로더↔관리자 분리 재확인 표.
+- `wiki/index.md` — §아키텍처 결정 ADR 색인에 0005 추가, §시스템 흐름에 admin-account-management
+  추가.
+
+graphify: 코드 변경 sprint — 다음 lint/sweep 시점에 재빌드.
+
+## 2026-04-23T10:30  feature  ADR 0005 E-8 후속 — Web 클라이언트 정정
+ADR 0005 ship 직후 발견: BFF 는 reason 받지만 Web 의 `decideAdminUploader` (api.ts:846) 가 인자
+미전달 + 응답 auditId 누락 + UploaderDetailPanel 의 3 결정 버튼이 reason input 없이 즉시 호출 →
+모든 audit row 의 payload.reason 이 null 로 박히는 정합성 결손.
+
+정정:
+- `apps/web/src/lib/api.ts::decideAdminUploader` — `reason?: string` 인자 추가, 빈 문자열은
+  body 에서 omit (ADR 0005 의 "빈 문자열은 null 저장" 정책과 정합). 응답 타입에 `auditId: string`
+  필드 추가.
+- `apps/web/src/components/admin/UploaderDetailPanel.tsx` — reason textarea 1개 추가 (3 rows,
+  maxLength 2000, char count footer). UX 강제: **반려/보완요청은 reason.trim().length>0 일 때만
+  enabled**, 승인은 항상 enabled. 전송 후 reason 클리어. BFF 가드는 ADR 대로 모두 optional 유지
+  — UX 강제와 BFF 가드를 의도적으로 분리.
+- `wiki/topics/admin-account-management.md` §UI 에 E-7 "UI 미포함" 정책의 예외 표기 (기존 화면
+  보강은 허용).
+
+검증: web typecheck PASS. 라이브 smoke 는 admin 화면 수동 테스트 필요 (자동화 미보유).
+
+graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.
+
+## 2026-04-23T11:30  feature  ADR 0005 E-7 정정 — Members 탭 ship
+사용자 피드백 ("관리자는 회원 및 업로더 관리페이지가 존재하지 않아") 후 결정 정정.
+원안 E-7 의 "backend-only" 채택 근거 (admin UI 패턴 미성숙) 가 더이상 유효하지 않음 — Uploaders
+탭 패턴 (목록 + 상세 패널 + 결정 액션) 이 충분히 성숙해 같은 패턴 복제로 디자인 review 비용
+거의 없음. ADR 0005 본문 §결정 E-7 정정.
+
+신규 BFF (apps/bff/src/routes/admin-users.ts):
+- `GET /admin/users?role=&status=&q=&page=&limit=` — 회원 목록. role ∈ {all, general, uploader,
+  admin}, status ∈ {all, active, deleted}, nickname q (icontains, 100자 한도). 응답에
+  `byRole / byStatus` counter (필터 외 차원은 유지하고 변경 차원만 빼고 집계).
+- `GET /admin/users/:id` — 상세. user 기본 + uploader_profile + admin_profile + 활성 세션 수
+  (`auth_sessions WHERE expires_at > now()` count) + 최근 admin_audit_logs 10건 (target_id 기준).
+  socialUid 는 마스킹 (앞 4 + 뒤 4).
+- `app.ts` 라우팅 2건 추가 (requireAuth → requireAdmin 체인).
+
+신규 Web (apps/web/src):
+- `lib/api.ts` — 7개 함수 추가: `fetchAdminUsers`, `fetchAdminUser`, `promoteUserToAdmin`,
+  `demoteUserAdmin`, `changeUserAdminScope`, `softDeleteUserAccount`, `revokeUserSessionsByAdmin`.
+  공통 mutation 헬퍼 `adminUserMutation` (`FORBIDDEN:<error>` / `CONFLICT:<error>` 메시지 분기).
+  타입: `AdminScope`, `MemberRoleFilter`, `MemberStatusFilter`, `AdminUserListItem`,
+  `AdminUsersListResponse`, `AdminUserDetail`, `AdminUserAuditEntry`.
+- `components/admin/MembersTab.tsx` — 좌측 목록 + role/status 필터 칩 + nickname 검색 (250ms
+  debounce) + 페이지네이션 + Uploaders 탭과 동일한 grid 레이아웃 (`lg:grid-cols-[1fr_440px]`).
+- `components/admin/UserDetailPanel.tsx` — 우측 패널 + 5 액션 (current state 별 동적 노출):
+  - 일반 user: 세션 폐기 / admin 승급 / 계정 비활성화
+  - admin 활성 user: 세션 폐기 / scope 변경 / admin 박탈 (계정 비활성화는 disabled — E-5c gate)
+  - 삭제된 user: 액션 영역 숨김
+  - 액션은 inline `ActionForm` 으로 펼침 — scope select (필요 시) + reason textarea (10~500자
+    필수, char count footer) + 실행/취소.
+- `pages/AdminEventsPage.tsx` — `AdminTab` 에 `'members'` 추가, TABS 배열에 "Members · 회원/admin
+  관리" 추가, body switch 에 `<MembersTab />` 분기.
+
+문서 정정:
+- `docs/decisions/0005-admin-account-management.md` §결정 E-7 — 원안 폐기 + 정정 채택 박제.
+- `wiki/topics/admin-account-management.md` §UI — Members 탭 컴포넌트/액션 노출 표 + UX/BFF
+  reason 검증 강도 비교표 (decideUploader 와 admin-users 의 차이).
+
+검증: BFF + Web typecheck 모두 PASS. dev 서버 라이브 — admin 으로 `/admin` → Members 탭 클릭으로
+바로 확인 가능.
+
+graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.
+
+## 2026-04-23T11:50  lint  ADR 0004/0005 + Members 탭 + RoleToggleButton sprint drift sweep
+graphify 재빌드 (905 nodes / 1177 edges / 131 communities — 이전 847/1084/121 대비 +58/+93/+10).
+이전 lint(04-23 sprint 1) 이후 ship 된 7 sprint 항목 (ADR 0004 코드 / ADR 0005 박제+코드 / Members
+탭 / RoleToggleButton / E-8 후속 / UserDetailPanel readability / wiki 정정) 의 wiki drift 식별 +
+즉시 정리.
+
+drift 5건 (Contradictions 4 + Gap 1) 모두 본 sweep 에서 해소:
+- C-13 `db-schema-overview.md` — 22 → 23 테이블 + admin_audit_logs 항목 신설 + admin_profiles.scope
+  도메인 4종 (`security` 추가).
+- C-14 `admin-flow.md` — 4 → 5 탭 (Members 신규) + Uploaders 탭에 reason+audit 표기.
+- C-15 `roles-and-active-role.md` Open questions #4/#5 — ADR 0005 / RoleToggleButton ship 으로
+  해소 표기.
+- C-16 `roles-and-active-role.md` §승급 플로우 L42 — 주민등록번호 표기를 사업자번호/CI 해시로
+  정정 (ADR 0003 — 04-21 sprint 의 누락분).
+- G-16 `admin-flow.md` — §Members 탭 섹션 신설 (5 액션 표 + admin-account-management cross-ref) +
+  §Audit Logs 정정 (approval_logs 와 admin_audit_logs 분리 노출 상태 명시).
+
+Implementation status — 미착수 4행 → **2행** (PostGIS geom + 모바일 레이아웃, 둘 다 Phase 2).
+세션 무효화 ADR / 관리자 계정 ADR 두 개의 큰 항목이 모두 ship 완료.
+
+다음 후보 (우선순위 가벼움 → 무거움): admin Audit 통합 뷰, bulk action, rejected uploader 쿨다운,
+PostGIS, 모바일 레이아웃.

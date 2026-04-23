@@ -14,9 +14,12 @@ See [log.md](log.md) for chronological activity.
 - [역할과 active_role](topics/roles-and-active-role.md) — 1계정 복수 역할 토글
 - [기술 스택](topics/tech-stack.md) — 확정 스택 + ADR 링크
 
-### 아키텍처 결정 (ADR 위키 미러)
-- [ADR 0001 — 용어집 정합성](topics/adr-0001-terminology-reconciliation.md) — 7건 확정 (rename 3 + 신설 3 + 컬럼 추가 1)
-- [ADR 0002 — 기술 스택 결정](topics/adr-0002-stack-decisions.md) — MinIO / OpenAI / Qdrant 단일
+### 아키텍처 결정 (ADR 색인)
+- [ADR 0001 — 용어집 정합성](topics/adr-0001-terminology-reconciliation.md) — 7건 확정 (rename 3 + 신설 3 + 컬럼 추가 1) (wiki 미러 보유)
+- [ADR 0002 — 기술 스택 결정](topics/adr-0002-stack-decisions.md) — MinIO / OpenAI / Qdrant 단일 (wiki 미러 보유)
+- [ADR 0003 — 업로더 PII 정책](../../docs/decisions/0003-uploader-pii-policy.md) — 주민번호 제거 + 사업자번호/CI 분기 (canonical only)
+- [ADR 0004 — 세션 무효화 정책](../../docs/decisions/0004-session-invalidation-policy.md) — soft-delete cascade + sliding-cap + logout-all + admin revoke (canonical only, [auth-flow](topics/auth-flow.md) 에 결정 표 미러)
+- [ADR 0005 — 관리자 계정 관리 + 작업 감사](../../docs/decisions/0005-admin-account-management.md) — admin promote/demote/scope-change + user soft-delete + uploader 승급 audit (canonical + [admin-account-management](topics/admin-account-management.md) topic 미러)
 
 ### 디자인
 - [DESIGN.md](../../DESIGN.md) — 디자인 시스템 정본 (Pretendard / 버밀리언 accent / map-first hybrid layout). UI 결정 시 최우선 참조.
@@ -39,6 +42,7 @@ See [log.md](log.md) for chronological activity.
 - [Qdrant 의미 검색 레이어](topics/semantic-search.md) — 이벤트 embedding + /chat kNN suggestions
 - [뉴스 기사 파이프라인 (A_400)](topics/news-article-pipeline.md) — Naver + Google News + embedding rerank
 - [구독·알림 센터 (A_203 / A_500)](topics/subscriptions-notifications.md) — 5축 매칭 + 2단계 dedup + 알림 fan-out
+- [관리자 계정 관리 + 작업 감사](topics/admin-account-management.md) — promote/demote/scope/soft-delete + uploader_decision audit (ADR 0005)
 
 ## Entities
 <!-- 외부 의존성: API, 서비스, 조직. 각 페이지에 endpoint·키·장애시 동작. -->
