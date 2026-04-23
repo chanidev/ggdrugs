@@ -99,7 +99,9 @@ CLI `pnpm ingest` 는 tourapi → seoul-culture → kcisa 순차 실행. 각 러
 ## Open questions
 
 - **중복 방지 강화** — 현재 정확 일치만. pg_trgm similarity 점수 0.8 이상 → 동일 이벤트로 간주하는 정책 미도입.
-- ~~**소스 쿼터·레이트리밋**~~ → **부분 해소** (2026-04-23): `apps/bff/src/jobs/lib/fetch-with-retry.ts` 헬퍼 신설 — 4 ingest runner (tourapi / seoul-culture / kcisa / news-naver) 의 fetch 가 429 / 5xx / 네트워크 에러에 exponential backoff (1s / 2s / 4s, max 8s) + Retry-After 헤더 존중 + 3회 재시도. 단순 transient 장애에 강해짐. **여전히 미해결**: 일 quota 소진 (4xx 일부) 은 retry 안 함 — 호출자가 받아 throw, scheduler 의 Promise.allSettled 가 source-level 격리. 일일 호출 카운트 추적·임계 알림은 별도 후속.
+- ~~**소스 쿼터·레이트리밋**~~ → **해소** (2026-04-23): 두 layer 합성.
+  - **Transient 장애**: `apps/bff/src/jobs/lib/fetch-with-retry.ts` — 429 / 5xx / 네트워크 에러에 exponential backoff (1s/2s/4s, max 8s) + Retry-After 헤더 존중 + 3회 재시도. 4 runner (tourapi/seoul-culture/kcisa/news-naver) 모두 적용.
+  - **일일 quota 추적**: `apps/bff/src/jobs/lib/quota-counter.ts` — in-memory Map, UTC 일자 기준 reset. `fetchWithRetry` 가 매 호출에 `record(source)`. provider 별 한도 default (tourapi/seoul/kcisa 1000, naver-news 25k, google-news 미정의). **80% 도달 시 logger.warn**, **95% 도달 시 logger.error** (각각 1일 1회). `scheduler.ts::runAll()` 후속 단계 8번이 끝 시점 snapshot 로그. **단일 인스턴스 한정** (multi-instance 시 Redis/DB 로 교체 필요).
 - ~~**과거 정리** — `ended` 이벤트 retention 미정~~ → **결정 박제 (2026-04-23)**: `ended` 이벤트 **유지** (archive 안 함). 근거: ① 캘린더 (A_500) 가 과거 참여 이벤트 기록을 보존해야 함 (리뷰 + 북마크 link), ② 검색에서 자동 제외 (`phase!='ended'` 필터 기본), ③ 4084 행 규모는 PostgreSQL 에 부담 없음 (rows < 100k). 트리거 (예: 100k 초과 + query 비용 측정) 도래 시 ADR 로 archive 정책 재검토. 코드 변경 없음.
 
 ## References

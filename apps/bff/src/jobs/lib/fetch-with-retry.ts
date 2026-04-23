@@ -5,6 +5,7 @@
 // 사용처: tourapi / seoul-culture / kcisa / news-naver ingest 의 외부 호출 wrapper.
 
 import { logger } from '../../logger.js';
+import { record as recordQuota } from './quota-counter.js';
 
 export interface FetchRetryOptions {
   retries?: number; // 기본 3
@@ -69,6 +70,8 @@ export async function fetchWithRetry(
 
   while (attempt <= retries) {
     attempt += 1;
+    // quota 카운트 — source 가 명시된 경우만. 재시도도 별개 호출이므로 매번 record.
+    if (opts.source) recordQuota(opts.source);
     try {
       const res = await fetch(url, init);
       if (!RETRYABLE_STATUS.has(res.status)) {
