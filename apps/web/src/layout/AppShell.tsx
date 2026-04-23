@@ -30,6 +30,10 @@ function rangeForPeriod(key: ChatFilters['periodKey']): { start: string; end: st
     return r;
   };
   if (key === 'today') return { start: iso(today), end: iso(today) };
+  if (key === 'tomorrow') {
+    const tmr = add(today, 1);
+    return { start: iso(tmr), end: iso(tmr) };
+  }
   if (key === 'weekend') {
     const day = today.getDay();
     const sat = add(today, (6 - day + 7) % 7);

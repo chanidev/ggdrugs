@@ -3,7 +3,7 @@ import { env } from '../env.js';
 import { logger } from '../logger.js';
 import { prisma } from '../prisma.js';
 
-type PeriodKey = 'today' | 'weekend' | 'week' | 'month' | null;
+type PeriodKey = 'today' | 'tomorrow' | 'weekend' | 'week' | 'month' | null;
 
 interface LlmChatResponse {
   reply: string;
@@ -67,6 +67,10 @@ function rangeForPeriod(key: PeriodKey): { start: Date; end: Date } | null {
     return r;
   };
   if (key === 'today') return { start: startOfDay(today), end: endOfDay(today) };
+  if (key === 'tomorrow') {
+    const tmr = add(today, 1);
+    return { start: startOfDay(tmr), end: endOfDay(tmr) };
+  }
   if (key === 'weekend') {
     const day = today.getDay();
     const sat = add(today, (6 - day + 7) % 7);

@@ -188,23 +188,39 @@ def health() -> dict[str, Any]:
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(req: ChatRequest) -> ChatResponse:
+    """
+    필터 추출 + 자연어 reply 생성. v2 부터 LLM 이 reply 도 직접 작성.
+
+    분기:
+      - LLM 활성: extract_via_openai 가 filters + reply 동시 반환. reply 비면 룰 fallback.
+      - LLM 비활성/실패: 룰 기반 extract_merge + compose_reply.
+    """
     user_texts = [m.text for m in req.messages if m.role == "user"]
     last_user = user_texts[-1] if user_texts else ""
 
-    # Stage 2 OpenAI 연동은 선택적 — 키 없거나 일일 예산 초과 시 규칙 기반 fallback.
+    extracted: dict[str, Any] | None = None
+    llm_reply: str = ""
     if _openai_available():
         try:
             extracted = _openai_extract(req.messages)
+            llm_reply = (extracted.get("reply") or "").strip() if isinstance(extracted, dict) else ""
         except Exception:
-            # LLM 호출 실패 시 조용히 fallback.
-            extracted = filter_rules.extract_merge(user_texts)
-    else:
+            extracted = None
+    if extracted is None:
         extracted = filter_rules.extract_merge(user_texts)
 
-    reply = filter_rules.compose_reply(last_user, extracted)
+    # 룰 fallback compose_reply 는 LLM reply 가 없거나 빈 경우만.
+    reply = llm_reply or filter_rules.compose_reply(last_user, extracted)
+
     return ChatResponse(
         reply=reply,
-        filters=ChatFilters(**extracted),
+        filters=ChatFilters(
+            companions=list(extracted.get("companions") or []),
+            eventTypes=list(extracted.get("eventTypes") or []),
+            periodKey=extracted.get("periodKey"),
+            vibes=list(extracted.get("vibes") or []),
+            regionHints=list(extracted.get("regionHints") or []),
+        ),
     )
 
 

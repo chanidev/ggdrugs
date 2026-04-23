@@ -8,7 +8,7 @@ import type { EventPhase } from './events.js';
 export interface ChatFilters {
   eventTypes: string[];
   companions: string[];
-  periodKey: 'today' | 'weekend' | 'week' | 'month' | null;
+  periodKey: 'today' | 'tomorrow' | 'weekend' | 'week' | 'month' | null;
   vibes: string[];
   regionHints: string[];
   /** BFF 가 regionHints 를 regions 테이블에서 resolve 해 추가한 id (없으면 []). */
