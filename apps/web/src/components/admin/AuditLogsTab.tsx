@@ -7,6 +7,7 @@ import {
   type AdminAuditAdminLogItem,
   type AdminAuditAdminAction,
 } from '../../lib/api';
+import { AuditDashboard } from './audit/AuditDashboard';
 
 /**
  * A_700 Audit 탭 — 두 source 통합 노출.
@@ -17,7 +18,7 @@ import {
  * 두 source 가 스키마 다르므로 각자 row 렌더 + 별도 action 필터. 페이지네이션도 분리.
  */
 
-type Source = 'event' | 'admin';
+type Source = 'overview' | 'event' | 'admin';
 type EventAction = 'any' | 'approved' | 'revision_requested' | 'rejected';
 
 const EVENT_ACTION_LABEL: Record<AdminAuditLogItem['action'], string> = {
@@ -89,38 +90,57 @@ function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown):
 }
 
 export function AuditLogsTab() {
-  const [source, setSource] = useState<Source>('event');
+  // 기본은 대시보드 — 운영자가 들어왔을 때 한 화면에 요약 보여주는 게 자연스러움.
+  const [source, setSource] = useState<Source>('overview');
 
   return (
-    <section className="flex flex-col gap-4">
-      {/* Source toggle */}
-      <div className="inline-flex w-fit rounded-(--radius-md) border border-(--color-border) p-0.5">
-        <button
-          type="button"
-          onClick={() => setSource('event')}
-          className={`h-9 rounded-[6px] px-4 text-[13px] font-medium transition-colors ${
-            source === 'event'
-              ? 'bg-(--color-accent) text-white'
-              : 'text-(--color-text-muted) hover:text-(--color-text)'
-          }`}
-        >
+    <section className="flex flex-col gap-6">
+      {/* Source toggle (3종) — 활자 위주, 라운드 박스 회피 */}
+      <nav
+        className="flex items-baseline gap-1 border-b border-(--color-border)"
+        aria-label="감사 로그 보기"
+      >
+        <SourceTab active={source === 'overview'} onClick={() => setSource('overview')}>
+          대시보드
+        </SourceTab>
+        <SourceTab active={source === 'event'} onClick={() => setSource('event')}>
           이벤트 심사
-        </button>
-        <button
-          type="button"
-          onClick={() => setSource('admin')}
-          className={`h-9 rounded-[6px] px-4 text-[13px] font-medium transition-colors ${
-            source === 'admin'
-              ? 'bg-(--color-accent) text-white'
-              : 'text-(--color-text-muted) hover:text-(--color-text)'
-          }`}
-        >
+        </SourceTab>
+        <SourceTab active={source === 'admin'} onClick={() => setSource('admin')}>
           Admin 작업
-        </button>
-      </div>
+        </SourceTab>
+      </nav>
 
-      {source === 'event' ? <EventAuditPanel /> : <AdminAuditPanel />}
+      {source === 'overview' && <AuditDashboard />}
+      {source === 'event' && <EventAuditPanel />}
+      {source === 'admin' && <AdminAuditPanel />}
     </section>
+  );
+}
+
+function SourceTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      onClick={onClick}
+      className={`relative -mb-px inline-flex h-10 items-center border-b-2 px-3 text-[14px] font-medium transition-colors ${
+        active
+          ? 'border-(--color-accent) text-(--color-accent)'
+          : 'border-transparent text-(--color-text-muted) hover:text-(--color-text)'
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

@@ -31,7 +31,11 @@ import {
   decideUploader,
   decideEventUpload,
 } from './routes/admin-uploaders.js';
-import { listAdminAuditLogs, listAdminAuditAdminLogs } from './routes/admin-audit.js';
+import {
+  listAdminAuditLogs,
+  listAdminAuditAdminLogs,
+  getAdminAuditSummary,
+} from './routes/admin-audit.js';
 import {
   revokeUserSessions,
   promoteToAdmin,
@@ -287,6 +291,13 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireAdmin(req, res, next).catch(next),
     (req, res, next) => listAdminAuditAdminLogs(req, res).catch(next),
+  );
+  // Audit 대시보드 — 양 source 통합 카운트 + 최근 활동 (windowDays 기본 7).
+  app.get(
+    '/admin/audit-summary',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => getAdminAuditSummary(req, res).catch(next),
   );
   // ADR 0005 E-7 (정정): Members 탭 백킹 — 회원 목록 + 상세 조회.
   app.get(

@@ -214,3 +214,131 @@ export async function listAdminAuditAdminLogs(req: Request, res: Response) {
     }),
   });
 }
+
+// =============================================================
+// Dashboard summary — 양 source 통합 카운트 + 최근 활동 timeline.
+// =============================================================
+
+/**
+ * GET /admin/audit-summary?windowDays=7
+ *
+ * 응답:
+ *   {
+ *     window: { days, since, until },
+ *     eventActions: { approved, revision_requested, rejected },
+ *     adminActions: { revoke_sessions, admin_promote, admin_demote, admin_scope_change, user_soft_delete, uploader_decision },
+ *     recentActivity: [{ source: 'event'|'admin', action, label, adminNickname, reason?, createdAt }]
+ *   }
+ */
+export async function getAdminAuditSummary(req: Request, res: Response) {
+  const windowDays = parseIntClamp(req.query.windowDays, 7, 1, 90);
+  const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000);
+  const until = new Date();
+
+  const [eventBreakdown, adminBreakdown, recentEvents, recentAdmin] = await Promise.all([
+    prisma.approvalLog.groupBy({
+      by: ['action'],
+      where: { createdAt: { gte: since } },
+      _count: { _all: true },
+    }),
+    prisma.adminAuditLog.groupBy({
+      by: ['action'],
+      where: { createdAt: { gte: since } },
+      _count: { _all: true },
+    }),
+    prisma.approvalLog.findMany({
+      where: { createdAt: { gte: since } },
+      orderBy: { createdAt: 'desc' },
+      take: 15,
+      select: {
+        logId: true,
+        action: true,
+        eventId: true,
+        reason: true,
+        createdAt: true,
+        event: { select: { title: true } },
+        admin: { select: { nickname: true } },
+      },
+    }),
+    prisma.adminAuditLog.findMany({
+      where: { createdAt: { gte: since } },
+      orderBy: { createdAt: 'desc' },
+      take: 15,
+      select: {
+        auditId: true,
+        action: true,
+        targetId: true,
+        payload: true,
+        createdAt: true,
+        admin: { select: { nickname: true } },
+      },
+    }),
+  ]);
+
+  const eventActions: Record<string, number> = {
+    approved: 0,
+    revision_requested: 0,
+    rejected: 0,
+  };
+  for (const r of eventBreakdown) eventActions[r.action] = r._count._all;
+
+  const adminActions: Record<string, number> = {
+    revoke_sessions: 0,
+    admin_promote: 0,
+    admin_demote: 0,
+    admin_scope_change: 0,
+    user_soft_delete: 0,
+    uploader_decision: 0,
+  };
+  for (const r of adminBreakdown) adminActions[r.action] = r._count._all;
+
+  // admin audit target user nickname batch lookup.
+  const targetIds = Array.from(
+    new Set(recentAdmin.map((a) => a.targetId).filter((x): x is bigint => x !== null)),
+  );
+  const targetUsers = targetIds.length
+    ? await prisma.user.findMany({
+        where: { userId: { in: targetIds } },
+        select: { userId: true, nickname: true },
+      })
+    : [];
+  const targetMap = new Map(targetUsers.map((u) => [u.userId.toString(), u.nickname]));
+
+  const eventEntries = recentEvents.map((r) => ({
+    source: 'event' as const,
+    key: `event:${r.logId.toString()}`,
+    action: r.action,
+    label: `${r.event?.title ?? '(삭제된 이벤트)'} #${r.eventId}`,
+    adminNickname: r.admin?.nickname ?? '(관리자)',
+    reason: r.reason,
+    createdAt: r.createdAt,
+  }));
+  const adminEntries = recentAdmin.map((r) => {
+    const reason =
+      r.payload && typeof r.payload === 'object'
+        ? ((r.payload as Record<string, unknown>).reason as string | null | undefined) ?? null
+        : null;
+    return {
+      source: 'admin' as const,
+      key: `admin:${r.auditId.toString()}`,
+      action: r.action,
+      label: r.targetId
+        ? targetMap.get(r.targetId.toString()) ?? `user#${r.targetId}`
+        : '(대상 없음)',
+      adminNickname: r.admin?.nickname ?? '(관리자)',
+      reason,
+      createdAt: r.createdAt,
+    };
+  });
+  const merged = [...eventEntries, ...adminEntries]
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, 15)
+    .map((e) => ({ ...e, createdAt: e.createdAt.toISOString() }));
+
+  res.json({
+    window: { days: windowDays, since: since.toISOString(), until: until.toISOString() },
+    eventActions,
+    adminActions,
+    recentActivity: merged,
+  });
+}

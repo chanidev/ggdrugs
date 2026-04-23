@@ -107,3 +107,39 @@ export async function fetchAdminAuditAdminLogs(
   }
   return (await res.json()) as AdminAuditAdminLogResponse;
 }
+
+// =============================================================
+// Dashboard summary — 양 source 통합 카운트 + 최근 활동.
+// =============================================================
+
+export interface AuditRecentActivity {
+  source: 'event' | 'admin';
+  key: string;
+  action: string;
+  label: string;
+  adminNickname: string;
+  reason: string | null;
+  createdAt: string;
+}
+
+export interface AdminAuditSummary {
+  window: { days: number; since: string; until: string };
+  eventActions: { approved: number; revision_requested: number; rejected: number };
+  adminActions: Record<AdminAuditAdminAction, number>;
+  recentActivity: AuditRecentActivity[];
+}
+
+export async function fetchAdminAuditSummary(
+  windowDays = 7,
+  signal?: AbortSignal,
+): Promise<AdminAuditSummary> {
+  const init = withCredentials(signal ? { signal } : {});
+  const res = await fetch(
+    `${BFF_URL}/admin/audit-summary?windowDays=${windowDays}`,
+    init,
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) throw new Error(`GET /admin/audit-summary ${res.status}`);
+  return (await res.json()) as AdminAuditSummary;
+}
