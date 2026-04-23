@@ -29,6 +29,7 @@
     "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
     "audit:news-mappings": "dotenv -e ../../.env -- tsx src/jobs/audit-news-mappings.ts",
     "sweep:sessions": "dotenv -e ../../.env -- tsx src/jobs/session-sweep.ts",
+    "aggregate:taste": "dotenv -e ../../.env -- tsx src/jobs/aggregate-taste-profiles.ts",
     "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"
   },
   "dependencies": {

@@ -21,6 +21,7 @@ import {
 } from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
+import { listMyRecommendations } from './routes/me-recommendations.js';
 import { postChat } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
 import { listAdminEventDocuments } from './routes/admin-documents.js';
@@ -194,6 +195,16 @@ export function createApp(): Express {
     },
     (req: Request, res: Response, next: NextFunction) => {
       listMyReviews(req, res).catch(next);
+    },
+  );
+  // G-5: 추천 — taste profile 기반 매칭 이벤트.
+  app.get(
+    '/me/recommendations',
+    (req: Request, res: Response, next: NextFunction) => {
+      requireAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      listMyRecommendations(req, res).catch(next);
     },
   );
   app.get('/regions', (req: Request, res: Response, next: NextFunction) => {

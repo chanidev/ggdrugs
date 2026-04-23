@@ -43,6 +43,7 @@ See [log.md](log.md) for chronological activity.
 - [뉴스 기사 파이프라인 (A_400)](topics/news-article-pipeline.md) — Naver + Google News + embedding rerank
 - [구독·알림 센터 (A_203 / A_500)](topics/subscriptions-notifications.md) — 5축 매칭 + 2단계 dedup + 알림 fan-out
 - [관리자 계정 관리 + 작업 감사](topics/admin-account-management.md) — promote/demote/scope/soft-delete + uploader_decision audit (ADR 0005)
+- [추천 시스템](topics/recommendations.md) — taste profile 기반 일일 집계 + /me/recommendations + 마이페이지 추천 탭 (G-5)
 
 ## Entities
 <!-- 외부 의존성: API, 서비스, 조직. 각 페이지에 endpoint·키·장애시 동작. -->

@@ -13,6 +13,7 @@ import {
   fetchMyReviews,
   fetchMySubscriptions,
   fetchMyUploader,
+  fetchMyRecommendations,
   setActiveRole,
   toggleSubscription,
   deleteSubscription,
@@ -21,6 +22,8 @@ import {
   type MyReviewItem,
   type MySubscription,
   type MyUploaderProfile,
+  type RecommendedEventItem,
+  type MyRecommendationsResponse,
 } from '../lib/api';
 import { loginUrl } from '../lib/auth-redirect';
 
@@ -33,7 +36,7 @@ import { loginUrl } from '../lib/auth-redirect';
  * 인증 필요 — 비로그인 상태면 로그인 유도 박스.
  */
 
-type Tab = 'calendar' | 'bookmarks' | 'reviews' | 'subscriptions';
+type Tab = 'calendar' | 'bookmarks' | 'reviews' | 'subscriptions' | 'recommendations';
 
 export function MyPage() {
   const { user, loading: authLoading } = useCurrentUser();
@@ -94,12 +97,16 @@ export function MyPage() {
         <TabBtn active={tab === 'subscriptions'} onClick={() => setTab('subscriptions')}>
           구독
         </TabBtn>
+        <TabBtn active={tab === 'recommendations'} onClick={() => setTab('recommendations')}>
+          추천
+        </TabBtn>
       </div>
 
       {tab === 'calendar' && <CalendarTab />}
       {tab === 'bookmarks' && <BookmarksList />}
       {tab === 'reviews' && <ReviewsList />}
       {tab === 'subscriptions' && <SubscriptionsList />}
+      {tab === 'recommendations' && <RecommendationsList />}
 
       <SessionFooter />
     </PageShell>
@@ -956,6 +963,125 @@ function SubscriptionsList() {
         ))}
       </ul>
     </div>
+  );
+}
+
+// =============================================================
+// G-5: 추천 탭 — taste profile 기반 매칭 이벤트
+// =============================================================
+
+const DIM_LABEL: Record<string, string> = {
+  category: '관심 종류',
+  region: '관심 지역',
+  vibe: '관심 성향',
+};
+
+function RecommendationsList() {
+  const [state, setState] = useState<{
+    loading: boolean;
+    error: string | null;
+    data: MyRecommendationsResponse | null;
+  }>({ loading: true, error: null, data: null });
+
+  useEffect(() => {
+    const ctrl = new AbortController();
+    setState({ loading: true, error: null, data: null });
+    fetchMyRecommendations({ limit: 20 }, ctrl.signal)
+      .then((data) => setState({ loading: false, error: null, data }))
+      .catch((e) => {
+        if ((e as { name?: string }).name === 'AbortError') return;
+        setState({ loading: false, error: (e as Error).message, data: null });
+      });
+    return () => ctrl.abort();
+  }, []);
+
+  if (state.loading) return <SkeletonList />;
+  if (state.error) return <EmptyBox label="불러오지 못했어요" hint={state.error} />;
+  if (!state.data) return null;
+
+  if (state.data.reason === 'no_taste_signals') {
+    return (
+      <EmptyBox
+        label="아직 추천을 만들 시그널이 부족해요"
+        hint="이벤트를 북마크하거나 리뷰를 남기면, 매일 한 번 그 데이터로 취향을 분석해 추천을 보여드려요."
+      />
+    );
+  }
+  if (state.data.items.length === 0) {
+    return (
+      <EmptyBox
+        label="조건에 맞는 새 이벤트가 없어요"
+        hint="며칠 내로 새 이벤트가 등록되면 다시 표시됩니다."
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="m-0 text-[12px] text-(--color-text-subtle)">
+        {state.data.items.length}건 · 매일 자동 갱신
+      </p>
+      <ul className="m-0 flex list-none flex-col gap-2 p-0">
+        {state.data.items.map((ev) => (
+          <li key={ev.eventId}>
+            <RecommendedCard item={ev} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function RecommendedCard({ item }: { item: RecommendedEventItem }) {
+  const date =
+    item.startDate === item.endDate ? item.startDate : `${item.startDate} — ${item.endDate}`;
+  const region = item.region.sigunguName
+    ? `${item.region.sidoName} ${item.region.sigunguName}`
+    : item.region.sidoName;
+  return (
+    <Link
+      to={`/events/${item.eventId}`}
+      className="flex gap-3 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-3 transition-colors hover:border-(--color-border-hover) hover:bg-(--color-surface-alt)"
+    >
+      <div className="h-20 w-20 shrink-0 overflow-hidden rounded-(--radius-md) bg-(--color-surface-warm)">
+        {item.posterImageUrl ? (
+          <img
+            src={item.posterImageUrl}
+            alt=""
+            loading="lazy"
+            className="h-full w-full object-cover"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = 'none';
+            }}
+          />
+        ) : null}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 flex items-start justify-between gap-2">
+          <h3 className="m-0 line-clamp-2 text-[15px] font-semibold leading-[1.3]">
+            {item.title}
+          </h3>
+          <PhaseBadge phase={item.phase} />
+        </div>
+        <p className="m-0 text-[13px] text-(--color-text-muted)">
+          {item.categoryName} · {region}
+        </p>
+        <p className="tabular m-0 text-[12px] text-(--color-text-subtle)">{date}</p>
+        {item.matchedDimensions.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {item.matchedDimensions.map((d) => (
+              <span
+                key={d}
+                className="inline-flex items-center rounded-(--radius-sm) bg-(--color-accent)/10 px-1.5 py-[1px] text-[10px] font-medium text-(--color-accent)"
+                title={`${DIM_LABEL[d] ?? d} 매칭`}
+              >
+                ✦ {DIM_LABEL[d] ?? d}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </Link>
   );
 }
 

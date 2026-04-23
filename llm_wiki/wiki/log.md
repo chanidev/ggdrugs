@@ -545,3 +545,44 @@ Web (apps/web/src/lib/auth-redirect.ts 신설):
 - **G-4 admin scope content_only / uploader_review_only**: 의미 결정 (콘텐츠 모더레이션 / 업로더 승급 전용). 권한 분기 코드는 후속 sprint (현재 활용 사례 미관측). admin-account-management.md scope 표 갱신.
 
 graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.
+
+## 2026-04-23T12:10  feature  G-5 추천 시스템 — taste profile 일일 집계 + /me/recommendations
+04-17 schema ship 이후 처음 사용처 부재였던 `user_taste_profiles` 활용 ship. 마이페이지 5번째
+탭 "추천" 신설.
+
+3 dimensions (KV 한도 안에서 단순):
+- preferred_category (events.category_code)
+- preferred_region (regions.region_id stringified)
+- preferred_vibe (event_vibes.vibe_id stringified)
+
+BFF:
+- 신규 `apps/bff/src/jobs/aggregate-taste-profiles.ts` — 활성 user 정의 (최근 30일 시그널 있음) +
+  per-user 3 dimension 계산 (raw SQL with TIES tiebreak `cnt DESC, latest DESC`) + upsert /
+  delete (시그널 0 dimension 정리)
+- 신규 `apps/bff/src/routes/me-recommendations.ts` — `GET /me/recommendations?limit=10` —
+  user_taste_profiles 조회 → WHERE OR (category) (region) (vibe) AND approved + 미삭제 +
+  phase!='ended' → ORDER BY startDate ASC. matchedDimensions 마킹 (UI tooltip 용). empty
+  state 분기 (no_taste_signals / no_valid_signals / 정상 0).
+- `scheduler.ts::runAll()` 후속 단계 7번으로 통합 (실패해도 warn — 다음 라운드 재시도).
+- `package.json`: `aggregate:taste` CLI script.
+- `app.ts`: `GET /me/recommendations` 라우팅 (requireAuth 만).
+
+Web:
+- `lib/api.ts`: `fetchMyRecommendations` + `RecommendedEventItem` / `MyRecommendationsResponse`
+  타입.
+- `MyPage.tsx`: Tab 에 'recommendations' 추가, `RecommendationsList` + `RecommendedCard` 컴포넌트.
+  matchedDimensions 칩 (✦ 관심 종류/지역/성향) 노출. empty state 친화 메시지.
+
+검증:
+- `pnpm aggregate:taste` 실행 → 2 users, 4 dimensions updated, 0 errors. 첫 SQL 에서
+  `e.category_code` 컬럼 부재 (events 에는 category_id 만, code 는 event_categories) 정정 →
+  `c.category_code` 로 수정.
+- `GET /me/recommendations` smoke (sent-tester user) → 5건 응답, matchedDimensions:['region']
+  정확. startDate 도 'YYYY-MM-DD' 형식 (bookmarks 패턴 정합성).
+
+문서:
+- 신규 `wiki/topics/recommendations.md` — 본 ship mirror + algorithm + open questions (가중치 / 시간 감쇠 / Qdrant 기반 후보).
+- `wiki/topics/auth-flow.md` OQ 의 user_taste_profiles 항목 해소 표기.
+- `wiki/index.md` 시스템 흐름 섹션에 recommendations.md 추가.
+
+graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.

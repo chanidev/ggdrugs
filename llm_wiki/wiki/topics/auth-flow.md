@@ -129,7 +129,8 @@ lookup. 본 ADR 부터 "session invalidation / revocation" 으로 통일.
 - ~~**Session revocation**~~ → **해소 (ADR 0004 D-1, D-6)**: soft-delete 시 명시 deleteMany +
   admin 강제 폐기 API 신설.
 - ~~**Sliding expiry 실제 동작**~~ → **해소 (ADR 0004 D-4)**: hybrid sliding 7d + cap 30d.
-- **`user_taste_profiles`, 알림** 등과 세션 레이어 관계 미정.
+- ~~**`user_taste_profiles`** 사용처 미정~~ → **해소** (2026-04-23, G-5): 일일 집계 → `/me/recommendations` 추천 endpoint 활용. [recommendations.md](recommendations.md) 참조. 세션 레이어와 직접 결합 없음 — 단순 `requireAuth` 통과면 본인 taste 조회.
+- **알림** 과 세션 레이어 관계 미정 — 푸시/이메일 발송 채널 미구현.
 - **Admin 권한 세분화** — D-6 의 `scope='security'` 가 admin 권한 모델 ADR (별도) 의 결과에
   의존. 현재는 'full' 만 통과.
 

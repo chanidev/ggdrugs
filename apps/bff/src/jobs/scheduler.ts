@@ -6,6 +6,7 @@ import { runNewsNaverIngest } from './news-naver-ingest.js';
 import { runEmbedEvents } from './embed-events.js';
 import { auditMappingDistributionQuick } from './audit-news-mappings.js';
 import { runSessionSweep } from './session-sweep.js';
+import { runTasteAggregation } from './aggregate-taste-profiles.js';
 import { logger } from '../logger.js';
 import { env } from '../env.js';
 
@@ -25,6 +26,7 @@ import { env } from '../env.js';
  *   4. embed-events (onlyMissing=true, eventLimit='all') — Qdrant alle-events 반영
  *   5. audit quick — 분포 + below-threshold 집계, 있으면 warn
  *   6. session sweep (ADR 0004 D-5) — 만료된 auth_sessions 행 정리 (grace 7d)
+ *   7. taste aggregation (G-5) — 활성 user 의 user_taste_profiles 갱신
  *
  * 업로더 제출 이벤트는 별도 경로(admin-uploaders.ts 승인 훅) 로 동일 2~5단계를 단건 처리.
  *
@@ -97,6 +99,16 @@ async function runAll(): Promise<void> {
     log.info({ sweep }, 'post-ingest session sweep done');
   } catch (err) {
     log.warn({ err: err instanceof Error ? err.message : String(err) }, 'session sweep failed');
+  }
+
+  // G-5: user_taste_profiles 일일 집계 — 활성 user 의 top 1 dimension 갱신.
+  // 추천 endpoint (/me/recommendations) 가 이 결과를 source 로 사용. 실패해도 추천은 빈
+  // 결과로 graceful degrade.
+  try {
+    const taste = await runTasteAggregation();
+    log.info({ taste }, 'post-ingest taste aggregation done');
+  } catch (err) {
+    log.warn({ err: err instanceof Error ? err.message : String(err) }, 'taste aggregation failed');
   }
 }
 
