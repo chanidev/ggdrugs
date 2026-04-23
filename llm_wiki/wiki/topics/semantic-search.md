@@ -70,6 +70,22 @@ LLM/Qdrant 503/502 → `suggestions: []` (채팅은 계속). compose-retreat 실
 
 기존 ended-event leak 버그 (5e51503) — phase 필터 없어 종료 이벤트가 후보로 leak → fix.
 
+### Hybrid search (v3.3 — 2026-04-23)
+
+Vector-only 검색이 고유명사·부분 일치에서 약함을 보강하기 위해 **Qdrant vector + Postgres pg_trgm keyword** 를 병렬 실행 → eventId 기준 union + `max(vec_score, trgm_score)` 로 결합.
+
+- **Vector 쿼리**: 최근 3턴 user_texts join (500자 cap). 맥락 반영.
+- **Keyword 쿼리**: **마지막 user 발화만** 120자 cap. 긴 history 는 trigram 을 희석 → 현재 의도 집중.
+- **pg_trgm 함수**: `word_similarity(query, target)` (title OR COALESCE(ai_summary, '')). `similarity` 대비 긴-query→짧은-title 시나리오에 관대 (실측: "2026 서울 일러스트코리아" vs "서울 일러스트" = 0.875).
+- **Threshold**: `KEYWORD_SIMILARITY_MIN = 0.30`. 너무 엄격하면 의미 있는 부분 매치를 놓침. 노이즈는 이후 rerank 가 정리.
+- **Limit**: `KEYWORD_OVERFETCH = 30` (vector 와 동일).
+- **Score 결합**: 두 score 모두 0~1 범위 → `max()` 로 결합. 한 쪽에서 강하게 맞으면 그 점수로 올라감. 평균/가중합 대신 max 선택 근거는 "하나라도 강한 근거 있으면 후보로 올리고 rerank 에 맡기자" 원칙.
+- **Prisma resolve 재사용**: 결합된 eventIds 전부에 기존 phase/period filter 적용 → 기존 rerank (+ Article RAG v3.2) 파이프라인으로 투입.
+
+**Degradation**: Vector 503 → keyword only. Keyword 실패 → vector only. 둘 다 실패 → `suggestions: []`.
+
+**비용 영향**: pg_trgm 쿼리 1회 추가 (~5ms on 4k events 기준, GIN trigram index 권장). LLM 토큰 영향 없음.
+
 ### Rerank Article RAG (v3.2 — 2026-04-23)
 
 Rerank 입력 후보에 **매핑된 상위 뉴스 기사 snippet** 을 주입 → matchReason 이 일반 카테고리 묘사가 아닌 실제 기사 근거 기반이 되도록.
@@ -163,6 +179,7 @@ aiSummary 가 있을수록 임베딩 품질이 좋아지므로 `summarize-events
   탈락 훅이 `deleteEventEmbeddings([id])` 즉시 호출. `isDeleted=true` soft-delete 경로의
   reconcile 만 잔여 — 주기 배치 후보.
 - ~~Article RAG — 기사 본문을 reply 근거로~~ → **해소** (2026-04-23 v3.2): rerank 입력 후보 별 top 1 매핑 기사 snippet 을 LLM 에 주입. matchReason 이 기사 근거 기반으로 구체화. 비용 +~$0.0001/req.
+- ~~Hybrid search — pg_trgm 키워드 + vector 결합~~ → **해소** (2026-04-23 v3.3): Qdrant vector + pg_trgm `word_similarity` 병렬 fetch, eventId union + max(score). Keyword 는 마지막 user 발화 120자로 집중, threshold 0.30. rerank 재사용.
 - ~~Streaming SSE — 응답 first-token 체감 latency~~ → **해소** (2026-04-23 v3.1):
   `/chat/stream` (LLM) + `/chat/stream` (BFF proxy) + Web `streamChat()`. `_SCHEMA`
   의 `reply` 를 properties 맨 앞에 두어 structured output stream 이 reply 텍스트를
@@ -171,10 +188,11 @@ aiSummary 가 있을수록 임베딩 품질이 좋아지므로 `summarize-events
   `meta`, `suggestions`, `reply_override`, `done`, `error`. AppShell `handleChatSubmit`
   이 placeholder 메시지 생성 후 델타 누적.
 - 후속 (v4 후보):
-  - **Hybrid search** — pg_trgm 키워드 + vector 결합 (현재 vector only).
   - **Grounded followup** — "그 중에 무료인 거?" 같은 referential 후속 질문 — 직전 turn 의 suggestions 을 LLM 에 컨텍스트로 재전달.
   - **Prompt injection 방어** — 사용자 입력 sanitize / role isolation.
   - **Streaming 개선 후속** — AbortController 로 중복 submit 취소, reconnect, retreat/delta 경합 UI 미스매치 edge case.
+  - **pg_trgm GIN index** — 현재 seq scan 으로 4k 이벤트 ~5ms, 데이터 성장 시 `CREATE INDEX idx_events_title_trgm ON events USING GIN (title gin_trgm_ops)` 후보.
+  - **Hybrid score tuning** — 현재 max() 결합, 가중합 `α*vec + β*trgm` 도입 시 A/B 필요.
 
 ## References
 

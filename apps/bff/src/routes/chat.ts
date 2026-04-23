@@ -57,6 +57,15 @@ interface ChatSuggestion {
 const SEMANTIC_DISPLAY_LIMIT = 5;
 // Qdrant over-fetch — phase/period 필터로 다수 drop, rerank 선택 풀 확보.
 const SEMANTIC_OVERFETCH = 30;
+// pg_trgm keyword over-fetch — vector 와 병렬. union 후 dedup.
+const KEYWORD_OVERFETCH = 30;
+// word_similarity 최소치 — long user query → short title 매치 용. 실측:
+//  0.30: "서울" 같은 흔한 매치가 들어올 수 있으나 vector/rerank 가 걸러냄
+//  0.40: 흔한 매치 drop, 고유명사 위주 (0.875 같은 정확 매치는 유지)
+// 0.30 으로 너그럽게 — 최종 노이즈는 rerank 이 처리.
+const KEYWORD_SIMILARITY_MIN = 0.3;
+// keyword 쿼리 최대 길이 — 마지막 user 발화만 사용 (vector 와 달리 history 미포함).
+const KEYWORD_QUERY_MAX = 120;
 // rerank 후보로 LLM 에 보낼 최대 수 — 토큰 cost 제한.
 const RERANK_INPUT_CAP = 12;
 // retreat reply 호출 임계 — 결과가 이 이하면 LLM 에 보내 다시 작성.
@@ -314,21 +323,22 @@ interface SemanticOpts {
   regionIds: string[];
 }
 
+// ----------------------------------------------------------------------------
+// v3.3 — Hybrid search. Vector (Qdrant) + Keyword (pg_trgm) 병렬.
+// ----------------------------------------------------------------------------
+
+interface HybridHit {
+  eventId: string;
+  score: number;
+}
+
 /**
- * Qdrant kNN over-fetch → Prisma resolve (phase != ended + period/specificDate 교집합)
- * → 후보 ≥ 8 이고 query 가 비-trivial 이면 LLM rerank → top 5 cap.
- *
- * LLM/Qdrant 실패는 fall-through (빈 배열 또는 score 순서 유지).
+ * Qdrant kNN via LLM service. score_threshold 0.25. LLM/Qdrant 503 → 빈 배열.
  */
-async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]> {
-  if (opts.userTexts.length === 0) return [];
-  const query = opts.userTexts.slice(-3).join('\n').slice(0, 500);
-
-  const filter: Record<string, unknown> = {};
-  if (opts.filters.eventTypes?.length) filter.categoryCode = opts.filters.eventTypes;
-  if (opts.regionIds.length === 1) filter.regionId = opts.regionIds[0];
-
-  let hits: LlmSearchHit[] = [];
+async function fetchVectorHits(
+  query: string,
+  filter: Record<string, unknown>,
+): Promise<HybridHit[]> {
   try {
     const r = await fetch(`${env.LLM_SERVICE_URL}/events/search`, {
       method: 'POST',
@@ -342,21 +352,97 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
     });
     if (!r.ok) return [];
     const j = (await r.json()) as { hits?: LlmSearchHit[] };
-    hits = j.hits ?? [];
-  } catch {
+    return (j.hits ?? []).map((h) => ({ eventId: h.eventId, score: h.score }));
+  } catch (err) {
+    logger.warn({ err }, 'chat: vector hits fetch failed');
     return [];
   }
-  if (hits.length === 0) return [];
+}
 
-  const eventIds = hits
-    .map((h) => {
-      try {
-        return BigInt(h.eventId);
-      } catch {
-        return null;
-      }
-    })
-    .filter((v): v is bigint => v !== null);
+/**
+ * Postgres pg_trgm `word_similarity` — 긴 쿼리의 부분 문자열이 title/ai_summary
+ * 에서 얼마나 잘 매치되는지. `similarity` 대비 긴 쿼리→짧은 title 시나리오에
+ * 관대함 (예: "2026 서울 일러스트코리아" vs "서울 일러스트" = 0.875).
+ *
+ * 한글 trigram 특성상 3글자 미만은 의미 있는 매치 불가 → 즉시 반환.
+ * 실패 (extension 없음 / 연결 문제) 는 빈 배열 — vector 쪽이 fallback.
+ */
+async function fetchKeywordHits(query: string): Promise<HybridHit[]> {
+  const clean = query.replace(/\s+/g, ' ').trim();
+  if (clean.length < 3) return [];
+  try {
+    const rows = await prisma.$queryRaw<
+      { event_id: bigint; score: number }[]
+    >`
+      SELECT event_id, GREATEST(
+        word_similarity(${clean}, title),
+        word_similarity(${clean}, COALESCE(ai_summary, ''))
+      )::float AS score
+      FROM events
+      WHERE approval_status = 'approved'
+        AND is_deleted = false
+        AND phase != 'ended'
+        AND (
+          word_similarity(${clean}, title) > ${KEYWORD_SIMILARITY_MIN}
+          OR word_similarity(${clean}, COALESCE(ai_summary, '')) > ${KEYWORD_SIMILARITY_MIN}
+        )
+      ORDER BY score DESC
+      LIMIT ${KEYWORD_OVERFETCH}
+    `;
+    return rows.map((r) => ({
+      eventId: r.event_id.toString(),
+      score: typeof r.score === 'number' ? r.score : Number(r.score),
+    }));
+  } catch (err) {
+    logger.warn({ err }, 'chat: keyword (pg_trgm) hits fetch failed');
+    return [];
+  }
+}
+
+/**
+ * Hybrid 검색 (v3.3 — 2026-04-23): Qdrant vector + Postgres pg_trgm keyword 병렬 →
+ * eventId 기준 union + max(score) → Prisma resolve (phase != ended + period/specificDate
+ * 교집합) → 후보 ≥ 6 + query 비-trivial 이면 LLM rerank → top 5 cap.
+ *
+ * Vector 는 의미·문맥, keyword 는 고유명사·부분 일치를 보강. 두 score 는 같은 0~1 스케일
+ * 이라 max() 로 결합 — 한 쪽에서 강하게 맞으면 그 점수로 올라감.
+ *
+ * LLM/Qdrant/DB 실패는 fall-through (빈 배열 또는 다른 쪽 결과만 유지).
+ */
+async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]> {
+  if (opts.userTexts.length === 0) return [];
+  const query = opts.userTexts.slice(-3).join('\n').slice(0, 500);
+
+  const filter: Record<string, unknown> = {};
+  if (opts.filters.eventTypes?.length) filter.categoryCode = opts.filters.eventTypes;
+  if (opts.regionIds.length === 1) filter.regionId = opts.regionIds[0];
+
+  // Keyword 쿼리는 마지막 user 발화만 — long concatenation 은 pg_trgm 을 희석.
+  const lastUser = opts.userTexts[opts.userTexts.length - 1] ?? '';
+  const keywordQuery = lastUser.slice(0, KEYWORD_QUERY_MAX);
+
+  const [vectorHits, keywordHitsArr] = await Promise.all([
+    fetchVectorHits(query, filter),
+    fetchKeywordHits(keywordQuery),
+  ]);
+
+  // eventId → combined score. max(vec, trgm) — 두 score 모두 0~1 정규화되어 있음.
+  const combinedScore = new Map<string, number>();
+  for (const h of vectorHits) combinedScore.set(h.eventId, h.score);
+  for (const h of keywordHitsArr) {
+    const prev = combinedScore.get(h.eventId) ?? 0;
+    if (h.score > prev) combinedScore.set(h.eventId, h.score);
+  }
+  if (combinedScore.size === 0) return [];
+
+  const eventIds: bigint[] = [];
+  for (const k of combinedScore.keys()) {
+    try {
+      eventIds.push(BigInt(k));
+    } catch {
+      // ignore
+    }
+  }
   if (eventIds.length === 0) return [];
 
   // specificDate 우선, 없으면 periodKey 범위.
@@ -393,7 +479,6 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
     },
   });
 
-  const scoreById = new Map(hits.map((h) => [h.eventId, h.score]));
   const scored = rows
     .map((r) => ({
       eventId: r.eventId.toString(),
@@ -410,7 +495,7 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
         name: r.category.displayName,
       },
       posterImageUrl: r.posterImageUrl,
-      score: scoreById.get(r.eventId.toString()) ?? 0,
+      score: combinedScore.get(r.eventId.toString()) ?? 0,
       vibesNames: r.vibeAssignments.map((v) => v.vibe.vibeName),
     }))
     .sort((a, b) => b.score - a.score);
