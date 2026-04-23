@@ -27,6 +27,7 @@
     "embed:events:missing": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events --missing",
     "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts",
     "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
+    "chat:eval": "dotenv -e ../../.env -- tsx src/jobs/chat-eval.ts",
     "audit:news-mappings": "dotenv -e ../../.env -- tsx src/jobs/audit-news-mappings.ts",
     "sweep:sessions": "dotenv -e ../../.env -- tsx src/jobs/session-sweep.ts",
     "aggregate:taste": "dotenv -e ../../.env -- tsx src/jobs/aggregate-taste-profiles.ts",

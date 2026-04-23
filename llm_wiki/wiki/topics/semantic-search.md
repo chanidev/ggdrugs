@@ -70,6 +70,37 @@ LLM/Qdrant 503/502 → `suggestions: []` (채팅은 계속). compose-retreat 실
 
 기존 ended-event leak 버그 (5e51503) — phase 필터 없어 종료 이벤트가 후보로 leak → fix.
 
+### Chat eval harness (v3.5 — 2026-04-23)
+
+v3.x 5 sprint 의 regression 방지를 위한 구조적 eval 장치.
+
+- **CLI**: `pnpm -F bff chat:eval [--id <case_id>] [--verbose] [--base http://localhost:3000]`
+- **Runner**: `apps/bff/src/jobs/chat-eval.ts` — 각 case 를 BFF `/chat` 에 POST, structural assertion 수행. e2e 경로 검증 (BFF + LLM + DB + Qdrant 전체 필요).
+- **Cases**: `apps/bff/src/jobs/chat-eval-cases.json` (20건 seed)
+  - `basic-*` 7건: 5 필터 축 각각 + multi-axis
+  - `multi-turn-*` 2건: 의도 변경 (`가족 말고 친구랑`, `혼자 말고 친구`)
+  - `specific-date-*` 2건: 상대 날짜 → ISO 절대 변환
+  - `grounded-*` 2건: referencesLast 탐지
+  - `injection-*` 3건: prompt injection 거부
+  - `hybrid-proper-noun`, `trivial-short`, `fallback-no-match`: edge
+- **Assertion 종류**:
+  - `filters.<axis>`: 배열은 **subset 매치** (expected ⊆ actual, LLM 비결정성 흡수), 스칼라는 exact
+  - `specificDateExact`: strict equal
+  - `referencesLast`: boolean equal
+  - `min/maxSuggestions`: 카운트 경계
+  - `replyForbidden` / `replyRequired`: case-insensitive substring 검사 (injection 방어 검증 주로)
+- **실행 시간**: avg ~4.5s/case, 전체 ~90s (20건 순차). 온라인 LLM cost 포함 — 전체 실행당 ~$0.01.
+- **종료 코드**: 실패 1건 이상 → exit 1 (CI 게이트 가능).
+
+**초기 baseline (2026-04-23, v3.5 ship 직후)**: 17/20 pass. 실패 3건 = 다음 sprint 타겟:
+1. `specific-date-next-sunday` — "다음주 일요일" → 2026-05-03 기대, 2026-04-30 (목) 반환. LLM 요일 계산 버그.
+2. `grounded-narrow-to-weekend`, `grounded-which-one` — referencesLast=true 미탐지. [직전 제안] 블록 인식률 낮음 — few-shot 추가 또는 prompt 명시화 필요.
+
+향후 확장:
+- LLM-judge reply 품질 평가 (현재는 structural only)
+- before/after 비교 모드 (baseline 저장 + 회귀 diff)
+- 비용·latency 트렌드 기록 (`wiki/audit/chat-eval-YYYY-MM-DD.md` 패턴)
+
 ### Grounded followup (v3.5 — 2026-04-23)
 
 Referential 쿼리 ("그 중에 무료인 거?", "아까 그 전시 언제까지야?", "2번째 이벤트는?") 지원.
