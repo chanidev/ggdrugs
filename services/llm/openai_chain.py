@@ -716,9 +716,13 @@ def rerank_candidates(
         "사용자 질문(query)와 후보 이벤트 목록을 보고, 의미·시점·동행·분위기 적합도가 가장 높은 순으로\n"
         f"top {top_k} 개를 골라 재정렬하세요. 각 항목에 1~2 어구 reason 을 붙이세요.\n\n"
         "[reason 규칙]\n"
-        "- '가족이 즐기기 좋은 야외 축제' 같이 사용자가 왜 흥미를 가질지 한 점 짚기.\n"
+        "- 후보에 articleSnippet (매핑된 뉴스 기사 요약) 이 있으면 **그 사실을 근거로** reason 작성.\n"
+        "  예: '작년 30만명 방문한 축제' 가 snippet 에 있으면 '작년 30만명 방문한 대표 축제' 로 인용.\n"
+        "- articleSnippet 없는 후보는 title · category · vibes 만 사용해 한 점 짚기.\n"
+        "  예: '가족이 즐기기 좋은 야외 축제'.\n"
         "- 12~30자, 광고 표현 금지, 사실 위주.\n"
-        "- 후보 메타에 없는 정보 추측 금지 (가격·인기·정원 등).\n\n"
+        "- snippet 에 없는 정보 (가격·인기·정원·혜택 등) 추측 금지.\n"
+        "- snippet 이 이벤트와 관련 없어 보이면 snippet 무시하고 메타로 fallback.\n\n"
         "[순서 결정 가중치]\n"
         "1순위: phase (ongoing > upcoming, ended 는 제거하지 말되 후순위)\n"
         "2순위: 사용자 동행/분위기 의도 부합\n"
@@ -727,13 +731,19 @@ def rerank_candidates(
     )
     cand_lines = []
     for c in candidates:
-        cand_lines.append(
+        line = (
             f"- id={c.get('eventId')}, title={c.get('title','')[:60]}, "
             f"phase={c.get('phase','')}, "
             f"date={c.get('startDate','')}~{c.get('endDate','')}, "
             f"region={c.get('region','')}, category={c.get('category','')}, "
             f"vibes={','.join(c.get('vibes') or [])}, score={c.get('score',0):.3f}"
         )
+        snippet = (c.get("articleSnippet") or "").strip()
+        if snippet:
+            # 인라인에 개행 없도록 한 줄화, 200자 하드 캡.
+            snippet_clean = " ".join(snippet.split())[:200]
+            line += f"\n  article: {snippet_clean}"
+        cand_lines.append(line)
     user_msg = f"query: {query}\n\n후보 ({len(candidates)}건):\n" + "\n".join(cand_lines)
 
     resp = client.chat.completions.create(

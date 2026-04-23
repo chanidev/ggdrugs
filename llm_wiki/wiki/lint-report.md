@@ -94,7 +94,7 @@
    LLM `_SCHEMA.reply` property-order 트릭 + `_extract_reply_progress` 이스케이프-aware 파서
    + BFF passthrough + Web `streamChat()` + AppShell placeholder 메시지 streaming.
    semantic-search.md §`POST /chat/stream` 박제.
-3. **Article RAG** — 1810건 매핑된 기사 본문을 chat reply 근거로 인용 (event_article_mappings 활용).
+3. ~~**Article RAG**~~ ✅ 2026-04-23 sprint 5 — rerank 입력에 top 1 기사 snippet 주입 (`fetchTopArticleSnippets` BFF helper + LLM `RerankCandidate.articleSnippet`). matchReason 이 기사 근거 기반으로 구체화. 비용 +$0.0001/req.
 4. **Hybrid search** — pg_trgm 키워드 검색 + vector 결합 (CLAUDE.md 에 pg_trgm 활성화 명시됨).
 5. **Phase 2 prod 진입** — 본인인증 PASS/NICE/카카오 통합 (인터페이스 1지점만 swap).
 6. **Prompt injection 방어** — 사용자 입력 sanitize + role isolation.

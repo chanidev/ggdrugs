@@ -70,6 +70,17 @@ LLM/Qdrant 503/502 → `suggestions: []` (채팅은 계속). compose-retreat 실
 
 기존 ended-event leak 버그 (5e51503) — phase 필터 없어 종료 이벤트가 후보로 leak → fix.
 
+### Rerank Article RAG (v3.2 — 2026-04-23)
+
+Rerank 입력 후보에 **매핑된 상위 뉴스 기사 snippet** 을 주입 → matchReason 이 일반 카테고리 묘사가 아닌 실제 기사 근거 기반이 되도록.
+
+- BFF `fetchTopArticleSnippets(eventIds)` — `event_article_mappings` 를 `relevanceScore DESC` 로 fetch, eventId 당 top 1 dedup. `article.summary` 우선, 없으면 `contentBody` fallback. `title` prefix 추가(이미 포함이면 생략), whitespace 정규화, **220자 cap**.
+- LLM `rerank_candidates` — candidate 마다 `articleSnippet` 필드 (optional). system prompt 가 "snippet 있으면 사실 기반으로 인용, 없으면 메타로 fallback, snippet 에 없는 정보 추측 금지" 지시. 관련성 낮아 보이면 무시.
+- 비용: 후보 12건 × 200자 ≈ 2,400자 추가 → gpt-4o-mini 기준 +~$0.0001/req (허용 범위).
+- 데이터 분포: approved 이벤트 중 44% 가 기사 매핑 보유 → rerank pool 의 약 절반이 snippet 혜택, 나머지는 기존 메타만.
+
+예: 원래 `"가족이 즐기기 좋은 야외 축제"` → snippet 있으면 `"작년 30만명 방문한 대표 축제"` 같이 구체화.
+
 ### `POST /chat/stream` — SSE 버전 (v3.1 — 2026-04-23)
 
 체감 latency 개선을 위해 reply 를 token 수준으로 스트림. 구조적 필드와 semantic suggestions 는 뒤이어 이벤트로 방출.
@@ -151,6 +162,7 @@ aiSummary 가 있을수록 임베딩 품질이 좋아지므로 `summarize-events
 - ~~이벤트가 승인 취소되면 Qdrant 에서 자동 삭제 안 됨~~ → **해소** (커밋 `80cb2a2`):
   탈락 훅이 `deleteEventEmbeddings([id])` 즉시 호출. `isDeleted=true` soft-delete 경로의
   reconcile 만 잔여 — 주기 배치 후보.
+- ~~Article RAG — 기사 본문을 reply 근거로~~ → **해소** (2026-04-23 v3.2): rerank 입력 후보 별 top 1 매핑 기사 snippet 을 LLM 에 주입. matchReason 이 기사 근거 기반으로 구체화. 비용 +~$0.0001/req.
 - ~~Streaming SSE — 응답 first-token 체감 latency~~ → **해소** (2026-04-23 v3.1):
   `/chat/stream` (LLM) + `/chat/stream` (BFF proxy) + Web `streamChat()`. `_SCHEMA`
   의 `reply` 를 properties 맨 앞에 두어 structured output stream 이 reply 텍스트를
@@ -159,7 +171,6 @@ aiSummary 가 있을수록 임베딩 품질이 좋아지므로 `summarize-events
   `meta`, `suggestions`, `reply_override`, `done`, `error`. AppShell `handleChatSubmit`
   이 placeholder 메시지 생성 후 델타 누적.
 - 후속 (v4 후보):
-  - **Article RAG** — `event_article_mappings` (1810건) 의 기사 본문을 reply 근거로 인용.
   - **Hybrid search** — pg_trgm 키워드 + vector 결합 (현재 vector only).
   - **Grounded followup** — "그 중에 무료인 거?" 같은 referential 후속 질문 — 직전 turn 의 suggestions 을 LLM 에 컨텍스트로 재전달.
   - **Prompt injection 방어** — 사용자 입력 sanitize / role isolation.

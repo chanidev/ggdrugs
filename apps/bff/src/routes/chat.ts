@@ -419,6 +419,12 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
   let reasonById = new Map<string, string>();
   let order: string[] | null = null;
   if (scored.length >= 6 && query.length >= 8) {
+    // v3.2 — Article RAG. rerank 입력 후보들에 대해 top 1 매핑 기사 snippet fetch.
+    // 기사 없는 후보는 빈 snippet 으로 전달.
+    const rerankPool = scored.slice(0, RERANK_INPUT_CAP);
+    const articleSnippets = await fetchTopArticleSnippets(
+      rerankPool.map((s) => s.eventId),
+    );
     try {
       const rerankRes = await fetch(`${env.LLM_SERVICE_URL}/events/rerank`, {
         method: 'POST',
@@ -426,7 +432,7 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
         body: JSON.stringify({
           query,
           top_k: SEMANTIC_DISPLAY_LIMIT,
-          candidates: scored.slice(0, RERANK_INPUT_CAP).map((s) => ({
+          candidates: rerankPool.map((s) => ({
             eventId: s.eventId,
             title: s.title,
             phase: s.phase,
@@ -436,6 +442,7 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
             category: s.category.name,
             vibes: s.vibesNames,
             score: s.score,
+            articleSnippet: articleSnippets.get(s.eventId) ?? '',
           })),
         }),
       });
@@ -483,6 +490,86 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
   }
 
   return final;
+}
+
+// ----------------------------------------------------------------------------
+// v3.2 — Article RAG. rerank 입력 후보에 매핑된 상위 뉴스 기사 snippet 주입.
+// ----------------------------------------------------------------------------
+
+// 각 후보 이벤트 당 LLM 에 보낼 기사 snippet 최대 길이.
+const ARTICLE_SNIPPET_MAX = 220;
+
+/**
+ * eventIds (string) → Map<eventId, snippet>. 매핑 없는 이벤트는 Map 에 없음.
+ *
+ * 전략:
+ * - event_article_mappings.relevanceScore DESC 로 top 1 / event
+ * - article.summary 우선, 없으면 contentBody 앞부분 slice
+ * - 220자 cap + whitespace 정규화
+ *
+ * 실패 시 빈 Map 반환 — rerank 는 계속 진행 (snippet 없으면 LLM 이 fallback).
+ */
+async function fetchTopArticleSnippets(
+  eventIdStrs: string[],
+): Promise<Map<string, string>> {
+  if (eventIdStrs.length === 0) return new Map();
+  const eventIds: bigint[] = [];
+  for (const s of eventIdStrs) {
+    try {
+      eventIds.push(BigInt(s));
+    } catch {
+      // ignore invalid id
+    }
+  }
+  if (eventIds.length === 0) return new Map();
+
+  // eventId 당 최상위 1건만 필요 — Prisma DISTINCT ON 미지원이라 raw 대신
+  // relevanceScore desc 로 전체 fetch 후 JS 에서 dedup. 후보 cap 12 → 최악 케이스 ~100행.
+  let rows: Array<{
+    eventId: bigint;
+    relevanceScore: unknown;
+    article: { title: string; summary: string | null; contentBody: string | null };
+  }> = [];
+  try {
+    rows = await prisma.eventArticleMapping.findMany({
+      where: { eventId: { in: eventIds } },
+      orderBy: [{ eventId: 'asc' }, { relevanceScore: 'desc' }],
+      select: {
+        eventId: true,
+        relevanceScore: true,
+        article: {
+          select: { title: true, summary: true, contentBody: true },
+        },
+      },
+    });
+  } catch (err) {
+    logger.warn({ err }, 'chat: fetchTopArticleSnippets failed');
+    return new Map();
+  }
+
+  const out = new Map<string, string>();
+  for (const r of rows) {
+    const key = r.eventId.toString();
+    if (out.has(key)) continue; // eventId 당 최상위 1건만
+    const snippet = buildArticleSnippet(r.article);
+    if (snippet) out.set(key, snippet);
+  }
+  return out;
+}
+
+function buildArticleSnippet(a: {
+  title: string;
+  summary: string | null;
+  contentBody: string | null;
+}): string {
+  // title 은 식별·근거에 유용 → 짧게 앞에 붙이고, summary/body 내용을 이어 붙임.
+  const body = (a.summary && a.summary.trim()) || (a.contentBody && a.contentBody.trim()) || '';
+  if (!body) return '';
+  // title 과 body 중복 방지 — body 가 이미 title 로 시작하면 title 생략.
+  const titleClean = a.title.trim();
+  const base = body.startsWith(titleClean) ? body : `${titleClean} - ${body}`;
+  // 공백 정규화 + 길이 cap.
+  return base.replace(/\s+/g, ' ').trim().slice(0, ARTICLE_SNIPPET_MAX);
 }
 
 interface RetreatOpts {

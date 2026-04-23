@@ -202,6 +202,9 @@ class RerankCandidate(BaseModel):
     category: str = ""
     vibes: list[str] = []
     score: float = 0.0
+    # v3.2 — Article RAG. BFF 가 event_article_mappings 에서 top 1 기사 summary
+    # (또는 contentBody 앞부분) 을 200자 내로 잘라 넘김. 없으면 빈 문자열.
+    articleSnippet: str = ""
 
 
 class RerankRequest(BaseModel):

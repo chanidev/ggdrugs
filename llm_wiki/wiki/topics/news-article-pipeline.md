@@ -144,4 +144,4 @@ threshold 위에 자동·수동 감사를 한 단계 더 둠 — 알고리즘이
 - `apps/web/src/pages/EventDetailPage/sections/ArticlesSection.tsx` — UI 페이징
 - `apps/web/src/components/EventSummaryPanel.tsx::ArticlesMiniList` — 요약 패널 top-3
 - [ingest-pipeline.md](ingest-pipeline.md) — 이벤트 크롤 파이프라인 (별개) + 후속 파이프라인 진입점
-- [semantic-search.md](semantic-search.md) — embedding 인프라 공유 + 실시간 동기화 3축
+- [semantic-search.md](semantic-search.md) — embedding 인프라 공유 + 실시간 동기화 3축 + **§Rerank Article RAG** (기사 snippet 을 chat rerank 에 근거로 주입, v3.2)
