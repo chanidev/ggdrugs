@@ -54,3 +54,8 @@ coverage/
 image.png
 screenshot*.png
 .gstack/
+
+# Playwright verification output (regenerable — script committed, screenshots not)
+apps/**/.verify/
+playwright-report/
+test-results/
