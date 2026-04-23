@@ -97,8 +97,8 @@
 3. ~~**Article RAG**~~ ✅ 2026-04-23 sprint 5 — rerank 입력에 top 1 기사 snippet 주입 (`fetchTopArticleSnippets` BFF helper + LLM `RerankCandidate.articleSnippet`). matchReason 이 기사 근거 기반으로 구체화. 비용 +$0.0001/req.
 4. ~~**Hybrid search**~~ ✅ 2026-04-23 sprint 5 — Qdrant vector + pg_trgm `word_similarity` 병렬 fetch, eventId union + max(score). Keyword 쿼리는 마지막 user 발화 120자. threshold 0.30. rerank 재사용.
 5. **Phase 2 prod 진입** — 본인인증 PASS/NICE/카카오 통합 (인터페이스 1지점만 swap).
-6. **Prompt injection 방어** — 사용자 입력 sanitize + role isolation.
-7. **Streaming 개선 후속** — AbortController 로 중복 submit 취소, retreat/delta 경합 UI edge, reconnect.
+6. ~~**Prompt injection 방어**~~ ✅ 2026-04-23 sprint 5 — `_sanitize_user_text` 모든 LLM 입력 지점 + system prompt §보안 블록 + Pydantic/BFF 이중 length gate (`validateChatBody`).
+7. ~~**Streaming 개선 후속** — AbortController~~ ✅ 2026-04-23 sprint 5 — AppShell `chatStreamAbortRef`, 새 submit 시 이전 stream abort, `streamChat` signal 체크 + AbortError 전파. retreat/delta 경합 후속은 v4 후보 (`reply_sealed` 이벤트).
 
 ---
 

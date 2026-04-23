@@ -91,24 +91,23 @@ export async function streamChat(
   handlers: ChatStreamHandlers,
   signal?: AbortSignal,
 ): Promise<void> {
-  let res: Response;
-  try {
-    res = await fetch(
-      `${BFF_URL}/chat/stream`,
-      withCredentials({
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream',
-        },
-        body: JSON.stringify({ messages }),
-        signal,
-      }),
-    );
-  } catch (err) {
-    if ((err as { name?: string })?.name === 'AbortError') return;
-    throw err;
+  // 이미 abort 된 signal 로 호출되면 즉시 AbortError 전파.
+  if (signal?.aborted) {
+    throw makeAbortError();
   }
+
+  const res = await fetch(
+    `${BFF_URL}/chat/stream`,
+    withCredentials({
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({ messages }),
+      signal,
+    }),
+  );
 
   if (res.status === 502) throw new Error('LLM_UNREACHABLE');
   if (!res.ok || !res.body) {
@@ -121,6 +120,7 @@ export async function streamChat(
   let buf = '';
   try {
     while (true) {
+      if (signal?.aborted) throw makeAbortError();
       const { value, done } = await reader.read();
       if (done) break;
       buf += decoder.decode(value, { stream: true });
@@ -154,6 +154,13 @@ export async function streamChat(
       // already released
     }
   }
+}
+
+// AbortError with standard name so callers can filter by `err.name === 'AbortError'`.
+function makeAbortError(): Error {
+  const e = new Error('aborted');
+  e.name = 'AbortError';
+  return e;
 }
 
 function dispatchSseEvent(event: string, data: unknown, h: ChatStreamHandlers) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Header } from './Header';
 import { Sidebar, type SidebarSection } from './Sidebar';
 import { MobileShell } from './MobileShell';
@@ -100,10 +100,26 @@ export function AppShell() {
   const [highlightRegionIds, setHighlightRegionIds] = useState<string[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
+  // v3.4 — 진행 중인 /chat/stream 요청 AbortController. 새 submit 시 이전 stream 취소.
+  const chatStreamAbortRef = useRef<AbortController | null>(null);
+
+  // unmount 시 진행 중 stream 정리.
+  useEffect(() => {
+    return () => {
+      chatStreamAbortRef.current?.abort();
+      chatStreamAbortRef.current = null;
+    };
+  }, []);
+
   const toggleSection = (key: SidebarSection) =>
     setOpen((prev) => (prev === key ? null : key));
 
   const handleChatSubmit = (text: string) => {
+    // 이전 stream 이 진행 중이면 즉시 취소 — 새 메시지 응답과 섞이지 않도록.
+    chatStreamAbortRef.current?.abort();
+    const controller = new AbortController();
+    chatStreamAbortRef.current = controller;
+
     const userMsg: ChatMessage = { role: 'user', text };
     const history = [...messages, userMsg];
     setMessages(history);
@@ -118,7 +134,9 @@ export function AppShell() {
 
     (async () => {
       try {
-        await streamChat(history, {
+        await streamChat(
+          history,
+          {
           onReplyDelta: (chunk) => {
             if (retreatApplied) return; // retreat 후 오는 델타 무시 (stream 종료 순서 보장 안됨)
             accumulatedReply += chunk;
@@ -171,8 +189,12 @@ export function AppShell() {
               return next;
             });
           },
-        });
+          },
+          controller.signal,
+        );
       } catch (err) {
+        // AbortError — 사용자가 새 메시지를 submit 해서 의도적으로 끊은 경우. UI 건드리지 않음.
+        if ((err as { name?: string })?.name === 'AbortError') return;
         const msg =
           (err as Error).message === 'LLM_UNREACHABLE'
             ? 'LLM 서비스에 연결하지 못했어요. 서비스가 올라와 있는지 확인해 주세요.'
@@ -183,6 +205,11 @@ export function AppShell() {
           next[placeholderIndex] = { role: 'assistant', text: msg };
           return next;
         });
+      } finally {
+        // 이 요청의 controller 가 여전히 현재 ref 이면 해제 (새 submit 이 이미 교체했으면 그대로).
+        if (chatStreamAbortRef.current === controller) {
+          chatStreamAbortRef.current = null;
+        }
       }
     })();
   };

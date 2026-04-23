@@ -71,6 +71,46 @@ const RERANK_INPUT_CAP = 12;
 // retreat reply 호출 임계 — 결과가 이 이하면 LLM 에 보내 다시 작성.
 const RETREAT_THRESHOLD = 0;
 
+// v3.4 — prompt injection surface 차단.
+const CHAT_MAX_MESSAGES = 30;
+const CHAT_MAX_MESSAGE_LEN = 2000;
+
+type InvalidReason = 'messages_type' | 'messages_count' | 'message_shape' | 'message_too_long';
+
+/**
+ * /chat 과 /chat/stream 이 공유하는 body validation. shape 문제나 과도한 length 는
+ * 400 으로 즉시 차단 — LLM 까지 도달하기 전에.
+ *
+ * 반환: 정상 messages[] 또는 [null, reason] 형태.
+ */
+function validateChatBody(
+  body: unknown,
+): { ok: true; messages: Array<{ role: string; text: string }> } | { ok: false; reason: InvalidReason } {
+  const b = body as { messages?: unknown } | null | undefined;
+  const raw = b?.messages;
+  if (!Array.isArray(raw)) return { ok: false, reason: 'messages_type' };
+  if (raw.length === 0 || raw.length > CHAT_MAX_MESSAGES) {
+    return { ok: false, reason: 'messages_count' };
+  }
+  const out: Array<{ role: string; text: string }> = [];
+  for (const m of raw) {
+    if (!m || typeof m !== 'object') return { ok: false, reason: 'message_shape' };
+    const role = (m as { role?: unknown }).role;
+    const text = (m as { text?: unknown }).text;
+    if (typeof role !== 'string' || typeof text !== 'string') {
+      return { ok: false, reason: 'message_shape' };
+    }
+    if (role !== 'user' && role !== 'assistant' && role !== 'system') {
+      return { ok: false, reason: 'message_shape' };
+    }
+    if (text.length > CHAT_MAX_MESSAGE_LEN) {
+      return { ok: false, reason: 'message_too_long' };
+    }
+    out.push({ role, text });
+  }
+  return { ok: true, messages: out };
+}
+
 /**
  * periodKey → {start, end} Date. AppShell.tsx rangeForPeriod 와 동일 의미 (Asia/Seoul 자정).
  */
@@ -208,6 +248,12 @@ async function buildUserSignals(userId: bigint | null): Promise<Record<string, u
  * LLM 503/502: BFF 도 그 status 반환 (web 이 LLM_UNREACHABLE 처리).
  */
 export async function postChat(req: Request, res: Response) {
+  const val = validateChatBody(req.body);
+  if (!val.ok) {
+    res.status(400).json({ error: 'invalid_chat_body', reason: val.reason });
+    return;
+  }
+
   const auth = (req as Partial<AuthenticatedRequest>).auth;
   const userId = auth?.userId ?? null;
 
@@ -227,7 +273,7 @@ export async function postChat(req: Request, res: Response) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify({
-        ...(req.body ?? {}),
+        messages: val.messages,
         ...(userSignals ? { user_signals: userSignals } : {}),
       }),
     });
@@ -699,6 +745,12 @@ async function composeRetreat(opts: RetreatOpts): Promise<LlmRetreatResponse> {
  *   4. done.
  */
 export async function postChatStream(req: Request, res: Response) {
+  const val = validateChatBody(req.body);
+  if (!val.ok) {
+    res.status(400).json({ error: 'invalid_chat_body', reason: val.reason });
+    return;
+  }
+
   const auth = (req as Partial<AuthenticatedRequest>).auth;
   const userId = auth?.userId ?? null;
 
@@ -722,10 +774,9 @@ export async function postChatStream(req: Request, res: Response) {
     }
   }
 
-  const messages = (req.body?.messages ?? []) as { role?: string; text?: string }[];
-  const userTexts = messages
-    .filter((m) => m?.role === 'user' && typeof m?.text === 'string')
-    .map((m) => (m.text as string).trim())
+  const userTexts = val.messages
+    .filter((m) => m.role === 'user')
+    .map((m) => m.text.trim())
     .filter((t) => t.length > 0);
   const lastUser = userTexts[userTexts.length - 1] ?? '';
 
@@ -738,7 +789,7 @@ export async function postChatStream(req: Request, res: Response) {
         Accept: 'text/event-stream',
       },
       body: JSON.stringify({
-        ...(req.body ?? {}),
+        messages: val.messages,
         ...(userSignals ? { user_signals: userSignals } : {}),
       }),
     });

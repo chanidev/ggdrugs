@@ -54,7 +54,8 @@ app.add_middleware(
 
 class ChatMessage(BaseModel):
     role: str = Field(pattern="^(user|assistant|system)$")
-    text: str
+    # v3.4 — prompt injection payload 크기 차단. 2000자 이상은 BFF 에서 400.
+    text: str = Field(max_length=2000)
 
 
 class UserSignals(BaseModel):
@@ -62,16 +63,20 @@ class UserSignals(BaseModel):
 
     값은 사람이 읽는 라벨 (예: '가족', '강남구', '체험형'). 없으면 None.
     LLM 은 이를 강제 필터로 쓰지 말고 'priorityHint' 로만 활용 — 사용자 발화가 명시적이면 그게 우선.
+
+    v3.4: 각 라벨 80자 cap — taste profile 테이블이 event title/description 에서 유래하므로
+    공격자 통제 가능하다고 가정.
     """
-    preferred_companion: str | None = None
-    preferred_category: str | None = None
-    preferred_region: str | None = None
-    preferred_vibe: str | None = None
+    preferred_companion: str | None = Field(default=None, max_length=80)
+    preferred_category: str | None = Field(default=None, max_length=80)
+    preferred_region: str | None = Field(default=None, max_length=80)
+    preferred_vibe: str | None = Field(default=None, max_length=80)
     recent_bookmarks: int = 0
 
 
 class ChatRequest(BaseModel):
-    messages: list[ChatMessage]
+    # v3.4 — history 총 길이·개수 cap. BFF 가 주는 history 는 UI 세션 하나 분량이라 20 로 충분.
+    messages: list[ChatMessage] = Field(max_length=30)
     user_signals: UserSignals | None = None
 
 
