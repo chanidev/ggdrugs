@@ -660,9 +660,10 @@ Phase 1 점검 결과 — **Hard gap 0건 잔존**. 잔여는 모두 Phase 2 또
 | `apps/web/src/pages/AdminEventsPage.tsx` | 817줄 | AdminEventsPage/{index,tabs/*} (max 373) |
 | `apps/web/src/pages/EventDetailPage.tsx` | 799줄 | EventDetailPage/{index,sections/*} (max 396) |
 
-분할 패턴 (Web vs BFF):
-- **Web (Vite bundler)**: `Foo.tsx` 삭제 → `Foo/index.tsx` 직접 사용. Vite 가 directory-as-index resolve 하므로 shim 불필요.
-- **BFF (Node ESM bundler resolution)**: `foo.ts` 는 11줄 re-export shim 으로 유지 (`export * from './foo/index.js'`). Node ESM 은 directory auto-resolve 안 함.
+분할 패턴 (Web vs BFF) — **정정 (2026-04-23 13:15)**:
+- **Web (Vite)**: 초기 가정과 달리 Vite 도 directory-as-index 자동 resolve **안 함** (typecheck 는 통과해서 문제 미인지). 빈 화면 발생 → 4 shim 파일 추가로 복구 (api.ts / MyPage.tsx / AdminEventsPage.tsx / EventDetailPage.tsx 모두 `export * from './X/index'` 또는 `export { Foo } from './Foo/index'`).
+- **BFF (Node ESM bundler resolution)**: 동일 — `foo.ts` 는 11줄 re-export shim 유지 (`export * from './foo/index.js'`).
+- 결론: TS typecheck 통과 ≠ 런타임 동작 보장. Vite/Node 둘 다 명시적 shim 필요. 다음 분할 시 처음부터 shim 같이 만들 것.
 
 Helper / type 처리:
 - 단일 사용처 → co-located
