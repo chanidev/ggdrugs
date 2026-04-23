@@ -49,9 +49,11 @@ A_700 관리자 콘솔은 **5개 탭** 구성 (`AdminEventsPage.tsx`):
 
 BFF: `GET /admin/audit-logs?page&limit&action&eventId&adminId` — `apps/bff/src/routes/admin-audit.ts`.
 
-현재 Audit 탭은 `approval_logs` (이벤트 심사) 만 노출. admin 측 보안·운영 액션은 `admin_audit_logs`
-별도 테이블 (Members 탭의 우측 패널 §최근 처리 내역 + 회원 detail 단위 노출). 두 테이블 통합 뷰는
-후속 sprint.
+Audit 탭은 두 source 토글: **이벤트 심사 (approval_logs)** + **Admin 작업 (admin_audit_logs)**.
+각자 별도 endpoint + action 필터:
+
+- 이벤트 심사: `GET /admin/audit-logs` (기존), action ∈ approved/revision_requested/rejected, eventId 검색.
+- Admin 작업: `GET /admin/admin-audit-logs` (신규, ADR 0005 후속), action ∈ uploader_decision/admin_promote/admin_demote/admin_scope_change/revoke_sessions/user_soft_delete. payload 사람 친화 요약 + targetNickname (삭제된 user 는 line-through).
 
 ## Members 탭 (2026-04-23 신규, ADR 0005 E-7)
 
@@ -75,9 +77,9 @@ Uploaders 탭 패턴 (목록 + 상세 패널 + 결정 액션) 의 미러.
 - ~~관리자 감사 로그 UI~~ → **해소** (2026-04-21): Audit 탭 ship.
 - ~~관리자 전용 계정 생성 플로우 부재~~ → **해소** (2026-04-23): ADR 0005 — seed:admin (bootstrap) + Members 탭의 "admin 승급" (peer-promote) 두 경로.
 - ~~업로더 승급 로그 테이블 부재~~ → **해소** (2026-04-23): ADR 0005 E-8 — `admin_audit_logs.action='uploader_decision'` 으로 `decideUploader` 호출 시 자동 기록.
+- ~~`admin_audit_logs` + `approval_logs` 통합 Audit 뷰 미구현~~ → **해소** (2026-04-23): Audit 탭 source 토글 (이벤트 심사 / Admin 작업) 신설. 두 테이블 분리 endpoint 유지하되 단일 탭에서 노출.
 - 대량 일괄 승인(bulk action) 지원 여부 미정 — 현재는 개별 승인만.
 - LLM이 관리자 보조로 등장(A_700 액터에 "시스템(LLM)" 포함) — 역할 범위 확정 필요(라벨 추천? 서류 OCR? CLAUDE.md §6-4는 LLM 위임 금지).
-- `admin_audit_logs` + `approval_logs` 통합 Audit 뷰 미구현 — 두 테이블 별도 노출 상태.
 
 ## References
 

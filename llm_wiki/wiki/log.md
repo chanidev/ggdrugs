@@ -431,3 +431,32 @@ Implementation status — 미착수 4행 → **2행** (PostGIS geom + 모바일 
 
 다음 후보 (우선순위 가벼움 → 무거움): admin Audit 통합 뷰, bulk action, rejected uploader 쿨다운,
 PostGIS, 모바일 레이아웃.
+
+## 2026-04-23T11:15  feature  admin Audit 통합 뷰 — source toggle (이벤트 심사 / Admin 작업)
+lint queue #1 처리. Audit 탭이 `approval_logs` (이벤트 심사) 만 노출하던 문제 — `admin_audit_logs`
+가 ADR 0005 ship 으로 6 actions 누적되는데 cross-user 통합 뷰 부재.
+
+신규 BFF endpoint:
+- `GET /admin/admin-audit-logs?action=&adminId=&targetUserId=&page=&limit=` —
+  `admin_audit_logs` 페이지네이션. 응답에 byAction (6 actions) + items[].adminNickname +
+  items[].targetNickname (target_id batch lookup, 삭제된 user 는 isDeleted 플래그 포함).
+- `app.ts` 에 라우팅 추가 (requireAuth → requireAdmin 체인).
+
+Web 정정 — `AuditLogsTab.tsx` 전면 재구성:
+- 상단에 source toggle (이벤트 심사 / Admin 작업) 2 버튼.
+- `EventAuditPanel`: 기존 패턴 유지 (action 4종 chip + eventId 검색).
+- `AdminAuditPanel` (신규): action 7종 chip (전체 + 6 actions) + payload 사람 친화 요약
+  (`summarizeAdminPayload` — UserDetailPanel 의 함수 동일 스펙). targetNickname 표시,
+  삭제된 user 는 line-through. reason 인용 블록.
+- `Pager` 헬퍼 추출 — 두 panel 이 공유.
+
+`api.ts`: `fetchAdminAuditAdminLogs` + `AdminAuditAdminLogItem` / `AdminAuditAdminLogResponse` /
+`AdminAuditAdminAction` 타입 추가.
+
+검증: BFF + Web typecheck 통과. `GET /admin/admin-audit-logs?limit=3` smoke — total 9건
+(revoke 2 + promote 1 + demote 1 + scope_change 1 + soft_delete 1 + uploader_decision 3),
+adminNickname/targetNickname/payload 동봉 확인. action filter 정상.
+
+문서: admin-flow.md §Audit 본문 정정 + OQ "통합 뷰 미구현" 해소 표기.
+
+graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.

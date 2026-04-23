@@ -1443,6 +1443,66 @@ export async function fetchAdminAuditLogs(
   return (await res.json()) as AdminAuditLogResponse;
 }
 
+// ADR 0005 후속: admin_audit_logs (admin 보안·운영 액션) 별도 조회.
+export type AdminAuditAdminAction =
+  | 'revoke_sessions'
+  | 'admin_promote'
+  | 'admin_demote'
+  | 'admin_scope_change'
+  | 'user_soft_delete'
+  | 'uploader_decision';
+
+export interface AdminAuditAdminLogItem {
+  auditId: string;
+  adminId: string;
+  adminNickname: string;
+  action: AdminAuditAdminAction;
+  targetId: string | null;
+  targetNickname: string | null;
+  targetDeleted: boolean | null;
+  payload: unknown;
+  createdAt: string;
+}
+
+export interface AdminAuditAdminLogResponse {
+  page: number;
+  limit: number;
+  total: number;
+  byAction: Record<AdminAuditAdminAction, number>;
+  items: AdminAuditAdminLogItem[];
+}
+
+export async function fetchAdminAuditAdminLogs(
+  q: {
+    page?: number;
+    limit?: number;
+    action?: 'any' | AdminAuditAdminAction;
+    adminId?: string;
+    targetUserId?: string;
+  },
+  signal?: AbortSignal,
+): Promise<AdminAuditAdminLogResponse> {
+  const params = new URLSearchParams();
+  if (q.page) params.set('page', String(q.page));
+  if (q.limit) params.set('limit', String(q.limit));
+  if (q.action && q.action !== 'any') params.set('action', q.action);
+  if (q.adminId) params.set('adminId', q.adminId);
+  if (q.targetUserId) params.set('targetUserId', q.targetUserId);
+  const init: RequestInit = { method: 'GET' };
+  if (signal) init.signal = signal;
+  const res = await fetch(
+    `${BFF_URL}/admin/admin-audit-logs?${params.toString()}`,
+    withCredentials(init),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('FORBIDDEN');
+  if (!res.ok) {
+    const txt = await res.text().catch(() => '');
+    throw new Error(`GET /admin/admin-audit-logs ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  return (await res.json()) as AdminAuditAdminLogResponse;
+}
+
 // =============================================================
 // ADR 0005 E-7 (정정): Members 탭 — 회원/admin 관리.
 // =============================================================

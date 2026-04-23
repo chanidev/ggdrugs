@@ -30,7 +30,7 @@ import {
   decideUploader,
   decideEventUpload,
 } from './routes/admin-uploaders.js';
-import { listAdminAuditLogs } from './routes/admin-audit.js';
+import { listAdminAuditLogs, listAdminAuditAdminLogs } from './routes/admin-audit.js';
 import {
   revokeUserSessions,
   promoteToAdmin,
@@ -269,6 +269,13 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireAdmin(req, res, next).catch(next),
     (req, res, next) => listAdminAuditLogs(req, res).catch(next),
+  );
+  // ADR 0005 후속: admin_audit_logs 분리 endpoint — Audit 탭의 source filter 가 분기 호출.
+  app.get(
+    '/admin/admin-audit-logs',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => listAdminAuditAdminLogs(req, res).catch(next),
   );
   // ADR 0005 E-7 (정정): Members 탭 백킹 — 회원 목록 + 상세 조회.
   app.get(
