@@ -131,7 +131,7 @@ threshold 위에 자동·수동 감사를 한 단계 더 둠 — 알고리즘이
 
 - ~~전체 이벤트 최초 backfill 아직 미실행~~ → **해소** (2026-04-22): 1,810/4,111 = 44% 커버리지,
   최종 7,473 매핑 (threshold 0.60 정리 후). 잔여는 매칭 가능한 기사가 없는 이벤트.
-- 기사 retention 정책 미정 — 이벤트 종료 6개월 후에도 유지?
+- ~~기사 retention 정책 미정~~ → **결정 박제 (2026-04-23)**: 매핑/기사 모두 **유지** (만료 정리 안 함). 근거: ① 이벤트 종료 후에도 사용자가 과거 캘린더에서 기사 다시 보고 싶을 수 있음, ② news_articles 테이블 자체가 작음 (최대 수만 행 예상), ③ event_article_mappings 누적도 4084 events × 평균 ~2 articles ≈ 8k 행 수준. 트리거 (예: news_articles 100k 초과) 도래 시 ADR 로 cleanup cron 재검토.
 - ~~Score drift — 동일 이벤트가 재매핑될 때 score 가 크게 흔들리지 않는지 eval 필요~~ →
   부분 해소: 자동 감사가 분포 드리프트를 감시. 단, 동일 (eventId, articleId) 쌍의 score
   trajectory 추적은 미구현 — 알고리즘 변경 시 before/after 비교는 수동.

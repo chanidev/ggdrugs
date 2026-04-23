@@ -4,6 +4,7 @@ import { Header } from '../layout/Header';
 import { PhaseBadge } from '../components/PhaseBadge';
 import { Icon } from '../components/Icon';
 import { useCurrentUser } from '../lib/auth-context';
+import { loginUrl } from '../lib/auth-redirect';
 import {
   APPROVAL_DOC_MIME,
   DocumentsPickerField,
@@ -145,7 +146,7 @@ function LoginGate() {
         업로더 역할 신청과 이벤트 등록은 로그인 후에 할 수 있어요.
       </p>
       <a
-        href="/api/auth/google"
+        href={loginUrl('google', '/uploader')}
         className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-4 text-[14px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
       >
         Google 로그인 <Icon name="arrow" size={14} />

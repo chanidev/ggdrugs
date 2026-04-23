@@ -9,6 +9,7 @@ import {
   markNotificationRead,
   type MyNotification,
 } from '../lib/api';
+import { loginUrl } from '../lib/auth-redirect';
 
 /**
  * /notifications — A_500 알림 센터.
@@ -92,7 +93,7 @@ export function NotificationsPage() {
             알림은 로그인 후 확인할 수 있어요.
           </p>
           <a
-            href="/api/auth/google"
+            href={loginUrl('google', '/notifications')}
             className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-4 text-[14px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
           >
             Google 로그인 <Icon name="arrow" size={14} />

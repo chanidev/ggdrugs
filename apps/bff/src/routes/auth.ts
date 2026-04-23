@@ -20,8 +20,28 @@ import { nextExpiresAt } from '../middleware/require-auth.js';
 
 const COOKIE_NAME = 'alle_sid';
 const OAUTH_STATE_COOKIE = 'alle_oauth_state';
+const OAUTH_RETURNTO_COOKIE = 'alle_oauth_returnto'; // A_100 — 원 액션 자동 복귀
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const OAUTH_STATE_TTL_S = 10 * 60; // 10 min
+
+/**
+ * A_100 자동 복귀 — same-origin path 만 화이트리스트.
+ *
+ * 허용: '/events/123', '/me', '/uploader?tab=apply' 같은 path+query
+ * 거부: 'https://...' (절대 URL), '//evil.com' (protocol-relative), '../' (path traversal),
+ *       길이 > 500 (cookie 부담)
+ *
+ * null 반환 시 callback 은 기본 '/' 로 fallback.
+ */
+function parseReturnTo(raw: unknown): string | null {
+  if (typeof raw !== 'string') return null;
+  if (raw.length === 0 || raw.length > 500) return null;
+  // '/' 로 시작하지만 '//' 은 protocol-relative URL 이라 거부
+  if (!raw.startsWith('/') || raw.startsWith('//')) return null;
+  // 안전한 path char 만 허용 (path/query/fragment 표준)
+  if (!/^[/A-Za-z0-9\-_.~!$&'()*+,;=:@%?#]+$/.test(raw)) return null;
+  return raw;
+}
 
 function makeSessionId(): string {
   return crypto.randomBytes(32).toString('base64url');
@@ -78,12 +98,13 @@ async function issueSessionAndRedirect(res: Response, userId: bigint, to: string
     data: { sessionId: sid, userId, expiresAt },
   });
   const secureFlag = env.NODE_ENV === 'production' ? '; Secure' : '';
-  // state 쿠키 만료 + 세션 쿠키 세팅 — 2 개 Set-Cookie 동시
+  // state 쿠키 만료 + returnTo 쿠키 만료 + 세션 쿠키 세팅 — 3 개 Set-Cookie 동시
   res.setHeader('Set-Cookie', [
     `${COOKIE_NAME}=${sid}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(
       SESSION_TTL_MS / 1000,
     )}${secureFlag}`,
     `${OAUTH_STATE_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secureFlag}`,
+    `${OAUTH_RETURNTO_COOKIE}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secureFlag}`,
   ]);
   res.redirect(to);
 }
@@ -187,7 +208,7 @@ export async function me(req: Request, res: Response) {
 // Google OAuth (authorization code flow)
 // =============================================================
 
-export async function startGoogle(_req: Request, res: Response) {
+export async function startGoogle(req: Request, res: Response) {
   if (!env.GOOGLE_OAUTH_CLIENT_ID || !env.GOOGLE_OAUTH_CLIENT_SECRET) {
     res.status(503).json({
       error:
@@ -198,11 +219,18 @@ export async function startGoogle(_req: Request, res: Response) {
   }
 
   const state = crypto.randomBytes(24).toString('base64url');
+  const returnTo = parseReturnTo(req.query.returnTo); // A_100
   const secureFlag = env.NODE_ENV === 'production' ? '; Secure' : '';
-  res.setHeader(
-    'Set-Cookie',
+  const cookies = [
     `${OAUTH_STATE_COOKIE}=${state}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${OAUTH_STATE_TTL_S}${secureFlag}`,
-  );
+  ];
+  if (returnTo) {
+    // 같은 TTL — state 만료 시 returnTo 도 같이 정리.
+    cookies.push(
+      `${OAUTH_RETURNTO_COOKIE}=${encodeURIComponent(returnTo)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${OAUTH_STATE_TTL_S}${secureFlag}`,
+    );
+  }
+  res.setHeader('Set-Cookie', cookies);
 
   const params = new URLSearchParams({
     client_id: env.GOOGLE_OAUTH_CLIENT_ID,
@@ -314,14 +342,17 @@ export async function googleCallback(req: Request, res: Response) {
     select: { userId: true },
   });
 
-  await issueSessionAndRedirect(res, user.userId, `${env.WEB_URL}/`);
+  // A_100 자동 복귀 — returnTo 쿠키 있으면 같은 origin path 로, 없으면 '/' 로.
+  const rawReturnTo = parseCookieValue(req, OAUTH_RETURNTO_COOKIE);
+  const returnTo = rawReturnTo ? parseReturnTo(decodeURIComponent(rawReturnTo)) : null;
+  await issueSessionAndRedirect(res, user.userId, `${env.WEB_URL}${returnTo ?? '/'}`);
 }
 
 // =============================================================
 // Kakao OAuth (authorization code flow)
 // =============================================================
 
-export async function startKakao(_req: Request, res: Response) {
+export async function startKakao(req: Request, res: Response) {
   if (!env.KAKAO_REST_API_KEY) {
     res.status(503).json({
       error:
@@ -332,11 +363,17 @@ export async function startKakao(_req: Request, res: Response) {
   }
 
   const state = crypto.randomBytes(24).toString('base64url');
+  const returnTo = parseReturnTo(req.query.returnTo); // A_100
   const secureFlag = env.NODE_ENV === 'production' ? '; Secure' : '';
-  res.setHeader(
-    'Set-Cookie',
+  const cookies = [
     `${OAUTH_STATE_COOKIE}=${state}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${OAUTH_STATE_TTL_S}${secureFlag}`,
-  );
+  ];
+  if (returnTo) {
+    cookies.push(
+      `${OAUTH_RETURNTO_COOKIE}=${encodeURIComponent(returnTo)}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${OAUTH_STATE_TTL_S}${secureFlag}`,
+    );
+  }
+  res.setHeader('Set-Cookie', cookies);
 
   const params = new URLSearchParams({
     client_id: env.KAKAO_REST_API_KEY,
@@ -436,7 +473,10 @@ export async function kakaoCallback(req: Request, res: Response) {
     select: { userId: true },
   });
 
-  await issueSessionAndRedirect(res, user.userId, `${env.WEB_URL}/`);
+  // A_100 자동 복귀 — Google callback 과 동일.
+  const rawReturnTo = parseCookieValue(req, OAUTH_RETURNTO_COOKIE);
+  const returnTo = rawReturnTo ? parseReturnTo(decodeURIComponent(rawReturnTo)) : null;
+  await issueSessionAndRedirect(res, user.userId, `${env.WEB_URL}${returnTo ?? '/'}`);
 }
 
 export async function logout(req: Request, res: Response) {

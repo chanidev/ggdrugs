@@ -43,8 +43,8 @@ Alle 의 HTTP 세션은 **opaque random 쿠키 + DB `auth_sessions` 행** 으로
 
 ### Google OAuth (`routes/auth.ts` startGoogle / googleCallback)
 
-1. 브라우저 → GET `/api/auth/google`
-2. BFF: CSRF state (24 byte random) 를 `alle_oauth_state` 쿠키 (10 분 TTL) 에 세팅
+1. 브라우저 → GET `/api/auth/google?returnTo=<path>` (returnTo 옵셔널, A_100 자동 복귀)
+2. BFF: CSRF state (24 byte random) 를 `alle_oauth_state` 쿠키 (10 분 TTL) 에 세팅. `?returnTo` 가 same-origin path 화이트리스트 통과하면 `alle_oauth_returnto` 쿠키도 같이 세팅 (동일 TTL).
 3. 302 → `https://accounts.google.com/o/oauth2/v2/auth?client_id=...&redirect_uri=${WEB_URL}/api/auth/google/callback&scope=openid+email+profile&state=...`
 4. 사용자 동의
 5. 302 → `GET /api/auth/google/callback?code=...&state=...` (Vite → BFF)
@@ -52,7 +52,7 @@ Alle 의 HTTP 세션은 **opaque random 쿠키 + DB `auth_sessions` 행** 으로
 7. POST `https://oauth2.googleapis.com/token` (code → access_token + id_token)
 8. GET `https://oauth2.googleapis.com/tokeninfo?id_token=...` (서명·aud·iss 검증)
 9. `users.upsert` on (authProvider='google', socialUid=info.sub)
-10. `auth_sessions.create` → Set-Cookie `alle_sid` + state 쿠키 만료 → 302 `${WEB_URL}/`
+10. `auth_sessions.create` → Set-Cookie `alle_sid` + state/returnTo 쿠키 만료 → 302 `${WEB_URL}${returnTo ?? '/'}` — A_100 자동 복귀
 
 ### Kakao OAuth (startKakao / kakaoCallback)
 
@@ -87,7 +87,26 @@ POST /auth/dev-login {"nickname":"chan"}
 
 - `AuthProvider` (`lib/auth-context.tsx`) 가 마운트 시 `/api/auth/me` 로 초기 세션 동기화 → `useCurrentUser()` 훅으로 `{user, loading, login, logout, refresh}` 제공.
 - 모든 fetch 가 `withCredentials({ credentials: 'include' })` 로 쿠키 전송.
-- Header (`layout/Header.tsx`) 로그인 버튼: `<a href="/api/auth/kakao">` + `<a href="/api/auth/google">` 두 개. 로그인 상태에선 nickname(→ `/me` 링크) + 로그아웃.
+- Header (`layout/Header.tsx`) 로그인 버튼: `loginUrl('kakao')` + `loginUrl('google')` (auth-redirect.ts 헬퍼). 로그인 상태에선 nickname(→ `/me` 링크) + 로그아웃.
+
+### A_100 자동 복귀 (`lib/auth-redirect.ts`)
+
+`loginUrl(provider, returnTo?, useReturnTo=true)` — 현재 path+search+hash 를 `?returnTo=` 로
+인코딩한 OAuth start URL 반환. `redirectToLogin(provider)` 은 `window.location.href` 직접 세팅.
+
+진입점 5곳에서 사용:
+- `Header` (Google/Kakao 두 버튼) — 현재 path 자동 보존
+- `BookmarkButton` (UNAUTHENTICATED 시) — 이벤트 상세 path 보존 → 인증 후 동일 페이지 복귀
+- `MyPage` LoginGate — `/me` 명시
+- `NotificationsPage` LoginGate — `/notifications` 명시
+- `UploaderPage` LoginGate — `/uploader` 명시
+- `EventDetailPage` 리뷰 LoginGate — 현재 path 자동 보존
+
+BFF `parseReturnTo(raw)` 화이트리스트:
+- '/' 시작 (path 만, 절대 URL 거부)
+- '//' 시작 거부 (protocol-relative URL 인젝션 방어)
+- 안전한 path char 만 (`[/A-Za-z0-9\-_.~!$&'()*+,;=:@%?#]`)
+- 길이 ≤ 500
 
 ## Session invalidation 정책 (ADR 0004 결정, 코드 ship 별도 PR)
 

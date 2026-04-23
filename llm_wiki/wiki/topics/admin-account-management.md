@@ -60,11 +60,13 @@ ADR 0004 가 남긴 dependency 2건 (D-1 user soft-delete 패턴, D-6 의 `scope
 |---|---|---|
 | `full` | 모든 admin 액션 | 본 ADR 5종 + 기존 admin 라우트 전체 |
 | `security` | 보안 사고 대응 전용 | revoke-sessions (ADR 0004 D-6) |
-| `content_only` | (미정 — 기존 정의 placeholder) | (현 시점 라우트별 추가 분기 없음) |
-| `uploader_review_only` | (미정 — 기존 정의 placeholder) | (동일) |
+| `content_only` | 이벤트 콘텐츠 라벨/심사만 — Members 탭의 admin 관리 액션은 차단 | 현재 라우트별 분기 없음 (모든 admin 라우트 통과). 활성화는 후속 sprint |
+| `uploader_review_only` | 업로더 승급 심사만 — 이벤트 / Members / Audit 탭 차단 | 동일 |
 
-`content_only` / `uploader_review_only` 의 실 사용은 기존 admin 라우트 (admin-events,
-admin-uploaders 등) 가 권한 분기를 추가할 때 활성화 — 본 ADR 범위 외.
+**결정 박제 (2026-04-23)**: 두 scope 의 *의미* 는 위 표대로 결정. *실제 권한 분기 코드* 는
+필요 시 (예: 외부 콘텐츠 모더레이터 채용, 별도 업로더 심사관 채용) 후속 sprint 에 추가.
+지금은 활용 사례 미관측이라 모든 routes 가 `requireAdmin` 통과만 검증 (scope='full' 만 사실상
+모든 액션 가능). `seed:admin --scope content_only` 등으로 미리 부여해도 동작은 'full' 과 동일.
 
 ## E-5 sub-rules (soft-delete 대상별)
 

@@ -510,3 +510,38 @@ admin-flow.md 의 OQ "대량 일괄 승인 지원 여부 미정" — 1년 가까
 코드 변경 없음 — wiki 한 줄. lint queue #2 closed.
 
 graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.
+
+## 2026-04-23T12:00  feature  A_100 자동 복귀 + 점검 sweep + G-2/G-3/G-4 결정 박제
+요구사항 v5.0 점검 sprint. A_100 의 "원 액션 자동 복귀" 갭 (use-cases-index OQ) 해소 + use-cases
+인덱스 자체 정합성 sweep + 3 미정 정책 박제.
+
+### A_100 자동 복귀 (G-1 해소)
+BFF (apps/bff/src/routes/auth.ts):
+- `parseReturnTo(raw)` 화이트리스트 — '/' 시작 / '//' 거부 (protocol-relative URL 인젝션 방어) /
+  안전 path char regex / 길이 ≤ 500
+- `OAUTH_RETURNTO_COOKIE = 'alle_oauth_returnto'` 신설 (state 와 동일 10분 TTL)
+- `startGoogle` / `startKakao` 에 `?returnTo=<path>` 처리 — 통과 시 returnTo 쿠키 set
+- `googleCallback` / `kakaoCallback` 마지막 redirect 가 `${WEB_URL}${returnTo ?? '/'}`
+- `issueSessionAndRedirect` 가 returnTo 쿠키 expire 동봉
+
+Web (apps/web/src/lib/auth-redirect.ts 신설):
+- `loginUrl(provider, returnTo?, useReturnTo=true)` — 현재 path+search+hash 자동 인코딩
+- `currentPath()` / `redirectToLogin(provider)` 헬퍼
+- 진입점 5곳 정정: Header (Google+Kakao 두 버튼), BookmarkButton (UNAUTHENTICATED 시),
+  EventDetailPage 리뷰 LoginGate, MyPage LoginGate, NotificationsPage LoginGate, UploaderPage LoginGate
+
+라이브 smoke: valid path → returnTo 쿠키 set, `//evil.com` → 거부, no returnTo → 기존 동작 유지.
+
+### use-cases-index sweep (drift 정리)
+- A_100 라벨 갱신 (자동 복귀 해소 + auth-flow cross-ref)
+- A_600 "주민번호" → "사업자번호 XOR CI 해시" (ADR 0003) + rejected 7d 쿨다운 추가
+- A_700 "두 탭" → "5 탭" (Members 신규) + admin_audit_logs 자동 기록 명시
+- OQ 정리: A_602 PDF (✅ 마이그레이션 ship), A_203 알림 스키마 (✅ subscriptions ship), A_300/A_400 우선순위 (운영 우선순위는 "상" 표기, 요구사항 라벨 자체는 그대로)
+- frontmatter related: admin-account-management + auth-flow 추가
+
+### G-2/G-3/G-4 결정 박제 (코드 0줄, 정책만)
+- **G-2 ended 이벤트 retention**: 유지 (archive 안 함). 캘린더 보존 + phase!='ended' 자동 필터 + 4084 행 부담 없음. 트리거 100k 도래 시 ADR 재검토. ingest-pipeline.md OQ 갱신.
+- **G-3 기사 retention**: 유지 (만료 정리 안 함). 과거 캘린더 기사 link 보존 + 8k 행 수준 부담 없음. 트리거 news_articles 100k 도래 시 ADR 재검토. news-article-pipeline.md OQ 갱신.
+- **G-4 admin scope content_only / uploader_review_only**: 의미 결정 (콘텐츠 모더레이션 / 업로더 승급 전용). 권한 분기 코드는 후속 sprint (현재 활용 사례 미관측). admin-account-management.md scope 표 갱신.
+
+graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.

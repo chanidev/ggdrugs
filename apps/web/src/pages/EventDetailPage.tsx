@@ -21,6 +21,7 @@ import {
   type StagedDoc,
 } from '../components/uploader/DocumentsPickerField';
 import { useCurrentUser } from '../lib/auth-context';
+import { loginUrl } from '../lib/auth-redirect';
 import { uploadReviewPhotos } from '../lib/uploads';
 
 /**
@@ -471,7 +472,7 @@ function LoginGate() {
         리뷰를 남기려면 로그인이 필요해요.
       </p>
       <a
-        href="/api/auth/google"
+        href={loginUrl('google')}
         className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
       >
         Google 로그인 <Icon name="arrow" size={12} />

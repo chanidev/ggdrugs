@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createBookmark, deleteBookmark } from '../lib/api';
 import { useCurrentUser } from '../lib/auth-context';
+import { redirectToLogin } from '../lib/auth-redirect';
 import { Icon } from './Icon';
 
 /**
@@ -38,7 +39,8 @@ export function BookmarkButton({
 
   const toggle = async () => {
     if (!loggedIn) {
-      window.location.href = '/api/auth/google';
+      // A_100 자동 복귀 — 현재 path 보존 (예: /events/123 → 인증 후 다시 돌아옴).
+      redirectToLogin('google');
       return;
     }
     const next = !bookmarked;
@@ -52,7 +54,7 @@ export function BookmarkButton({
       // 롤백
       setBookmarked(!next);
       if ((err as Error).message === 'UNAUTHENTICATED') {
-        window.location.href = '/api/auth/google';
+        redirectToLogin('google');
       }
     } finally {
       setPending(false);

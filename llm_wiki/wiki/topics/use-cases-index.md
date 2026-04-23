@@ -2,7 +2,7 @@
 title: 유스케이스 인덱스 (A_100 ~ A_700)
 type: topic
 created: 2026-04-17
-updated: 2026-04-17
+updated: 2026-04-23
 sources: [2026-04-17_requirements-v5, 2026-04-17_ui-flow-draft]
 related:
   - ../sources/2026-04-17_requirements-v5.md
@@ -11,6 +11,8 @@ related:
   - event-detail-review-flow.md
   - uploader-flow.md
   - admin-flow.md
+  - admin-account-management.md
+  - auth-flow.md
 ---
 
 # 유스케이스 인덱스
@@ -24,7 +26,7 @@ v5.0 요구사항정의서 Ⅱ장의 13개 유스케이스 요약. 기능 ID(GG-
 ### 인증 (AUTH)
 | ID | 이름 | 우선순위 | 액터 | 핵심 |
 |---|---|---|---|---|
-| A_100 [수정] | API 회원가입 | 상 | 비회원 | 개인화 액션 클릭 시 Google/Kakao 소셜 가입 모달 → 원 액션 자동 복귀. 비회원은 탐색만 가능. |
+| A_100 [수정] | API 회원가입 | 상 | 비회원 | Google/Kakao 소셜 가입. **원 액션 자동 복귀** (2026-04-23 ship) — `loginUrl(provider)` 헬퍼가 현재 path 를 `?returnTo=` 로 인코딩, OAuth callback 이 same-origin 검증 후 `${WEB_URL}${returnTo}` 로 redirect. [auth-flow §A_100](auth-flow.md) 참조. |
 | A_101 | 로그인 | 상 | 사용자 | Google/Kakao API 연동. |
 
 ### 메인·검색 (MAIN / CHAT / FILTER / UPCOMING)
@@ -50,21 +52,20 @@ v5.0 요구사항정의서 Ⅱ장의 13개 유스케이스 요약. 기능 ID(GG-
 ### 업로더 (UREG / UMAIN / UPLOAD)
 | ID | 이름 | 우선순위 | 액터 | 핵심 |
 |---|---|---|---|---|
-| A_600 [수정] | 업로더 역할 승급 | 상 | 일반 사용자 → 업로더 후보 | 신규 계정 아니고 **기존 계정에 uploader 역할 추가 신청**. 이름·주민번호·소속·연락처·증명사진·약관. |
+| A_600 [수정] | 업로더 역할 승급 | 상 | 일반 사용자 → 업로더 후보 | 기존 계정에 uploader 역할 추가 신청. 이름·소속·연락처·**사업자번호 XOR CI 해시** (ADR 0003 — 주민번호 제거)·증명사진·약관. rejected 7d 쿨다운. |
 | A_601 | 업로더 전용 메인페이지 | 상 | 업로더 | 본인 등록 이벤트 그리드(상태별: 대기/보완/반려/완료). '이벤트 업로드' 버튼으로 A_602. |
 | A_602 | 이벤트 업로드 | 상 | 업로더 | 서류 ≥2종(상위기관 승인서/허가서/사업자등록증/기타 신분), 기본정보, 이벤트 종류 택1, 상위 2개 expected_companion. |
 
 ### 관리자 (ADMIN)
 | ID | 이름 | 우선순위 | 액터 | 핵심 |
 |---|---|---|---|---|
-| A_700 | 이벤트 승인 및 라벨 부여 | 상 | 관리자, LLM(보조) | 두 탭(이벤트 업로드 심사 / 업로더 승급 심사). 서류 검토 후 승인/보완/반려 + **이벤트 성향 라벨 직접 부여** (LLM 위임 금지). |
+| A_700 | 이벤트 승인 및 라벨 부여 | 상 | 관리자 | **5 탭** (Events vibe 라벨 / Uploads 심사 / Uploaders 심사 / **Members 회원·admin 관리** / Audit). 서류 검토 후 승인/보완/반려 + 이벤트 성향 라벨 직접 부여 (LLM 위임 금지, CLAUDE.md §6-4). 모든 admin 액션은 `admin_audit_logs` 자동 기록 (ADR 0004 D-6 + ADR 0005). |
 
 ## Open questions / contradictions
 
-- A_300 우선순위가 "중(Could Have)"로 되어 있으나 메인 화면 필수 진입점 중 하나 — 우선순위 재검토 후보.
-- A_400 우선순위도 "중" — 실제로는 북마크·리뷰·예약 진입점인데 중 수준으로 분류된 이유 불명.
-- A_602의 서류 요건(2종 이상)과 approval_documents 테이블 CHECK(mime_type)이 JPEG/PNG만 허용 — PDF 업로드 불가한 구조라 실제 사업자등록증 사본 업로드 시 제약.
-- A_203의 '알림 설정'이 A_500 알림 설정과 연동되는데, notifications 테이블은 "이벤트 일정 기반"만 모델링되어 있음 — "조건 기반 신규 이벤트 등록 알림"을 어떻게 저장할지 별도 스키마 필요 가능성.
+- A_300 / A_400 우선순위 "중" 표기 — 실제로는 메인 진입점이라 "상" 수준. 요구사항 v5.0 라벨 자체는 그대로 두고 본 wiki 만 운영 우선순위로 정정 (별도 ADR 불필요).
+- ~~A_602 서류 PDF 미허용~~ → **해소** (마이그레이션 `20260421110000_allow_pdf_in_approval_docs`): `approval_documents.mime_type IN ('image/jpeg','image/png','application/pdf')`.
+- ~~A_203 조건 기반 알림 스키마~~ → **해소** (ADR 0001 #7 + subscriptions-notifications.md ship): `event_subscriptions` 테이블 + 5축 매칭 + 2단계 dedup + notifications fan-out.
 
 ## References
 

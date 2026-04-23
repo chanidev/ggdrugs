@@ -3,6 +3,7 @@ import { LogoLockup } from '../components/brand/Logo';
 import { Icon } from '../components/Icon';
 import { NotificationBell } from '../components/notifications/NotificationBell';
 import { useCurrentUser } from '../lib/auth-context';
+import { loginUrl } from '../lib/auth-redirect';
 
 /**
  * Header — 상단 바 (60px).
@@ -85,17 +86,18 @@ function AuthArea() {
     );
   }
 
-  // Real OAuth — Google/Kakao 선택. (BFF 503 이면 알림 fallback.)
+  // Real OAuth — Google/Kakao 선택. A_100 자동 복귀 — 현재 path 를 returnTo 로 보존.
+  // (BFF 503 이면 알림 fallback.)
   return (
     <div className="flex items-center gap-1.5">
       <a
-        href="/api/auth/kakao"
+        href={loginUrl('kakao')}
         className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-border) bg-[#FEE500] px-2.5 text-[12px] font-medium text-[#191600] transition-colors hover:bg-[#FDD835] md:px-3 md:text-[13px]"
       >
         Kakao
       </a>
       <a
-        href="/api/auth/google"
+        href={loginUrl('google')}
         className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-2.5 text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) md:px-3 md:text-[13px]"
       >
         <span className="md:hidden">Google</span>
