@@ -73,37 +73,69 @@ def _today_context() -> str:
 # Few-shot 예시 — 변형 발화 학습. 실 데이터 기반 (오늘 날짜 의존 없는 표현 위주).
 _FEWSHOT = """예시:
 - "이번 주말 애들이랑 갈만한 축제":
-  filters {companions:["family"], eventTypes:["festival"], periodKey:"weekend"}
-  reply "이번 주말 · 가족 동행 · 축제 기준으로 찾아봤어요. 결과를 함께 보여드릴게요."
+  {
+    filters: {companions:["family"], eventTypes:["festival"], periodKey:"weekend"},
+    specificDate: null,
+    reply: "이번 주말 · 가족 동행 · 축제 기준으로 찾아봤어요. 결과를 함께 보여드릴게요.",
+    followups: ["이번 달 전체로", "혼자 가도 좋은 거", "성수동·홍대 위주로"]
+  }
 
 - "강남 데이트 분위기 잔잔한 전시":
-  filters {regionHints:["강남구"], companions:["couple"], eventTypes:["exhibition"], vibes:["정적"]}
-  reply "강남구 · 연인 동행 · 전시 · 정적 분위기로 좁혔어요. 마음에 드는 것 있는지 확인해 보세요."
+  {
+    filters: {regionHints:["강남구"], companions:["couple"], eventTypes:["exhibition"], vibes:["정적"]},
+    specificDate: null,
+    reply: "강남구 · 연인 동행 · 전시 · 정적 분위기로 좁혔어요. 마음에 드는 것 있는지 확인해 보세요.",
+    followups: ["야간 운영 위주", "공연도 같이", "다른 구도 보기"]
+  }
 
 - "혼자 조용히 책 읽을만한 곳" (이벤트 종류 불명확):
-  filters {companions:["solo"], vibes:["정적"]}
-  reply "혼자 · 정적 분위기 기준으로 추려봤어요. 종류(전시·교육 등)도 알려주시면 더 정확히 좁혀드려요."
+  {
+    filters: {companions:["solo"], vibes:["정적"]},
+    specificDate: null,
+    reply: "혼자 · 정적 분위기 기준으로 추려봤어요. 종류(전시·교육 등)도 알려주시면 더 정확히 좁혀드려요.",
+    followups: ["전시만 보기", "교육·강좌 보기", "이번 주말로"]
+  }
 
 - "내일 종로구 공연":
-  filters {regionHints:["종로구"], eventTypes:["performance"], periodKey:"tomorrow"}
-  reply "종로구 · 내일 · 공연 기준으로 찾아봤어요."
+  {
+    filters: {regionHints:["종로구"], eventTypes:["performance"], periodKey:"tomorrow"},
+    specificDate: null,
+    reply: "종로구 · 내일 · 공연 기준으로 찾아봤어요.",
+    followups: ["주말까지 넓게", "친구랑 같이", "전시도 함께"]
+  }
 
 - (직전 턴 "이번 주말 가족 축제" 후) "가족 말고 친구랑":
-  filters {companions:["friend"], eventTypes:["festival"], periodKey:"weekend"}
-  reply "친구 동행으로 바꿔서 이번 주말 축제만 다시 추려봤어요. (가족 조건은 빼드렸어요.)"
+  {
+    filters: {companions:["friend"], eventTypes:["festival"], periodKey:"weekend"},
+    specificDate: null,
+    reply: "친구 동행으로 바꿔서 이번 주말 축제만 다시 추려봤어요. (가족 조건은 빼드렸어요.)",
+    followups: ["야외 활동 위주", "체험형 강조", "다음 주로 미루기"]
+  }
+
+- "이번주 토요일 한강 근처 야외 행사" (구체 날짜 — specificDate 사용):
+  {
+    filters: {periodKey:"weekend", vibes:["활동적"]},
+    specificDate: "2026-04-25",
+    reply: "이번 주 토요일(4/25) 활동적 분위기로 찾아봤어요. 한강 근처는 영등포·용산·마포·성동·강서·송파 권역에서 확인해 주세요.",
+    followups: ["일요일도 보기", "가족이랑은", "전시도 함께"]
+  }
 
 - "오늘 갈 만한 거 추천해줘" (필터 거의 없음):
-  filters {periodKey:"today"}
-  reply "오늘 진행 중인 이벤트로 좁혀봤어요. 동행이나 종류를 알려주시면 더 정확하게 추천드릴게요."
+  {
+    filters: {periodKey:"today"},
+    specificDate: null,
+    reply: "오늘 진행 중인 이벤트로 좁혀봤어요. 동행이나 종류를 알려주시면 더 정확하게 추천드릴게요.",
+    followups: ["가족이랑", "혼자서", "이번 주말로"]
+  }
 """
 
 
 SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시·공연·박람회 등) 검색 어시스턴트 'Alle' 입니다.
 
-목표: 사용자 발화에서 5개 필터 축을 추출하고, 동시에 1~2 문장 자연어 응답(reply) 도 작성하세요.
-응답은 사용자가 무엇을 좁혔는지 안심하고, 다음 행동(결과 확인 또는 추가 조건 제공)으로 넘어가게 도와줍니다.
+목표: 사용자 발화에서 5개 필터 축 + (선택)구체 날짜 추출, 자연어 응답(reply) 작성,
+다음 행동을 유도하는 후속 추천(followups) 2~3개를 동시에 생성합니다.
 
-[추출 규칙]
+[추출 규칙 — filters]
 - 값은 반드시 허용 목록에서만 선택. 없는 값은 만들지 말 것.
 - 다중 턴: 이전 턴 + 이번 턴 의도 union.
 - 최근 턴에 "말고/빼고/아니/대신/바꿔/그게 아니라/이번엔 다른" 등 의도 변경 신호가 있으면
@@ -116,6 +148,12 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시
   "보러" → "관람형", "배움" → "교육형", "사람들" → "네트워킹 중심".
 - "팝업 스토어/플리마켓/마켓" 도 festival 로 분류 (현 카테고리 체계 한도).
 
+[specificDate — 선택]
+- 사용자가 명확한 단일 날짜를 지정한 경우만 ISO YYYY-MM-DD 로 반환. 그 외엔 null.
+- 예: "5월 1일" → 올해 "2026-05-01", "다음주 토요일" / "이번주 일요일" / "내일" → 절대 날짜 계산.
+- 절대 추측하지 말 것 — "이번 주말" 같은 모호한 표현은 specificDate 없이 periodKey="weekend" 로만.
+- 오늘 컨텍스트 절대 날짜를 활용해 정확히 계산.
+
 [reply 작성 규칙 — 어기면 실패]
 - 1~2 문장, 250자 이내, 존댓말 (~요/~습니다).
 - 절대 위치 표현 금지: "오른쪽", "왼쪽", "상단", "하단", "지도 옆" 등 (모바일·데스크톱 공용).
@@ -125,6 +163,14 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시
 - 좁혀진 축이 없거나 추출 실패면 어떤 정보를 더 주면 좋은지 짧게 가이드.
 - 의도 변경 신호 있었으면 명시 ("X 조건은 빼드렸어요" 같이).
 - 톤: 친절하지만 담백. 신문 기사 도입부 같은 사실 위주.
+
+[followups 작성 규칙]
+- 정확히 2~3개의 짧은 한국어 chip. 각 12자 이하.
+- 사용자가 탭하면 그대로 다음 user 발화가 됨 — 자연스러운 명령형/평서문 요청 형태.
+  (좋은 예: "이번 주말로", "혼자 가도 좋은 거", "전시도 함께" / 나쁜 예: "더 보기", "추천")
+- 직전 사용자 발화·추출된 필터 맥락에서 **확장**(다른 동행/시기/카테고리)·**축소**(특정 vibe·지역)·
+  **대체**(다른 카테고리) 중 의미 있는 변형. 단순 echo 금지.
+- 이미 사용자가 명시한 축은 다시 묻지 말 것.
 
 [오늘 컨텍스트]
 {{TODAY}}
@@ -142,6 +188,34 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시
 
 def _build_system_prompt() -> str:
     return SYSTEM_PROMPT_TEMPLATE.replace("{TODAY}", _today_context())
+
+
+def _format_user_signals(sig: dict[str, Any]) -> str:
+    """user_signals → priorityHint 시스템 컨텍스트 한 블록.
+
+    LLM 은 이를 강제 필터로 쓰지 말고 동률 시 우선순위 결정에만 사용.
+    사용자 발화가 다른 축을 명시하면 그게 우선.
+    """
+    parts: list[str] = []
+    if sig.get("preferred_companion"):
+        parts.append(f"평소 동행: {sig['preferred_companion']}")
+    if sig.get("preferred_category"):
+        parts.append(f"선호 카테고리: {sig['preferred_category']}")
+    if sig.get("preferred_region"):
+        parts.append(f"선호 지역: {sig['preferred_region']}")
+    if sig.get("preferred_vibe"):
+        parts.append(f"선호 분위기: {sig['preferred_vibe']}")
+    bookmarks = sig.get("recent_bookmarks") or 0
+    if bookmarks:
+        parts.append(f"최근 북마크 {bookmarks}건")
+    if not parts:
+        return ""
+    return (
+        "[priorityHint — 사용자 과거 활동 기반]\n"
+        + " · ".join(parts)
+        + "\n사용자가 명시 안 한 축에 한해 위 힌트로 자연스럽게 우선순위만 보정. "
+        "강제 필터로 쓰지 말 것. reply 에서 '평소 ...셨던 거 같아서' 같은 자연 언급 1회는 OK."
+    )
 
 
 # 하위 호환 (외부 import 시 깨지지 않게) — 첫 import 시점 컨텍스트로 컴파일.
@@ -174,14 +248,29 @@ _SCHEMA = {
                 "type": "array",
                 "items": {"type": "string", "enum": _ALLOWED_REGIONS},
             },
+            "specificDate": {
+                "type": ["string", "null"],
+                "description": "사용자가 명시한 단일 날짜 ISO YYYY-MM-DD. 모호하면 null.",
+                "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+            },
             "reply": {
                 "type": "string",
                 "description": "1~2 문장 자연어 응답. 250자 이내. 위치 표현 금지.",
                 "minLength": 1,
                 "maxLength": 280,
             },
+            "followups": {
+                "type": "array",
+                "description": "다음 user 발화 후보 칩 2~3개. 각 12자 이하.",
+                "items": {"type": "string", "minLength": 1, "maxLength": 14},
+                "minItems": 2,
+                "maxItems": 3,
+            },
         },
-        "required": ["companions", "eventTypes", "periodKey", "vibes", "regionHints", "reply"],
+        "required": [
+            "companions", "eventTypes", "periodKey", "vibes", "regionHints",
+            "specificDate", "reply", "followups",
+        ],
     },
 }
 
@@ -294,23 +383,33 @@ def summarize_event(
     return sanitize_summary(raw)
 
 
-def extract_via_openai(messages: list[dict[str, str]]) -> dict[str, Any]:
+def extract_via_openai(
+    messages: list[dict[str, str]],
+    *,
+    user_signals: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]
+    user_signals: 로그인 사용자의 taste profile 라벨. 있으면 시스템에 priorityHint 추가.
     반환:
       {
         "companions": [...], "eventTypes": [...], "periodKey": "...",
         "vibes": [...], "regionHints": [...],
-        "reply": "1~2 문장 자연어 응답"
+        "specificDate": "YYYY-MM-DD" | None,
+        "reply": "1~2 문장",
+        "followups": ["chip1", "chip2", "chip3"]
       }
     실패 시 OpenAIError 계열 예외를 상위로 올려서 app.py 가 fallback 처리.
 
-    SYSTEM_PROMPT 는 매 호출마다 오늘 날짜를 주입한 새 인스턴스로 빌드 — 자정
-    경계 변경 즉시 반영. (모듈 캐시 SYSTEM_PROMPT 는 외부 import 호환용.)
+    SYSTEM_PROMPT 는 매 호출마다 오늘 날짜를 주입한 새 인스턴스로 빌드.
     """
-    client = OpenAI()  # OPENAI_API_KEY 환경변수 자동 로드
+    client = OpenAI()
 
-    chat = [{"role": "system", "content": _build_system_prompt()}]
+    sys_prompt = _build_system_prompt()
+    if user_signals:
+        sys_prompt += "\n\n" + _format_user_signals(user_signals)
+
+    chat = [{"role": "system", "content": sys_prompt}]
     for m in messages:
         role = m.get("role", "user")
         if role not in {"user", "assistant"}:
@@ -333,8 +432,194 @@ def extract_via_openai(messages: list[dict[str, str]]) -> dict[str, Any]:
         "periodKey": data.get("periodKey"),
         "vibes": list(data.get("vibes") or []),
         "regionHints": list(data.get("regionHints") or []),
+        "specificDate": data.get("specificDate"),
         "reply": (data.get("reply") or "").strip(),
+        "followups": [s.strip() for s in (data.get("followups") or []) if s and s.strip()][:3],
     }
+
+
+# =============================================================
+# v3 — Retreat composer (0건 처리) + LLM Reranker
+# =============================================================
+
+_RETREAT_SCHEMA = {
+    "name": "compose_retreat",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "reply": {
+                "type": "string",
+                "description": "0건 사실을 인정하고 다음 행동을 자연스럽게 안내하는 1~2 문장.",
+                "minLength": 1,
+                "maxLength": 280,
+            },
+            "followups": {
+                "type": "array",
+                "description": "사용자가 시도해볼 만한 대안 2~3개 (제약 완화 / 다른 동행·시기·카테고리).",
+                "items": {"type": "string", "minLength": 1, "maxLength": 14},
+                "minItems": 2,
+                "maxItems": 3,
+            },
+        },
+        "required": ["reply", "followups"],
+    },
+}
+
+
+def compose_retreat(
+    *,
+    user_text: str,
+    extracted_filters: dict[str, Any],
+    sql_count: int,
+    semantic_count: int,
+) -> dict[str, Any]:
+    """
+    BFF 가 0건 (또는 매우 낮은 결과) 감지 시 호출. 결과를 LLM 에 알려주고
+    자연스러운 retreat reply + 대체 followups 생성.
+
+    실패 시 OpenAIError 계열 예외 → BFF 가 원래 reply 유지.
+    """
+    client = OpenAI()
+    sys = (
+        f"당신은 한국어 서울 이벤트 검색 어시스턴트 'Alle' 의 retreat 모드입니다.\n"
+        f"{_today_context()}\n\n"
+        "사용자가 요청한 조건으로 SQL 검색 결과는 sql_count 건, AI 의미 검색 후보는 semantic_count 건입니다.\n"
+        "결과가 부족한 사실을 한 문장으로 인정하고, 어떤 축을 완화하면 결과가 늘어날지 1문장으로 제안하세요.\n"
+        "그리고 followups 2~3개로 구체적인 대안을 제시하세요 (예: '이번 주말로 넓히기', '동행 빼기', '전시도 함께').\n\n"
+        "[제약]\n"
+        "- 위치 표현 금지: 오른쪽/왼쪽/상단/하단.\n"
+        "- 광고·과장 금지.\n"
+        "- 마크다운·이모지·해시태그 금지.\n"
+        "- 결과 0건이면 가짜로 추천하지 말 것 — 정직하게 '없네요' 인정.\n"
+        "- followups 각 12자 이하, 사용자가 탭하면 그대로 다음 user 발화가 됨."
+    )
+
+    user_msg = (
+        f"사용자 마지막 발화: {user_text}\n"
+        f"추출된 필터: {json.dumps(extracted_filters, ensure_ascii=False)}\n"
+        f"sql_count: {sql_count}\n"
+        f"semantic_count: {semantic_count}"
+    )
+
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": sys},
+            {"role": "user", "content": user_msg},
+        ],
+        response_format={"type": "json_schema", "json_schema": _RETREAT_SCHEMA},
+        temperature=0.3,
+        max_tokens=300,
+    )
+    _track_usage("retreat", resp)
+    content = resp.choices[0].message.content or "{}"
+    data = json.loads(content)
+    return {
+        "reply": (data.get("reply") or "").strip(),
+        "followups": [s.strip() for s in (data.get("followups") or []) if s and s.strip()][:3],
+    }
+
+
+_RERANK_SCHEMA = {
+    "name": "rerank_events",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "ranked": {
+                "type": "array",
+                "description": "재정렬된 eventId + 한 줄 reason. 가장 의미 적합한 순.",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "eventId": {"type": "string"},
+                        "reason": {
+                            "type": "string",
+                            "description": "왜 이 이벤트가 사용자 의도에 맞는지 1~2 어구. 12~30자.",
+                            "minLength": 4,
+                            "maxLength": 60,
+                        },
+                    },
+                    "required": ["eventId", "reason"],
+                },
+                "minItems": 1,
+            },
+        },
+        "required": ["ranked"],
+    },
+}
+
+
+def rerank_candidates(
+    *,
+    query: str,
+    candidates: list[dict[str, Any]],
+    top_k: int = 5,
+) -> list[dict[str, Any]]:
+    """
+    cosine 기반 top-N 후보를 의미·맥락 적합성으로 재정렬 + 추천 사유 생성.
+
+    candidates: [{eventId, title, phase, startDate, endDate, region, category, vibes, score}]
+    반환: [{eventId, reason}] 길이 ≤ top_k. 원본 후보에 reason 만 붙여서 BFF 가 merge.
+
+    실패 시 예외 → BFF 가 원래 score 순서 유지.
+    """
+    if not candidates:
+        return []
+    client = OpenAI()
+    sys = (
+        f"당신은 한국어 이벤트 추천 reranker 입니다. {_today_context()}\n"
+        "사용자 질문(query)와 후보 이벤트 목록을 보고, 의미·시점·동행·분위기 적합도가 가장 높은 순으로\n"
+        f"top {top_k} 개를 골라 재정렬하세요. 각 항목에 1~2 어구 reason 을 붙이세요.\n\n"
+        "[reason 규칙]\n"
+        "- '가족이 즐기기 좋은 야외 축제' 같이 사용자가 왜 흥미를 가질지 한 점 짚기.\n"
+        "- 12~30자, 광고 표현 금지, 사실 위주.\n"
+        "- 후보 메타에 없는 정보 추측 금지 (가격·인기·정원 등).\n\n"
+        "[순서 결정 가중치]\n"
+        "1순위: phase (ongoing > upcoming, ended 는 제거하지 말되 후순위)\n"
+        "2순위: 사용자 동행/분위기 의도 부합\n"
+        "3순위: 카테고리 / 지역 일치\n"
+        "4순위: 원래 score (동률 시)"
+    )
+    cand_lines = []
+    for c in candidates:
+        cand_lines.append(
+            f"- id={c.get('eventId')}, title={c.get('title','')[:60]}, "
+            f"phase={c.get('phase','')}, "
+            f"date={c.get('startDate','')}~{c.get('endDate','')}, "
+            f"region={c.get('region','')}, category={c.get('category','')}, "
+            f"vibes={','.join(c.get('vibes') or [])}, score={c.get('score',0):.3f}"
+        )
+    user_msg = f"query: {query}\n\n후보 ({len(candidates)}건):\n" + "\n".join(cand_lines)
+
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": sys},
+            {"role": "user", "content": user_msg},
+        ],
+        response_format={"type": "json_schema", "json_schema": _RERANK_SCHEMA},
+        temperature=0.1,
+        max_tokens=600,
+    )
+    _track_usage("rerank", resp)
+    content = resp.choices[0].message.content or "{}"
+    data = json.loads(content)
+    out: list[dict[str, Any]] = []
+    seen_ids: set[str] = set()
+    for item in data.get("ranked") or []:
+        eid = str(item.get("eventId") or "").strip()
+        if not eid or eid in seen_ids:
+            continue
+        seen_ids.add(eid)
+        out.append({"eventId": eid, "reason": (item.get("reason") or "").strip()})
+        if len(out) >= top_k:
+            break
+    return out
 
 
 def embed_texts(texts: list[str]) -> list[list[float]]:

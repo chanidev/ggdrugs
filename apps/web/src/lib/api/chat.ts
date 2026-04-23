@@ -27,11 +27,17 @@ export interface ChatSuggestion {
   category: { code: string; name: string };
   posterImageUrl: string | null;
   score: number;
+  /** v3 — LLM rerank 가 붙인 한 줄 추천 사유 (없으면 null). */
+  matchReason?: string | null;
 }
 
 export interface ChatReply {
   reply: string;
   filters: ChatFilters;
+  /** v3 — 사용자가 명시한 단일 날짜 ISO YYYY-MM-DD. */
+  specificDate?: string | null;
+  /** v3 — 다음 user 발화 후보 칩 2~3개 (각 ≤14자). */
+  followups?: string[];
   /** Qdrant 의미 검색으로 뽑아준 이벤트 후보 (최대 5개). 비어있을 수 있음. */
   suggestions: ChatSuggestion[];
 }

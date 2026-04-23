@@ -8,6 +8,8 @@ export interface ChatMessage {
   text: string;
   /** assistant 메시지에만 실림 — Qdrant 의미 검색으로 뽑힌 이벤트 후보. */
   suggestions?: ChatSuggestion[];
+  /** assistant 메시지에만 — LLM 이 제안한 다음 user 발화 후보 칩 (최대 3). */
+  followups?: string[];
 }
 
 /**
@@ -83,27 +85,34 @@ export function ChatDock({
         >
           {messages.length > 0 && (
             <div className="mb-2.5 flex max-h-[260px] flex-col gap-2 overflow-y-auto rounded-(--radius-lg) bg-(--color-surface-alt) px-3.5 py-2.5">
-              {messages.map((m, i) => (
-                <div key={i} className="flex flex-col gap-1.5">
-                  <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <span
-                      className={`inline-block max-w-[80%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
-                        m.role === 'user'
-                          ? 'rounded-br-[4px] bg-(--color-accent) text-white'
-                          : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
-                      }`}
-                    >
-                      {m.text}
-                    </span>
+              {messages.map((m, i) => {
+                const isLastAssistant =
+                  m.role === 'assistant' && i === messages.length - 1;
+                return (
+                  <div key={i} className="flex flex-col gap-1.5">
+                    <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <span
+                        className={`inline-block max-w-[80%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
+                          m.role === 'user'
+                            ? 'rounded-br-[4px] bg-(--color-accent) text-white'
+                            : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
+                        }`}
+                      >
+                        {m.text}
+                      </span>
+                    </div>
+                    {m.role === 'assistant' && m.suggestions && m.suggestions.length > 0 && (
+                      <SuggestionsRow
+                        items={m.suggestions}
+                        onClick={(eid) => onSuggestionClick?.(eid)}
+                      />
+                    )}
+                    {isLastAssistant && m.followups && m.followups.length > 0 && (
+                      <FollowupRow items={m.followups} onPick={(s) => onSubmit(s)} />
+                    )}
                   </div>
-                  {m.role === 'assistant' && m.suggestions && m.suggestions.length > 0 && (
-                    <SuggestionsRow
-                      items={m.suggestions}
-                      onClick={(eid) => onSuggestionClick?.(eid)}
-                    />
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           <div className="mb-2 flex items-center gap-2 text-[12px] text-(--color-text-subtle)">
@@ -154,8 +163,30 @@ export function ChatDock({
 }
 
 /**
+ * Followup chip row — LLM 이 제안한 다음 user 발화 후보 (2~3개).
+ * 탭하면 그대로 새 user 메시지로 submit. 마지막 assistant 메시지에만 노출.
+ */
+function FollowupRow({ items, onPick }: { items: string[]; onPick: (text: string) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5 pt-0.5">
+      {items.slice(0, 3).map((s, i) => (
+        <button
+          key={`${i}-${s}`}
+          type="button"
+          onClick={() => onPick(s)}
+          className="inline-flex items-center gap-1 rounded-full border border-(--color-border) bg-(--color-surface) px-2.5 py-1 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-accent) hover:bg-(--color-accent-bg) hover:text-(--color-accent)"
+        >
+          <span aria-hidden className="text-(--color-text-subtle)">↳</span>
+          {s}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/**
  * AI 답변 아래 붙는 이벤트 후보 strip — Qdrant kNN 결과 상위 N.
- * 가로 스크롤 카드. 클릭 → summary panel 오픈.
+ * 가로 스크롤 카드. 클릭 → summary panel 오픈. matchReason 있으면 1줄 표기.
  */
 function SuggestionsRow({
   items,
@@ -193,6 +224,11 @@ function SuggestionsRow({
               {s.startDate}
               {s.startDate !== s.endDate && ` ~ ${s.endDate}`}
             </span>
+            {s.matchReason && (
+              <span className="line-clamp-2 text-[10.5px] italic text-(--color-accent)/85">
+                ✦ {s.matchReason}
+              </span>
+            )}
           </button>
         ))}
       </div>

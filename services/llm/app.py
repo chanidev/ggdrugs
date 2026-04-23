@@ -55,8 +55,22 @@ class ChatMessage(BaseModel):
     text: str
 
 
+class UserSignals(BaseModel):
+    """로그인 사용자의 taste profile 요약 — LLM 이 추천 톤 보정용 컨텍스트로 사용.
+
+    값은 사람이 읽는 라벨 (예: '가족', '강남구', '체험형'). 없으면 None.
+    LLM 은 이를 강제 필터로 쓰지 말고 'priorityHint' 로만 활용 — 사용자 발화가 명시적이면 그게 우선.
+    """
+    preferred_companion: str | None = None
+    preferred_category: str | None = None
+    preferred_region: str | None = None
+    preferred_vibe: str | None = None
+    recent_bookmarks: int = 0
+
+
 class ChatRequest(BaseModel):
     messages: list[ChatMessage]
+    user_signals: UserSignals | None = None
 
 
 class SummarizeRequest(BaseModel):
@@ -158,6 +172,49 @@ class ChatFilters(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     filters: ChatFilters
+    # v3 — 명시적 단일 날짜 (있으면 BFF 가 periodKey 보다 우선 적용).
+    specificDate: str | None = None
+    # v3 — 다음 user 발화 후보 칩 2~3개. 12자 이하.
+    followups: list[str] = []
+
+
+class RetreatRequest(BaseModel):
+    user_text: str
+    filters: ChatFilters
+    sql_count: int = Field(ge=0)
+    semantic_count: int = Field(ge=0)
+
+
+class RetreatResponse(BaseModel):
+    reply: str
+    followups: list[str] = []
+
+
+class RerankCandidate(BaseModel):
+    eventId: str
+    title: str
+    phase: str = ""
+    startDate: str = ""
+    endDate: str = ""
+    region: str = ""
+    category: str = ""
+    vibes: list[str] = []
+    score: float = 0.0
+
+
+class RerankRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+    candidates: list[RerankCandidate] = Field(min_length=1, max_length=50)
+    top_k: int = Field(default=5, ge=1, le=20)
+
+
+class RerankItem(BaseModel):
+    eventId: str
+    reason: str
+
+
+class RerankResponse(BaseModel):
+    ranked: list[RerankItem]
 
 
 def _stage_label() -> str:
@@ -202,7 +259,7 @@ def chat(req: ChatRequest) -> ChatResponse:
     llm_reply: str = ""
     if _openai_available():
         try:
-            extracted = _openai_extract(req.messages)
+            extracted = _openai_extract(req.messages, user_signals=req.user_signals)
             llm_reply = (extracted.get("reply") or "").strip() if isinstance(extracted, dict) else ""
         except Exception:
             extracted = None
@@ -211,6 +268,9 @@ def chat(req: ChatRequest) -> ChatResponse:
 
     # 룰 fallback compose_reply 는 LLM reply 가 없거나 빈 경우만.
     reply = llm_reply or filter_rules.compose_reply(last_user, extracted)
+
+    followups = list(extracted.get("followups") or []) if isinstance(extracted, dict) else []
+    specific_date = extracted.get("specificDate") if isinstance(extracted, dict) else None
 
     return ChatResponse(
         reply=reply,
@@ -221,20 +281,88 @@ def chat(req: ChatRequest) -> ChatResponse:
             vibes=list(extracted.get("vibes") or []),
             regionHints=list(extracted.get("regionHints") or []),
         ),
+        specificDate=specific_date,
+        followups=followups,
     )
 
 
-def _openai_extract(messages: list[ChatMessage]) -> dict[str, Any]:
+def _openai_extract(
+    messages: list[ChatMessage],
+    *,
+    user_signals: UserSignals | None = None,
+) -> dict[str, Any]:
     """
     Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.
 
+    user_signals 가 있으면 LLM 시스템 컨텍스트에 추가 — 'priorityHint' 로만 사용.
+
     실패 시 예외를 올려 chat() 가 규칙 기반으로 fallback.
     """
-    # lazy import — OPENAI_API_KEY 없는 환경에서 openai 패키지 로드 비용 회피.
     from openai_chain import extract_via_openai
 
     payload = [{"role": m.role, "text": m.text} for m in messages]
-    return extract_via_openai(payload)
+    sig = user_signals.model_dump() if user_signals else None
+    return extract_via_openai(payload, user_signals=sig)
+
+
+@app.post("/chat/compose-retreat", response_model=RetreatResponse)
+def chat_compose_retreat(req: RetreatRequest) -> RetreatResponse:
+    """
+    BFF 가 사용자 검색 결과 0건 (또는 매우 적음) 감지 시 호출. LLM 이 결과 사실
+    인지 + 자연스러운 retreat reply + 대체 followups 생성.
+
+    LLM 비활성/실패면 정적 fallback (정직한 0건 안내).
+    """
+    if _openai_available():
+        try:
+            from openai_chain import compose_retreat
+            out = compose_retreat(
+                user_text=req.user_text,
+                extracted_filters=req.filters.model_dump(),
+                sql_count=req.sql_count,
+                semantic_count=req.semantic_count,
+            )
+            if out.get("reply"):
+                return RetreatResponse(reply=out["reply"], followups=out.get("followups") or [])
+        except Exception:
+            pass
+    # Fallback: 룰 기반 retreat. periodKey 가 좁은 케이스부터 완화 제안.
+    period = req.filters.periodKey
+    soft = {
+        "today": ("내일은 어떠세요?", "이번 주말로", "이번 달 전체"),
+        "tomorrow": ("주말로", "이번 주 전체", "다음 주말"),
+        "weekend": ("이번 주 전체", "이번 달", "동행 빼기"),
+        "week": ("이번 달", "동행 빼기", "다른 카테고리"),
+        "month": ("동행 빼기", "지역 넓히기", "다른 카테고리"),
+    }.get(period or "", ("동행 빼기", "지역 넓히기", "기간 넓히기"))
+    return RetreatResponse(
+        reply="입력하신 조건으로 진행 중인 이벤트가 없네요. 조건을 조금 완화해 보세요.",
+        followups=list(soft),
+    )
+
+
+@app.post("/events/rerank", response_model=RerankResponse)
+def events_rerank(req: RerankRequest) -> RerankResponse:
+    """
+    cosine 기반 후보 N 개를 LLM 이 의미·맥락 적합도로 재정렬 + 추천 사유 1줄 생성.
+    BFF chat 의 over-fetch 30 → top 5 cap 단계에 삽입 가능.
+
+    LLM 비활성이면 503 — 호출자가 원래 score 순서 유지 책임.
+    """
+    from fastapi import HTTPException
+
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="rerank unavailable (no key or over budget)")
+    try:
+        from openai_chain import rerank_candidates
+        ranked = rerank_candidates(
+            query=req.query,
+            candidates=[c.model_dump() for c in req.candidates],
+            top_k=req.top_k,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"rerank failed: {e.__class__.__name__}")
+    return RerankResponse(ranked=[RerankItem(**r) for r in ranked])
 
 
 @app.post("/summarize", response_model=SummarizeResponse)

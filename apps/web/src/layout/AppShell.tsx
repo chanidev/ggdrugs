@@ -120,6 +120,9 @@ export function AppShell() {
             ...(reply.suggestions && reply.suggestions.length > 0
               ? { suggestions: reply.suggestions }
               : {}),
+            ...(reply.followups && reply.followups.length > 0
+              ? { followups: reply.followups }
+              : {}),
           },
         ]);
         const q = chatFiltersToQuery(reply.filters);

@@ -218,9 +218,15 @@ export function createApp(): Express {
     listVibes(req, res).catch(next);
   });
 
-  app.post('/chat', (req: Request, res: Response, next: NextFunction) => {
-    postChat(req, res).catch(next);
-  });
+  app.post(
+    '/chat',
+    (req: Request, res: Response, next: NextFunction) => {
+      resolveAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      postChat(req, res).catch(next);
+    },
+  );
 
   // Admin — vibe 라벨 부여 (requireAuth → requireAdmin 체인).
   app.get(

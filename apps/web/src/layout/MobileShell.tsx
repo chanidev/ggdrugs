@@ -350,24 +350,43 @@ function MobileChatTab({
             </ul>
           </div>
         ) : (
-          messages.map((m, i) => (
-            <div key={i} className="flex flex-col gap-1.5">
-              <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <span
-                  className={`inline-block max-w-[82%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
-                    m.role === 'user'
-                      ? 'rounded-br-[4px] bg-(--color-accent) text-white'
-                      : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
-                  }`}
-                >
-                  {m.text}
-                </span>
+          messages.map((m, i) => {
+            const isLastAssistant =
+              m.role === 'assistant' && i === messages.length - 1;
+            return (
+              <div key={i} className="flex flex-col gap-1.5">
+                <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <span
+                    className={`inline-block max-w-[82%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
+                      m.role === 'user'
+                        ? 'rounded-br-[4px] bg-(--color-accent) text-white'
+                        : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
+                    }`}
+                  >
+                    {m.text}
+                  </span>
+                </div>
+                {m.role === 'assistant' && m.suggestions && m.suggestions.length > 0 && (
+                  <MobileSuggestionsList items={m.suggestions} onClick={onSuggestionClick} />
+                )}
+                {isLastAssistant && m.followups && m.followups.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 pt-0.5">
+                    {m.followups.slice(0, 3).map((s, k) => (
+                      <button
+                        key={`${k}-${s}`}
+                        type="button"
+                        onClick={() => onSubmit(s)}
+                        className="inline-flex items-center gap-1 rounded-full border border-(--color-border) bg-(--color-surface) px-2.5 py-1 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-accent) hover:bg-(--color-accent-bg) hover:text-(--color-accent)"
+                      >
+                        <span aria-hidden className="text-(--color-text-subtle)">↳</span>
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              {m.role === 'assistant' && m.suggestions && m.suggestions.length > 0 && (
-                <MobileSuggestionsList items={m.suggestions} onClick={onSuggestionClick} />
-              )}
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -434,6 +453,11 @@ function MobileSuggestionsList({
                 {s.startDate}
                 {s.startDate !== s.endDate && ` ~ ${s.endDate}`}
               </span>
+              {s.matchReason && (
+                <span className="line-clamp-2 text-[10.5px] italic text-(--color-accent)/85">
+                  ✦ {s.matchReason}
+                </span>
+              )}
             </button>
           </li>
         ))}
