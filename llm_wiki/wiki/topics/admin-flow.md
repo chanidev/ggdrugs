@@ -78,7 +78,7 @@ Uploaders 탭 패턴 (목록 + 상세 패널 + 결정 액션) 의 미러.
 - ~~관리자 전용 계정 생성 플로우 부재~~ → **해소** (2026-04-23): ADR 0005 — seed:admin (bootstrap) + Members 탭의 "admin 승급" (peer-promote) 두 경로.
 - ~~업로더 승급 로그 테이블 부재~~ → **해소** (2026-04-23): ADR 0005 E-8 — `admin_audit_logs.action='uploader_decision'` 으로 `decideUploader` 호출 시 자동 기록.
 - ~~`admin_audit_logs` + `approval_logs` 통합 Audit 뷰 미구현~~ → **해소** (2026-04-23): Audit 탭 source 토글 (이벤트 심사 / Admin 작업) 신설. 두 테이블 분리 endpoint 유지하되 단일 탭에서 노출.
-- 대량 일괄 승인(bulk action) 지원 여부 미정 — 현재는 개별 승인만.
+- ~~대량 일괄 승인(bulk action) 지원 여부 미정~~ → **해소 (2026-04-23): 미지원 결정** — admin 의 모든 결정 액션은 1건씩 처리. 근거: ① audit 가치 (reason 을 N건 묶어 박제하면 case-by-case 추적 의미 약화), ② 검토 부주의 risk (체크 한 번으로 N건 처리 시 실수 영향 N배), ③ 일상 운영에서 1건씩 처리해도 충분. 향후 스팸 다발 사태 등 트리거 발생 시 ADR 로 재평가.
 - LLM이 관리자 보조로 등장(A_700 액터에 "시스템(LLM)" 포함) — 역할 범위 확정 필요(라벨 추천? 서류 OCR? CLAUDE.md §6-4는 LLM 위임 금지).
 
 ## References
