@@ -18,6 +18,9 @@ import { BookmarkButton } from './BookmarkButton';
  *
  * 레이아웃: Sidebar(236) + OverlayPanel(380) 오른쪽, w-[380], absolute left-[616].
  * z-10 (OverlayPanel z-20 보다 아래 — 필터/목록을 가리지 않게, 지도 위엔 얹힘).
+ *
+ * 모바일 사용처: `EventSummaryContent` 만 export — MobileShell BottomSheet 내부
+ * 인라인 렌더 (positioning 없이). desktop wrapper 는 그대로 `EventSummaryPanel`.
  */
 export function EventSummaryPanel({
   eventId,
@@ -26,6 +29,34 @@ export function EventSummaryPanel({
   eventId: string;
   onClose: () => void;
 }) {
+  return (
+    <aside
+      aria-label="선택된 이벤트 요약"
+      className="absolute bottom-0 left-[616px] top-0 z-10 hidden w-[380px] flex-col border-r border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)] md:flex"
+    >
+      <header className="flex shrink-0 items-center justify-between border-b border-(--color-border) px-5 pb-4 pt-5">
+        <h3 className="m-0 text-[16px] font-bold tracking-[-0.015em]">이벤트 요약</h3>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="요약 패널 닫기"
+          className="flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
+        >
+          <Icon name="close" size={18} />
+        </button>
+      </header>
+      <EventSummaryContent eventId={eventId} />
+    </aside>
+  );
+}
+
+/**
+ * EventSummaryContent — 데이터 fetch + body + footer (positioning/aside 없음).
+ *
+ * 부모는 `flex flex-col` 컨테이너여야 함. desktop 은 EventSummaryPanel `<aside>`,
+ * 모바일은 BottomSheet 내부 `<section>`.
+ */
+export function EventSummaryContent({ eventId }: { eventId: string }) {
   const navigate = useNavigate();
   const [state, setState] = useState<{
     loading: boolean;
@@ -50,22 +81,7 @@ export function EventSummaryPanel({
   }, [eventId]);
 
   return (
-    <aside
-      aria-label="선택된 이벤트 요약"
-      className="absolute bottom-14 left-0 right-0 top-[60px] z-20 flex flex-col border-t border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)] md:bottom-0 md:left-[616px] md:right-auto md:top-0 md:z-10 md:w-[380px] md:border-r md:border-t-0"
-    >
-      <header className="flex shrink-0 items-center justify-between border-b border-(--color-border) px-5 pb-4 pt-5">
-        <h3 className="m-0 text-[16px] font-bold tracking-[-0.015em]">이벤트 요약</h3>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="요약 패널 닫기"
-          className="flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
-        >
-          <Icon name="close" size={18} />
-        </button>
-      </header>
-
+    <>
       <div className="min-h-0 flex-1 overflow-y-auto">
         {state.loading && <SummarySkeleton />}
         {state.error === 'NOT_FOUND' && (
@@ -92,7 +108,7 @@ export function EventSummaryPanel({
           </button>
         </footer>
       )}
-    </aside>
+    </>
   );
 }
 

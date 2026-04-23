@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Header } from './Header';
 import { Sidebar, type SidebarSection } from './Sidebar';
-import { MobileTabBar } from './MobileTabBar';
+import { MobileShell } from './MobileShell';
 import { OverlayPanel } from '../components/OverlayPanel';
 import { FilterSearchPanel } from '../components/FilterSearchPanel';
 import { FullListPanel } from '../components/FullListPanel';
@@ -68,34 +68,31 @@ function chatFiltersToQuery(f: ChatFilters): EventListQuery | null {
 }
 
 /**
- * AppShell — A_200 메인 페이지 레이아웃.
+ * AppShell — A_200 메인 페이지 state 컨테이너.
  *
- * 구조:
- *  - Header (60px)
- *  - Body (flex row):
- *    · Sidebar rail (236px)
- *    · OverlayPanel (absolute left=236, w=380, z=20)         — 필터/목록/채팅 help
- *    · EventSummaryPanel (absolute left=616, w=380, z=10)     — 선택 이벤트 요약 (있을 때만)
- *    · main (map + 플로팅 ChatDock)
+ * 데스크톱 / 모바일 두 트리를 동시 렌더, CSS 로 한 쪽만 노출:
+ *  - 데스크톱: 본 파일 내 `<DesktopBody>` (Header + Sidebar rail + OverlayPanel + map + ChatDock).
+ *    `hidden md:flex`.
+ *  - 모바일:   `<MobileShell>` (full-screen map + floating header + BottomSheet).
+ *    내부적으로 `md:hidden`.
+ *
+ * 둘은 같은 부모 state 를 공유 — 회전 / breakpoint 전환 시에도 선택된 이벤트, chat
+ * 메시지, 적용된 필터가 유지됨.
  *
  * State lift:
- *  - open section (filter/list/chat/null)
+ *  - open section (filter/list/chat/null) — 데스크톱 OverlayPanel 만 사용
  *  - chatValue + messages + dockCollapsed
  *  - mapFilter: FilterSearchPanel 적용 결과가 SeoulMap 재-fetch 를 트리거
- *  - selectedEventId: 핀 클릭 / 목록 클릭 → 요약 패널 + 지도 하이라이트 동기화
+ *  - highlightRegionIds: chip 클릭 즉시 폴리곤 하이라이트 (mapFilter 와 분리)
+ *  - selectedEventId: 핀/목록 클릭 → 요약 패널/시트 + 지도 하이라이트 동기화
  */
 export function AppShell() {
-  // 기본 시작 상태: 데스크탑 필터 패널, 모바일은 닫힘(지도). CSS breakpoint 로
-  // 대체할 수 없어서 초기값만 viewport 폭으로 결정. 이후엔 사용자 state.
-  const [open, setOpen] = useState<SidebarSection | null>(() => {
-    if (typeof window === 'undefined') return 'filter';
-    return window.matchMedia('(min-width: 768px)').matches ? 'filter' : null;
-  });
+  // 데스크톱 기본 상태 — 모바일은 자체 tab state 사용 (open 비참조).
+  const [open, setOpen] = useState<SidebarSection | null>('filter');
   const [chatValue, setChatValue] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [dockCollapsed, setDockCollapsed] = useState(false);
   const [mapFilter, setMapFilter] = useState<EventListQuery | null>(null);
-  // 지도 폴리곤 하이라이트는 chip 클릭에 즉시 반응 — 핀 재-fetch(mapFilter) 와 분리.
   const [highlightRegionIds, setHighlightRegionIds] = useState<string[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
@@ -124,7 +121,6 @@ export function AppShell() {
         const q = chatFiltersToQuery(reply.filters);
         if (q) {
           setMapFilter(q);
-          // 채팅에서 온 지역은 폴리곤 하이라이트도 켜준다.
           setHighlightRegionIds(reply.filters.regionIds);
         }
       } catch (err) {
@@ -138,69 +134,85 @@ export function AppShell() {
   };
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-(--color-bg) text-(--color-text)">
-      <Header />
-      <div className="relative flex min-h-0 flex-1">
-        <Sidebar open={open} onToggle={toggleSection} />
-        <OverlayPanel open={open} onClose={() => setOpen(null)}>
-          {open === 'filter' && (
-            <FilterSearchPanel
-              onApplied={(q) => setMapFilter(q)}
-              onReset={() => {
-                setMapFilter(null);
-                setHighlightRegionIds([]);
-              }}
-              onRegionSelectionChange={setHighlightRegionIds}
-              onSelectEvent={setSelectedEventId}
-              activeEventId={selectedEventId}
-            />
-          )}
-          {open === 'list' && (
-            <FullListPanel
-              activeEventId={selectedEventId}
-              onSelect={setSelectedEventId}
-            />
-          )}
-          {open === 'chat' && (
-            <ChatHelpPanel
-              onPick={(q) => {
-                setOpen(null);
-                setChatValue(q);
-                if (dockCollapsed) setDockCollapsed(false);
-              }}
-            />
-          )}
-        </OverlayPanel>
-        {selectedEventId && (
-          <EventSummaryPanel
-            eventId={selectedEventId}
-            onClose={() => setSelectedEventId(null)}
-          />
-        )}
-        <MobileTabBar open={open} onSelect={setOpen} />
-        <main className="relative flex min-w-0 flex-1 flex-col">
-          <div className="relative min-h-0 flex-1">
-            <ErrorBoundary>
-              <SeoulMap
-                filter={mapFilter}
-                highlightRegionIds={highlightRegionIds}
-                selectedEventId={selectedEventId}
+    <>
+      {/* 데스크톱 트리 (md+) */}
+      <div className="hidden h-screen flex-col overflow-hidden bg-(--color-bg) text-(--color-text) md:flex">
+        <Header />
+        <div className="relative flex min-h-0 flex-1">
+          <Sidebar open={open} onToggle={toggleSection} />
+          <OverlayPanel open={open} onClose={() => setOpen(null)}>
+            {open === 'filter' && (
+              <FilterSearchPanel
+                onApplied={(q) => setMapFilter(q)}
+                onReset={() => {
+                  setMapFilter(null);
+                  setHighlightRegionIds([]);
+                }}
+                onRegionSelectionChange={setHighlightRegionIds}
                 onSelectEvent={setSelectedEventId}
+                activeEventId={selectedEventId}
               />
-            </ErrorBoundary>
-            <HealthBadge />
-            <ChatDock
-              value={chatValue}
-              onChange={setChatValue}
-              onSubmit={handleChatSubmit}
-              onSuggestionClick={setSelectedEventId}
-              messages={messages}
-              collapsed={dockCollapsed}
-              onToggleCollapsed={() => setDockCollapsed((c) => !c)}
+            )}
+            {open === 'list' && (
+              <FullListPanel
+                activeEventId={selectedEventId}
+                onSelect={setSelectedEventId}
+              />
+            )}
+            {open === 'chat' && (
+              <ChatHelpPanel
+                onPick={(q) => {
+                  setOpen(null);
+                  setChatValue(q);
+                  if (dockCollapsed) setDockCollapsed(false);
+                }}
+              />
+            )}
+          </OverlayPanel>
+          {selectedEventId && (
+            <EventSummaryPanel
+              eventId={selectedEventId}
+              onClose={() => setSelectedEventId(null)}
             />
-          </div>
-        </main>
+          )}
+          <main className="relative flex min-w-0 flex-1 flex-col">
+            <div className="relative min-h-0 flex-1">
+              <ErrorBoundary>
+                <SeoulMap
+                  filter={mapFilter}
+                  highlightRegionIds={highlightRegionIds}
+                  selectedEventId={selectedEventId}
+                  onSelectEvent={setSelectedEventId}
+                />
+              </ErrorBoundary>
+              <HealthBadge />
+              <ChatDock
+                value={chatValue}
+                onChange={setChatValue}
+                onSubmit={handleChatSubmit}
+                onSuggestionClick={setSelectedEventId}
+                messages={messages}
+                collapsed={dockCollapsed}
+                onToggleCollapsed={() => setDockCollapsed((c) => !c)}
+              />
+            </div>
+          </main>
+        </div>
       </div>
-    </div>
+
+      {/* 모바일 트리 (< md) — 내부적으로 md:hidden */}
+      <MobileShell
+        mapFilter={mapFilter}
+        setMapFilter={setMapFilter}
+        highlightRegionIds={highlightRegionIds}
+        setHighlightRegionIds={setHighlightRegionIds}
+        selectedEventId={selectedEventId}
+        setSelectedEventId={setSelectedEventId}
+        chatValue={chatValue}
+        setChatValue={setChatValue}
+        messages={messages}
+        onChatSubmit={handleChatSubmit}
+      />
+    </>
   );
 }

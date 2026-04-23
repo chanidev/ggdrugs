@@ -43,8 +43,8 @@ export function ChatDock({
 }) {
   return (
     <form
-      // 모바일: 하단 MobileTabBar(h-14) 위에 위치. 데스크탑: bottom-6 floating.
-      className="pointer-events-auto absolute bottom-[72px] left-2 right-2 z-[7] rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-3 pb-3 pt-3 shadow-(--shadow-lg) md:bottom-6 md:left-1/2 md:right-auto md:w-[min(820px,calc(100%-48px))] md:-translate-x-1/2 md:px-[18px] md:pb-4 md:pt-3.5"
+      // 데스크톱 전용 floating dock — 모바일 메인은 BottomSheet 채팅 탭 사용.
+      className="pointer-events-auto absolute bottom-6 left-1/2 z-[7] w-[min(820px,calc(100%-48px))] -translate-x-1/2 rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-[18px] pb-4 pt-3.5 shadow-(--shadow-lg)"
       onSubmit={(e) => {
         e.preventDefault();
         const t = value.trim();
