@@ -586,3 +586,31 @@ Web:
 - `wiki/index.md` 시스템 흐름 섹션에 recommendations.md 추가.
 
 graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.
+
+## 2026-04-23T12:25  feature  소스 쿼터·레이트리밋 — fetchWithRetry 헬퍼 + 4 runner 적용
+ingest-pipeline.md OQ "소스 쿼터·레이트리밋 미구현" 부분 해소. 단일 fetch 호출의 transient
+장애 (429 / 5xx / 네트워크) 에 graceful retry — 외부 API 일시 장애로 ingest 가 통째 죽지
+않도록.
+
+신규: `apps/bff/src/jobs/lib/fetch-with-retry.ts`:
+- `fetchWithRetry(url, init?, opts?)` — 3회 재시도, exp backoff (1s/2s/4s, cap 8s)
+- Retry-After 헤더 존중 (초 단위 정수 + HTTP-date 둘 다)
+- 재시도 대상: 429, 500, 502, 503, 504, 네트워크 에러 (ECONNRESET / ENOTFOUND / EAI_AGAIN /
+  socket / fetch failed)
+- 4xx (429 제외), 2xx, 3xx 는 그대로 반환 — 호출자가 res.ok 처리
+- AbortError 는 재시도 안 함 (외부 abort 의도 존중)
+
+적용: 4 runner 모두 fetch → fetchWithRetry 교체:
+- tourapi-ingest.ts (searchFestival2)
+- seoul-culture-ingest.ts (culturalEventInfo)
+- kcisa-ingest.ts (API_CCA_145)
+- news-naver-ingest.ts (Naver search + Google News RSS)
+
+여전히 미해결 (별도 후속):
+- 일 quota 소진 (provider 별 4xx 일부 또는 200 + 특정 resultCode) — 자동 retry 안 함.
+  호출자가 throw, scheduler 의 Promise.allSettled 가 source-level 격리는 보장.
+- 일일 호출 카운트 추적·임계 알림 (예: 일 한도 80% 도달 시 warn) — 미구현.
+
+검증: BFF typecheck PASS. 라이브 retry 동작은 외부 장애 발생 시 자연 검증.
+
+graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.

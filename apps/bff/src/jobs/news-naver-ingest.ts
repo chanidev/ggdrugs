@@ -3,6 +3,7 @@ import { logger } from '../logger.js';
 import { prisma } from '../prisma.js';
 import { Prisma } from '@prisma/client';
 import { callLlm } from '../llm-client.js';
+import { fetchWithRetry } from './lib/fetch-with-retry.js';
 
 /**
  * 네이버 뉴스 검색 API → event_article_mappings 채움 (A_400 · N-2).
@@ -182,7 +183,7 @@ async function fetchGoogleNewsRss(query: string): Promise<NaverNewsItem[]> {
   const url = `${GOOGLE_NEWS_RSS}?q=${encodeURIComponent(`${query} when:30d`)}&hl=ko&gl=KR&ceid=KR:ko`;
   let xml: string;
   try {
-    const res = await fetch(url, { headers: { 'User-Agent': 'alle-news-bot/1.0' } });
+    const res = await fetchWithRetry(url, { headers: { 'User-Agent': 'alle-news-bot/1.0' } }, { source: 'google-news' });
     if (!res.ok) return [];
     xml = await res.text();
   } catch {
@@ -219,12 +220,16 @@ async function fetchNaverNews(query: string): Promise<NaverNewsItem[]> {
     throw new Error('NAVER_CLIENT_ID/SECRET missing');
   }
   const url = `${SEARCH_URL}?query=${encodeURIComponent(query)}&display=${DISPLAY}&sort=sim`;
-  const res = await fetch(url, {
-    headers: {
-      'X-Naver-Client-Id': env.NAVER_CLIENT_ID,
-      'X-Naver-Client-Secret': env.NAVER_CLIENT_SECRET,
+  const res = await fetchWithRetry(
+    url,
+    {
+      headers: {
+        'X-Naver-Client-Id': env.NAVER_CLIENT_ID,
+        'X-Naver-Client-Secret': env.NAVER_CLIENT_SECRET,
+      },
     },
-  });
+    { source: 'naver-news' },
+  );
   if (!res.ok) {
     const txt = await res.text().catch(() => '');
     throw new Error(`naver news ${res.status}: ${txt.slice(0, 200)}`);

@@ -1,5 +1,6 @@
 import { env } from '../env.js';
 import { logger } from '../logger.js';
+import { fetchWithRetry } from './lib/fetch-with-retry.js';
 import {
   isForwardLooking,
   parseYmd,
@@ -61,7 +62,11 @@ async function fetchPage(pageNo: number, eventStartDate: string): Promise<{ item
     `eventStartDate=${eventStartDate}`,
   ].join('&');
 
-  const res = await fetch(`${BASE_URL}?${qs}`, { headers: { Accept: 'application/json' } });
+  const res = await fetchWithRetry(
+    `${BASE_URL}?${qs}`,
+    { headers: { Accept: 'application/json' } },
+    { source: 'tourapi' },
+  );
   if (!res.ok) throw new Error(`TourAPI HTTP ${res.status} ${res.statusText}`);
   const text = await res.text();
   if (!text.startsWith('{')) throw new Error(`TourAPI non-JSON: ${text.slice(0, 200)}`);

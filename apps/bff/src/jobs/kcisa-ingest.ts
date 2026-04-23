@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
+import { fetchWithRetry } from './lib/fetch-with-retry.js';
 import {
   cleanDescription,
   extractSeoulGu,
@@ -101,7 +102,7 @@ async function fetchPage(pageNo: number): Promise<{ items: KcisaItem[]; total: n
     `numOfRows=${PAGE_SIZE}`,
     `pageNo=${pageNo}`,
   ].join('&');
-  const res = await fetch(`${BASE_URL}?${qs}`, { headers: { Accept: 'application/xml' } });
+  const res = await fetchWithRetry(`${BASE_URL}?${qs}`, { headers: { Accept: 'application/xml' } }, { source: 'kcisa' });
   if (!res.ok) throw new Error(`KCISA HTTP ${res.status}`);
   const xml = await res.text();
   const { code, msg } = parseResultCode(xml);

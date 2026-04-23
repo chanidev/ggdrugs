@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
+import { fetchWithRetry } from './lib/fetch-with-retry.js';
 import {
   cleanDescription,
   isForwardLooking,
@@ -108,7 +109,7 @@ function splitLatLng(lot: string | undefined, lat: string | undefined): { latitu
 async function fetchPage(start: number, end: number): Promise<{ items: SeoulEventRow[]; total: number }> {
   if (!env.SEOUL_OPEN_API_KEY) throw new Error('SEOUL_OPEN_API_KEY is not set');
   const url = `${BASE}/${env.SEOUL_OPEN_API_KEY}/json/${ENDPOINT}/${start}/${end}/`;
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  const res = await fetchWithRetry(url, { headers: { Accept: 'application/json' } }, { source: 'seoul-culture' });
   if (!res.ok) throw new Error(`Seoul OpenAPI HTTP ${res.status}`);
   const data = (await res.json()) as SeoulResponse;
 
