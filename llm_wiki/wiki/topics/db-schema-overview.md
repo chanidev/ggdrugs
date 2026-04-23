@@ -49,7 +49,7 @@ PostgreSQL **23 테이블** 구성. 크게 5개 도메인 그룹으로 나뉜다
 - **event_subscriptions** *(신설, ADR 0001 #7)* — A_203 조건 기반 신규 이벤트 알림 구독 (user_id + 필터 5종 JSONB).
 - **photo_albums** — 사용자 앨범. event_id NULL 허용.
 - **photos** — ai_tags JSONB + GIN 인덱스.
-- **user_taste_profiles** — taste_dimension/taste_value KV 형태.
+- **user_taste_profiles** — taste_dimension/taste_value KV 형태. 사용처: G-5 추천 시스템 일일 집계 ([recommendations.md](recommendations.md)) — 3 dimensions (`preferred_category` / `preferred_region` / `preferred_vibe`).
 
 ### 5. LLM·크롤링 (5개)
 - **chat_sessions** — 채팅 검색 세션.

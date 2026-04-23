@@ -614,3 +614,35 @@ ingest-pipeline.md OQ "소스 쿼터·레이트리밋 미구현" 부분 해소. 
 검증: BFF typecheck PASS. 라이브 retry 동작은 외부 장애 발생 시 자연 검증.
 
 graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.
+
+## 2026-04-23T12:30  lint  Phase 1 마감 sweep — drift 0 확인 + graphify 재빌드
+04-23 sprint 의 모든 후속 ship (Audit 통합 / 쿨다운 / 정책 박제 / A_100 / G-5 / fetchWithRetry)
+은 commit 단위로 wiki 동시 갱신 패턴을 따라 drift 0건. 본 sweep 은 후속 정리만:
+
+- graphify 재빌드 — 931 nodes / 1227 edges / 132 communities (이전 905/1177/131 대비 +26/+50/+1)
+- `db-schema-overview.md` user_taste_profiles 항목에 G-5 사용처 cross-ref 추가
+- `lint-report.md` 전면 갱신 — 본 sprint 의 14건 ship 항목 표 + Phase 1 lint queue 전체 closed
+  표기 + 다음 sprint 후보 (Phase 2 진입 / 추천 정교화 / quota 추적 / audit dashboard)
+
+Phase 1 lint queue 누적 정리 (04-22 lint 부터 04-23 sprint 3 까지):
+
+| ID | 항목 | 결과 |
+|---|---|---|
+| 1 | admin Audit 통합 뷰 | ✅ ship (source toggle) |
+| 2 | bulk action | ✅ 미지원 결정 박제 |
+| 3 | rejected uploader 쿨다운 | ✅ ship (7d) |
+| 4 | PostGIS geom | ⏸ Phase 2 |
+| 5 | 모바일 레이아웃 | ⏸ Phase 2 |
+
+추가 (점검 sprint 에서 식별):
+
+| ID | 항목 | 결과 |
+|---|---|---|
+| G-1 | A_100 자동 복귀 | ✅ ship (returnTo 쿠키 + 화이트리스트) |
+| G-2 | ended retention | ✅ 유지 결정 박제 |
+| G-3 | 기사 retention | ✅ 유지 결정 박제 |
+| G-4 | admin scope 의미 | ✅ 의미 결정 박제 |
+| G-5 | user_taste_profiles 사용 | ✅ ship (추천 시스템) |
+| G-6 | 소스 쿼터·레이트리밋 (transient) | ✅ ship (fetchWithRetry) |
+
+Phase 1 점검 결과 — **Hard gap 0건 잔존**. 잔여는 모두 Phase 2 또는 트리거 대기 영역.

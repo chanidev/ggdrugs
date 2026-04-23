@@ -1,40 +1,38 @@
 # Wiki Lint Report
 
-**Generated**: 2026-04-23 11:50 (ADR 0004 + 0005 ship + Members 탭 + RoleToggleButton sprint 후)
-**Scope**: `wiki/` 전체 (4 sources + **21 topics** + 5 entities, index/log 제외) — admin-account-management.md 신규 추가
-**Graphify cross-check**: `graphify-out/` **905 nodes / 1177 edges / 131 communities** (2026-04-23 재빌드 — 이전 847/1084/121 대비 +58/+93/+10)
-**이전 lint**: 2026-04-23 (sprint 1) — Contradictions 0 / Gaps 0. 이후 ADR 0004/0005 + Members 탭 + RoleToggleButton ship → 새 drift 5건.
+**Generated**: 2026-04-23 12:30 (Phase 1 마감 sweep — Audit 통합 + 쿨다운 + A_100 자동 복귀 + 정책 박제 + 추천 + fetchWithRetry sprint 후)
+**Scope**: `wiki/` 전체 (4 sources + **22 topics** + 5 entities, index/log 제외) — admin-account-management + recommendations 추가
+**Graphify cross-check**: `graphify-out/` **931 nodes / 1227 edges / 132 communities** (이전 905/1177/131 대비 +26/+50/+1)
+**이전 lint**: 2026-04-23 sprint 2 (11:50) — Contradictions 0 / Gaps 0. 이후 5 commit ship 추가 (Audit 통합 / 쿨다운 / bulk action 박제 / A_100 자동 복귀 + G-2/3/4 박제 / G-5 추천 / fetchWithRetry).
 
 ---
 
 ## 요약
 
-| 카테고리 | 이전(04-23 sprint 1) | 현재(04-23 sprint 2) |
+| 카테고리 | 이전(11:50) | 현재(12:30) |
 |---|---|---|
-| Contradictions | 0 | **0** — C-13/14/15/16 본 sweep 에서 즉시 정리 |
+| Contradictions | 0 | **0** — 본 sprint 의 모든 변경이 이미 wiki 본문에도 반영됨 (각 commit 의 "문서" 단계에서 함께 갱신) |
 | Stale refs | 0 | 0 |
-| Orphans | 0 | 0 (admin-account-management.md index 등재 완료) |
-| Gaps | 0 | **0** — G-16 본 sweep 에서 즉시 정리 (admin-flow.md §Members 탭 추가) |
+| Orphans | 0 | 0 — admin-account-management.md / recommendations.md 모두 index 등재 |
+| Gaps | 0 | 0 |
 | Over-large pages | 0 | 0 |
-| Implementation status | 미착수 4행 | **미착수 2행** — 세션 무효화 ADR + 관리자 계정 ADR 둘 다 해소 |
+| Implementation status | 미착수 2행 (PostGIS / 모바일) | **미착수 2행 + 부분 해소 1** — 소스 쿼터·레이트리밋 transient retry ship, quota 카운트 추적은 미완 |
 
-**상태**: 두 ADR (0004 세션 무효화 + 0005 관리자 계정 관리) 코드 ship 완료 + wiki drift 5건 (C-13/14/15/16 + G-16) 모두 본 sweep 에서 정리. 잔여 미착수는 PostGIS / 모바일 레이아웃 (모두 Phase 2).
+**상태**: Phase 1 lint queue 5개 모두 처리 완료. 현 sprint 의 모든 ship 항목이 commit 내 "문서" 단계에서 wiki 와 함께 갱신되어 후속 drift 없음. 잔여 미착수는 Phase 2 또는 운영 트리거 대기.
 
 ---
 
-## 1. Contradictions — ✅ 0건 (4건 본 sweep 에서 정리)
+## 1. Contradictions — ✅ 0건
 
-### (해소) C-13. `topics/db-schema-overview.md` admin_audit_logs + scope 도메인
-2026-04-23 본 sweep — §Summary 의 "22 테이블" → "23 테이블" 갱신 + 갱신 근거 (admin_audit_logs 신설) 명시. §1 의 admin_profiles.scope 도메인을 4종으로 확장 + 마이그레이션 링크. §3 (승인 흐름) 을 "2개" → "3개" 로 갱신 + admin_audit_logs 항목 신설 (action 6종 + payload 표준 cross-ref).
+본 sprint 의 모든 ship 이 commit-단위 wiki 동시 갱신을 따름:
 
-### (해소) C-14. `topics/admin-flow.md` 4 탭 → 5 탭 + Members 정의
-2026-04-23 본 sweep — "**5개 탭**" 으로 갱신 + Members 탭 정의 추가 (5 액션 + audit 자동 기록). Uploaders 탭에도 reason textarea + audit (ADR 0005 E-8) 추가 표기. frontmatter `related:` 에 admin-account-management 추가.
-
-### (해소) C-15. `topics/roles-and-active-role.md` Open questions
-2026-04-23 본 sweep — #4 (관리자 계정 생성 플로우) 해소 표기 + ADR 0005 링크. #5 (양방향 토글) 도 RoleToggleButton 5 상태 분기 ship 으로 해소 표기. #6 (rejected 쿨다운) 은 현 정책 (쿨다운 없음) 명시.
-
-### (해소) C-16. `topics/roles-and-active-role.md` 주민번호 표기
-2026-04-23 본 sweep — §승급 플로우 L42 "주민등록번호" → "사업자등록번호 (10자) XOR CI 해시 (88자)" 로 갱신 + ADR 0003 근거 (개인정보보호법 §24-2) 본문에 명시. RoleToggleButton 진입 경로도 같이 정정.
+- **ADR 0004/0005 박제 + 코드 ship** (`9cafc2a`/`d023857`/`66b49aa`) — 전체 sweep 으로 정합
+- **Audit 통합 뷰** (`f11c42d`) — admin-flow §Audit 본문 동시 갱신, OQ 해소
+- **rejected 쿨다운** (`f2175bf`) — roles-and-active-role OQ #6 해소
+- **bulk action 박제** (`83e858c`) — admin-flow OQ 해소
+- **A_100 자동 복귀 + 정책 박제** (`6ec5884`) — auth-flow §A_100 + use-cases-index sweep + ingest/news-article OQ 박제
+- **G-5 추천** (`27c2fb5`) — recommendations.md 신규 + auth-flow OQ 해소 + db-schema-overview user_taste_profiles 사용처 cross-ref (본 sweep 에서 추가)
+- **fetchWithRetry** (`7d54020`) — ingest-pipeline OQ 부분 해소
 
 ---
 
@@ -44,61 +42,65 @@
 
 ## 3. Orphans — ✅ 0건
 
-신규 `topics/admin-account-management.md` 는 `wiki/index.md` §시스템 흐름 + §아키텍처 결정 양쪽에 등재됨.
+신규 topic 2건 모두 `wiki/index.md` 등재 (admin-account-management = 시스템 흐름 + ADR 색인, recommendations = 시스템 흐름).
 
 ---
 
-## 4. Gaps — ✅ 0건 (1건 본 sweep 에서 정리)
-
-### (해소) G-16. `topics/admin-flow.md` Members 탭 / 5 액션 / admin_audit_logs 표
-2026-04-23 본 sweep — `admin-flow.md` 에 §Members 탭 섹션 신설 (5 액션 표 + admin-account-management cross-ref). §Audit Logs 섹션 본문도 정정 — `approval_logs` (이벤트) 와 `admin_audit_logs` (admin 액션) 두 테이블 분리 노출 상태 명시 + 통합 뷰는 후속 sprint 명기.
+## 4. Gaps — ✅ 0건
 
 ---
 
-## 5. Implementation Status — 🟢 큰 진전
+## 5. Implementation Status
 
-### 2026-04-23 sprint 1 대비 변경된 행
+### 본 sprint (04-23 sprint 2 → 3) 변경
 
 | 항목 | 이전 | 현재 | 근거 |
 |---|---|---|---|
-| 세션 무효화 ADR | 🔴 미착수 | ✅ ADR 0004 박제 + 코드 ship (D-3/D-4/D-5/D-6) | docs/decisions/0004 + 코드 PR |
-| 관리자 계정 생성 ADR | 🔴 미착수 | ✅ ADR 0005 박제 + 코드 ship (E-2/E-4/E-5/E-7/E-8) + Members 탭 UI | docs/decisions/0005 + admin-users.ts + MembersTab |
+| ADR 0004 D-1 user soft-delete 패턴 | 정책만 박제 | ✅ ADR 0005 E-5 ship | admin-users.ts softDeleteUser |
+| ADR 0004 D-6 admin revoke scope | 'full' 만 | ✅ 'full' \| 'security' | ADR 0005 E-3 chk_admin_scope rebuild |
+| `decideUploader` audit | 0 행 작성 | ✅ admin_audit_logs `uploader_decision` | ADR 0005 E-8 |
+| 회원/admin 관리 UI | backend-only | ✅ Members 탭 (5 액션 + audit) | ADR 0005 E-7 정정 |
+| 마이페이지 역할 전환 버튼 (GG-ROLE-001) | 미구현 | ✅ RoleToggleButton 5 상태 분기 | MyPage.tsx |
+| Audit 탭 source toggle | approval_logs only | ✅ 이벤트 심사 / Admin 작업 토글 | AuditLogsTab.tsx |
+| rejected uploader 재신청 쿨다운 | 없음 | ✅ 7d (uploader_profiles.updatedAt 기준) | applyUploader + RoleToggleButton |
+| bulk action 정책 | 미정 (OQ) | ✅ 미지원 결정 박제 | admin-flow.md |
+| A_100 원 액션 자동 복귀 | 미구현 | ✅ returnTo 쿠키 + parseReturnTo 화이트리스트 | auth.ts + auth-redirect.ts |
+| ended 이벤트 retention | 미정 (OQ) | ✅ 유지 결정 박제 | ingest-pipeline.md |
+| 기사 retention | 미정 (OQ) | ✅ 유지 결정 박제 | news-article-pipeline.md |
+| admin scope content_only/uploader_review_only | placeholder | ✅ 의미 결정 박제 (분기 코드는 후속) | admin-account-management.md |
+| user_taste_profiles 사용 (G-5) | 0 사용처 | ✅ 일일 집계 + /me/recommendations + 마이페이지 추천 탭 | aggregate-taste-profiles.ts + me-recommendations.ts |
+| 소스 쿼터·레이트리밋 (transient) | 미구현 | ✅ fetchWithRetry (429/5xx/네트워크 retry + Retry-After) 4 runner 적용 | jobs/lib/fetch-with-retry.ts |
 
-### 신규 행
-
-| 항목 | 상태 | 비고 |
-|---|---|---|
-| `admin_audit_logs` 테이블 | ✅ ship | action ∈ {revoke_sessions, admin_promote, admin_demote, admin_scope_change, user_soft_delete, uploader_decision} |
-| sliding+cap 세션 만료 | ✅ ship | `nextExpiresAt = MIN(now+7d, created+30d)` 매 요청 갱신 |
-| session-sweep cron | ✅ ship | scheduler 후속 단계 6번, grace 7d |
-| logout-all UI | ✅ ship | MyPage SessionFooter |
-| RoleToggleButton (GG-ROLE-001) | ✅ ship | MyPage 우측 상단, 5 상태 분기 |
-| Members 탭 (회원/admin 관리) | ✅ ship | Uploaders 탭 패턴 미러 — 5 액션 inline 폼 + reason 강제 + audit 자동 기록 |
-
-### 여전히 🔴 미착수
+### 여전히 🔴 미착수 — Phase 2 또는 트리거 대기
 
 | 항목 | 비고 |
 |---|---|
-| PostGIS geom 전환 | 트리거 조건 미충족 — 지도 viewport bbox / 반경 검색 미도입. 현재 `regionId` 필터만 사용. premature optimization 회피 권장 |
-| 모바일 메인 레이아웃 | rail+panel → 바텀시트 전환 Phase 2 |
+| 일 quota 소진 카운트·임계 알림 | provider 별 quota 추적 미구현. 호출자 throw → scheduler Promise.allSettled source-level 격리만 |
+| 모바일 메인 레이아웃 | rail+panel → 바텀시트 Phase 2. DESIGN.md review 후 |
+| PostGIS geom 전환 | 지도 viewport bbox / 반경 검색 도입 결정 시 |
+| 본인인증 prod (PASS/NICE/카카오) | ADR 0003 §개인 업로더 본인인증 후속 (현재 dev mock) |
+| 사업자번호 정부 API 검증 | ADR 0003 후속 |
+| 서울 외 지역 확장 | UX 결정 |
+| 클러스터 정렬 기준 (거리/인기/최신) | UX 결정 |
+| 추천 가중치·시간 감쇠·Qdrant 기반 personalized kNN | recommendations.md OQ — 만족도 측정 후 결정 |
+| `admin_audit_logs` + `approval_logs` 통합 audit reporting | source toggle 은 ship, 통합 dashboard 는 별도 |
 
 ---
 
 ## 6. Over-large / low-confidence — 해당 없음
 
-모든 topic 파일 < 220줄 (admin-account-management.md 가 최대 ~165줄). graphify INFERRED 평균 confidence 0.81, < 0.6 zero — 조치 불필요.
+모든 topic 파일 < 250줄. graphify INFERRED 평균 confidence 0.81, < 0.6 zero — 조치 불필요.
 
 ---
 
-## 권장 우선 순서 (다음 sprint 후 재평가)
+## 권장 우선순위 (다음 sprint)
 
-본 sweep 의 drift 5건 전부 해소. 다음 ship 후 재평가. 잔여 미착수 후보:
+본 sprint 로 Phase 1 lint queue 전체 closed. 다음 sprint 후보:
 
-1. **`admin_audit_logs` + `approval_logs` 통합 Audit 탭** — 현재 두 테이블 별도. admin-flow.md OQ 에 명시.
-2. **bulk action** — 일괄 승인/반려. admin-flow.md OQ.
-3. **rejected uploader 재신청 쿨다운 정책** — roles-and-active-role.md OQ #6.
-4. **PostGIS geom 전환** — 트리거 조건 미충족 (지도 viewport bbox / 반경 검색 미도입). premature optimization 회피.
-5. **모바일 메인 레이아웃** — Phase 2.
+1. **Phase 2 진입** — 모바일 메인 레이아웃 또는 본인인증 prod 통합 (둘 중 큰 영역)
+2. **추천 시스템 정교화** — Qdrant 기반 personalized kNN (recommendations.md OQ)
+3. **일 quota 추적·알림** — provider 별 일일 호출 카운트 + 임계 도달 시 warn
+4. **admin Audit dashboard** — approval_logs + admin_audit_logs 통합 시각화 (source toggle 은 ship)
 
 ---
 
@@ -107,4 +109,5 @@
 - `lint-report.md` 를 CI 에 엮어서 new drift 있으면 PR comment.
 - `auditMappingDistributionQuick` 로그를 주기 리포트로 aggregate → Slack/notion push.
 - graphify `graph.json` 의 node count / edge count 트렌드를 log.md 에 자동 append.
-- **신규**: `admin_audit_logs` 의 daily summary (action 별 count + 최근 24h reason 샘플) → admin 모니터링 대시보드.
+- `admin_audit_logs` 의 daily summary (action 별 count + 최근 24h reason 샘플) → admin 모니터링.
+- 추천 만족도 측정 (CTR / convert rate) — Qdrant 전환 트리거 신호.
