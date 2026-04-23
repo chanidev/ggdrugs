@@ -134,6 +134,38 @@ def upsert_events(
         return 0
 
 
+def retrieve_vectors(ids: list[int | str]) -> list[list[float]]:
+    """
+    주어진 point id 들의 vector 만 반환. 없는 id 는 skip.
+    Personalized 추천 (user-vector 평균) 용.
+    """
+    client = _get_client()
+    if client is None:
+        return []
+    if not ensure_collection():
+        return []
+    if not ids:
+        return []
+    try:
+        points = client.retrieve(
+            collection_name=_COLLECTION,
+            ids=ids,
+            with_vectors=True,
+            with_payload=False,
+        )
+        out: list[list[float]] = []
+        for pt in points:
+            vec = getattr(pt, "vector", None)
+            if vec is None:
+                continue
+            # Qdrant 은 dict 또는 list 반환 가능 — list 만 받음
+            if isinstance(vec, list) and vec and isinstance(vec[0], (int, float)):
+                out.append([float(x) for x in vec])
+        return out
+    except Exception:
+        return []
+
+
 def delete_events(ids: list[int | str]) -> int:
     """
     Batch delete by point id. Qdrant 에 없는 id 는 조용히 no-op.

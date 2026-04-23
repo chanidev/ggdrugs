@@ -132,6 +132,21 @@ class EventDeleteResponse(BaseModel):
     collection: str
 
 
+# Personalized 추천 — seed event ids → mean vector → kNN.
+class PersonalizedRequest(BaseModel):
+    seed_event_ids: list[int] = Field(min_length=1, max_length=100)
+    limit: int = Field(default=20, ge=1, le=100)
+    score_threshold: float | None = Field(default=0.3, ge=0.0, le=1.0)
+    # 결과에서 제외할 event_id (보통 seed 자체 + 이미 본 이벤트). seed 는 자동 제외됨.
+    exclude_ids: list[int] = Field(default_factory=list, max_length=500)
+
+
+class PersonalizedResponse(BaseModel):
+    seed_count: int
+    used_seed_count: int  # Qdrant 에 vector 가 있던 seed 수
+    hits: list[EventSearchHit]
+
+
 class ChatFilters(BaseModel):
     eventTypes: list[str] = []
     companions: list[str] = []
@@ -328,6 +343,46 @@ def events_search(req: EventSearchRequest) -> EventSearchResponse:
     return EventSearchResponse(
         query=req.query,
         hits=[EventSearchHit(**h) for h in hits],
+    )
+
+
+@app.post("/events/personalized", response_model=PersonalizedResponse)
+def events_personalized(req: PersonalizedRequest) -> PersonalizedResponse:
+    """
+    Personalized 추천 — seed event ids → 각 vector retrieve → mean vector → kNN.
+
+    BFF 의 /me/recommendations 가 사용자의 최근 북마크 + 리뷰 이벤트를 seed 로
+    호출. seed 자체와 exclude_ids 는 결과에서 제외.
+
+    seed 가 모두 Qdrant 에 없으면 hits=[] (BFF 가 SQL OR fallback).
+    """
+    from qdrant_events import retrieve_vectors, search_events
+
+    vectors = retrieve_vectors(req.seed_event_ids)
+    if not vectors:
+        return PersonalizedResponse(
+            seed_count=len(req.seed_event_ids), used_seed_count=0, hits=[]
+        )
+
+    dim = len(vectors[0])
+    mean = [sum(v[i] for v in vectors) / len(vectors) for i in range(dim)]
+
+    exclude_set = {str(i) for i in req.seed_event_ids} | {str(i) for i in req.exclude_ids}
+    # 필터 후 limit 만족시키기 위해 여유분 fetch (제외 비율 고려해 넉넉히)
+    over_fetch = max(req.limit + len(exclude_set), req.limit * 2)
+    over_fetch = min(over_fetch, 100)
+
+    raw_hits = search_events(
+        vector=mean,
+        limit=over_fetch,
+        score_threshold=req.score_threshold,
+    )
+    filtered = [h for h in raw_hits if h["eventId"] not in exclude_set][: req.limit]
+
+    return PersonalizedResponse(
+        seed_count=len(req.seed_event_ids),
+        used_seed_count=len(vectors),
+        hits=[EventSearchHit(**h) for h in filtered],
     )
 
 

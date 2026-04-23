@@ -13,15 +13,32 @@ export interface RecommendedEventItem {
   phase: 'upcoming' | 'ongoing' | 'ended';
   categoryName: string;
   region: { sidoName: string; sigunguName: string | null; fullAddress: string };
-  /** 어떤 dimension 과 매칭됐는지 (UI tooltip 용). 'category' | 'region' | 'vibe' subset. */
+  /**
+   * 어떤 dimension 과 매칭됐는지 (UI tooltip 용).
+   * Qdrant personalized 결과는 ['semantic'], SQL fallback 은 'category'|'region'|'vibe' subset.
+   */
   matchedDimensions: string[];
+  /** Qdrant personalized 결과만 — kNN cosine score (0~1). SQL fallback 은 undefined. */
+  score?: number;
 }
 
 export interface MyRecommendationsResponse {
   items: RecommendedEventItem[];
-  tasteSignals: Record<string, string>;
-  /** 'no_taste_signals' = user_taste_profiles 빈 (북마크/리뷰 0). 'no_valid_signals' = 손상값 only. */
-  reason: 'no_taste_signals' | 'no_valid_signals' | null;
+  /** 'qdrant_personalized' (mean vector kNN) | 'fallback_sql' (taste profile OR matching) */
+  source: 'qdrant_personalized' | 'fallback_sql';
+  tasteSignals?: Record<string, string>; // fallback_sql 일 때만 동봉
+  seedCount: number;
+  /**
+   * null = 정상.
+   * 'no_taste_signals' = 시그널 0 (북마크/리뷰 0).
+   * 'no_valid_signals' = taste 손상 + Qdrant 0.
+   * 'qdrant_unavailable' = LLM 다운, SQL fallback 사용 표기.
+   */
+  reason:
+    | 'no_taste_signals'
+    | 'no_valid_signals'
+    | 'qdrant_unavailable'
+    | null;
 }
 
 export async function fetchMyRecommendations(

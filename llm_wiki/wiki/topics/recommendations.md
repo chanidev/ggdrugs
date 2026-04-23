@@ -87,16 +87,49 @@ fetch 후 client-side 마킹 — Prisma 의 OR 가 단일 row 에 어떤 절이 
 - `items.length === 0` → "조건 맞는 신규 이벤트 없음"
 - 정상 → `RecommendedCard` 카드 list. matchedDimensions 칩 노출 (✦ 관심 종류 / 관심 지역 / 관심 성향)
 
+## Hybrid Qdrant + SQL fallback (2026-04-23 정교화)
+
+이전엔 SQL OR (taste profile) 단일 알고리즘. 이제 **2-tier hybrid**:
+
+### Primary — Qdrant personalized (mean vector kNN)
+- BFF 가 사용자의 **최근 북마크 10 + 비삭제 리뷰 5** 를 seed event ids 로 수집
+- `services/llm POST /events/personalized` 호출:
+  - `qdrant_events.retrieve_vectors(seed_ids)` → 각 seed 의 1536d 벡터 retrieve (Qdrant `client.retrieve`)
+  - **mean vector** 계산 (uniform weight, 시간 감쇠 미적용)
+  - `search_events(mean, limit, score_threshold=0.25)` → kNN
+  - seed 자체와 exclude_ids 는 결과에서 제외 (over-fetch 후 filter)
+- 응답 hits 의 eventId 를 BFF Prisma 로 resolve (approved + 미삭제 + phase!='ended' 추가 필터)
+- 정렬: kNN score desc 보존
+- response: `source: 'qdrant_personalized'`, `score` 필드 동봉, `matchedDimensions: ['semantic']`
+
+### Fallback — SQL OR (taste profile)
+다음 케이스에 자동 진입:
+1. user 가 북마크/리뷰 0건 (seed 없음)
+2. LLM service 다운 (timeout 5s, 503, 네트워크 에러)
+3. Qdrant 가 seed 모두 못 찾음 (vector 부재)
+4. Qdrant hits 모두 stale/삭제 후 Prisma resolve 0
+
+기존 알고리즘 그대로:
+- `user_taste_profiles` 의 `preferred_category / region / vibe` 3 dim
+- WHERE OR + approved + 미삭제 + phase!='ended' + seed exclude
+- ORDER BY startDate ASC
+- response: `source: 'fallback_sql'`, `tasteSignals` 동봉, `matchedDimensions: ['category', 'region', ...]`
+
+### Reason 분기
+- `null` — 정상 결과
+- `'no_taste_signals'` — taste profile 0 + seed 0 (북마크/리뷰 0)
+- `'no_valid_signals'` — taste 손상 + Qdrant 0 동시
+- `'qdrant_unavailable'` — LLM 다운 → SQL fallback 진입 표기
+
+### 라이브 검증
+seedId 1535 → mean vector 검색 → score 0.86 / 0.67 hits 정상. 예찬 user (seed 4건) → 1건 매칭 (score 0.688, semantic).
+
 ## Open questions
 
-- 시그널 가중치 — bookmarks 와 reviews 를 동등 처리. 리뷰가 더 강한 시그널 (시간 투자 큼) 일 수 있는데
-  현재는 단순 UNION ALL.
-- 시간 감쇠 (time decay) — 1년 전 북마크와 어제 북마크가 동등 weight. exponential decay 도입 검토 후보.
-- 다중 매칭 우선순위 — matchedDimensions 가 2개인 이벤트 (category + region 둘 다 매칭) 가 1개 매칭
-  보다 우선시되지 않음 (단순 startDate 순). score 기반 정렬 후보.
-- Qdrant 기반 추천 — semantic-search 인프라가 이미 있음. 사용자 북마크 이벤트들의 embedding mean
-  → kNN search 로 더 정교한 추천 가능. 현재는 SQL OR 매칭 simple 버전. 트리거 (만족도 측정 지표
-  도입 후) 도래 시 ADR 로 재평가.
+- ~~Qdrant 기반 추천~~ → **해소** (2026-04-23): 위 §Hybrid 섹션.
+- 시그널 가중치 — bookmarks 와 reviews 를 동등 처리. 리뷰가 더 강한 시그널 (시간 투자 큼) 일 수 있는데 현재는 단순 UNION ALL.
+- 시간 감쇠 (time decay) — Qdrant mean vector 도 uniform. exponential decay 검토 후보.
+- 만족도 측정 (CTR / dwell time) — 추천 효과 정량화 미구현.
 
 ## References
 

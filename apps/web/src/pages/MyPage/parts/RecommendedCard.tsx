@@ -6,6 +6,7 @@ const DIM_LABEL: Record<string, string> = {
   category: '관심 종류',
   region: '관심 지역',
   vibe: '관심 성향',
+  semantic: 'AI 추천', // Qdrant personalized — mean vector kNN
 };
 
 export function RecommendedCard({ item }: { item: RecommendedEventItem }) {
