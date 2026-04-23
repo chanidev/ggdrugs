@@ -224,8 +224,17 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
       });
       onSubmitted(uploader);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'unknown';
-      setError(msg);
+      const raw = err instanceof Error ? err.message : 'unknown';
+      // REAPPLY_COOLDOWN:<ISO>:<days> → 한국어로.
+      if (raw.startsWith('REAPPLY_COOLDOWN:')) {
+        const [, iso, days] = raw.split(':');
+        const dateLabel = iso ? iso.slice(0, 10) : '?';
+        setError(
+          `반려된 신청은 ${days}일 쿨다운 적용 — ${dateLabel} 이후 다시 신청해 주세요.`,
+        );
+      } else {
+        setError(raw);
+      }
     } finally {
       setSubmitting(false);
     }

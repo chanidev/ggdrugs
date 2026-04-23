@@ -460,3 +460,35 @@ adminNickname/targetNickname/payload 동봉 확인. action filter 정상.
 문서: admin-flow.md §Audit 본문 정정 + OQ "통합 뷰 미구현" 해소 표기.
 
 graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.
+
+## 2026-04-23T11:30  feature  rejected uploader 재신청 쿨다운 (7d) — lint queue #3
+roles-and-active-role.md OQ #6 해소. RoleToggleButton 이 rejected 후 즉시 재신청 가능했던
+abuse 경로 차단. 단순 정책이라 ADR 박제 없이 코드 1곳 + 응답 필드 3개 추가.
+
+정책:
+- **rejected**: 7일 쿨다운 (기준 = `uploader_profiles.updatedAt` = admin 의 decideUploader 호출 시점)
+- **revision_requested**: 쿨다운 없음 (admin 이 명시 보완 요청)
+- **pending / approved**: 재신청 자체가 무관 (applyUploader 가 별도 차단)
+
+BFF (apps/bff/src/routes/uploader.ts):
+- `REJECTED_REAPPLY_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000` 상수
+- `computeReapplyGate(profile)` → `{ canReapply, canReapplyAt, cooldownReason }` 헬퍼 export
+- `shapeUploaderProfile()` 에 gate 3 필드 동봉
+- `applyUploader()` 에서 rejected + cooldown active → 429 `reapply_cooldown_active` +
+  `{ canReapplyAt, cooldownDays }` payload. orphan 업로드 정리 후 거부.
+
+Web:
+- `MyUploaderProfile` 타입에 canReapply / canReapplyAt / cooldownReason 추가
+- `RoleToggleButton` 의 rejected 분기 — cooldown active 시 disabled 카운트다운 버튼
+  ("반려 · N일 후 재신청"), 풀리면 기존 "반려 · 재신청" 링크
+- `applyUploader` API 가 429 → `REAPPLY_COOLDOWN:<ISO>:<days>` Error 발생, `UploaderPage`
+  의 ApplyForm 이 한국어 메시지로 변환 ("반려된 신청은 N일 쿨다운 적용 — YYYY-MM-DD 이후 다시
+  신청해 주세요.")
+
+검증: BFF + Web typecheck PASS. fake user 로 cooldown 시나리오 smoke — `/me/uploader`
+응답에 `{canReapply:false, canReapplyAt:'2026-04-30...', cooldownReason:'rejected_cooldown'}`,
+apply 시도 → `429 {"error":"reapply_cooldown_active","cooldownDays":7}` 정상 (cleanup 완료).
+
+문서: roles-and-active-role.md OQ #6 해소 표기.
+
+graphify: 동일 sprint — 다음 lint 에서 통합 재빌드.

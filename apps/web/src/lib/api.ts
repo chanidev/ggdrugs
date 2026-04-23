@@ -900,6 +900,10 @@ export interface MyUploaderProfile {
   approvedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** rejected 재신청 쿨다운 (7d). cooldownReason: 'rejected_cooldown' | 'profile_exists' | null. */
+  canReapply: boolean;
+  canReapplyAt: string | null;
+  cooldownReason: 'rejected_cooldown' | 'profile_exists' | null;
 }
 
 /** 본인 업로더 프로파일 조회. 프로파일 없으면 null. */
@@ -972,6 +976,16 @@ export async function applyUploader(body: ApplyUploaderBody): Promise<{
   if (res.status === 409) {
     const data = (await res.json().catch(() => ({}))) as { status?: string };
     throw new Error(`ALREADY_APPLIED:${data.status ?? 'unknown'}`);
+  }
+  if (res.status === 429) {
+    // rejected 재신청 쿨다운 — canReapplyAt ISO + cooldownDays 동봉.
+    const data = (await res.json().catch(() => ({}))) as {
+      canReapplyAt?: string;
+      cooldownDays?: number;
+    };
+    throw new Error(
+      `REAPPLY_COOLDOWN:${data.canReapplyAt ?? ''}:${data.cooldownDays ?? '?'}`,
+    );
   }
   if (!res.ok) {
     const txt = await res.text().catch(() => '');

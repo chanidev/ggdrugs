@@ -84,6 +84,35 @@ function computePhase(start: Date, end: Date): 'upcoming' | 'ongoing' | 'ended' 
   return 'ongoing';
 }
 
+/**
+ * rejected 재신청 쿨다운 — 7일 (lint queue #3).
+ * 기준 시점: uploader_profiles.updatedAt (admin 의 decideUploader 호출 시 갱신).
+ * revision_requested 는 admin 이 명시 보완을 요청한 케이스라 쿨다운 없음.
+ */
+export const REJECTED_REAPPLY_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function computeReapplyGate(p: {
+  approvalStatus: string;
+  updatedAt: Date;
+}): { canReapply: boolean; canReapplyAt: string | null; cooldownReason: string | null } {
+  if (p.approvalStatus === 'rejected') {
+    const ready = new Date(p.updatedAt.getTime() + REJECTED_REAPPLY_COOLDOWN_MS);
+    if (ready > new Date()) {
+      return {
+        canReapply: false,
+        canReapplyAt: ready.toISOString(),
+        cooldownReason: 'rejected_cooldown',
+      };
+    }
+    return { canReapply: true, canReapplyAt: null, cooldownReason: null };
+  }
+  if (p.approvalStatus === 'revision_requested') {
+    return { canReapply: true, canReapplyAt: null, cooldownReason: null };
+  }
+  // pending / approved — 재신청 자체가 허용 안 됨 (재신청과 무관, applyUploader 가 차단).
+  return { canReapply: false, canReapplyAt: null, cooldownReason: 'profile_exists' };
+}
+
 function shapeUploaderProfile(p: {
   uploaderId: bigint;
   organizationName: string;
@@ -94,6 +123,7 @@ function shapeUploaderProfile(p: {
   createdAt: Date;
   updatedAt: Date;
 }) {
+  const gate = computeReapplyGate(p);
   return {
     uploaderId: p.uploaderId.toString(),
     organizationName: p.organizationName,
@@ -103,6 +133,9 @@ function shapeUploaderProfile(p: {
     approvedAt: p.approvedAt?.toISOString() ?? null,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
+    canReapply: gate.canReapply,
+    canReapplyAt: gate.canReapplyAt,
+    cooldownReason: gate.cooldownReason,
   };
 }
 
@@ -243,8 +276,22 @@ export async function applyUploader(req: Request, res: Response) {
 
   const existing = await prisma.uploaderProfile.findUnique({
     where: { userId: auth.userId },
-    select: { uploaderId: true, approvalStatus: true },
+    select: { uploaderId: true, approvalStatus: true, updatedAt: true },
   });
+
+  // rejected 재신청 쿨다운 (7d) — gate.canReapply=false 면 즉시 거부.
+  if (existing && existing.approvalStatus === 'rejected') {
+    const gate = computeReapplyGate(existing);
+    if (!gate.canReapply) {
+      await cleanupOrphans();
+      res.status(429).json({
+        error: 'reapply_cooldown_active',
+        canReapplyAt: gate.canReapplyAt,
+        cooldownDays: REJECTED_REAPPLY_COOLDOWN_MS / (24 * 60 * 60 * 1000),
+      });
+      return;
+    }
+  }
 
   if (existing && existing.approvalStatus !== 'rejected' && existing.approvalStatus !== 'revision_requested') {
     await cleanupOrphans();

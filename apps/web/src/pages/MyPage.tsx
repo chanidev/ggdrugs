@@ -173,12 +173,29 @@ function RoleToggleButton() {
     );
   }
 
-  // 3. 보완 / 반려
+  // 3. 보완 / 반려 — rejected 는 7일 쿨다운 (BFF computeReapplyGate 가 결정).
   if (
     profile.approvalStatus === 'revision_requested' ||
     profile.approvalStatus === 'rejected'
   ) {
-    const label = profile.approvalStatus === 'rejected' ? '반려' : '보완 요청';
+    const isRejected = profile.approvalStatus === 'rejected';
+    const label = isRejected ? '반려' : '보완 요청';
+
+    // 쿨다운 active — disabled 버튼 + 카운트다운.
+    if (isRejected && !profile.canReapply && profile.canReapplyAt) {
+      const ms = new Date(profile.canReapplyAt).getTime() - Date.now();
+      const days = Math.max(0, Math.ceil(ms / (24 * 60 * 60 * 1000)));
+      return (
+        <span
+          aria-disabled="true"
+          className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 text-[13px] font-medium text-(--color-text-subtle)"
+          title={`${profile.canReapplyAt.slice(0, 10)} 이후 재신청 가능 (rejected 7일 쿨다운)`}
+        >
+          반려 · {days}일 후 재신청
+        </span>
+      );
+    }
+
     return (
       <Link
         to="/uploader"
