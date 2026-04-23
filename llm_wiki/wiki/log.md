@@ -647,6 +647,57 @@ Phase 1 lint queue 누적 정리 (04-22 lint 부터 04-23 sprint 3 까지):
 
 Phase 1 점검 결과 — **Hard gap 0건 잔존**. 잔여는 모두 Phase 2 또는 트리거 대기 영역.
 
+## 2026-04-23T15:00  feature  impeccable craft sprint — Audit dashboard + 추천 가중치 + KYC mock 정리 + 모바일 박제
+"전체 다 진행" 요청 후 4 항목 일괄 ship. UI 부분은 impeccable 스킬 활용 (DESIGN.md
+정합 craft).
+
+#1 admin Audit 대시보드 (`663e571`):
+- BFF GET /admin/audit-summary?windowDays=7 — 양 source (approval_logs +
+  admin_audit_logs) 카운트 + recentActivity 15건 merged
+- Web AuditDashboard.tsx — DESIGN.md 정합 craft. 비대칭 grid (0.9fr/1.1fr),
+  단일 vermillion accent (max-count action 만), 활자+여백 hierarchy, 막대
+  88px label + 1.5px track + 44px count, 타임라인 80px 시간 컬럼 + faint
+  divider + reason 인용 max-65ch, WindowPicker (7d/30d/90d underline tab)
+- AuditLogsTab Source 'overview'|'event'|'admin' 3-way, 기본 overview
+- Anti-AI-slop 통과: 사이드 스트라이프 X, gradient text X, glassmorphism X,
+  카드 in 카드 X, 아이콘 머리글 X, sparkline X
+
+#2 추천 가중치 + 시간감쇠:
+- `apps/bff/src/jobs/aggregate-taste-profiles.ts` 의 3 SQL 에 weight 추가
+  - bookmark weight = 1.0, review weight = 1.5 (리뷰가 더 강한 시그널)
+  - exponential decay: weight *= EXP(-LN(2) * age_days / 30)  (half-life 30d)
+- `COUNT(*)` → `SUM(weight)::float AS score`, ORDER BY score DESC
+- recommendations.md OQ 2건 (가중치 / 시간감쇠) 해소 표기. Qdrant primary 의
+  weighted mean 은 LLM endpoint 변경 필요해 별도 후속.
+
+#3 본인인증 dev mock cleanup — Phase 2 swap 지점 명확화:
+- 신규 `apps/web/src/lib/identity-verification.ts` —
+  `requestIdentityVerification(provider)` async 함수 + KycProvider type +
+  KYC_PROVIDERS 표 + IS_KYC_DEV_MOCK flag. Prod 통합 시 함수 본체만 교체,
+  caller 무수정.
+- UploaderPage ApplyForm 정정 — 인라인 generateMockCiHash 삭제, async pending
+  state, provider 라디오 (PASS / NICE / 카카오) 추가, "(dev stub)" 표기는
+  IS_KYC_DEV_MOCK 으로 분기.
+
+#4 DESIGN.md 모바일 정책 박제:
+- §Layout 에 "모바일 메인 레이아웃 정책" 섹션 신설 — 풀스크린 지도 + BottomSheet
+  (peek 50vh ↔ full 90vh) + floating header. 비-목표 (bottom tab bar / side
+  drawer / pull-to-refresh) 명시. 코드 ship 미정 — 별도 sprint 진입 시 기준.
+
+검증: BFF + Web typecheck PASS. aggregate:taste 가중 SQL 정상 (2 users / 4 dims
+updated / 0 errors). audit-summary smoke 정상 (eventActions / adminActions /
+recentActivity 12건).
+
+부수: .claude/settings.local.json 에 ~/.claude/skills/**/*.md Edit/Write
+permission 추가 (사용자 승인 후).
+
+graphify 재빌드: 1024 nodes / 1248 edges / 178 communities (이전 989/1217/162 대비
++35 nodes / +31 edges / +16 communities — 새 component 들 반영).
+
+남은 외부 결정 영역 (코드만으로 ship 불가):
+- 모바일 메인 코드 ship (DESIGN.md 모바일 섹션 박제 완료, 별도 sprint 트리거 대기)
+- 본인인증 prod 통합 (PASS/NICE/카카오 KYC 계약 + 키 발급 외부 trigger 필요)
+
 ## 2026-04-23T13:00  refactor  코드 모듈화 sprint — 상위 5 파일 디렉터리 분할 (zero behavior change)
 사용자 피드백 ("function 이 한 페이지에 엄청 몰려있다") → 상위 5 파일 측정 후 일괄 분할.
 모두 pure refactor — 함수/타입 시그니처 동일, public 호출 사이트 무수정.

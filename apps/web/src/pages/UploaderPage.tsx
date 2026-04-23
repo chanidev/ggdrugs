@@ -6,6 +6,12 @@ import { Icon } from '../components/Icon';
 import { useCurrentUser } from '../lib/auth-context';
 import { loginUrl } from '../lib/auth-redirect';
 import {
+  requestIdentityVerification,
+  KYC_PROVIDERS,
+  IS_KYC_DEV_MOCK,
+  type KycProvider,
+} from '../lib/identity-verification';
+import {
   APPROVAL_DOC_MIME,
   DocumentsPickerField,
   type StagedDoc,
@@ -161,15 +167,6 @@ function LoginGate() {
 
 type IdentityKind = 'organization' | 'individual';
 
-/** dev 용 CI 해시 stub — 실 PASS/NICE 연동은 Phase 2. Base64 88자 random. */
-function generateMockCiHash(): string {
-  const bytes = new Uint8Array(66); // 66 bytes → 88 Base64
-  crypto.getRandomValues(bytes);
-  let bin = '';
-  for (const b of bytes) bin += String.fromCharCode(b);
-  return btoa(bin).slice(0, 88);
-}
-
 function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => void }) {
   const [organizationName, setOrg] = useState('');
   const [contactPhone, setPhone] = useState('');
@@ -178,6 +175,9 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
   const [identityKind, setIdentityKind] = useState<IdentityKind>('organization');
   const [bizRegNumber, setBizRegNumber] = useState('');
   const [ciHash, setCiHash] = useState<string | null>(null);
+  const [ciProvider, setCiProvider] = useState<KycProvider>('pass');
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
   const [docs, setDocs] = useState<StagedDoc[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [docsUploading, setDocsUploading] = useState(false);
@@ -196,8 +196,17 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
     docs.length >= 1 &&
     docs.length <= 5;
 
-  const runMockCI = () => {
-    setCiHash(generateMockCiHash());
+  const runIdentityVerification = async () => {
+    setVerifying(true);
+    setVerifyError(null);
+    try {
+      const r = await requestIdentityVerification(ciProvider);
+      setCiHash(r.ciHash);
+    } catch (err) {
+      setVerifyError(err instanceof Error ? err.message : 'unknown');
+    } finally {
+      setVerifying(false);
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -345,11 +354,16 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
               />
             </Field>
           ) : (
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-2">
               <span className="text-[13px] font-semibold text-(--color-text)">본인인증</span>
               {ciHash ? (
                 <div className="flex items-center justify-between gap-2 rounded-(--radius-md) border border-(--color-success)/40 bg-(--color-success)/5 px-3 py-2 text-[12px]">
-                  <span className="text-(--color-success)">✓ 본인인증 완료 (dev stub)</span>
+                  <span className="text-(--color-success)">
+                    ✓ {KYC_PROVIDERS.find((p) => p.id === ciProvider)?.label ?? ciProvider} 본인인증 완료
+                    {IS_KYC_DEV_MOCK && (
+                      <span className="ml-1.5 text-(--color-text-subtle)">(dev stub)</span>
+                    )}
+                  </span>
                   <button
                     type="button"
                     onClick={() => setCiHash(null)}
@@ -359,16 +373,54 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={runMockCI}
-                  className="inline-flex h-10 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-4 text-[13px] font-medium hover:border-(--color-border-hover)"
-                >
-                  본인인증 시작 (dev stub)
-                </button>
+                <>
+                  <fieldset className="flex flex-wrap gap-1.5" aria-label="본인인증 제공자">
+                    <legend className="sr-only">본인인증 제공자 선택</legend>
+                    {KYC_PROVIDERS.map((p) => {
+                      const active = ciProvider === p.id;
+                      return (
+                        <label
+                          key={p.id}
+                          className={`inline-flex h-9 cursor-pointer items-center rounded-(--radius-md) border px-3 text-[12.5px] font-medium transition-colors ${
+                            active
+                              ? 'border-(--color-accent) bg-(--color-accent)/5 text-(--color-accent)'
+                              : 'border-(--color-border) bg-(--color-surface) text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text)'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="kyc-provider"
+                            value={p.id}
+                            checked={active}
+                            onChange={() => setCiProvider(p.id)}
+                            className="sr-only"
+                          />
+                          {p.label}
+                        </label>
+                      );
+                    })}
+                  </fieldset>
+                  <button
+                    type="button"
+                    onClick={() => void runIdentityVerification()}
+                    disabled={verifying}
+                    className="inline-flex h-10 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-4 text-[13px] font-medium hover:border-(--color-border-hover) disabled:opacity-40"
+                  >
+                    {verifying
+                      ? '인증 중…'
+                      : `${KYC_PROVIDERS.find((p) => p.id === ciProvider)?.label ?? ciProvider}로 본인인증`}
+                  </button>
+                  {verifyError && (
+                    <p className="m-0 rounded-(--radius-sm) bg-(--color-error)/5 p-2 text-[11.5px] text-(--color-error)">
+                      인증 실패: {verifyError}
+                    </p>
+                  )}
+                </>
               )}
               <span className="text-[11px] text-(--color-text-subtle)">
-                실 배포에서는 PASS / NICE / 카카오 본인인증으로 대체됨. 현재는 CI 88자 random stub.
+                {IS_KYC_DEV_MOCK
+                  ? 'Dev: random CI 88자 생성 stub. Prod 통합 시 PASS / NICE / Kakao popup 흐름으로 자동 swap (lib/identity-verification.ts).'
+                  : '본인인증 완료 후 CI 가 안전 보관됨 (관리자만 마스킹 노출).'}
               </span>
             </div>
           )}

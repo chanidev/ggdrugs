@@ -170,6 +170,23 @@
 - **상세 / 마이페이지 / 업로더 / 관리자**: grid-disciplined — 12 col grid, max-width 1200px, gutter 24px.
 - **모바일(≤640px)**: list/map 토글 전환 (동시 표시 X).
 
+### 모바일 메인 레이아웃 정책 (2026-04-23 박제, 코드 ship 미정)
+
+데스크톱의 rail+overlay panel 패턴은 모바일에서 작동 불가. 모바일 메인은 다음 구조로 결정:
+
+- **기본 viewport**: 지도 100% 풀스크린. 핀 클러스터 직접 탭.
+- **하단 BottomSheet**: 50vh peek (현재 영역 이벤트 list) ↔ 90vh full (필터 + 채팅 + 전체목록 통합). 드래그 + tap-to-toggle.
+- **상단 floating header**: 로고 + 알림 + 마이페이지 link (60px → 48px h-12, blur 배경 surface/80 + backdrop-blur-md, surface 위에 떠있음).
+- **필터 / 채팅 / 전체목록**: 셋 다 BottomSheet 내부 탭 (rail 의 inline accordion 패턴 — 모바일에서도 그대로 활용).
+- **이벤트 핀 탭**: BottomSheet 가 자동으로 50vh peek 으로 전환되며 해당 이벤트 EventSummaryPanel inline 노출 (panel 별도 floating X).
+
+코드 ship 미정 — 별도 sprint 진입 시 본 정책 기준 구현. 현재 데스크톱 코드는 그대로 유지.
+
+**비-목표** (모바일에서 의도적으로 안 함):
+- bottom tab bar (Instagram-style) — Alle 는 단일 페이지 발견 흐름이 핵심
+- side drawer hamburger menu — Alle 는 메뉴 항목이 적음
+- pull-to-refresh — 데이터 fresh 가 빠른 영역이 아님 (이벤트는 daily batch)
+
 ### Breakpoints
 
 | 이름 | min-width |

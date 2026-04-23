@@ -6,7 +6,10 @@
 //   preferred_vibe      — event_vibe_assignments.vibe_id (BigInt → string)
 //
 // 시그널 = 북마크 + 비삭제 리뷰. 두 쪽 모두 user 의 명시적 선호 표현.
-// TIES 처리: COUNT DESC, 동수일 때 createdAt 최신 우선 (raw SQL ORDER BY 2번째 키).
+// 가중치 (recommendations.md OQ 해소):
+//   - bookmark weight = 1.0, review weight = 1.5 (리뷰는 시간 투자 큼, 더 강한 시그널)
+//   - exponential time decay, half-life 30일 — weight *= EXP(-LN(2) * age_days / 30)
+// TIES 처리: SUM(weight) DESC, 동수일 때 createdAt 최신 우선.
 // 활성 user 만 (최근 30일 시그널 있는 user) — 비활성 user 는 skip 해 비용 절약.
 //
 // 트리거: scheduler.ts::runAll() 후속 단계 + `pnpm aggregate:taste` CLI.
@@ -30,16 +33,20 @@ async function findActiveUserIds(): Promise<bigint[]> {
 
 async function topCategoryFor(userId: bigint): Promise<string | null> {
   const rows = await prisma.$queryRaw<{ category_code: string }[]>`
-    SELECT c.category_code, COUNT(*)::int AS cnt, MAX(sig.ts) AS latest
+    SELECT c.category_code, SUM(sig.weight)::float AS score, MAX(sig.ts) AS latest
     FROM (
-      SELECT event_id, created_at AS ts FROM bookmarks WHERE user_id = ${userId}
+      SELECT event_id, created_at AS ts,
+             1.0 * EXP(-LN(2.0) * EXTRACT(EPOCH FROM (NOW() - created_at)) / (30.0 * 86400.0)) AS weight
+        FROM bookmarks WHERE user_id = ${userId}
       UNION ALL
-      SELECT event_id, created_at AS ts FROM reviews WHERE user_id = ${userId} AND is_deleted = false
+      SELECT event_id, created_at AS ts,
+             1.5 * EXP(-LN(2.0) * EXTRACT(EPOCH FROM (NOW() - created_at)) / (30.0 * 86400.0)) AS weight
+        FROM reviews WHERE user_id = ${userId} AND is_deleted = false
     ) sig
     JOIN events e ON e.event_id = sig.event_id
     JOIN event_categories c ON c.category_id = e.category_id
     GROUP BY c.category_code
-    ORDER BY cnt DESC, latest DESC
+    ORDER BY score DESC, latest DESC
     LIMIT 1
   `;
   return rows[0]?.category_code ?? null;
@@ -47,15 +54,19 @@ async function topCategoryFor(userId: bigint): Promise<string | null> {
 
 async function topRegionFor(userId: bigint): Promise<string | null> {
   const rows = await prisma.$queryRaw<{ region_id: bigint }[]>`
-    SELECT e.region_id, COUNT(*)::int AS cnt, MAX(sig.ts) AS latest
+    SELECT e.region_id, SUM(sig.weight)::float AS score, MAX(sig.ts) AS latest
     FROM (
-      SELECT event_id, created_at AS ts FROM bookmarks WHERE user_id = ${userId}
+      SELECT event_id, created_at AS ts,
+             1.0 * EXP(-LN(2.0) * EXTRACT(EPOCH FROM (NOW() - created_at)) / (30.0 * 86400.0)) AS weight
+        FROM bookmarks WHERE user_id = ${userId}
       UNION ALL
-      SELECT event_id, created_at AS ts FROM reviews WHERE user_id = ${userId} AND is_deleted = false
+      SELECT event_id, created_at AS ts,
+             1.5 * EXP(-LN(2.0) * EXTRACT(EPOCH FROM (NOW() - created_at)) / (30.0 * 86400.0)) AS weight
+        FROM reviews WHERE user_id = ${userId} AND is_deleted = false
     ) sig
     JOIN events e ON e.event_id = sig.event_id
     GROUP BY e.region_id
-    ORDER BY cnt DESC, latest DESC
+    ORDER BY score DESC, latest DESC
     LIMIT 1
   `;
   return rows[0]?.region_id?.toString() ?? null;
@@ -64,15 +75,19 @@ async function topRegionFor(userId: bigint): Promise<string | null> {
 async function topVibeFor(userId: bigint): Promise<string | null> {
   // vibe 는 event 자체에 N개 매핑돼있어 분포 더 풍부 — 단일 max 잡기.
   const rows = await prisma.$queryRaw<{ vibe_id: bigint }[]>`
-    SELECT va.vibe_id, COUNT(*)::int AS cnt, MAX(sig.ts) AS latest
+    SELECT va.vibe_id, SUM(sig.weight)::float AS score, MAX(sig.ts) AS latest
     FROM (
-      SELECT event_id, created_at AS ts FROM bookmarks WHERE user_id = ${userId}
+      SELECT event_id, created_at AS ts,
+             1.0 * EXP(-LN(2.0) * EXTRACT(EPOCH FROM (NOW() - created_at)) / (30.0 * 86400.0)) AS weight
+        FROM bookmarks WHERE user_id = ${userId}
       UNION ALL
-      SELECT event_id, created_at AS ts FROM reviews WHERE user_id = ${userId} AND is_deleted = false
+      SELECT event_id, created_at AS ts,
+             1.5 * EXP(-LN(2.0) * EXTRACT(EPOCH FROM (NOW() - created_at)) / (30.0 * 86400.0)) AS weight
+        FROM reviews WHERE user_id = ${userId} AND is_deleted = false
     ) sig
     JOIN event_vibe_assignments va ON va.event_id = sig.event_id
     GROUP BY va.vibe_id
-    ORDER BY cnt DESC, latest DESC
+    ORDER BY score DESC, latest DESC
     LIMIT 1
   `;
   return rows[0]?.vibe_id?.toString() ?? null;

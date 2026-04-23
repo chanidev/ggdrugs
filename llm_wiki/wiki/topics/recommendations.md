@@ -127,9 +127,9 @@ seedId 1535 → mean vector 검색 → score 0.86 / 0.67 hits 정상. 예찬 use
 ## Open questions
 
 - ~~Qdrant 기반 추천~~ → **해소** (2026-04-23): 위 §Hybrid 섹션.
-- 시그널 가중치 — bookmarks 와 reviews 를 동등 처리. 리뷰가 더 강한 시그널 (시간 투자 큼) 일 수 있는데 현재는 단순 UNION ALL.
-- 시간 감쇠 (time decay) — Qdrant mean vector 도 uniform. exponential decay 검토 후보.
-- 만족도 측정 (CTR / dwell time) — 추천 효과 정량화 미구현.
+- ~~시그널 가중치 (bookmarks vs reviews)~~ → **해소** (2026-04-23): SQL fallback aggregate 에 적용 — bookmark 1.0 / review 1.5 (리뷰는 시간 투자 큼). `aggregate-taste-profiles.ts` 의 SQL 이 `SUM(weight)` 기반.
+- ~~시간 감쇠 (time decay)~~ → **해소** (2026-04-23): SQL fallback 에 exponential decay 적용 — `weight *= EXP(-LN(2) * age_days / 30)` (half-life 30일). Qdrant primary 의 mean vector 는 여전히 uniform — Qdrant weighted mean 은 LLM endpoint 변경 필요한 큰 작업이라 후속.
+- 만족도 측정 (CTR / dwell time) — 추천 효과 정량화 미구현. Qdrant weighted mean 트리거 결정용.
 
 ## References
 
