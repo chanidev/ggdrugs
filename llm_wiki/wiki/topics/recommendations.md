@@ -79,7 +79,7 @@ TIES tiebreak: `COUNT DESC, MAX(signal.created_at) DESC` (raw SQL).
 `matchedDimensions` 는 UI 가 "왜 추천됐는지" 표시 (예: `✦ 관심 종류` 칩). UNION 쿼리 대신
 fetch 후 client-side 마킹 — Prisma 의 OR 가 단일 row 에 어떤 절이 매칭됐는지 모르기 때문.
 
-## UI (`apps/web/src/pages/MyPage.tsx::RecommendationsList`)
+## UI (`apps/web/src/pages/MyPage/tabs/RecommendationsTab.tsx::RecommendationsList`)
 
 마이페이지 5번째 탭 "추천". empty state 분기:
 - `reason === 'no_taste_signals'` → "북마크/리뷰 시그널이 부족" 안내 + 매일 자동 갱신 설명
@@ -103,5 +103,5 @@ fetch 후 client-side 마킹 — Prisma 의 OR 가 단일 row 에 어떤 절이 
 - `apps/bff/src/jobs/aggregate-taste-profiles.ts` — 일일 집계 본체
 - `apps/bff/src/jobs/scheduler.ts::runAll()` — 후속 파이프라인 7단계 통합
 - `apps/bff/src/routes/me-recommendations.ts` — 추천 endpoint
-- `apps/web/src/pages/MyPage.tsx::RecommendationsList` — UI
+- `apps/web/src/pages/MyPage/tabs/RecommendationsTab.tsx::RecommendationsList` — UI
 - `pnpm --filter bff aggregate:taste` — CLI

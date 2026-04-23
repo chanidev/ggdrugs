@@ -88,7 +88,7 @@ probe 로 `/embed` 500 확인 시 keyword-only 모드로 자동 전환. threshol
   (url 도메인 첫 label), authorName, articleCategory, originalUrl, summary, publishedAt,
   relevanceScore, matchedAt.
 - 호출자: 요약 패널은 `limit=3` 단일 요청 (top-3 미니 리스트), 상세 페이지는 `limit=5` + offset
-  페이지네이션 (`apps/web/src/lib/api.ts::fetchEventArticlesPage`).
+  페이지네이션 (`apps/web/src/lib/api/articles.ts::fetchEventArticlesPage`).
 
 ## UI
 
@@ -141,7 +141,7 @@ threshold 위에 자동·수동 감사를 한 단계 더 둠 — 알고리즘이
 - `apps/bff/src/jobs/news-naver-ingest.ts` — V2 파이프라인 본체
 - `apps/bff/src/jobs/audit-news-mappings.ts` — 품질 감사 (CLI + quick variant)
 - `apps/bff/src/routes/event-articles.ts` — 공개 API
-- `apps/web/src/pages/EventDetailPage.tsx::ArticlesSection` — UI 페이징
+- `apps/web/src/pages/EventDetailPage/sections/ArticlesSection.tsx` — UI 페이징
 - `apps/web/src/components/EventSummaryPanel.tsx::ArticlesMiniList` — 요약 패널 top-3
 - [ingest-pipeline.md](ingest-pipeline.md) — 이벤트 크롤 파이프라인 (별개) + 후속 파이프라인 진입점
 - [semantic-search.md](semantic-search.md) — embedding 인프라 공유 + 실시간 동기화 3축

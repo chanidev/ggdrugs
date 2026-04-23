@@ -48,7 +48,7 @@ related:
 | 화면 | 컴포넌트 | 호출 | 노출 | 출처 |
 |---|---|---|---|---|
 | 메인 요약 패널 (A_300) | `ArticlesMiniList` (`apps/web/src/components/EventSummaryPanel.tsx`) | `fetchEventArticlesPage(id, { limit: 3, offset: 0 })` | top-3 미니 카드, total > 3 시 "전체 N건 보기" → 상세 이동 | 커밋 `03da473` |
-| 이벤트 상세 (A_400) | `ArticlesSection` (`apps/web/src/pages/EventDetailPage.tsx::676`) | `fetchEventArticlesPage(id, { limit: 5, offset: page*5 })` | 페이지당 5건 + 이전/다음 버튼 + total 배지 | 커밋 `03da473` |
+| 이벤트 상세 (A_400) | `ArticlesSection` (`apps/web/src/pages/EventDetailPage/sections/ArticlesSection.tsx`) | `fetchEventArticlesPage(id, { limit: 5, offset: page*5 })` | 페이지당 5건 + 이전/다음 버튼 + total 배지 | 커밋 `03da473` |
 | 캘린더 팝업 (A_500) | `CalendarSummaryCard` header 우측 | `_count.articleMappings` (이벤트 detail 응답에 동봉) | 배지 (count > 0 일 때만) | 기존 |
 
 API 시그니처 (요약):

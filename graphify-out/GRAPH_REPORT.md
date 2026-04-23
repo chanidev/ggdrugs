@@ -1,11 +1,11 @@
 # Graph Report - .  (2026-04-23)
 
 ## Corpus Check
-- 99 files · ~176,151 words
+- 146 files · ~177,527 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 931 nodes · 1227 edges · 132 communities detected
+- 989 nodes · 1217 edges · 162 communities detected
 - Extraction: 94% EXTRACTED · 6% INFERRED · 0% AMBIGUOUS · INFERRED: 75 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
@@ -142,18 +142,48 @@
 - [[_COMMUNITY_Community 129|Community 129]]
 - [[_COMMUNITY_Community 130|Community 130]]
 - [[_COMMUNITY_Community 131|Community 131]]
+- [[_COMMUNITY_Community 132|Community 132]]
+- [[_COMMUNITY_Community 133|Community 133]]
+- [[_COMMUNITY_Community 134|Community 134]]
+- [[_COMMUNITY_Community 135|Community 135]]
+- [[_COMMUNITY_Community 136|Community 136]]
+- [[_COMMUNITY_Community 137|Community 137]]
+- [[_COMMUNITY_Community 138|Community 138]]
+- [[_COMMUNITY_Community 139|Community 139]]
+- [[_COMMUNITY_Community 140|Community 140]]
+- [[_COMMUNITY_Community 141|Community 141]]
+- [[_COMMUNITY_Community 142|Community 142]]
+- [[_COMMUNITY_Community 143|Community 143]]
+- [[_COMMUNITY_Community 144|Community 144]]
+- [[_COMMUNITY_Community 145|Community 145]]
+- [[_COMMUNITY_Community 146|Community 146]]
+- [[_COMMUNITY_Community 147|Community 147]]
+- [[_COMMUNITY_Community 148|Community 148]]
+- [[_COMMUNITY_Community 149|Community 149]]
+- [[_COMMUNITY_Community 150|Community 150]]
+- [[_COMMUNITY_Community 151|Community 151]]
+- [[_COMMUNITY_Community 152|Community 152]]
+- [[_COMMUNITY_Community 153|Community 153]]
+- [[_COMMUNITY_Community 154|Community 154]]
+- [[_COMMUNITY_Community 155|Community 155]]
+- [[_COMMUNITY_Community 156|Community 156]]
+- [[_COMMUNITY_Community 157|Community 157]]
+- [[_COMMUNITY_Community 158|Community 158]]
+- [[_COMMUNITY_Community 159|Community 159]]
+- [[_COMMUNITY_Community 160|Community 160]]
+- [[_COMMUNITY_Community 161|Community 161]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `withCredentials()` - 51 edges
-2. `UI 플로우 와이어프레임 초안 (전체 문서)` - 23 edges
-3. `ADR 0001 — DDL v3 ↔ Terminology v5 Reconciliation` - 18 edges
-4. `Use Cases Index (A_100~A_700)` - 15 edges
-5. `Tech Stack` - 12 edges
-6. `UI Architecture (current)` - 11 edges
-7. `5 Filter Types` - 10 edges
-8. `Roles & active_role` - 10 edges
-9. `Line Monogram Logo (frame + A stroke + vermilion crossbar)` - 10 edges
-10. `Monorepo Skeleton` - 9 edges
+1. `UI 플로우 와이어프레임 초안 (전체 문서)` - 23 edges
+2. `ADR 0001 — DDL v3 ↔ Terminology v5 Reconciliation` - 18 edges
+3. `Use Cases Index (A_100~A_700)` - 15 edges
+4. `Tech Stack` - 12 edges
+5. `UI Architecture (current)` - 11 edges
+6. `5 Filter Types` - 10 edges
+7. `Roles & active_role` - 10 edges
+8. `Line Monogram Logo (frame + A stroke + vermilion crossbar)` - 10 edges
+9. `Monorepo Skeleton` - 9 edges
+10. `ADR 0001 Terminology Reconciliation` - 9 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `Tech Stack` --semantically_similar_to--> `Production Required Keys Guard`  [INFERRED] [semantically similar]
@@ -178,16 +208,16 @@
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.04
-Nodes (76): A_700 Dual-Tab Structure, Event Approval Queue, LLM Delegation Guardrail (CLAUDE.md §6-4), Admin Flow, Decision #1: on_hold → revision_requested, Decision #2: users.active_role column, Decision #3: admin_profiles table, Decision #4: expected_companion rename (+68 more)
+Cohesion: 0.03
+Nodes (83): A_700 Dual-Tab Structure, Event Approval Queue, LLM Delegation Guardrail (CLAUDE.md §6-4), Admin Flow, Decision #1: on_hold → revision_requested, Decision #2: users.active_role column, Decision #3: admin_profiles table, Decision #4: expected_companion rename (+75 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.04
-Nodes (35): listAdminAuditAdminLogs(), listAdminAuditLogs(), parseBigIntQuery(), parseIntClamp(), listAdminEvents(), parseBigIntCsv(), parseIntClamp(), postChat() (+27 more)
+Nodes (11): putAdminEventVibes(), adminUserMutation(), changeUserAdminScope(), demoteUserAdmin(), promoteUserToAdmin(), revokeUserSessionsByAdmin(), softDeleteUserAccount(), fetchEventArticles() (+3 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.07
-Nodes (58): adminUserMutation(), applyUploader(), buildQuery(), changeUserAdminScope(), createBookmark(), createEventReview(), createSubscription(), createUploaderEvent() (+50 more)
+Cohesion: 0.05
+Nodes (25): listAdminAuditAdminLogs(), listAdminAuditLogs(), parseBigIntQuery(), parseIntClamp(), listAdminEvents(), parseBigIntCsv(), parseIntClamp(), postChat() (+17 more)
 
 ### Community 3 - "Community 3"
 Cohesion: 0.07
@@ -202,16 +232,16 @@ Cohesion: 0.08
 Nodes (22): aggregateForUser(), findActiveUserIds(), main(), runTasteAggregation(), topCategoryFor(), topRegionFor(), topVibeFor(), bandLabel() (+14 more)
 
 ### Community 6 - "Community 6"
-Cohesion: 0.06
-Nodes (40): D-1 MinIO object storage, D-2 OpenAI single LLM provider, D-3 Qdrant single vector store, Rationale: S3-compat enables migration, Rejected: Anthropic (no embeddings), Rejected: pgvector single, BFF runtime dependencies, apps/bff README (+32 more)
-
-### Community 7 - "Community 7"
 Cohesion: 0.09
 Nodes (31): delay(), fetchWithRetry(), isNetworkError(), parseRetryAfter(), computePhase(), existsInOtherOrigin(), extractSeoulGu(), getCategoryId() (+23 more)
 
-### Community 8 - "Community 8"
+### Community 7 - "Community 7"
 Cohesion: 0.06
 Nodes (36): Asset: favicon.svg (thicker strokes for 16px), Asset: logo-lockup.svg (260×84, mark + Alle + SEOUL), Asset: logo-mark.svg (84×84), Brand Name: Alle (replaces GGdrugs), Alle rollout checklist (8 items), DESIGN.md patch — new Brand section under Product Context, Alle Brand Handoff README, Crossbar uses var(--color-accent) = #E8562D only (+28 more)
+
+### Community 8 - "Community 8"
+Cohesion: 0.07
+Nodes (33): D-1 MinIO object storage, D-2 OpenAI single LLM provider, D-3 Qdrant single vector store, Rationale: S3-compat enables migration, Rejected: Anthropic (no embeddings), Rejected: pgvector single, BFF runtime dependencies, apps/bff README (+25 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.11
@@ -222,11 +252,11 @@ Cohesion: 0.07
 Nodes (29): Dockerfile directory readme, Alle (Product Name), apps/bff (Node.js + Express + Prisma), apps/web (React Frontend), CLAUDE.md (Agent Instructions), Docker Compose (postgres/qdrant/redis), Docker Desktop, docs/ (Requirements & Decisions) (+21 more)
 
 ### Community 11 - "Community 11"
-Cohesion: 0.22
-Nodes (17): applyUploader(), computePhase(), computeReapplyGate(), createUploaderEvent(), getMyUploader(), getMyUploaderEvent(), listMyUploaderEvents(), parseBigIntParam() (+9 more)
+Cohesion: 0.13
+Nodes (19): applyUploader(), validateSignupDocs(), computePhase(), createUploaderEvent(), getMyUploaderEvent(), listEvents(), listMyUploaderEvents(), parseBigIntCsv() (+11 more)
 
 ### Community 12 - "Community 12"
-Cohesion: 0.25
+Cohesion: 0.23
 Nodes (17): clearSessionCookie(), devLogin(), googleCallback(), googleRedirectUri(), issueSessionAndRedirect(), kakaoCallback(), kakaoRedirectUri(), logout() (+9 more)
 
 ### Community 13 - "Community 13"
@@ -259,35 +289,35 @@ Nodes (9): decideEventUpload(), decideUploader(), getAdminUploader(), listAdminU
 
 ### Community 20 - "Community 20"
 Cohesion: 0.27
-Nodes (8): extract(), extract_merge(), _match_any(), _match_first(), Korean keyword → filter mapping (Stage 1 rule-based).  의도적으로 단순하게 유지. Stage 2 에서, 다중 턴 — 모든 user 발화에서 추출한 필터를 머지. 최근 발화가 우선.      - 다중 값 축(companions/eventTypes/v, table 의 각 그룹(동의어)에서 하나라도 걸리면 해당 code 를 수집., 사용자 발화에서 5개 필터 축을 뽑는다. 없으면 빈 값.
+Nodes (5): listMyNotifications(), markAllNotificationsRead(), markNotificationRead(), parseBigIntParam(), parseIntClamp()
 
 ### Community 21 - "Community 21"
+Cohesion: 0.33
+Nodes (6): createSubscription(), deleteSubscription(), parseBigIntArray(), parseStringArray(), shape(), toggleSubscription()
+
+### Community 22 - "Community 22"
+Cohesion: 0.27
+Nodes (8): extract(), extract_merge(), _match_any(), _match_first(), Korean keyword → filter mapping (Stage 1 rule-based).  의도적으로 단순하게 유지. Stage 2 에서, 다중 턴 — 모든 user 발화에서 추출한 필터를 머지. 최근 발화가 우선.      - 다중 값 축(companions/eventTypes/v, table 의 각 그룹(동의어)에서 하나라도 걸리면 해당 code 를 수집., 사용자 발화에서 5개 필터 축을 뽑는다. 없으면 빈 값.
+
+### Community 23 - "Community 23"
 Cohesion: 0.27
 Nodes (10): Wiki invariants (raw append-only, 1:1 sources), LLM Wiki raw/ readme, LLM Wiki README, LLM Wiki Schema, LLM Wiki + graphify Setup Guide, Three-layer architecture (raw/wiki/schema), LLM Wiki 사용법, CLAUDE.md auto-load hook (+2 more)
 
-### Community 22 - "Community 22"
+### Community 24 - "Community 24"
 Cohesion: 0.31
 Nodes (8): classify_sentiment(), embed_texts(), extract_via_openai(), Stage 2 — OpenAI gpt-4o-mini 기반 필터 추출 체인.  규칙 - 인터페이스는 Stage 1 의 extract_merge 와, messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag, 임베딩 배치 호출 — text-embedding-3-small (1536 dim) 기본.      빈 문자열은 호출 전에 단일 공백 으로 치환, summarize_event(), _track_usage()
 
-### Community 23 - "Community 23"
+### Community 25 - "Community 25"
 Cohesion: 0.33
 Nodes (8): normalize_whitespace(), AI 요약 post-processing 가드.  모델/fallback 양쪽에서 공통으로 적용되는 server-side 정제기. 프롬프트에는 "이, max_len 초과 시 가까운 문장 경계에서 자르기. 못 찾으면 하드 자르고 '…'., 모델/fallback 양쪽 요약에 적용하는 최종 정제., sanitize_summary(), strip_emoji(), strip_markdown(), truncate_at_sentence()
 
-### Community 24 - "Community 24"
-Cohesion: 0.29
-Nodes (2): onCreated(), submit()
-
-### Community 25 - "Community 25"
+### Community 26 - "Community 26"
 Cohesion: 0.48
 Nodes (5): deleteObjects(), getS3(), objectExists(), presignGet(), presignPut()
 
-### Community 26 - "Community 26"
+### Community 27 - "Community 27"
 Cohesion: 0.48
 Nodes (6): addBookmark(), listMyBookmarks(), listMyReviews(), parseEventId(), parseIntClamp(), removeBookmark()
-
-### Community 27 - "Community 27"
-Cohesion: 0.38
-Nodes (4): listMyNotifications(), markNotificationRead(), parseBigIntParam(), parseIntClamp()
 
 ### Community 28 - "Community 28"
 Cohesion: 0.38
@@ -302,32 +332,32 @@ Cohesion: 0.53
 Nodes (4): formatDateRange(), fromBffItem(), hashToColor(), shortRegion()
 
 ### Community 31 - "Community 31"
+Cohesion: 0.33
+Nodes (0): 
+
+### Community 32 - "Community 32"
 Cohesion: 0.4
 Nodes (6): EnvValidationError, loadEnv (full validation), loadPartial (per-service schema), env (BffEnv instance), pino logger (env-aware), prisma (PrismaClient singleton)
 
-### Community 32 - "Community 32"
+### Community 33 - "Community 33"
 Cohesion: 0.33
 Nodes (6): Registered Domain: http://localhost:5173 (Vite dev server), Registered Domain: http://localhost:9999 (Primary / 기본), Domain-Only Registration Rule (paths stripped, e.g. https://www.example.com/mypage → https://example.com), Kakao Developers App Platform/Web Domain Settings (inferred), Primary Domain Badge (기본), Web Domain Configuration Panel
 
-### Community 33 - "Community 33"
+### Community 34 - "Community 34"
 Cohesion: 0.7
 Nodes (4): listAdmins(), main(), parseArgs(), resolveUserId()
 
-### Community 34 - "Community 34"
+### Community 35 - "Community 35"
 Cohesion: 0.4
 Nodes (1): ErrorBoundary
 
-### Community 35 - "Community 35"
+### Community 36 - "Community 36"
 Cohesion: 0.5
 Nodes (2): load(), onActionDone()
 
-### Community 36 - "Community 36"
+### Community 37 - "Community 37"
 Cohesion: 0.5
 Nodes (2): chatFiltersToQuery(), rangeForPeriod()
-
-### Community 37 - "Community 37"
-Cohesion: 0.4
-Nodes (0): 
 
 ### Community 38 - "Community 38"
 Cohesion: 0.4
@@ -335,39 +365,39 @@ Nodes (0):
 
 ### Community 39 - "Community 39"
 Cohesion: 0.4
-Nodes (5): Event state machine (pending → approved → ended / rejected / revision_requested), Terminology — event/event_type/event_vibe/companion_type/expected_companion, event_tendency_labels — vibe master table, WHY: AI video generation removed in v5.0, 요구사항정의서 Ⅴ. 용어집 — canonical column/enum names
+Nodes (0): 
 
 ### Community 40 - "Community 40"
-Cohesion: 0.83
-Nodes (3): callLlm(), isRetriable(), sleep()
+Cohesion: 0.4
+Nodes (5): Event state machine (pending → approved → ended / rejected / revision_requested), Terminology — event/event_type/event_vibe/companion_type/expected_companion, event_tendency_labels — vibe master table, WHY: AI video generation removed in v5.0, 요구사항정의서 Ⅴ. 용어집 — canonical column/enum names
 
 ### Community 41 - "Community 41"
 Cohesion: 0.83
-Nodes (3): excerpt(), main(), parseArgs()
+Nodes (3): callLlm(), isRetriable(), sleep()
 
 ### Community 42 - "Community 42"
+Cohesion: 0.83
+Nodes (3): excerpt(), main(), parseArgs()
+
+### Community 43 - "Community 43"
 Cohesion: 0.5
 Nodes (0): 
 
-### Community 43 - "Community 43"
+### Community 44 - "Community 44"
 Cohesion: 0.83
 Nodes (3): currentPath(), loginUrl(), redirectToLogin()
 
-### Community 44 - "Community 44"
-Cohesion: 0.5
-Nodes (0): 
-
 ### Community 45 - "Community 45"
 Cohesion: 0.5
-Nodes (4): Brand implementation references (Logo.tsx + public SVGs + handoff), apps/web/public/favicon.svg (thicker-stroke variant), apps/web/public/logo-lockup.svg (raw lockup asset), apps/web/public/logo-mark.svg (raw Line Monogram asset)
+Nodes (0): 
 
 ### Community 46 - "Community 46"
 Cohesion: 0.5
-Nodes (4): events table — unified crawled + uploaded via source_type, WHY: soft delete on users/events/reviews for recovery + partial index perf, WHY: single events table + source_type — avoids dual query paths, A_501 이벤트 리뷰 작성 — new review flow (wireframe 6-1)
+Nodes (4): Brand implementation references (Logo.tsx + public SVGs + handoff), apps/web/public/favicon.svg (thicker-stroke variant), apps/web/public/logo-lockup.svg (raw lockup asset), apps/web/public/logo-mark.svg (raw Line Monogram asset)
 
 ### Community 47 - "Community 47"
-Cohesion: 0.67
-Nodes (0): 
+Cohesion: 0.5
+Nodes (4): events table — unified crawled + uploaded via source_type, WHY: soft delete on users/events/reviews for recovery + partial index perf, WHY: single events table + source_type — avoids dual query paths, A_501 이벤트 리뷰 작성 — new review flow (wireframe 6-1)
 
 ### Community 48 - "Community 48"
 Cohesion: 0.67
@@ -395,35 +425,35 @@ Nodes (0):
 
 ### Community 54 - "Community 54"
 Cohesion: 0.67
-Nodes (3): Aesthetic — editorial + map-first (no mall), 결정: 예약/결제 UI 제외 (v5.0), Pretendard 단일 패밀리 전략
+Nodes (0): 
 
 ### Community 55 - "Community 55"
-Cohesion: 0.67
-Nodes (3): Decision #7: event_subscriptions table, event_subscriptions table (new), notifications table
+Cohesion: 1.0
+Nodes (2): onCreated(), submit()
 
 ### Community 56 - "Community 56"
-Cohesion: 1.0
-Nodes (3): DB 설계 명세서 v3 (2026-04), God node: ADR 0001 DDL v3 ↔ Terminology v5 (18 edges), 요구사항정의서 v5.0 (장원팀, 2026-04)
+Cohesion: 0.67
+Nodes (0): 
 
 ### Community 57 - "Community 57"
 Cohesion: 0.67
-Nodes (3): Filter 5 fixed — region/period/companion/event_type/event_vibe, WHY: filter 5 unified — region/period/companion/type/vibe (prevent ad-hoc filters), A_203 예정 이벤트 조회 — new upcoming-events tab
+Nodes (0): 
 
 ### Community 58 - "Community 58"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (3): Aesthetic — editorial + map-first (no mall), 결정: 예약/결제 UI 제외 (v5.0), Pretendard 단일 패밀리 전략
 
 ### Community 59 - "Community 59"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (3): Decision #7: event_subscriptions table, event_subscriptions table (new), notifications table
 
 ### Community 60 - "Community 60"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (3): DB 설계 명세서 v3 (2026-04), God node: ADR 0001 DDL v3 ↔ Terminology v5 (18 edges), 요구사항정의서 v5.0 (장원팀, 2026-04)
 
 ### Community 61 - "Community 61"
-Cohesion: 1.0
-Nodes (0): 
+Cohesion: 0.67
+Nodes (3): Filter 5 fixed — region/period/companion/event_type/event_vibe, WHY: filter 5 unified — region/period/companion/type/vibe (prevent ad-hoc filters), A_203 예정 이벤트 조회 — new upcoming-events tab
 
 ### Community 62 - "Community 62"
 Cohesion: 1.0
@@ -431,7 +461,7 @@ Nodes (0):
 
 ### Community 63 - "Community 63"
 Cohesion: 1.0
-Nodes (2): /api → localhost:3000 proxy (rewrite strip), HealthBadge (BFF /api/health poll)
+Nodes (0): 
 
 ### Community 64 - "Community 64"
 Cohesion: 1.0
@@ -451,7 +481,7 @@ Nodes (0):
 
 ### Community 68 - "Community 68"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): /api → localhost:3000 proxy (rewrite strip), HealthBadge (BFF /api/health poll)
 
 ### Community 69 - "Community 69"
 Cohesion: 1.0
@@ -479,39 +509,39 @@ Nodes (0):
 
 ### Community 75 - "Community 75"
 Cohesion: 1.0
-Nodes (2): Map pin component tokens, Signature — 핀 클러스터 분해 애니메이션
+Nodes (0): 
 
 ### Community 76 - "Community 76"
 Cohesion: 1.0
-Nodes (2): Vermilion single accent (#E8562D), 결정: 버밀리언 단색 accent 근거
+Nodes (0): 
 
 ### Community 77 - "Community 77"
 Cohesion: 1.0
-Nodes (2): Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo), Rationale: skip repo/package rename to avoid full-repo churn
+Nodes (0): 
 
 ### Community 78 - "Community 78"
 Cohesion: 1.0
-Nodes (2): Do-not-edit: DB schema, env keys, internal identifiers, DB v3: 20 tables (regions, users, uploader_profiles, events, ...)
+Nodes (0): 
 
 ### Community 79 - "Community 79"
 Cohesion: 1.0
-Nodes (2): DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001), Term: event_vibe (event vibe labels, admin-assigned)
+Nodes (0): 
 
 ### Community 80 - "Community 80"
 Cohesion: 1.0
-Nodes (2): v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video, Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향
+Nodes (0): 
 
 ### Community 81 - "Community 81"
 Cohesion: 1.0
-Nodes (2): Three roles: user / uploader / admin with active_role toggle, users + uploader_profiles 1:1 — single-account multi-role
+Nodes (0): 
 
 ### Community 82 - "Community 82"
 Cohesion: 1.0
-Nodes (1): BFF env schema (merged)
+Nodes (0): 
 
 ### Community 83 - "Community 83"
 Cohesion: 1.0
-Nodes (1): Vite config (React + Tailwind + BFF proxy)
+Nodes (0): 
 
 ### Community 84 - "Community 84"
 Cohesion: 1.0
@@ -519,7 +549,7 @@ Nodes (0):
 
 ### Community 85 - "Community 85"
 Cohesion: 1.0
-Nodes (1): VITE_KAKAO_MAP_JS_KEY env typing
+Nodes (0): 
 
 ### Community 86 - "Community 86"
 Cohesion: 1.0
@@ -551,91 +581,91 @@ Nodes (0):
 
 ### Community 93 - "Community 93"
 Cohesion: 1.0
-Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
+Nodes (0): 
 
 ### Community 94 - "Community 94"
 Cohesion: 1.0
-Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
+Nodes (0): 
 
 ### Community 95 - "Community 95"
 Cohesion: 1.0
-Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
+Nodes (0): 
 
 ### Community 96 - "Community 96"
 Cohesion: 1.0
-Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
+Nodes (0): 
 
 ### Community 97 - "Community 97"
 Cohesion: 1.0
-Nodes (1): 텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50
+Nodes (2): Vermilion single accent (#E8562D), 결정: 버밀리언 단색 accent 근거
 
 ### Community 98 - "Community 98"
 Cohesion: 1.0
-Nodes (1): Qdrant 의미 검색 — 자연어 쿼리 → 1536d 임베딩 → kNN.      /chat 체인에서 필터 추출 후 자연어 쿼리로 후속 호출하거
+Nodes (2): Map pin component tokens, Signature — 핀 클러스터 분해 애니메이션
 
 ### Community 99 - "Community 99"
 Cohesion: 1.0
-Nodes (1): BFF 이벤트 embed 배치가 호출 — Qdrant alle-events collection 에 upsert.     vector dim=15
+Nodes (2): Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo), Rationale: skip repo/package rename to avoid full-repo churn
 
 ### Community 100 - "Community 100"
 Cohesion: 1.0
-Nodes (1): 현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.
+Nodes (2): Do-not-edit: DB schema, env keys, internal identifiers, DB v3: 20 tables (regions, users, uploader_profiles, events, ...)
 
 ### Community 101 - "Community 101"
 Cohesion: 1.0
-Nodes (1): 키 있고 일일 예산 한도 전이면 True.
+Nodes (2): v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video, Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향
 
 ### Community 102 - "Community 102"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001), Term: event_vibe (event vibe labels, admin-assigned)
 
 ### Community 103 - "Community 103"
 Cohesion: 1.0
-Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
+Nodes (2): Three roles: user / uploader / admin with active_role toggle, users + uploader_profiles 1:1 — single-account multi-role
 
 ### Community 104 - "Community 104"
 Cohesion: 1.0
-Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
+Nodes (1): BFF env schema (merged)
 
 ### Community 105 - "Community 105"
 Cohesion: 1.0
-Nodes (1): 텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50
+Nodes (0): 
 
 ### Community 106 - "Community 106"
 Cohesion: 1.0
-Nodes (1): 현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.
+Nodes (1): Vite config (React + Tailwind + BFF proxy)
 
 ### Community 107 - "Community 107"
 Cohesion: 1.0
-Nodes (1): 키 있고 일일 예산 한도 전이면 True.
+Nodes (0): 
 
 ### Community 108 - "Community 108"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (1): VITE_KAKAO_MAP_JS_KEY env typing
 
 ### Community 109 - "Community 109"
 Cohesion: 1.0
-Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
+Nodes (0): 
 
 ### Community 110 - "Community 110"
 Cohesion: 1.0
-Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
+Nodes (0): 
 
 ### Community 111 - "Community 111"
 Cohesion: 1.0
-Nodes (1): TOKEN_BUDGET_DAILY_USD 환경변수. 없으면 None (가드 off).
+Nodes (0): 
 
 ### Community 112 - "Community 112"
 Cohesion: 1.0
-Nodes (1): messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag
+Nodes (0): 
 
 ### Community 113 - "Community 113"
 Cohesion: 1.0
-Nodes (1): messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag
+Nodes (0): 
 
 ### Community 114 - "Community 114"
 Cohesion: 1.0
-Nodes (1): 현재 활성 체인 — 환경변수에 따라 결정.
+Nodes (0): 
 
 ### Community 115 - "Community 115"
 Cohesion: 1.0
@@ -643,234 +673,406 @@ Nodes (0):
 
 ### Community 116 - "Community 116"
 Cohesion: 1.0
-Nodes (1): messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag
+Nodes (0): 
 
 ### Community 117 - "Community 117"
 Cohesion: 1.0
-Nodes (1): 필터 5종 (region/period/companion/type/vibe)
+Nodes (0): 
 
 ### Community 118 - "Community 118"
 Cohesion: 1.0
-Nodes (1): graphify rule: read GRAPH_REPORT first
+Nodes (0): 
 
 ### Community 119 - "Community 119"
 Cohesion: 1.0
-Nodes (1): gstack workflow Think→Plan→Build→Review→Test→Ship→Reflect
+Nodes (0): 
 
 ### Community 120 - "Community 120"
 Cohesion: 1.0
-Nodes (1): phase badge tokens (upcoming/ongoing/ended)
+Nodes (0): 
 
 ### Community 121 - "Community 121"
 Cohesion: 1.0
-Nodes (1): chat_messages table
+Nodes (0): 
 
 ### Community 122 - "Community 122"
 Cohesion: 1.0
-Nodes (1): search_logs table
+Nodes (0): 
 
 ### Community 123 - "Community 123"
 Cohesion: 1.0
-Nodes (1): Term: period
+Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
 
 ### Community 124 - "Community 124"
 Cohesion: 1.0
-Nodes (1): Do-not-edit: color/type/radius/shadow/motion tokens already correct
+Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
 
 ### Community 125 - "Community 125"
 Cohesion: 1.0
-Nodes (1): Pending decision: rename @ggdrugs/web → @alle/web? (default no)
+Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
 
 ### Community 126 - "Community 126"
 Cohesion: 1.0
-Nodes (1): Pending decision: href='/' vs react-router <Link> in Logo anchor
+Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
 
 ### Community 127 - "Community 127"
 Cohesion: 1.0
-Nodes (1): Term: companion_type {혼자, 연인, 친구, 가족}
+Nodes (1): 텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50
 
 ### Community 128 - "Community 128"
 Cohesion: 1.0
-Nodes (1): God node: UI 플로우 와이어프레임 초안 (23 edges)
+Nodes (1): Qdrant 의미 검색 — 자연어 쿼리 → 1536d 임베딩 → kNN.      /chat 체인에서 필터 추출 후 자연어 쿼리로 후속 호출하거
 
 ### Community 129 - "Community 129"
 Cohesion: 1.0
-Nodes (1): Alle Logo Mark (served, apps/web/public/)
+Nodes (1): BFF 이벤트 embed 배치가 호출 — Qdrant alle-events collection 에 upsert.     vector dim=15
 
 ### Community 130 - "Community 130"
 Cohesion: 1.0
-Nodes (1): Alle Favicon (served, apps/web/public/)
+Nodes (1): 현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.
 
 ### Community 131 - "Community 131"
+Cohesion: 1.0
+Nodes (1): 키 있고 일일 예산 한도 전이면 True.
+
+### Community 132 - "Community 132"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 133 - "Community 133"
+Cohesion: 1.0
+Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
+
+### Community 134 - "Community 134"
+Cohesion: 1.0
+Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
+
+### Community 135 - "Community 135"
+Cohesion: 1.0
+Nodes (1): 텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50
+
+### Community 136 - "Community 136"
+Cohesion: 1.0
+Nodes (1): 현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.
+
+### Community 137 - "Community 137"
+Cohesion: 1.0
+Nodes (1): 키 있고 일일 예산 한도 전이면 True.
+
+### Community 138 - "Community 138"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 139 - "Community 139"
+Cohesion: 1.0
+Nodes (1): 이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal
+
+### Community 140 - "Community 140"
+Cohesion: 1.0
+Nodes (1): 리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.
+
+### Community 141 - "Community 141"
+Cohesion: 1.0
+Nodes (1): TOKEN_BUDGET_DAILY_USD 환경변수. 없으면 None (가드 off).
+
+### Community 142 - "Community 142"
+Cohesion: 1.0
+Nodes (1): messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag
+
+### Community 143 - "Community 143"
+Cohesion: 1.0
+Nodes (1): messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag
+
+### Community 144 - "Community 144"
+Cohesion: 1.0
+Nodes (1): 현재 활성 체인 — 환경변수에 따라 결정.
+
+### Community 145 - "Community 145"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 146 - "Community 146"
+Cohesion: 1.0
+Nodes (1): messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag
+
+### Community 147 - "Community 147"
+Cohesion: 1.0
+Nodes (1): 필터 5종 (region/period/companion/type/vibe)
+
+### Community 148 - "Community 148"
+Cohesion: 1.0
+Nodes (1): graphify rule: read GRAPH_REPORT first
+
+### Community 149 - "Community 149"
+Cohesion: 1.0
+Nodes (1): gstack workflow Think→Plan→Build→Review→Test→Ship→Reflect
+
+### Community 150 - "Community 150"
+Cohesion: 1.0
+Nodes (1): phase badge tokens (upcoming/ongoing/ended)
+
+### Community 151 - "Community 151"
+Cohesion: 1.0
+Nodes (1): chat_messages table
+
+### Community 152 - "Community 152"
+Cohesion: 1.0
+Nodes (1): search_logs table
+
+### Community 153 - "Community 153"
+Cohesion: 1.0
+Nodes (1): Term: period
+
+### Community 154 - "Community 154"
+Cohesion: 1.0
+Nodes (1): Do-not-edit: color/type/radius/shadow/motion tokens already correct
+
+### Community 155 - "Community 155"
+Cohesion: 1.0
+Nodes (1): Pending decision: rename @ggdrugs/web → @alle/web? (default no)
+
+### Community 156 - "Community 156"
+Cohesion: 1.0
+Nodes (1): Pending decision: href='/' vs react-router <Link> in Logo anchor
+
+### Community 157 - "Community 157"
+Cohesion: 1.0
+Nodes (1): Term: companion_type {혼자, 연인, 친구, 가족}
+
+### Community 158 - "Community 158"
+Cohesion: 1.0
+Nodes (1): God node: UI 플로우 와이어프레임 초안 (23 edges)
+
+### Community 159 - "Community 159"
+Cohesion: 1.0
+Nodes (1): Alle Logo Mark (served, apps/web/public/)
+
+### Community 160 - "Community 160"
+Cohesion: 1.0
+Nodes (1): Alle Favicon (served, apps/web/public/)
+
+### Community 161 - "Community 161"
 Cohesion: 1.0
 Nodes (1): Alle Logo Lockup (served, apps/web/public/)
 
 ## Knowledge Gaps
 - **217 isolated node(s):** `BFF env schema (merged)`, `pino logger (env-aware)`, `prisma (PrismaClient singleton)`, `Vite config (React + Tailwind + BFF proxy)`, `/api → localhost:3000 proxy (rewrite strip)` (+212 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 58`** (2 nodes): `subscription-match.ts`, `notifyMatchingSubscribers()`
+- **Thin community `Community 62`** (2 nodes): `subscription-match.ts`, `notifyMatchingSubscribers()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 59`** (2 nodes): `BookmarkButton.tsx`, `BookmarkButton()`
+- **Thin community `Community 63`** (2 nodes): `role.ts`, `setActiveRole()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 60`** (2 nodes): `ChatDock.tsx`, `ChatDock()`
+- **Thin community `Community 64`** (2 nodes): `BookmarkButton.tsx`, `BookmarkButton()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (2 nodes): `ChatHelpPanel.tsx`, `ChatHelpPanel()`
+- **Thin community `Community 65`** (2 nodes): `ChatDock.tsx`, `ChatDock()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (2 nodes): `FullListPanel.tsx`, `phaseCount()`
+- **Thin community `Community 66`** (2 nodes): `ChatHelpPanel.tsx`, `ChatHelpPanel()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (2 nodes): `/api → localhost:3000 proxy (rewrite strip)`, `HealthBadge (BFF /api/health poll)`
+- **Thin community `Community 67`** (2 nodes): `FullListPanel.tsx`, `phaseCount()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (2 nodes): `Icon.tsx`, `Icon()`
+- **Thin community `Community 68`** (2 nodes): `/api → localhost:3000 proxy (rewrite strip)`, `HealthBadge (BFF /api/health poll)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (2 nodes): `OverlayPanel.tsx`, `OverlayPanel()`
+- **Thin community `Community 69`** (2 nodes): `Icon.tsx`, `Icon()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (2 nodes): `PhaseBadge.tsx`, `PhaseBadge()`
+- **Thin community `Community 70`** (2 nodes): `OverlayPanel.tsx`, `OverlayPanel()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (2 nodes): `AuditLogsTab.tsx`, `summarizeAdminPayload()`
+- **Thin community `Community 71`** (2 nodes): `PhaseBadge.tsx`, `PhaseBadge()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (2 nodes): `UploaderDetailPanel.tsx`, `decide()`
+- **Thin community `Community 72`** (2 nodes): `AuditLogsTab.tsx`, `summarizeAdminPayload()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (2 nodes): `UploadReviewPanel.tsx`, `decide()`
+- **Thin community `Community 73`** (2 nodes): `UploaderDetailPanel.tsx`, `decide()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (2 nodes): `NotificationBell.tsx`, `NotificationBell()`
+- **Thin community `Community 74`** (2 nodes): `UploadReviewPanel.tsx`, `decide()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (2 nodes): `DocumentsPickerField.tsx`, `DocumentsPickerField()`
+- **Thin community `Community 75`** (2 nodes): `NotificationBell.tsx`, `NotificationBell()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (2 nodes): `EventFormFields.tsx`, `isEventFormFilled()`
+- **Thin community `Community 76`** (2 nodes): `DocumentsPickerField.tsx`, `DocumentsPickerField()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (2 nodes): `MyPage.tsx`, `onToggle()`
+- **Thin community `Community 77`** (2 nodes): `EventFormFields.tsx`, `isEventFormFilled()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (2 nodes): `UploaderPage.tsx`, `toggleRole()`
+- **Thin community `Community 78`** (2 nodes): `UploaderPage.tsx`, `toggleRole()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (2 nodes): `Map pin component tokens`, `Signature — 핀 클러스터 분해 애니메이션`
+- **Thin community `Community 79`** (2 nodes): `index.tsx`, `AdminEventsPage()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (2 nodes): `Vermilion single accent (#E8562D)`, `결정: 버밀리언 단색 accent 근거`
+- **Thin community `Community 80`** (2 nodes): `UploadersTab.tsx`, `UploadersTab()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (2 nodes): `Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)`, `Rationale: skip repo/package rename to avoid full-repo churn`
+- **Thin community `Community 81`** (2 nodes): `UploadReviewsTab.tsx`, `onDecided()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 78`** (2 nodes): `Do-not-edit: DB schema, env keys, internal identifiers`, `DB v3: 20 tables (regions, users, uploader_profiles, events, ...)`
+- **Thin community `Community 82`** (2 nodes): `MiniMapSection.tsx`, `MiniMapSection()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 79`** (2 nodes): `DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)`, `Term: event_vibe (event vibe labels, admin-assigned)`
+- **Thin community `Community 83`** (2 nodes): `Provenance.tsx`, `Provenance()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 80`** (2 nodes): `v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video`, `Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향`
+- **Thin community `Community 84`** (2 nodes): `BookmarkCard.tsx`, `BookmarkCard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 81`** (2 nodes): `Three roles: user / uploader / admin with active_role toggle`, `users + uploader_profiles 1:1 — single-account multi-role`
+- **Thin community `Community 85`** (2 nodes): `EmptyBox.tsx`, `EmptyBox()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 82`** (1 nodes): `BFF env schema (merged)`
+- **Thin community `Community 86`** (2 nodes): `PageShell.tsx`, `PageShell()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 83`** (1 nodes): `Vite config (React + Tailwind + BFF proxy)`
+- **Thin community `Community 87`** (2 nodes): `RecommendedCard.tsx`, `RecommendedCard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 84`** (1 nodes): `main.tsx`
+- **Thin community `Community 88`** (2 nodes): `ReviewCard.tsx`, `ReviewCard()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 85`** (1 nodes): `VITE_KAKAO_MAP_JS_KEY env typing`
+- **Thin community `Community 89`** (2 nodes): `RoleToggleButton.tsx`, `RoleToggleButton()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 86`** (1 nodes): `EventList.tsx`
+- **Thin community `Community 90`** (2 nodes): `SessionFooter.tsx`, `SessionFooter()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 87`** (1 nodes): `EventSummaryPanel.tsx`
+- **Thin community `Community 91`** (2 nodes): `SkeletonList.tsx`, `SkeletonList()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 88`** (1 nodes): `Poster.tsx`
+- **Thin community `Community 92`** (2 nodes): `Stars.tsx`, `Stars()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 89`** (1 nodes): `MembersTab.tsx`
+- **Thin community `Community 93`** (2 nodes): `TabBtn.tsx`, `TabBtn()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 90`** (1 nodes): `mock.ts`
+- **Thin community `Community 94`** (2 nodes): `BookmarksTab.tsx`, `BookmarksList()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 91`** (1 nodes): `Header.tsx`
+- **Thin community `Community 95`** (2 nodes): `CalendarTab.tsx`, `ymd()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 92`** (1 nodes): `schema.ts`
+- **Thin community `Community 96`** (2 nodes): `RecommendationsTab.tsx`, `RecommendationsList()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 93`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
+- **Thin community `Community 97`** (2 nodes): `Vermilion single accent (#E8562D)`, `결정: 버밀리언 단색 accent 근거`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 94`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
+- **Thin community `Community 98`** (2 nodes): `Map pin component tokens`, `Signature — 핀 클러스터 분해 애니메이션`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 95`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
+- **Thin community `Community 99`** (2 nodes): `Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)`, `Rationale: skip repo/package rename to avoid full-repo churn`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 96`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
+- **Thin community `Community 100`** (2 nodes): `Do-not-edit: DB schema, env keys, internal identifiers`, `DB v3: 20 tables (regions, users, uploader_profiles, events, ...)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 97`** (1 nodes): `텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50`
+- **Thin community `Community 101`** (2 nodes): `v5.0 changes: +A_203, +A_501, +용어집, filter-term unification, −AI video`, `Filter terminology: 지역/기간/인원구성/이벤트 종류/이벤트 성향`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 98`** (1 nodes): `Qdrant 의미 검색 — 자연어 쿼리 → 1536d 임베딩 → kNN.      /chat 체인에서 필터 추출 후 자연어 쿼리로 후속 호출하거`
+- **Thin community `Community 102`** (2 nodes): `DB v3 term: event_tendency_labels (renamed to event_vibes in ADR 0001)`, `Term: event_vibe (event vibe labels, admin-assigned)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 99`** (1 nodes): `BFF 이벤트 embed 배치가 호출 — Qdrant alle-events collection 에 upsert.     vector dim=15`
+- **Thin community `Community 103`** (2 nodes): `Three roles: user / uploader / admin with active_role toggle`, `users + uploader_profiles 1:1 — single-account multi-role`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 100`** (1 nodes): `현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.`
+- **Thin community `Community 104`** (1 nodes): `BFF env schema (merged)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 101`** (1 nodes): `키 있고 일일 예산 한도 전이면 True.`
+- **Thin community `Community 105`** (1 nodes): `index.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 102`** (1 nodes): `Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()`
+- **Thin community `Community 106`** (1 nodes): `Vite config (React + Tailwind + BFF proxy)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 103`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
+- **Thin community `Community 107`** (1 nodes): `main.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 104`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
+- **Thin community `Community 108`** (1 nodes): `VITE_KAKAO_MAP_JS_KEY env typing`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 105`** (1 nodes): `텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50`
+- **Thin community `Community 109`** (1 nodes): `EventList.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 106`** (1 nodes): `현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.`
+- **Thin community `Community 110`** (1 nodes): `EventSummaryPanel.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 107`** (1 nodes): `키 있고 일일 예산 한도 전이면 True.`
+- **Thin community `Community 111`** (1 nodes): `Poster.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 108`** (1 nodes): `Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()`
+- **Thin community `Community 112`** (1 nodes): `MembersTab.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 109`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
+- **Thin community `Community 113`** (1 nodes): `mock.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 110`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
+- **Thin community `Community 114`** (1 nodes): `Header.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 111`** (1 nodes): `TOKEN_BUDGET_DAILY_USD 환경변수. 없으면 None (가드 off).`
+- **Thin community `Community 115`** (1 nodes): `index.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 112`** (1 nodes): `messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag`
+- **Thin community `Community 116`** (1 nodes): `ArticlesSection.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 113`** (1 nodes): `messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag`
+- **Thin community `Community 117`** (1 nodes): `LoginGateBox.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 114`** (1 nodes): `현재 활성 체인 — 환경변수에 따라 결정.`
+- **Thin community `Community 118`** (1 nodes): `OverviewSection.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 115`** (1 nodes): `Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()`
+- **Thin community `Community 119`** (1 nodes): `PosterHeader.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 116`** (1 nodes): `messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag`
+- **Thin community `Community 120`** (1 nodes): `index.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 117`** (1 nodes): `필터 5종 (region/period/companion/type/vibe)`
+- **Thin community `Community 121`** (1 nodes): `CalendarSummaryCard.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 118`** (1 nodes): `graphify rule: read GRAPH_REPORT first`
+- **Thin community `Community 122`** (1 nodes): `schema.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 119`** (1 nodes): `gstack workflow Think→Plan→Build→Review→Test→Ship→Reflect`
+- **Thin community `Community 123`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 120`** (1 nodes): `phase badge tokens (upcoming/ongoing/ended)`
+- **Thin community `Community 124`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 121`** (1 nodes): `chat_messages table`
+- **Thin community `Community 125`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 122`** (1 nodes): `search_logs table`
+- **Thin community `Community 126`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 123`** (1 nodes): `Term: period`
+- **Thin community `Community 127`** (1 nodes): `텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 124`** (1 nodes): `Do-not-edit: color/type/radius/shadow/motion tokens already correct`
+- **Thin community `Community 128`** (1 nodes): `Qdrant 의미 검색 — 자연어 쿼리 → 1536d 임베딩 → kNN.      /chat 체인에서 필터 추출 후 자연어 쿼리로 후속 호출하거`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 125`** (1 nodes): `Pending decision: rename @ggdrugs/web → @alle/web? (default no)`
+- **Thin community `Community 129`** (1 nodes): `BFF 이벤트 embed 배치가 호출 — Qdrant alle-events collection 에 upsert.     vector dim=15`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 126`** (1 nodes): `Pending decision: href='/' vs react-router <Link> in Logo anchor`
+- **Thin community `Community 130`** (1 nodes): `현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 127`** (1 nodes): `Term: companion_type {혼자, 연인, 친구, 가족}`
+- **Thin community `Community 131`** (1 nodes): `키 있고 일일 예산 한도 전이면 True.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 128`** (1 nodes): `God node: UI 플로우 와이어프레임 초안 (23 edges)`
+- **Thin community `Community 132`** (1 nodes): `Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 129`** (1 nodes): `Alle Logo Mark (served, apps/web/public/)`
+- **Thin community `Community 133`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 130`** (1 nodes): `Alle Favicon (served, apps/web/public/)`
+- **Thin community `Community 134`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 131`** (1 nodes): `Alle Logo Lockup (served, apps/web/public/)`
+- **Thin community `Community 135`** (1 nodes): `텍스트 배치 임베딩 — text-embedding-3-small(1536d) 기본.      OPENAI_API_KEY 없거나 예산 초과면 50`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 136`** (1 nodes): `현재 활성 체인 — 환경변수·예산 잔량에 따라 결정.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 137`** (1 nodes): `키 있고 일일 예산 한도 전이면 True.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 138`** (1 nodes): `Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 139`** (1 nodes): `이벤트 한 건 → 2~3 문장 한국어 요약.      OPENAI_API_KEY 없으면 title + category 기반 간단 문장으로 fal`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 140`** (1 nodes): `리뷰 본문 → positive/negative/neutral 분류. 단문 1회 호출.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 141`** (1 nodes): `TOKEN_BUDGET_DAILY_USD 환경변수. 없으면 None (가드 off).`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 142`** (1 nodes): `messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 143`** (1 nodes): `messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 144`** (1 nodes): `현재 활성 체인 — 환경변수에 따라 결정.`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 145`** (1 nodes): `Stage 2 OpenAI chain — gpt-4o-mini + structured outputs.      실패 시 예외를 올려 chat()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 146`** (1 nodes): `messages: [{"role": "user"|"assistant"|"system", "text": str}, ...]     반환: Stag`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 147`** (1 nodes): `필터 5종 (region/period/companion/type/vibe)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 148`** (1 nodes): `graphify rule: read GRAPH_REPORT first`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 149`** (1 nodes): `gstack workflow Think→Plan→Build→Review→Test→Ship→Reflect`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 150`** (1 nodes): `phase badge tokens (upcoming/ongoing/ended)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 151`** (1 nodes): `chat_messages table`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 152`** (1 nodes): `search_logs table`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 153`** (1 nodes): `Term: period`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 154`** (1 nodes): `Do-not-edit: color/type/radius/shadow/motion tokens already correct`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 155`** (1 nodes): `Pending decision: rename @ggdrugs/web → @alle/web? (default no)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 156`** (1 nodes): `Pending decision: href='/' vs react-router <Link> in Logo anchor`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 157`** (1 nodes): `Term: companion_type {혼자, 연인, 친구, 가족}`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 158`** (1 nodes): `God node: UI 플로우 와이어프레임 초안 (23 edges)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 159`** (1 nodes): `Alle Logo Mark (served, apps/web/public/)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 160`** (1 nodes): `Alle Favicon (served, apps/web/public/)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 161`** (1 nodes): `Alle Logo Lockup (served, apps/web/public/)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Tech Stack` connect `Community 6` to `Community 0`?**
-  _High betweenness centrality (0.016) - this node is a cross-community bridge._
-- **Why does `ADR 0002 — Stack Decisions (MinIO/OpenAI/Qdrant)` connect `Community 3` to `Community 6`?**
-  _High betweenness centrality (0.015) - this node is a cross-community bridge._
-- **Why does `Technology stack table` connect `Community 6` to `Community 10`?**
-  _High betweenness centrality (0.013) - this node is a cross-community bridge._
+- **Why does `Tech Stack` connect `Community 0` to `Community 8`?**
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **Why does `ADR 0002 — Stack Decisions (MinIO/OpenAI/Qdrant)` connect `Community 3` to `Community 8`?**
+  _High betweenness centrality (0.014) - this node is a cross-community bridge._
+- **Why does `putAdminEventVibes()` connect `Community 1` to `Community 2`?**
+  _High betweenness centrality (0.012) - this node is a cross-community bridge._
 - **What connects `BFF env schema (merged)`, `pino logger (env-aware)`, `prisma (PrismaClient singleton)` to the rest of the system?**
   _217 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.04 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.03 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.04 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**
-  _Cohesion score 0.07 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.05 - nodes in this community are weakly interconnected._

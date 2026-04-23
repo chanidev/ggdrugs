@@ -646,3 +646,35 @@ Phase 1 lint queue 누적 정리 (04-22 lint 부터 04-23 sprint 3 까지):
 | G-6 | 소스 쿼터·레이트리밋 (transient) | ✅ ship (fetchWithRetry) |
 
 Phase 1 점검 결과 — **Hard gap 0건 잔존**. 잔여는 모두 Phase 2 또는 트리거 대기 영역.
+
+## 2026-04-23T13:00  refactor  코드 모듈화 sprint — 상위 5 파일 디렉터리 분할 (zero behavior change)
+사용자 피드백 ("function 이 한 페이지에 엄청 몰려있다") → 상위 5 파일 측정 후 일괄 분할.
+모두 pure refactor — 함수/타입 시그니처 동일, public 호출 사이트 무수정.
+
+분할 전후:
+| 파일 | 분할 전 | 분할 후 (max single file) |
+|---|---|---|
+| `apps/web/src/lib/api.ts` | 1749줄 | 16 domain 모듈 (max 445 — uploader.ts) |
+| `apps/web/src/pages/MyPage.tsx` | 1122줄 | MyPage/{index,parts/*,tabs/*} (max 163) |
+| `apps/bff/src/routes/uploader.ts` | 1102줄 | uploader/{profile,apply,role,events,_helpers} (max 732) + 11줄 re-export shim |
+| `apps/web/src/pages/AdminEventsPage.tsx` | 817줄 | AdminEventsPage/{index,tabs/*} (max 373) |
+| `apps/web/src/pages/EventDetailPage.tsx` | 799줄 | EventDetailPage/{index,sections/*} (max 396) |
+
+분할 패턴 (Web vs BFF):
+- **Web (Vite bundler)**: `Foo.tsx` 삭제 → `Foo/index.tsx` 직접 사용. Vite 가 directory-as-index resolve 하므로 shim 불필요.
+- **BFF (Node ESM bundler resolution)**: `foo.ts` 는 11줄 re-export shim 으로 유지 (`export * from './foo/index.js'`). Node ESM 은 directory auto-resolve 안 함.
+
+Helper / type 처리:
+- 단일 사용처 → co-located
+- 2+ 사용처 → 첫 정의 파일 그대로 두고 type-only import (예: `EventPhase`, `UploaderApprovalStatus`, `BffEventItem`)
+- BFF uploader 의 `shapeUploaderProfile` / `computeReapplyGate` / `REJECTED_REAPPLY_COOLDOWN_MS` 는 `_helpers.ts` 로 추출 (profile + apply 양쪽 사용)
+
+검증: BFF + Web typecheck 모두 PASS. Caller 모두 무수정.
+
+Wiki 정정: topics/ 의 source path 참조 5건 갱신 (event-detail-review-flow / news-article-pipeline ×2 / recommendations ×2 / roles-and-active-role ×2). log.md 의 과거 항목은 그 시점 사실이라 유지.
+
+graphify 재빌드: 989 nodes / 1217 edges / 162 communities (이전 931/1227/132 대비 +58 nodes / -10 edges / +30 communities — 분할로 community 모듈성 증가).
+
+남은 큰 파일 (분할 후): UploaderPage (724) / admin-users.ts (644) / UserDetailPanel (518) / auth.ts (517) / UploaderNewEventPage (512) / AuditLogsTab (508) / UploaderEventEditPage (502) / news-naver-ingest (490). 모두 700줄 이하 — 추가 분할 ROI 낮음.
+
+5 commits: f94893d (api) / 2a8ac42 (MyPage) / 81112f6 (AdminEventsPage) / 474660b (uploader) / a42bcb4 (EventDetailPage).
