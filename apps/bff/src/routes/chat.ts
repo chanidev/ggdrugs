@@ -992,6 +992,22 @@ export async function postChatStream(req: Request, res: Response) {
   }
 
   if (!upstream.ok || !upstream.body) {
+    // v3.5.1 defensive: LLM 서비스가 v3.1 이전 버전이면 /chat/stream 이 404. 이때 일반
+    // /chat 으로 fallback — 한 번에 reply + meta + suggestions 를 emit 해서 클라이언트
+    // SSE 경험을 degrade (체감 latency 약간 증가) 하지만 "응답 없음" 은 회피.
+    if (upstream.status === 404) {
+      logger.warn(
+        { status: upstream.status },
+        'chat/stream: upstream 404 — falling back to non-stream /chat',
+      );
+      await streamFallbackFromNonStream({
+        body: val.body,
+        userSignals,
+        emit,
+        res,
+      });
+      return;
+    }
     emit('error', { message: `llm_upstream_${upstream.status}` });
     emit('done', {});
     res.end();
@@ -1132,6 +1148,128 @@ export async function postChatStream(req: Request, res: Response) {
 
   emit('done', {});
   res.end();
+}
+
+// ----------------------------------------------------------------------------
+// v3.5.1 defensive fallback — LLM 서비스가 v3.1 이전이면 /chat/stream 404.
+// non-stream /chat 을 호출해 같은 SSE 이벤트 시퀀스를 합성 emit → client 경험 유지.
+// ----------------------------------------------------------------------------
+interface FallbackOpts {
+  body: { messages: Array<{ role: string; text: string }>; lastSuggestions: ClientLastSuggestion[] };
+  userSignals: Record<string, unknown> | null;
+  emit: (event: string, data: unknown) => void;
+  res: Response;
+}
+
+async function streamFallbackFromNonStream(opts: FallbackOpts): Promise<void> {
+  let upstream: globalThis.Response;
+  try {
+    upstream = await fetch(`${env.LLM_SERVICE_URL}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
+      body: JSON.stringify({
+        messages: opts.body.messages,
+        ...(opts.userSignals ? { user_signals: opts.userSignals } : {}),
+        ...(opts.body.lastSuggestions.length > 0
+          ? { last_suggestions: opts.body.lastSuggestions }
+          : {}),
+      }),
+    });
+  } catch (err) {
+    logger.error({ err }, 'chat/stream fallback: /chat fetch failed');
+    opts.emit('error', { message: 'llm_service_unreachable' });
+    opts.emit('done', {});
+    opts.res.end();
+    return;
+  }
+  if (!upstream.ok) {
+    opts.emit('error', { message: `llm_upstream_${upstream.status}` });
+    opts.emit('done', {});
+    opts.res.end();
+    return;
+  }
+  const data = (await upstream.json()) as LlmChatResponse;
+  const userTexts = opts.body.messages
+    .filter((m) => m.role === 'user')
+    .map((m) => m.text.trim())
+    .filter((t) => t.length > 0);
+  const lastUser = userTexts[userTexts.length - 1] ?? '';
+
+  // reply 전체를 한 번에 보냄 (streaming 체감 없지만 동작 보장).
+  if (data.reply) opts.emit('reply_delta', { text: data.reply });
+
+  // region/vibe resolve (postChat 과 동일).
+  const hints = data.filters?.regionHints ?? [];
+  const vibeNames = data.filters?.vibes ?? [];
+  let regionIds: string[] = [];
+  if (hints.length > 0) {
+    const rows = await prisma.region.findMany({
+      where: { sigunguName: { in: hints }, dongName: null },
+      select: { regionId: true },
+    });
+    regionIds = rows.map((r) => r.regionId.toString());
+  }
+  let vibeIds: string[] = [];
+  if (vibeNames.length > 0) {
+    const rows = await prisma.eventVibe.findMany({
+      where: { vibeName: { in: vibeNames }, isActive: true },
+      select: { vibeId: true },
+    });
+    vibeIds = rows.map((r) => r.vibeId.toString());
+  }
+
+  const useGrounded =
+    data.referencesLast === true && opts.body.lastSuggestions.length > 0;
+
+  opts.emit('meta', {
+    reply: data.reply ?? '',
+    filters: { ...data.filters, regionIds, vibeIds },
+    specificDate: data.specificDate ?? null,
+    followups: (data.followups ?? []).slice(0, 3),
+    referencesLast: useGrounded,
+  });
+
+  let suggestions: ChatSuggestion[] = [];
+  try {
+    suggestions = useGrounded
+      ? await groundedRerank({
+          lastSuggestions: opts.body.lastSuggestions,
+          userTexts,
+          filters: data.filters,
+          specificDate: data.specificDate ?? null,
+        })
+      : await semanticSuggestions({
+          userTexts,
+          filters: data.filters,
+          specificDate: data.specificDate ?? null,
+          regionIds,
+        });
+  } catch (err) {
+    logger.warn({ err }, 'chat/stream fallback: semantic failed');
+  }
+  opts.emit('suggestions', { items: suggestions });
+
+  if (suggestions.length <= RETREAT_THRESHOLD && userTexts.length > 0 && !useGrounded) {
+    try {
+      const retreat = await composeRetreat({
+        userText: lastUser,
+        filters: data.filters,
+        sqlCount: 0,
+        semanticCount: 0,
+      });
+      if (retreat.reply) {
+        opts.emit('reply_override', {
+          text: retreat.reply,
+          followups: retreat.followups.slice(0, 3),
+        });
+      }
+    } catch (err) {
+      logger.warn({ err }, 'chat/stream fallback: retreat failed');
+    }
+  }
+
+  opts.emit('done', {});
+  opts.res.end();
 }
 
 // ----------------------------------------------------------------------------
