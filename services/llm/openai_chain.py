@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+from collections.abc import Iterator
 from datetime import date, timedelta
 from typing import Any
 
@@ -221,6 +222,8 @@ def _format_user_signals(sig: dict[str, Any]) -> str:
 # 하위 호환 (외부 import 시 깨지지 않게) — 첫 import 시점 컨텍스트로 컴파일.
 SYSTEM_PROMPT = _build_system_prompt()
 
+# Property 순서는 Streaming 시 실제 emit 순서 → reply 를 맨 앞에 두면 tokens 이
+# 스트림 초반부터 바로 흘러나옴 (체감 latency 개선).
 _SCHEMA = {
     "name": "chat_extract",
     "strict": True,
@@ -228,6 +231,12 @@ _SCHEMA = {
         "type": "object",
         "additionalProperties": False,
         "properties": {
+            "reply": {
+                "type": "string",
+                "description": "1~2 문장 자연어 응답. 250자 이내. 위치 표현 금지.",
+                "minLength": 1,
+                "maxLength": 280,
+            },
             "companions": {
                 "type": "array",
                 "items": {"type": "string", "enum": _ALLOWED_COMPANIONS},
@@ -253,12 +262,6 @@ _SCHEMA = {
                 "description": "사용자가 명시한 단일 날짜 ISO YYYY-MM-DD. 모호하면 null.",
                 "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
             },
-            "reply": {
-                "type": "string",
-                "description": "1~2 문장 자연어 응답. 250자 이내. 위치 표현 금지.",
-                "minLength": 1,
-                "maxLength": 280,
-            },
             "followups": {
                 "type": "array",
                 "description": "다음 user 발화 후보 칩 2~3개. 각 12자 이하.",
@@ -268,8 +271,8 @@ _SCHEMA = {
             },
         },
         "required": [
-            "companions", "eventTypes", "periodKey", "vibes", "regionHints",
-            "specificDate", "reply", "followups",
+            "reply", "companions", "eventTypes", "periodKey", "vibes", "regionHints",
+            "specificDate", "followups",
         ],
     },
 }
@@ -425,7 +428,12 @@ def extract_via_openai(
     )
     _track_usage("chat", resp)
     content = resp.choices[0].message.content or "{}"
-    data = json.loads(content)
+    return _parse_chat_extract(content)
+
+
+def _parse_chat_extract(raw_json: str) -> dict[str, Any]:
+    """_SCHEMA 결과 문자열 → 정규화된 dict. 스트리밍 종료 시점에도 재사용."""
+    data = json.loads(raw_json)
     return {
         "companions": list(data.get("companions") or []),
         "eventTypes": list(data.get("eventTypes") or []),
@@ -436,6 +444,138 @@ def extract_via_openai(
         "reply": (data.get("reply") or "").strip(),
         "followups": [s.strip() for s in (data.get("followups") or []) if s and s.strip()][:3],
     }
+
+
+def extract_via_openai_stream(
+    messages: list[dict[str, str]],
+    *,
+    user_signals: dict[str, Any] | None = None,
+) -> Iterator[tuple[str, Any]]:
+    """
+    스트리밍 버전. `reply` 텍스트가 생성되는 즉시 ("delta", str) 를 yield,
+    스트림 종료 시 ("final", dict) — extract_via_openai 와 동일한 형태.
+
+    _SCHEMA 는 properties 순서상 reply 를 맨 앞에 두므로 json fragment 초반부터
+    reply 텍스트가 흘러나온다. `"reply":"..."` 구간만 골라서 델타로 방출.
+
+    실패(예외)는 호출자가 /chat/stream 엔드포인트에서 "error" SSE 이벤트로 변환.
+    """
+    client = OpenAI()
+
+    sys_prompt = _build_system_prompt()
+    if user_signals:
+        sys_prompt += "\n\n" + _format_user_signals(user_signals)
+
+    chat = [{"role": "system", "content": sys_prompt}]
+    for m in messages:
+        role = m.get("role", "user")
+        if role not in {"user", "assistant"}:
+            continue
+        chat.append({"role": role, "content": m.get("text", "")})
+
+    stream = client.chat.completions.create(
+        model=MODEL,
+        messages=chat,
+        response_format={"type": "json_schema", "json_schema": _SCHEMA},
+        temperature=0.2,
+        max_tokens=500,
+        stream=True,
+        stream_options={"include_usage": True},
+    )
+
+    buf = ""
+    emitted = 0  # buf 기준 reply 값 중 이미 델타로 내보낸 char 위치
+    usage = None
+    for chunk in stream:
+        # include_usage=True 마지막 chunk 에 usage 포함 (choices 비어 있음).
+        if getattr(chunk, "usage", None):
+            usage = chunk.usage
+        if not chunk.choices:
+            continue
+        delta = chunk.choices[0].delta.content or ""
+        if not delta:
+            continue
+        buf += delta
+        # reply 값 문자열 범위 추출 후 새 텍스트만 delta 로 yield.
+        cur_reply, closed = _extract_reply_progress(buf)
+        if cur_reply is not None and len(cur_reply) > emitted:
+            yield "delta", cur_reply[emitted:]
+            emitted = len(cur_reply)
+        # reply 가 닫히면 그 이후 delta 에는 reply 증분 없음 — 계속 버퍼만 누적.
+        _ = closed
+
+    # usage 을 extract_via_openai 와 유사한 형태로 기록. stream 은 resp 객체가
+    # 없으므로 간이 dummy 로 감싸 _track_usage 에 넘김.
+    if usage is not None:
+        class _UsageResp:
+            pass
+        r = _UsageResp()
+        r.usage = usage  # type: ignore[attr-defined]
+        r.model = MODEL  # type: ignore[attr-defined]
+        _track_usage("chat", r)
+
+    final = _parse_chat_extract(buf or "{}")
+    yield "final", final
+
+
+def _extract_reply_progress(buf: str) -> tuple[str | None, bool]:
+    """
+    누적 JSON 버퍼에서 `"reply":"..."` 의 **현재까지 누적된 문자열 값** 과 닫힘 여부 반환.
+    JSON 이스케이프 (`\\"`, `\\\\`, `\\n` 등) 를 파싱한 "실제 문자 값" 을 돌려줌.
+
+    reply 가 아직 시작되지 않았으면 (None, False).
+    """
+    # property 순서상 reply 가 첫 필드 — `{"reply":"...` 로 시작.
+    key = '"reply":"'
+    i = buf.find(key)
+    if i < 0:
+        return None, False
+    j = i + len(key)
+    out: list[str] = []
+    k = j
+    closed = False
+    while k < len(buf):
+        c = buf[k]
+        if c == "\\":
+            # 이스케이프 시퀀스 — 뒤 1자(또는 \uXXXX 의 경우 5자)까지 버퍼에 있으면 처리.
+            if k + 1 >= len(buf):
+                break
+            nxt = buf[k + 1]
+            if nxt == '"':
+                out.append('"')
+                k += 2
+            elif nxt == "\\":
+                out.append("\\")
+                k += 2
+            elif nxt == "/":
+                out.append("/")
+                k += 2
+            elif nxt == "n":
+                out.append("\n")
+                k += 2
+            elif nxt == "t":
+                out.append("\t")
+                k += 2
+            elif nxt == "r":
+                out.append("\r")
+                k += 2
+            elif nxt == "u" and k + 5 < len(buf):
+                try:
+                    out.append(chr(int(buf[k + 2 : k + 6], 16)))
+                except ValueError:
+                    out.append(buf[k : k + 6])
+                k += 6
+            else:
+                # 불완전 이스케이프 — 다음 chunk 기다리기 위해 여기서 끊음.
+                break
+        elif c == '"':
+            closed = True
+            k += 1
+            break
+        else:
+            out.append(c)
+            k += 1
+    return "".join(out), closed
 
 
 # =============================================================

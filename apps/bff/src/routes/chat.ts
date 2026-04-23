@@ -506,3 +506,238 @@ async function composeRetreat(opts: RetreatOpts): Promise<LlmRetreatResponse> {
   if (!r.ok) throw new Error(`compose-retreat ${r.status}`);
   return (await r.json()) as LlmRetreatResponse;
 }
+
+// ============================================================================
+// POST /chat/stream — SSE 스트림 버전.
+// ============================================================================
+
+/**
+ * 이벤트:
+ *   reply_delta   {text: string}             # LLM 이 생성 중인 reply 텍스트 증분
+ *   meta          {filters, specificDate, followups, reply}
+ *   suggestions   {items: ChatSuggestion[]}  # semantic + rerank 결과
+ *   reply_override {text, followups}         # retreat 발동 시 reply 교체
+ *   done          {}
+ *   error         {message}
+ *
+ * 흐름:
+ *   1. LLM /chat/stream proxy — reply_delta 이벤트는 즉시 client 로 relay.
+ *   2. meta 수신 → regionIds / vibeIds resolve + semantic + rerank 병렬 시작.
+ *   3. suggestions 확정 → 이벤트 emit. 0건이면 compose-retreat 호출 → reply_override.
+ *   4. done.
+ */
+export async function postChatStream(req: Request, res: Response) {
+  const auth = (req as Partial<AuthenticatedRequest>).auth;
+  const userId = auth?.userId ?? null;
+
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no');
+  // 즉시 header flush — 클라이언트가 빨리 readable stream open.
+  res.flushHeaders?.();
+
+  const emit = (event: string, data: unknown) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  let userSignals: Record<string, unknown> | null = null;
+  if (userId) {
+    try {
+      userSignals = await buildUserSignals(userId);
+    } catch (err) {
+      logger.warn({ err, userId: userId.toString() }, 'chat/stream: buildUserSignals failed');
+    }
+  }
+
+  const messages = (req.body?.messages ?? []) as { role?: string; text?: string }[];
+  const userTexts = messages
+    .filter((m) => m?.role === 'user' && typeof m?.text === 'string')
+    .map((m) => (m.text as string).trim())
+    .filter((t) => t.length > 0);
+  const lastUser = userTexts[userTexts.length - 1] ?? '';
+
+  let upstream: globalThis.Response;
+  try {
+    upstream = await fetch(`${env.LLM_SERVICE_URL}/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        Accept: 'text/event-stream',
+      },
+      body: JSON.stringify({
+        ...(req.body ?? {}),
+        ...(userSignals ? { user_signals: userSignals } : {}),
+      }),
+    });
+  } catch (err) {
+    logger.error({ err }, 'chat/stream: llm fetch failed');
+    emit('error', { message: 'llm_service_unreachable' });
+    emit('done', {});
+    res.end();
+    return;
+  }
+
+  if (!upstream.ok || !upstream.body) {
+    emit('error', { message: `llm_upstream_${upstream.status}` });
+    emit('done', {});
+    res.end();
+    return;
+  }
+
+  let metaPayload: {
+    filters: LlmFilters;
+    specificDate: string | null;
+    followups: string[];
+    reply: string;
+  } | null = null;
+
+  const aborted = { value: false };
+  req.on('close', () => {
+    aborted.value = true;
+  });
+
+  try {
+    for await (const evt of parseSse(upstream.body)) {
+      if (aborted.value) break;
+      if (evt.event === 'reply_delta') {
+        res.write(`event: reply_delta\ndata: ${evt.data}\n\n`);
+      } else if (evt.event === 'meta') {
+        try {
+          const parsed = JSON.parse(evt.data) as {
+            filters: LlmFilters;
+            specificDate: string | null;
+            followups?: string[];
+            reply?: string;
+          };
+          metaPayload = {
+            filters: parsed.filters,
+            specificDate: parsed.specificDate ?? null,
+            followups: parsed.followups ?? [],
+            reply: parsed.reply ?? '',
+          };
+        } catch (err) {
+          logger.warn({ err }, 'chat/stream: meta parse failed');
+        }
+      } else if (evt.event === 'error') {
+        res.write(`event: error\ndata: ${evt.data}\n\n`);
+      }
+      // 'done' 은 upstream 종료 신호 — 자체 처리하지 않고 for-await 가 끝나길 기다림.
+    }
+  } catch (err) {
+    logger.error({ err }, 'chat/stream: upstream read failed');
+    emit('error', { message: 'upstream_read_failed' });
+  }
+
+  if (!metaPayload) {
+    emit('done', {});
+    res.end();
+    return;
+  }
+
+  // meta 기반 regionIds / vibeIds resolve + semantic + rerank.
+  const hints = metaPayload.filters.regionHints ?? [];
+  const vibeNames = metaPayload.filters.vibes ?? [];
+
+  let regionIds: string[] = [];
+  if (hints.length > 0) {
+    const rows = await prisma.region.findMany({
+      where: { sigunguName: { in: hints }, dongName: null },
+      select: { regionId: true },
+    });
+    regionIds = rows.map((r) => r.regionId.toString());
+  }
+
+  let vibeIds: string[] = [];
+  if (vibeNames.length > 0) {
+    const rows = await prisma.eventVibe.findMany({
+      where: { vibeName: { in: vibeNames }, isActive: true },
+      select: { vibeId: true },
+    });
+    vibeIds = rows.map((r) => r.vibeId.toString());
+  }
+
+  // meta 이벤트는 regionIds / vibeIds 를 붙여서 재-emit (기존 /chat 응답과 동형).
+  emit('meta', {
+    reply: metaPayload.reply,
+    filters: {
+      ...metaPayload.filters,
+      regionIds,
+      vibeIds,
+    },
+    specificDate: metaPayload.specificDate,
+    followups: metaPayload.followups.slice(0, 3),
+  });
+
+  let suggestions: ChatSuggestion[] = [];
+  try {
+    suggestions = await semanticSuggestions({
+      userTexts,
+      filters: metaPayload.filters,
+      specificDate: metaPayload.specificDate,
+      regionIds,
+    });
+  } catch (err) {
+    logger.warn({ err }, 'chat/stream: semantic failed');
+  }
+  emit('suggestions', { items: suggestions });
+
+  if (suggestions.length <= RETREAT_THRESHOLD && userTexts.length > 0) {
+    try {
+      const retreat = await composeRetreat({
+        userText: lastUser,
+        filters: metaPayload.filters,
+        sqlCount: 0,
+        semanticCount: 0,
+      });
+      if (retreat.reply) {
+        emit('reply_override', {
+          text: retreat.reply,
+          followups: retreat.followups.slice(0, 3),
+        });
+      }
+    } catch (err) {
+      logger.warn({ err }, 'chat/stream: compose-retreat failed');
+    }
+  }
+
+  emit('done', {});
+  res.end();
+}
+
+// ----------------------------------------------------------------------------
+// SSE 파서 — undici ReadableStream<Uint8Array> → async iterable of {event,data}.
+// ----------------------------------------------------------------------------
+async function* parseSse(
+  body: ReadableStream<Uint8Array>,
+): AsyncGenerator<{ event: string; data: string }> {
+  const decoder = new TextDecoder('utf-8');
+  const reader = body.getReader();
+  let buf = '';
+  try {
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      // SSE 이벤트는 빈 줄(\n\n) 로 구분.
+      let idx: number;
+      while ((idx = buf.indexOf('\n\n')) >= 0) {
+        const frame = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        let event = 'message';
+        const dataLines: string[] = [];
+        for (const raw of frame.split('\n')) {
+          const line = raw.replace(/\r$/, '');
+          if (line.startsWith(':')) continue;
+          if (line.startsWith('event:')) event = line.slice(6).trim();
+          else if (line.startsWith('data:')) dataLines.push(line.slice(5).replace(/^ /, ''));
+        }
+        if (dataLines.length > 0) {
+          yield { event, data: dataLines.join('\n') };
+        }
+      }
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}

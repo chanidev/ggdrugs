@@ -30,7 +30,9 @@ from typing import Any
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+import json as _json
 
 # 모노레포 루트 .env 로드 — services/llm/ 기준 두 단계 위.
 load_dotenv(Path(__file__).resolve().parent.parent.parent / ".env", override=False)
@@ -303,6 +305,95 @@ def _openai_extract(
     payload = [{"role": m.role, "text": m.text} for m in messages]
     sig = user_signals.model_dump() if user_signals else None
     return extract_via_openai(payload, user_signals=sig)
+
+
+@app.post("/chat/stream")
+def chat_stream(req: ChatRequest) -> StreamingResponse:
+    """
+    /chat 의 SSE 스트림 버전. reply 텍스트가 생성되는 즉시 'reply_delta' 로 흘려보내고,
+    구조적 필드(filters / specificDate / followups) 는 스트림 종료 시 'meta' 로 한 번에.
+
+    BFF 가 /chat/stream 을 proxy — meta 수신 후 semantic/rerank/retreat 실행.
+
+    이벤트 타입:
+      reply_delta  {text: str}            # reply 누적 증분
+      meta         {filters, specificDate, followups}
+      done         {}
+      error        {message}              # 스트림 중 예외 발생
+    """
+    user_texts = [m.text for m in req.messages if m.role == "user"]
+    last_user = user_texts[-1] if user_texts else ""
+
+    def gen():
+        sent_reply = ""
+        final_extracted: dict[str, Any] | None = None
+
+        if _openai_available():
+            try:
+                from openai_chain import extract_via_openai_stream
+
+                payload = [{"role": m.role, "text": m.text} for m in req.messages]
+                sig = req.user_signals.model_dump() if req.user_signals else None
+                for kind, value in extract_via_openai_stream(payload, user_signals=sig):
+                    if kind == "delta":
+                        sent_reply += value
+                        yield _sse_event("reply_delta", {"text": value})
+                    elif kind == "final":
+                        final_extracted = value
+            except Exception as e:  # noqa: BLE001
+                yield _sse_event("error", {"message": f"{e.__class__.__name__}"})
+                final_extracted = None
+
+        if final_extracted is None:
+            # Fallback — rule-based. reply 를 한 번에 보낸다 (tokens 없이).
+            extracted = filter_rules.extract_merge(user_texts)
+            fallback_reply = filter_rules.compose_reply(last_user, extracted)
+            remainder = fallback_reply[len(sent_reply):] if fallback_reply.startswith(sent_reply) else fallback_reply
+            if remainder:
+                yield _sse_event("reply_delta", {"text": remainder})
+            sent_reply = fallback_reply
+            final_extracted = {
+                **extracted,
+                "reply": fallback_reply,
+                "followups": [],
+                "specificDate": None,
+            }
+        else:
+            # LLM 이 보낸 최종 reply 가 이미 흘려보낸 sent_reply 와 다르면 누락분 보완.
+            final_reply = (final_extracted.get("reply") or "").strip()
+            if final_reply and final_reply.startswith(sent_reply) and len(final_reply) > len(sent_reply):
+                yield _sse_event("reply_delta", {"text": final_reply[len(sent_reply):]})
+                sent_reply = final_reply
+
+        meta = {
+            "filters": {
+                "companions": list(final_extracted.get("companions") or []),
+                "eventTypes": list(final_extracted.get("eventTypes") or []),
+                "periodKey": final_extracted.get("periodKey"),
+                "vibes": list(final_extracted.get("vibes") or []),
+                "regionHints": list(final_extracted.get("regionHints") or []),
+            },
+            "specificDate": final_extracted.get("specificDate"),
+            "followups": list(final_extracted.get("followups") or [])[:3],
+            "reply": sent_reply,
+        }
+        yield _sse_event("meta", meta)
+        yield _sse_event("done", {})
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",  # nginx 버퍼링 방지 — SSE 즉시 flush
+            "Connection": "keep-alive",
+        },
+    )
+
+
+def _sse_event(event: str, data: dict[str, Any]) -> str:
+    """SSE 프레임 직렬화. ensure_ascii=False 로 한글 raw — 네트워크 바이트 절약 + 디버그 용이."""
+    return f"event: {event}\ndata: {_json.dumps(data, ensure_ascii=False)}\n\n"
 
 
 @app.post("/chat/compose-retreat", response_model=RetreatResponse)

@@ -11,7 +11,7 @@ import { ChatDock, type ChatMessage } from '../components/ChatDock';
 import { HealthBadge } from '../components/HealthBadge';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { EventSummaryPanel } from '../components/EventSummaryPanel';
-import { sendChat, type ChatFilters, type EventListQuery, type EventPhase } from '../lib/api';
+import { streamChat, type ChatFilters, type EventListQuery, type EventPhase } from '../lib/api';
 
 /** periodKey → {start, end} (YYYY-MM-DD). FilterSearchPanel 로직과 동일 의미. */
 function rangeForPeriod(key: ChatFilters['periodKey']): { start: string; end: string } | null {
@@ -109,33 +109,80 @@ export function AppShell() {
     setMessages(history);
     setChatValue('');
     if (dockCollapsed) setDockCollapsed(false);
+    // placeholder assistant 메시지 — streamChat 델타를 이 텍스트에 누적.
+    const placeholderIndex = history.length; // user 메시지 바로 뒤
+    setMessages((prev) => [...prev, { role: 'assistant', text: '' }]);
+
+    let accumulatedReply = '';
+    let retreatApplied = false;
+
     (async () => {
       try {
-        const reply = await sendChat(history);
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            text: reply.reply,
-            ...(reply.suggestions && reply.suggestions.length > 0
-              ? { suggestions: reply.suggestions }
-              : {}),
-            ...(reply.followups && reply.followups.length > 0
-              ? { followups: reply.followups }
-              : {}),
+        await streamChat(history, {
+          onReplyDelta: (chunk) => {
+            if (retreatApplied) return; // retreat 후 오는 델타 무시 (stream 종료 순서 보장 안됨)
+            accumulatedReply += chunk;
+            setMessages((prev) => {
+              if (placeholderIndex >= prev.length) return prev;
+              const next = prev.slice();
+              next[placeholderIndex] = { ...next[placeholderIndex], text: accumulatedReply };
+              return next;
+            });
           },
-        ]);
-        const q = chatFiltersToQuery(reply.filters);
-        if (q) {
-          setMapFilter(q);
-          setHighlightRegionIds(reply.filters.regionIds);
-        }
+          onMeta: (meta) => {
+            // filters 확정 즉시 지도 갱신.
+            const q = chatFiltersToQuery(meta.filters);
+            if (q) {
+              setMapFilter(q);
+              setHighlightRegionIds(meta.filters.regionIds);
+            }
+            if (meta.followups.length > 0) {
+              setMessages((prev) => {
+                if (placeholderIndex >= prev.length) return prev;
+                const next = prev.slice();
+                next[placeholderIndex] = {
+                  ...next[placeholderIndex],
+                  followups: meta.followups,
+                };
+                return next;
+              });
+            }
+          },
+          onSuggestions: (items) => {
+            if (items.length === 0) return;
+            setMessages((prev) => {
+              if (placeholderIndex >= prev.length) return prev;
+              const next = prev.slice();
+              next[placeholderIndex] = { ...next[placeholderIndex], suggestions: items };
+              return next;
+            });
+          },
+          onReplyOverride: (p) => {
+            retreatApplied = true;
+            accumulatedReply = p.text;
+            setMessages((prev) => {
+              if (placeholderIndex >= prev.length) return prev;
+              const next = prev.slice();
+              next[placeholderIndex] = {
+                ...next[placeholderIndex],
+                text: p.text,
+                followups: p.followups.length > 0 ? p.followups : next[placeholderIndex].followups,
+              };
+              return next;
+            });
+          },
+        });
       } catch (err) {
         const msg =
           (err as Error).message === 'LLM_UNREACHABLE'
             ? 'LLM 서비스에 연결하지 못했어요. 서비스가 올라와 있는지 확인해 주세요.'
             : '응답을 받지 못했어요. 잠시 후 다시 시도해 주세요.';
-        setMessages((prev) => [...prev, { role: 'assistant', text: msg }]);
+        setMessages((prev) => {
+          if (placeholderIndex >= prev.length) return [...prev, { role: 'assistant', text: msg }];
+          const next = prev.slice();
+          next[placeholderIndex] = { role: 'assistant', text: msg };
+          return next;
+        });
       }
     })();
   };

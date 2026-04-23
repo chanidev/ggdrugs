@@ -1,8 +1,8 @@
 # Wiki Lint Report
 
-**Generated**: 2026-04-23 sprint 4 (모바일 메인 ship + chat v3 prompt 강화 + AI 후보 종료 leak fix sprint 후)
+**Generated**: 2026-04-23 sprint 5 (chat v3 commit + Streaming SSE ship 후)
 **Scope**: `wiki/` 전체 (4 sources + **22 topics** + 5 entities, index/log 제외) + `DESIGN.md` 모바일 정책 cross-check
-**이전 lint**: 2026-04-23 sprint 3 (12:30) — Phase 1 lint queue 5건 모두 closed. 이후 8 commit + 1 미커밋 sprint.
+**이전 lint**: 2026-04-23 sprint 4 — 미커밋 v3 박제. sprint 5 에서 commit + Streaming SSE 추가 ship.
 
 ---
 
@@ -89,12 +89,16 @@
 
 ## 권장 우선순위 (다음 sprint)
 
-1. **chat v3 미커밋 commit** — 본 lint sweep 에서 wiki 미리 박제했으므로 commit 메시지 + 검증 스크립트 확장만 남음.
-2. **Streaming SSE** — gpt-4o-mini /chat 응답 SSE stream → 체감 latency 개선 (현 ~1.5s).
+1. ~~**chat v3 미커밋 commit**~~ ✅ 2026-04-23 sprint 4-commit (`c50c23d` + `c8338fa`).
+2. ~~**Streaming SSE**~~ ✅ 2026-04-23 sprint 5 — `/chat/stream` SSE 3-tier 구현.
+   LLM `_SCHEMA.reply` property-order 트릭 + `_extract_reply_progress` 이스케이프-aware 파서
+   + BFF passthrough + Web `streamChat()` + AppShell placeholder 메시지 streaming.
+   semantic-search.md §`POST /chat/stream` 박제.
 3. **Article RAG** — 1810건 매핑된 기사 본문을 chat reply 근거로 인용 (event_article_mappings 활용).
 4. **Hybrid search** — pg_trgm 키워드 검색 + vector 결합 (CLAUDE.md 에 pg_trgm 활성화 명시됨).
 5. **Phase 2 prod 진입** — 본인인증 PASS/NICE/카카오 통합 (인터페이스 1지점만 swap).
 6. **Prompt injection 방어** — 사용자 입력 sanitize + role isolation.
+7. **Streaming 개선 후속** — AbortController 로 중복 submit 취소, retreat/delta 경합 UI edge, reconnect.
 
 ---
 

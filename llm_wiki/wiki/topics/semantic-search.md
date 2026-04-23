@@ -70,6 +70,26 @@ LLM/Qdrant 503/502 → `suggestions: []` (채팅은 계속). compose-retreat 실
 
 기존 ended-event leak 버그 (5e51503) — phase 필터 없어 종료 이벤트가 후보로 leak → fix.
 
+### `POST /chat/stream` — SSE 버전 (v3.1 — 2026-04-23)
+
+체감 latency 개선을 위해 reply 를 token 수준으로 스트림. 구조적 필드와 semantic suggestions 는 뒤이어 이벤트로 방출.
+
+**Property 순서 트릭**: `_SCHEMA.properties` 에서 `reply` 를 **맨 앞**에 배치. OpenAI structured output stream 은 property 선언 순서대로 JSON 을 emit 하므로 `{"reply":"...` 조각이 스트림 초반부터 도착. BFF 는 `"reply":"` 접두사 이후 closing `"` 까지의 이스케이프-aware 파싱으로 실제 텍스트만 추출해 delta 로 방출.
+
+**이벤트 타입**:
+- `reply_delta` `{text: string}` — reply 누적 증분 (append 하면 현재까지 완성된 reply)
+- `meta` `{reply, filters: {..., regionIds, vibeIds}, specificDate, followups}` — 구조적 필드 확정 (semantic 직전)
+- `suggestions` `{items: ChatSuggestion[]}` — Qdrant + rerank 결과. 0건일 수 있음
+- `reply_override` `{text, followups}` — retreat 발동 (suggestions ≤ `RETREAT_THRESHOLD`). 누적된 reply 교체
+- `done` `{}` — 정상 종료
+- `error` `{message}` — 상향 전달 (스트림은 이어서 끝남)
+
+**Degradation**: LLM 비활성/실패 시 서버는 rule-based reply 를 한 번에 `reply_delta` 로 emit. upstream 502/503 → `error` + `done`.
+
+**Client 계약**: AppShell `handleChatSubmit` 은 submit 즉시 빈 text placeholder assistant 메시지 push → `onReplyDelta` 마다 append → `onMeta` 에서 followups + filter→지도 갱신 → `onSuggestions` 에서 suggestions 부착 → `onReplyOverride` 면 text 교체. Desktop / Mobile 양쪽이 같은 handler 공유.
+
+구현 파일: `services/llm/app.py::chat_stream`, `services/llm/openai_chain.py::extract_via_openai_stream` + `_extract_reply_progress`, `apps/bff/src/routes/chat.ts::postChatStream` + `parseSse`, `apps/web/src/lib/api/chat.ts::streamChat`.
+
 ## 데이터 채우기
 
 ### 배치 (BFF `apps/bff/src/jobs/embed-events.ts`)
@@ -131,12 +151,19 @@ aiSummary 가 있을수록 임베딩 품질이 좋아지므로 `summarize-events
 - ~~이벤트가 승인 취소되면 Qdrant 에서 자동 삭제 안 됨~~ → **해소** (커밋 `80cb2a2`):
   탈락 훅이 `deleteEventEmbeddings([id])` 즉시 호출. `isDeleted=true` soft-delete 경로의
   reconcile 만 잔여 — 주기 배치 후보.
+- ~~Streaming SSE — 응답 first-token 체감 latency~~ → **해소** (2026-04-23 v3.1):
+  `/chat/stream` (LLM) + `/chat/stream` (BFF proxy) + Web `streamChat()`. `_SCHEMA`
+  의 `reply` 를 properties 맨 앞에 두어 structured output stream 이 reply 텍스트를
+  초반부터 방출. BFF 가 reply_delta 를 즉시 relay, meta 수신 후 semantic/rerank/retreat
+  실행. retreat 발동 시 `reply_override` 이벤트로 교체. 이벤트 타입: `reply_delta`,
+  `meta`, `suggestions`, `reply_override`, `done`, `error`. AppShell `handleChatSubmit`
+  이 placeholder 메시지 생성 후 델타 누적.
 - 후속 (v4 후보):
-  - **Streaming SSE** — gpt-4o-mini 응답 체감 latency 개선 (현재 ~1.5s).
   - **Article RAG** — `event_article_mappings` (1810건) 의 기사 본문을 reply 근거로 인용.
   - **Hybrid search** — pg_trgm 키워드 + vector 결합 (현재 vector only).
   - **Grounded followup** — "그 중에 무료인 거?" 같은 referential 후속 질문 — 직전 turn 의 suggestions 을 LLM 에 컨텍스트로 재전달.
   - **Prompt injection 방어** — 사용자 입력 sanitize / role isolation.
+  - **Streaming 개선 후속** — AbortController 로 중복 submit 취소, reconnect, retreat/delta 경합 UI 미스매치 edge case.
 
 ## References
 

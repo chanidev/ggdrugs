@@ -22,7 +22,7 @@ import {
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
 import { listMyRecommendations } from './routes/me-recommendations.js';
-import { postChat } from './routes/chat.js';
+import { postChat, postChatStream } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
 import { listAdminEventDocuments } from './routes/admin-documents.js';
 import {
@@ -225,6 +225,16 @@ export function createApp(): Express {
     },
     (req: Request, res: Response, next: NextFunction) => {
       postChat(req, res).catch(next);
+    },
+  );
+  // SSE 스트림 — LLM reply 를 즉시 흘려보내고 meta/suggestions 뒤이어.
+  app.post(
+    '/chat/stream',
+    (req: Request, res: Response, next: NextFunction) => {
+      resolveAuth(req, res, next).catch(next);
+    },
+    (req: Request, res: Response, next: NextFunction) => {
+      postChatStream(req, res).catch(next);
     },
   );
 
