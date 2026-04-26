@@ -32,6 +32,9 @@ export interface EventListResponse {
   items: BffEventItem[];
 }
 
+/** v4.4 — 정렬 옵션. ending(default) / recent / popular. distance 는 별도 sprint. */
+export type EventSort = 'ending' | 'recent' | 'popular';
+
 export interface EventListQuery {
   regionIds?: string[];
   period?: '3m' | '6m' | 'all' | 'custom';
@@ -45,6 +48,8 @@ export interface EventListQuery {
   limit?: number;
   /** v4.3 stage 3 — PostGIS bbox 필터: "minLng,minLat,maxLng,maxLat". BFF 가 ST_Within 적용. */
   bbox?: string;
+  /** v4.4 — 정렬 키. 미지정 시 BFF default ('ending'). */
+  sort?: EventSort;
 }
 
 function buildQuery(q: EventListQuery): string {
@@ -60,6 +65,7 @@ function buildQuery(q: EventListQuery): string {
   if (q.page) sp.set('page', String(q.page));
   if (q.limit) sp.set('limit', String(q.limit));
   if (q.bbox) sp.set('bbox', q.bbox);
+  if (q.sort) sp.set('sort', q.sort);
   return sp.toString();
 }
 

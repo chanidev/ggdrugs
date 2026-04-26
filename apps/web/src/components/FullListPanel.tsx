@@ -5,6 +5,7 @@ import {
   type EventListResponse,
   type EventsStatsResponse,
   type EventPhase,
+  type EventSort,
 } from '../lib/api';
 import { fromBffItem, type DisplayEvent } from '../lib/event-display';
 import { EventList } from './EventList';
@@ -18,6 +19,24 @@ const PHASE_TABS: { key: PhaseKey; label: string }[] = [
   { key: 'ongoing', label: '진행중' },
   { key: 'ended', label: '종료' },
 ];
+
+/** v4.4 — 정렬 옵션 표기. 사용자 선택은 localStorage 에 persist. */
+const SORT_OPTIONS: { key: EventSort; label: string }[] = [
+  { key: 'ending', label: '종료임박' },
+  { key: 'recent', label: '최신' },
+  { key: 'popular', label: '인기' },
+];
+const SORT_STORAGE_KEY = 'alle.fullList.sort';
+
+function loadSortPref(): EventSort {
+  try {
+    const v = localStorage.getItem(SORT_STORAGE_KEY);
+    if (v === 'ending' || v === 'recent' || v === 'popular') return v;
+  } catch {
+    // SSR 또는 storage 차단 환경 — default 로 fallback.
+  }
+  return 'ending';
+}
 
 /**
  * FullListPanel — A_300 전체목록 조회 (+ A_203 예정 이벤트 탭).
@@ -39,6 +58,7 @@ export function FullListPanel({
   const [statsError, setStatsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedKey>('all');
   const [phase, setPhase] = useState<PhaseKey>('all');
+  const [sort, setSort] = useState<EventSort>(() => loadSortPref());
   const [listState, setListState] = useState<{
     loading: boolean;
     error: string | null;
@@ -64,6 +84,7 @@ export function FullListPanel({
         eventTypes: selected === 'all' ? [] : [selected],
         phases: phase === 'all' ? [] : [phase],
         limit: 100,
+        sort,
       },
       ctrl.signal,
     )
@@ -73,7 +94,16 @@ export function FullListPanel({
         setListState({ loading: false, error: (err as Error).message, data: null });
       });
     return () => ctrl.abort();
-  }, [selected, phase]);
+  }, [selected, phase, sort]);
+
+  // v4.4 — 사용자 정렬 선택을 localStorage 에 persist (다음 세션 유지).
+  useEffect(() => {
+    try {
+      localStorage.setItem(SORT_STORAGE_KEY, sort);
+    } catch {
+      // storage 차단 — 무시.
+    }
+  }, [sort]);
 
   const chips: { key: SelectedKey; label: string; count: number | null }[] = [
     { key: 'all', label: '전체', count: stats?.total ?? null },
@@ -144,6 +174,33 @@ export function FullListPanel({
             </Fragment>
           );
         })}
+      </div>
+      {/* v4.4 — 정렬 segmented control. localStorage persist. */}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-(--color-border) px-5 py-2">
+        <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-(--color-text-subtle)">
+          정렬
+        </span>
+        <div role="radiogroup" aria-label="정렬 기준" className="inline-flex items-center gap-0.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-0.5">
+          {SORT_OPTIONS.map((opt) => {
+            const active = sort === opt.key;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setSort(opt.key)}
+                className={`inline-flex h-7 items-center rounded-(--radius-sm) px-2.5 text-[12px] font-medium transition-colors ${
+                  active
+                    ? 'bg-(--color-surface) text-(--color-accent) shadow-(--shadow-sm)'
+                    : 'text-(--color-text-muted) hover:text-(--color-text)'
+                }`}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
       <div className="flex shrink-0 flex-wrap gap-1.5 border-b border-(--color-border) px-5 py-3">
         {chips.map((c) => {

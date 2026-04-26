@@ -1129,3 +1129,49 @@ semantic-search.md OQ "PostGIS stage 3" 해소. v4.3 의 bbox 인프라 (BFF `/e
 v4.1 (pg_trgm token) + v4.2 (Streaming reconnect) + v4.3 (PostGIS stage 1+2+3).
 A 미착수 5건 중 4건 ship (PostGIS stage 1-3 = 1건 처리). 잔여 1.5건 (본인인증 / 사업자번호
 는 Phase 2 swap 대기, PostGIS stage 4 는 검증 기간 대기, 클러스터 정렬은 UX 결정 대기).
+
+## 2026-04-26T18:20  feature  목록 정렬 옵션 — v4.4 sort=ending|recent|popular
+
+lint-report 의 "클러스터 정렬 (거리/인기/최신)" UX 결정 잔여 → 3-option 버전 ship.
+거리순은 anchor (사용자 위치 vs 지도 center vs sigungu) 결정 별 sprint 분리.
+
+### 변경 — apps/bff/src/routes/events.ts
+- `SORT_ENUM = {ending, recent, popular}` + 파싱 (default `ending`)
+- orderBy 매핑:
+  - ending: `endDate desc, startDate asc, eventId asc` (기존 default)
+  - recent: `createdAt desc, eventId asc`
+  - popular: `bookmarkCount desc, reviewCount desc, eventId asc`
+- 모든 정렬에 eventId asc tie-break — 결정론적 페이지네이션 보장.
+
+### 변경 — apps/web/src/lib/api/events.ts
+- `EventSort = 'ending' | 'recent' | 'popular'` 타입 export
+- `EventListQuery.sort?: EventSort` 추가 + `buildQuery` 직렬화
+
+### 변경 — apps/web/src/components/FullListPanel.tsx
+- `sort` state + localStorage persist (`alle.fullList.sort`).
+  loadSortPref() 가 차단/SSR 환경에서도 안전 fallback.
+- segmented control UI — phase strip + chip 사이. radio role + aria-checked.
+  active 면 surface bg + accent text + shadow-sm, inactive 는 muted hover.
+- fetchEvents 의존성에 sort 추가 — 변경 즉시 refetch.
+
+### UX
+- default 'ending' (기존 동작 유지 — 회귀 0).
+- 사용자 선택은 다음 세션까지 유지 (localStorage).
+- 거리순 미포함 — anchor 결정 + 사용자 위치 권한 / Kakao Map center / sigungu 중심 중 어느 쪽이 default 인지 별도 brainstorm 후 별 sprint.
+
+### 검증
+- BFF typecheck PASS, web typecheck baseline 7 그대로 (신규 0)
+- BFF /events?sort=popular limit=3 → bookmarkCount 1 의 상위 3건 확인
+- BFF /events?sort=recent limit=3 → createdAt 최신 3건 확인
+- chat:eval 22/22 PASS — chat 결합 영향 없음
+- wiki:lint 0 drift
+
+### 후속
+- 거리순 sort=distance — PostGIS `ST_Distance(location_geom, ST_Point(anchor_lng, anchor_lat))`
+  활용. anchor 결정 (Geolocation API / 지도 center / sigungu 중심) UX 별 sprint.
+- A_300 mobile FullListPanel 도 동일 정렬 UI — MobileShell 의 `tab='list'` path 가 같은 컴포넌트 사용 중 (자동 적용).
+
+### 본 세션 누적 ship
+v4.1 (pg_trgm) + v4.2 (Streaming reconnect) + v4.3 stage 1+2+3 (PostGIS) + v4.4 (sort).
+A 미착수 5건 → ship 4 + 결정 1건 분리 (거리순 anchor) → 잔여 = Phase 2 본인인증/사업자번호
++ PostGIS stage 4 (검증 기간) + 거리순 anchor (UX 결정).

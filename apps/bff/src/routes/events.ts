@@ -39,6 +39,9 @@ const EVENT_TYPE_ENUM = new Set([
 ]);
 const PERIOD_ENUM = new Set(['3m', '6m', 'all', 'custom']);
 const PHASE_ENUM = new Set(['upcoming', 'ongoing', 'ended']);
+/** v4.4 — 정렬 옵션. ending(default) / recent / popular. distance 는 별도 sprint (anchor 결정). */
+const SORT_ENUM = new Set(['ending', 'recent', 'popular']);
+type SortKey = 'ending' | 'recent' | 'popular';
 
 function parseCsv(raw: unknown): string[] {
   if (typeof raw !== 'string' || raw.length === 0) return [];
@@ -125,6 +128,10 @@ export async function listEvents(req: Request, res: Response) {
     return;
   }
   const bbox = parseBbox(req.query.bbox);
+  const sort: SortKey =
+    typeof req.query.sort === 'string' && SORT_ENUM.has(req.query.sort)
+      ? (req.query.sort as SortKey)
+      : 'ending';
 
   const where: Prisma.EventWhereInput = {
     approvalStatus: 'approved',
@@ -174,11 +181,19 @@ export async function listEvents(req: Request, res: Response) {
     where.phase = { in: phases };
   }
 
+  // v4.4 — sort 별 orderBy 매핑. 모두 eventId asc tie-break 으로 결정론적 페이지네이션 보장.
+  const orderBy: Prisma.EventOrderByWithRelationInput[] =
+    sort === 'recent'
+      ? [{ createdAt: 'desc' }, { eventId: 'asc' }]
+      : sort === 'popular'
+        ? [{ bookmarkCount: 'desc' }, { reviewCount: 'desc' }, { eventId: 'asc' }]
+        : [{ endDate: 'desc' }, { startDate: 'asc' }, { eventId: 'asc' }];
+
   const [total, rows] = await Promise.all([
     prisma.event.count({ where }),
     prisma.event.findMany({
       where,
-      orderBy: [{ endDate: 'desc' }, { startDate: 'asc' }, { eventId: 'asc' }],
+      orderBy,
       skip: (page - 1) * limit,
       take: limit,
       select: {
