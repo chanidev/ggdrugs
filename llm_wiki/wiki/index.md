@@ -59,8 +59,11 @@ See [log.md](log.md) for chronological activity.
 - [2026-04-17_ui-flow-draft](sources/2026-04-17_ui-flow-draft.md) — 전체 UI 플로우 와이어프레임 초안 (raw/초안.png)
 - [2026-04-16_db-design-spec](sources/2026-04-16_db-design-spec.md) — DB 설계 명세서 v3 (raw/DB_설계_명세서_v3.docx)
 - [2026-04-16_event-curation-ddl](sources/2026-04-16_event-curation-ddl.md) — 실행 가능 DDL (raw/event_curation_ddl_v3.sql)
+- [2026-04-17_design-system-zip](sources/2026-04-17_design-system-zip.md) — DESIGN.md ingredient (raw/GGdrugs Design System.zip + raw/design_handoff_alle_brand/)
+- [2026-04-26_error1](sources/2026-04-26_error1.md) — Sprint A 디버깅 스크린샷 placeholder (raw/error1.png)
 
 ## Meta
 - [schema.md](../schema.md) — wiki structure and workflow definitions
 - [log.md](log.md) — chronological ingest/update log
 - [lint-report.md](lint-report.md) — latest health check (generated)
+- [audit/](audit/) — 시간 박제 audit 리포트 (chat-rank-bench / chat:eval 트렌드 등 generated, 1 sweep = 1 file)

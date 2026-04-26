@@ -8,15 +8,15 @@
 
 ## 요약
 
-| 카테고리 | 이전 | 현재 |
-|---|---|---|
-| Contradictions | 0 | **0** |
-| Stale refs | 0 | 0 |
-| Orphans | 0 | **2** — `raw/error1.png` (신규) + `raw/GGdrugs Design System.zip` (사전 존재) |
-| Gaps | 0 | **2** — `ui-architecture.md` stale (2026-04-17), `log.md` Sprint A 2026-04-26 미박제 |
-| Over-large pages | 0 | 0 (log.md 905줄은 chronological append-only — 분할 비용 > 가치) |
-| Index drift | — | **1** — `wiki/audit/` 디렉터리 index.md Meta 섹션 미언급 |
-| Implementation status | 미착수 6행 | **미착수 5행** (chat v3.x + v4 + bench + Sprint A 6건 ship — close) |
+| 카테고리 | 이전 | 현재 (post P1) | post P2+P3 |
+|---|---|---|---|
+| Contradictions | 0 | **0** | 0 |
+| Stale refs | 0 | 0 | 0 |
+| Orphans | 0 | 2 | **0** — 신규 source 페이지 2건 생성 (`2026-04-26_error1`, `2026-04-17_design-system-zip`) + index.md Sources 등재 |
+| Gaps | 0 | 2 | **0** — `log.md` 2026-04-26 entry append (`802d351`) + `ui-architecture.md` 전면 갱신 (P2) |
+| Over-large pages | 0 | 0 | 0 |
+| Index drift | — | 1 | **0** — index.md Meta 섹션에 audit/ 진입점 추가 (I-1 해소) |
+| Implementation status | 미착수 6행 | 미착수 5행 | 미착수 5행 (변동 없음) |
 
 **상태**: chat backend 도메인은 박제 완벽 (semantic-search.md v3.3 → v4 + bench A/B 결과 + redact + GIN 인덱스 모두 반영). UI 도메인 (ui-architecture.md) 은 2026-04-17 부터 정체 — 8 sprint drift. raw/ 와 sources/ 1:1 invariant 가 신규 파일 1건으로 깨짐 — 결정 필요.
 
@@ -141,11 +141,17 @@ graphify INFERRED 비율 6% (75 edges, avg 0.81 confidence) — schema 기준 0.
 
 ## 권장 우선순위 (다음 sprint)
 
-1. **P1**: `log.md` 2026-04-26 Sprint A entry 추가 (5분, 본 sweep 결과 박제 포함).
-2. **P2**: `ui-architecture.md` 전면 갱신 — v3.x backend 결합 + v4 transient 필드 + Sprint A 폴리시 + MobileShell/BottomSheet (G-1 해소). 1 sprint 단독 작업.
-3. **P3**: `index.md` Meta 섹션에 audit/ 디렉터리 진입점 1줄 (I-1 해소).
-4. **P3**: `raw/error1.png` 분류 결정 (O-1) — source 페이지 생성 OR raw/ 정리. 가능하면 raw/README.md 에 "디버깅 스크린샷 분류 정책" 박제.
-5. **P3**: `raw/GGdrugs Design System.zip` (O-2) — raw/README.md 에 "DESIGN.md ingredient, 별도 source 페이지 없음" 한 줄 박제.
+이번 sweep 의 P1~P3 모두 본 세션에서 해소:
+
+1. ✅ **P1**: `log.md` 2026-04-26 Sprint A entry append (`802d351`).
+2. ✅ **P2**: `ui-architecture.md` 전면 갱신 (frontmatter `updated: 2026-04-26`, semantic-search.md cross-link 추가, AppShell state machine + ChatMessage 4 transient 필드 + 4 폴리시 매핑 + streamFor/handleRetry + MobileShell + 모션 keyframes 박제). G-1 해소.
+3. ✅ **P3**: `index.md` Meta 섹션에 `audit/` 디렉터리 + Sources 섹션에 `2026-04-26_error1` / `2026-04-17_design-system-zip` 등재 (I-1 + O-1 + O-2 해소).
+4. ✅ **P3**: `wiki/sources/2026-04-26_error1.md` placeholder source 페이지 (raw/error1.png 1:1 매핑).
+5. ✅ **P3**: `wiki/sources/2026-04-17_design-system-zip.md` source 페이지 (raw/GGdrugs Design System.zip + design_handoff_alle_brand/ 묶음, DESIGN.md ingredient 명시).
+
+다음 sprint 후보 (lint 외):
+- `.gitignore` 에 `llm_wiki/raw/error*.png` 추가 — 디버깅 산출물 우발 commit 방지.
+- chat:eval 결과 트렌드를 `wiki/audit/chat-eval-YYYY-MM-DD.md` 로 주기 박제 (semantic-search.md §Chat eval harness "향후 확장" 후보).
 
 ---
 
