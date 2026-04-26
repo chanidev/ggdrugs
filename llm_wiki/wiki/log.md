@@ -1462,3 +1462,48 @@ location_geom 이 단일 source of truth.
 ### 본 세션 누적
 v4.1 + v4.2 + v4.3 (stage 1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (4a) + v4.8 (GPS) +
 v4.9 (Places) + v4.10 (4b). PostGIS 마이그레이션 4-stage 완전 종결.
+
+## 2026-04-26T20:50  feature  Streaming idempotent resume — v4.11 Last-Event-ID + cache
+
+v4.2 sealed-gate auto-retry 보강. blip 후 재연결 시 LLM 재호출 0 (cache replay only).
+서버 stream_id 발행 + in-memory cache + Last-Event-ID 표준 헤더 흐름.
+
+### 결정
+- **In-memory cache, Redis 아님** — ioredis 의존 회피. 단일 인스턴스 가정. 향후 horizontal
+  scale 시 동일 API 로 Redis swap 가능 (key 형식 `chat_stream:<streamId>` 호환).
+- TTL 5분, 메모리 budget 평균 ~5KB/stream × 1000 concurrent ≈ 5MB. LRU 5000 entry 상한.
+- SSE event id 형식: `<streamId>:<seq>`. streamId UUID, seq 0-based 단조.
+
+### BFF — apps/bff/src/lib/stream-cache.ts (NEW)
+- `startStream / recordEvent / getCachedAfter / finalizeStream / parseLastEventId` API.
+- TTL evict + LRU 정리 — 새 entry 추가 시.
+
+### BFF — apps/bff/src/routes/chat.ts (postChatStream)
+- 진입 시 `Last-Event-ID` 헤더 검사 → cache hit 면 그 이후 events replay + res.end.
+  LLM 재호출 0.
+- cache miss / 헤더 없음 → 새 streamId (randomUUID) 생성 + `event: stream_start` emit.
+- emit 헬퍼 wrap: sequential id + `id: <streamId>:<seq>` SSE line + cacheRecordEvent.
+- 정상 종료 시 finalizeStream(streamId) — TTL 5분 더 유지.
+- upstream `reply_delta` / `error` passthrough 도 emit 헬퍼 사용 (cache 일관성).
+
+### Web — apps/web/src/lib/api/chat.ts (streamChat)
+- StreamCtx { streamId, lastEventId } — 현재 stream 추적.
+- reader loop 에서 SSE `id:` line 파싱 → ctx 갱신.
+- stream_start event silent consume (caller dispatch 안 함).
+- 재시도 시점에 ctx 있으면 `Last-Event-ID: <streamId>:<seq>` 헤더로 reconnect.
+
+### 검증
+- BFF typecheck PASS, web typecheck baseline 7 (v4.11 신규 0).
+- SSE smoke: 첫 응답 — `id: <uuid>:0\nevent: stream_start` 확인.
+- Resume smoke: streamId 추출 후 `Last-Event-ID: <uuid>:2` 헤더로 별도 요청 → cache 에서
+  seq=3 부터 replay (id: `<uuid>:3` 부터 시작). LLM 재호출 0.
+- chat:eval 22/22 PASS (avg 5938ms), wiki:lint 0 drift.
+
+### 제약 / 후속
+- 단일 인스턴스 한정 — horizontal scale 시 sticky session 또는 Redis swap 필요.
+- process restart 시 cache 손실 — v4.2 retry 가 fresh LLM 호출로 자연 fallback.
+- 향후: Redis swap (BullMQ 도입 시 자연), per-event size cap.
+
+### 본 세션 누적
+v4.1 + v4.2 + v4.3 (1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (4a) + v4.8 (GPS) + v4.9 (Places) +
+v4.10 (4b) + v4.11 (idempotent resume).

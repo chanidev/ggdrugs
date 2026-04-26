@@ -153,10 +153,20 @@ export async function streamChat(
     },
   };
 
+  // v4.11 — idempotent resume. server 가 stream_start 이벤트로 streamId 전달, 매 event 의
+  // SSE id field 가 "<streamId>:<seq>". 끊김 후 재시도 시 Last-Event-ID 헤더 전달 → server 가
+  // cache 에서 그 이후만 replay (LLM 재호출 0).
+  const ctx: StreamCtx = { streamId: null, lastEventId: null };
+
   while (true) {
     if (attempt > 1) handlers.onAttemptStart?.(attempt);
     try {
-      await attemptStream(messages, wrapped, signal, lastSuggestions);
+      // v4.11 — 재시도 시점에 streamId 가 있으면 Last-Event-ID 로 cache replay 시도.
+      const resumeHeader =
+        attempt > 1 && ctx.streamId && ctx.lastEventId !== null
+          ? `${ctx.streamId}:${ctx.lastEventId}`
+          : null;
+      await attemptStream(messages, wrapped, signal, lastSuggestions, ctx, resumeHeader);
       return; // 정상 종료 (onDone 은 attemptStream 내부에서 호출).
     } catch (err) {
       if ((err as { name?: string })?.name === 'AbortError') throw err;
@@ -172,21 +182,31 @@ export async function streamChat(
   }
 }
 
+/** v4.11 — 재연결을 위한 stream 식별 정보. attemptStream 이 갱신. */
+interface StreamCtx {
+  streamId: string | null;
+  lastEventId: number | null;
+}
+
 /** 단일 stream 시도 — fetch + reader loop. retry 로직은 streamChat 이 wrap. */
 async function attemptStream(
   messages: { role: 'user' | 'assistant' | 'system'; text: string }[],
   handlers: ChatStreamHandlers,
   signal: AbortSignal | undefined,
   lastSuggestions: LastSuggestionRef[] | undefined,
+  ctx: StreamCtx,
+  resumeLastEventId: string | null,
 ): Promise<void> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'text/event-stream',
+  };
+  if (resumeLastEventId) headers['Last-Event-ID'] = resumeLastEventId;
   const res = await fetch(
     `${BFF_URL}/chat/stream`,
     withCredentials({
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
-      },
+      headers,
       body: JSON.stringify({
         messages,
         ...(lastSuggestions && lastSuggestions.length > 0
@@ -217,17 +237,33 @@ async function attemptStream(
         const frame = buf.slice(0, idx);
         buf = buf.slice(idx + 2);
         let event = 'message';
+        let frameId: string | null = null;
         const dataLines: string[] = [];
         for (const raw of frame.split('\n')) {
           const line = raw.replace(/\r$/, '');
           if (line.startsWith(':')) continue;
-          if (line.startsWith('event:')) event = line.slice(6).trim();
+          if (line.startsWith('id:')) frameId = line.slice(3).trim();
+          else if (line.startsWith('event:')) event = line.slice(6).trim();
           else if (line.startsWith('data:')) dataLines.push(line.slice(5).replace(/^ /, ''));
+        }
+        // v4.11 — id 형식 "<streamId>:<seq>" 파싱하여 ctx 갱신.
+        if (frameId) {
+          const sepIdx = frameId.lastIndexOf(':');
+          if (sepIdx > 0) {
+            const sid = frameId.slice(0, sepIdx);
+            const seq = Number.parseInt(frameId.slice(sepIdx + 1), 10);
+            if (Number.isFinite(seq)) {
+              ctx.streamId = sid;
+              ctx.lastEventId = seq;
+            }
+          }
         }
         if (dataLines.length === 0) continue;
         const dataStr = dataLines.join('\n');
         try {
           const data = JSON.parse(dataStr) as unknown;
+          // stream_start event 는 streamId 만 노출 — caller 에 dispatch 안 함.
+          if (event === 'stream_start') continue;
           dispatchSseEvent(event, data, handlers);
         } catch {
           // data 가 JSON 이 아닐 경우 무시. 서버는 항상 JSON 직렬화.

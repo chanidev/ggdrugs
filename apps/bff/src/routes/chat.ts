@@ -1,7 +1,15 @@
 import type { Request, Response } from 'express';
+import { randomUUID } from 'node:crypto';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
 import { prisma } from '../prisma.js';
+import {
+  startStream as cacheStartStream,
+  recordEvent as cacheRecordEvent,
+  getCachedAfter,
+  finalizeStream,
+  parseLastEventId,
+} from '../lib/stream-cache.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
 type PeriodKey = 'today' | 'tomorrow' | 'weekend' | 'week' | 'month' | null;
@@ -1051,9 +1059,38 @@ export async function postChatStream(req: Request, res: Response) {
   // 즉시 header flush — 클라이언트가 빨리 readable stream open.
   res.flushHeaders?.();
 
+  // v4.11 — idempotent resume. Last-Event-ID 헤더가 있으면 cache 에서 그 이후 event 만
+  // replay → LLM 재호출 X. cache miss / expired 면 fresh stream 으로 fallback.
+  const lastEventIdHeader =
+    typeof req.headers['last-event-id'] === 'string' ? req.headers['last-event-id'] : undefined;
+  const resumePoint = parseLastEventId(lastEventIdHeader);
+  if (resumePoint) {
+    const cached = getCachedAfter(resumePoint.streamId, resumePoint.afterSeq);
+    if (cached !== null) {
+      // cache hit — replay all events after afterSeq, then end. LLM 재호출 0.
+      for (const e of cached) {
+        res.write(`id: ${resumePoint.streamId}:${e.seq}\nevent: ${e.event}\ndata: ${e.data}\n\n`);
+      }
+      res.end();
+      return;
+    }
+    // cache miss → fresh stream 으로 진행 (fallback). 새 streamId 발행.
+  }
+
+  // v4.11 — 새 stream 시작. UUID 발행 + sequential id + cache 저장.
+  const streamId = randomUUID();
+  let seq = 0;
+  cacheStartStream(streamId);
+
   const emit = (event: string, data: unknown) => {
-    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    const dataStr = JSON.stringify(data);
+    const id = seq++;
+    cacheRecordEvent(streamId, id, event, dataStr);
+    res.write(`id: ${streamId}:${id}\nevent: ${event}\ndata: ${dataStr}\n\n`);
   };
+
+  // 첫 event — client 가 streamId 알 수 있도록 명시 emit. 재연결 시 Last-Event-ID 의 prefix.
+  emit('stream_start', { streamId });
 
   let userSignals: Record<string, unknown> | null = null;
   if (userId) {
@@ -1134,7 +1171,12 @@ export async function postChatStream(req: Request, res: Response) {
     for await (const evt of parseSse(upstream.body)) {
       if (aborted.value) break;
       if (evt.event === 'reply_delta') {
-        res.write(`event: reply_delta\ndata: ${evt.data}\n\n`);
+        // v4.11 — emit 헬퍼 사용 (cache 저장 + sequential id 부여). passthrough 가 아닌 reparse.
+        try {
+          emit('reply_delta', JSON.parse(evt.data));
+        } catch {
+          // upstream data 가 JSON 이 아닐 경우 — silent drop (rare).
+        }
       } else if (evt.event === 'meta') {
         try {
           const parsed = JSON.parse(evt.data) as {
@@ -1155,7 +1197,11 @@ export async function postChatStream(req: Request, res: Response) {
           logger.warn({ err }, 'chat/stream: meta parse failed');
         }
       } else if (evt.event === 'error') {
-        res.write(`event: error\ndata: ${evt.data}\n\n`);
+        try {
+          emit('error', JSON.parse(evt.data));
+        } catch {
+          // ignore.
+        }
       }
       // 'done' 은 upstream 종료 신호 — 자체 처리하지 않고 for-await 가 끝나길 기다림.
     }
@@ -1254,6 +1300,7 @@ export async function postChatStream(req: Request, res: Response) {
   }
 
   emit('done', {});
+  finalizeStream(streamId);
   res.end();
 }
 
