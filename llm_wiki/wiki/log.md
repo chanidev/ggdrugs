@@ -987,3 +987,49 @@ max 의 -5.6% 는 1 repeat 노이즈 범위 (v4 audit 의 "1 repeat 에선 w0.3-
 - 3 repeat 풀 bench (~13.5min, ~$0.18) 는 v4.1 baseline 박제 후속 후보.
 - single-token (proper-noun) query 는 unnest 1개 행 = full query 와 동일 — 회귀 0.
 - 후속 v4 OQ 잔여: Streaming reconnect, PostGIS geom 전환.
+
+## 2026-04-26T17:05  feature  Streaming reconnect — v4.2 sealed-gate auto-retry
+
+semantic-search.md OQ "Streaming reconnect" 해소. 네트워크 blip 시 chat SSE 끊김 →
+사용자가 manual retry 버튼 (Sprint A) 클릭해야 했던 UX 의 자동성 보강.
+
+### 설계 결정 — sealed 게이트 + 1회 auto-retry
+v4 SSE 시퀀스 (`reply_delta × N → meta → reply_sealed → suggestions → [reply_override?]
+→ done`) 가 이미 reply_sealed 라는 자연스러운 분기점을 보유. 이를 retry 결정 게이트로 활용:
+- **sealed 전 끊김** → 핵심 reply 미도달. 자동 재시도 1회.
+- **sealed 후 끊김** → 핵심 reply 도달. suggestions / override 만 누락 가능 — soft success
+  (`onDone` 호출). 사용자가 원하면 manual retry (Sprint A `ErrorRetryButton`) 가능.
+- **AbortError / 4xx / LLM_UNREACHABLE** → 영속 에러로 간주, retry skip.
+
+대안 #1 (서버 idempotent resume + Last-Event-ID) 는 Redis 캐시 + LLM stream id 분리 +
+replay 로직 등 인프라 큼 — v5 후보로 박제. 본 v4.2 는 server 측 변경 0, 순수 client 측.
+
+### 변경 — apps/web/src/lib/api/chat.ts
+- `streamChat` 을 `attemptStream` (단일 fetch + reader loop) + 외부 retry wrapper 로 분리.
+- `ChatStreamHandlers.onAttemptStart?(attempt)` 신규 — 재시도 직전 호출, caller 가 placeholder reset.
+- `ChatStreamHandlers.onReplySealed` 를 wrap 해 sealed 플래그 추적. sealed 후 끊김은
+  `onDone` 으로 soft success 처리.
+- `isRetryable(err)` 헬퍼 — `LLM_UNREACHABLE` / 4xx 는 false, network/5xx/parse 는 true.
+- RETRY_MAX = 1 (단일 재시도. blip 패턴은 대부분 1회면 회복).
+
+### 변경 — apps/web/src/layout/AppShell.tsx
+`streamFor` 의 handlers 에 `onAttemptStart` 추가:
+- `accumulatedReply = ''` / `replySealed = false` 리셋
+- placeholder 메시지를 fresh `{ role: 'assistant', text: '', streaming: true }` 로 교체
+  (이전 시도의 overriding/meta/error 모두 drop)
+
+### 검증
+- BFF 재기동 없음 — server 측 변경 0.
+- SSE smoke: `curl -sN /chat/stream` 시퀀스 v4 그대로 (reply_delta × N → meta →
+  reply_sealed → suggestions → reply_override → done).
+- web typecheck — baseline 7 errors 그대로 (v4.2 신규 0).
+- chat:eval 22/22 PASS (non-stream /chat 경로, retry 로직 영향 없음 — sanity).
+
+### 후속 (v5 후보)
+- 서버 idempotent resume — Last-Event-ID 헤더 + Redis 캐시 + LLM stream id 분리.
+  blip 시 LLM 재호출 없이 기존 토큰 replay (비용 절감).
+- 가시적 retry 인디케이터 — auto-retry 발생 시 풍선에 "재연결 중..." 미세 라벨 (UX 명시성).
+  현재는 placeholder 재초기화로 사용자가 인지 가능하지만 명시 신호 0.
+
+### 누적 v4 OQ 잔여
+- PostGIS geom 전환 (지도 viewport bbox / 반경 검색).

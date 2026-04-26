@@ -149,6 +149,19 @@ export function AppShell() {
         await streamChat(
           history,
           {
+            onAttemptStart: (_attempt) => {
+              // v4.2 — sealed-gate auto-retry. 이전 시도의 부분 누적 / overriding /
+              // meta(retreat) / error 가 placeholder 에 남아있으면 새 시도와 충돌.
+              // 신선한 placeholder 로 교체.
+              accumulatedReply = '';
+              replySealed = false;
+              setMessages((prev) => {
+                if (placeholderIndex >= prev.length) return prev;
+                const next = prev.slice();
+                next[placeholderIndex] = { role: 'assistant', text: '', streaming: true };
+                return next;
+              });
+            },
             onReplyDelta: (chunk) => {
               if (replySealed) return;
               accumulatedReply += chunk;

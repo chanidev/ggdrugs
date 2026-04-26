@@ -116,20 +116,69 @@ export interface ChatStreamHandlers {
   onError?: (message: string) => void;
   /** 최종 정상 종료. AbortController.abort() 시에는 호출되지 않음. */
   onDone?: () => void;
+  /**
+   * v4.2 — 자동 retry 직전 호출. attempt 는 새 시도 번호 (현재 1회 retry 만 → 항상 2).
+   * caller 는 placeholder 메시지의 text/streaming/meta/error 등 transient state 를 리셋.
+   * 첫 호출 (attempt=1) 에는 emit 되지 않음 — 진정한 retry 시점에만.
+   */
+  onAttemptStart?: (attempt: number) => void;
 }
 
-/** /chat/stream 호출. AbortController 를 반환하지 않음 — caller 가 외부에서 전달해 cancel. */
+/**
+ * /chat/stream 호출. AbortController 를 반환하지 않음 — caller 가 외부에서 전달해 cancel.
+ *
+ * v4.2 — sealed-gate 자동 retry: reply_sealed 도착 전에 네트워크 / 5xx 끊김 발생 시
+ * 1회 자동 재시도 (handlers.onAttemptStart(2) 로 caller 에 placeholder reset 알림).
+ * sealed 이후 끊김은 soft success (handlers.onDone) — 핵심 reply 는 도달했고
+ * suggestions / reply_override 만 누락. 사용자 abort / 4xx / LLM_UNREACHABLE 은 retry X.
+ */
 export async function streamChat(
   messages: { role: 'user' | 'assistant' | 'system'; text: string }[],
   handlers: ChatStreamHandlers,
   signal?: AbortSignal,
   lastSuggestions?: LastSuggestionRef[],
 ): Promise<void> {
-  // 이미 abort 된 signal 로 호출되면 즉시 AbortError 전파.
-  if (signal?.aborted) {
-    throw makeAbortError();
-  }
+  if (signal?.aborted) throw makeAbortError();
 
+  const RETRY_MAX = 1;
+  let attempt = 1;
+  let sealed = false;
+
+  // sealed 추적 — caller 의 onReplySealed 를 wrap.
+  const wrapped: ChatStreamHandlers = {
+    ...handlers,
+    onReplySealed: (p) => {
+      sealed = true;
+      handlers.onReplySealed?.(p);
+    },
+  };
+
+  while (true) {
+    if (attempt > 1) handlers.onAttemptStart?.(attempt);
+    try {
+      await attemptStream(messages, wrapped, signal, lastSuggestions);
+      return; // 정상 종료 (onDone 은 attemptStream 내부에서 호출).
+    } catch (err) {
+      if ((err as { name?: string })?.name === 'AbortError') throw err;
+      if (sealed) {
+        // sealed 이후 끊김 — 핵심 reply 는 도달. suggestions / override 누락 가능하지만 soft success.
+        handlers.onDone?.();
+        return;
+      }
+      if (!isRetryable(err) || attempt > RETRY_MAX) throw err;
+      attempt++;
+      // 다음 iteration 에서 onAttemptStart 호출.
+    }
+  }
+}
+
+/** 단일 stream 시도 — fetch + reader loop. retry 로직은 streamChat 이 wrap. */
+async function attemptStream(
+  messages: { role: 'user' | 'assistant' | 'system'; text: string }[],
+  handlers: ChatStreamHandlers,
+  signal: AbortSignal | undefined,
+  lastSuggestions: LastSuggestionRef[] | undefined,
+): Promise<void> {
   const res = await fetch(
     `${BFF_URL}/chat/stream`,
     withCredentials({
@@ -193,6 +242,19 @@ export async function streamChat(
       // already released
     }
   }
+}
+
+/**
+ * v4.2 — auto-retry 대상 판별. 다음은 retry X:
+ * - LLM_UNREACHABLE (BFF 가 명시적으로 LLM 503 신호)
+ * - 4xx (validation / auth — 영속 에러)
+ * 그 외 (network error / 5xx / parse 에러 등) 는 retry 가능.
+ */
+function isRetryable(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  if (err.message === 'LLM_UNREACHABLE') return false;
+  if (/^POST \/chat\/stream 4\d\d:/.test(err.message)) return false;
+  return true;
 }
 
 // AbortError with standard name so callers can filter by `err.name === 'AbortError'`.
