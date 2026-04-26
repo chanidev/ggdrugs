@@ -43,6 +43,8 @@ export interface EventListQuery {
   phases?: EventPhase[];
   page?: number;
   limit?: number;
+  /** v4.3 stage 3 — PostGIS bbox 필터: "minLng,minLat,maxLng,maxLat". BFF 가 ST_Within 적용. */
+  bbox?: string;
 }
 
 function buildQuery(q: EventListQuery): string {
@@ -57,6 +59,7 @@ function buildQuery(q: EventListQuery): string {
   if (q.phases?.length) sp.set('phases', q.phases.join(','));
   if (q.page) sp.set('page', String(q.page));
   if (q.limit) sp.set('limit', String(q.limit));
+  if (q.bbox) sp.set('bbox', q.bbox);
   return sp.toString();
 }
 

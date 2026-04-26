@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Map as KakaoMap,
   MapMarker,
@@ -147,6 +147,10 @@ export function SeoulMap({
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [geojson, setGeojson] = useState<SeoulGuGeoJson | null>(null);
   const [regions, setRegions] = useState<RegionItem[]>([]);
+  // v4.3 stage 3 — viewport bbox. 사용자가 panning / zoom 시 300ms debounce 후 갱신.
+  // null 인 동안엔 기본 fetch (phases 또는 filter 만 적용) — 첫 idle 후 bbox 등록.
+  const [mapBbox, setMapBbox] = useState<string | null>(null);
+  const bboxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // lookups (geojson + regions) — 페이지당 1회.
   useEffect(() => {
@@ -188,10 +192,13 @@ export function SeoulMap({
   const fillOpacity = pulsePhase === 0 ? 0.12 : 0.04;
 
   // 필터 없으면 기본값: 진행중+예정. 필터 있으면 해당 쿼리 + limit 500.
-  const query = useMemo<EventListQuery>(
-    () => (filter ? { ...filter, limit: PIN_LIMIT } : { phases: ['ongoing', 'upcoming'], limit: PIN_LIMIT }),
-    [filter],
-  );
+  // v4.3 stage 3 — mapBbox 가 set 되면 query 에 bbox 포함 → BFF ST_Within viewport 필터.
+  const query = useMemo<EventListQuery>(() => {
+    const base: EventListQuery = filter
+      ? { ...filter, limit: PIN_LIMIT }
+      : { phases: ['ongoing', 'upcoming'], limit: PIN_LIMIT };
+    return mapBbox ? { ...base, bbox: mapBbox } : base;
+  }, [filter, mapBbox]);
   const queryKey = useMemo(() => JSON.stringify(query), [query]);
 
   // 선택된 핀의 좌표 — 지도 위 강조 overlay 렌더용.
@@ -222,6 +229,28 @@ export function SeoulMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appkey, queryKey]);
 
+  // v4.3 stage 3 — debounce 타이머는 unmount 시 cleanup.
+  useEffect(() => {
+    return () => {
+      if (bboxTimerRef.current) clearTimeout(bboxTimerRef.current);
+    };
+  }, []);
+
+  /**
+   * v4.3 stage 3 — Kakao Map onBoundsChanged 핸들러.
+   * 사용자 panning / zoom 마다 발화 → 300ms debounce 후 bbox state 갱신 → query 변경 →
+   * fetchEvents refetch (phases/filter + bbox 결합 → BFF ST_Within).
+   */
+  const handleBoundsChanged = (map: kakao.maps.Map) => {
+    if (bboxTimerRef.current) clearTimeout(bboxTimerRef.current);
+    bboxTimerRef.current = setTimeout(() => {
+      const b = map.getBounds();
+      const sw = b.getSouthWest();
+      const ne = b.getNorthEast();
+      setMapBbox(`${sw.getLng()},${sw.getLat()},${ne.getLng()},${ne.getLat()}`);
+    }, 300);
+  };
+
   if (!appkey) return <MissingKeyNotice />;
   if (error) return <LoaderErrorNotice error={error} />;
   if (loading) return <LoadingNotice />;
@@ -234,6 +263,7 @@ export function SeoulMap({
         style={{ width: '100%', height: '100%' }}
         aria-label="서울 이벤트 지도"
         onClick={() => onSelectEvent?.(null)}
+        onBoundsChanged={handleBoundsChanged}
       >
         {highlightedGu.map((gu) => (
           <Polygon

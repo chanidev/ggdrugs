@@ -1083,3 +1083,49 @@ CREATE INDEX idx_events_location_geom ON events USING GIST (location_geom);
 이번 세션 ship: pg_trgm token-level (v4.1) + Streaming reconnect (v4.2) + PostGIS stage 1+2 (v4.3).
 잔여: 본인인증 prod (PASS/NICE/카카오), 사업자번호 정부 API, 클러스터 정렬 UX,
 PostGIS stage 3-4 (UX/검증 트리거 대기).
+
+## 2026-04-26T17:55  feature  PostGIS stage 3 — Web SeoulMap viewport bbox
+
+semantic-search.md OQ "PostGIS stage 3" 해소. v4.3 의 bbox 인프라 (BFF `/events?bbox=`)
+가 실제 사용자 panning / zoom 에 의해 호출되도록 Web SeoulMap 에 viewport hook 추가.
+
+### 변경 — apps/web/src/lib/api/events.ts
+- `EventListQuery.bbox?: string` 추가 ("minLng,minLat,maxLng,maxLat")
+- `buildQuery` 가 bbox 를 URL search param 으로 직렬화
+
+### 변경 — apps/web/src/components/SeoulMap.tsx
+- `mapBbox` state + `bboxTimerRef` (debounce 타이머)
+- `handleBoundsChanged(map: kakao.maps.Map)` — `map.getBounds().getSouthWest/NorthEast()`
+  로 viewport 추출 → 300ms debounce → setState. `KakaoMap.onBoundsChanged` 에 연결.
+- `query` useMemo 에 `bbox: mapBbox` 조건부 포함 — bbox null 동안엔 기존 흐름 (회귀 0).
+- unmount 시 debounce 타이머 cleanup.
+
+### 동작
+1. 첫 mount: mapBbox=null → `phases=ongoing,upcoming&limit=500` 으로 전체 fetch (기존)
+2. 사용자 panning 또는 zoom: `bounds_changed` 발화 → 300ms 후 bbox 갱신 → query 변경 →
+   useEffect refetch → BFF ST_Within(location_geom, ST_MakeEnvelope(...)) 적용 → viewport
+   안 events 만 응답.
+3. Filter 적용 + bbox 결합 가능 (filter regionIds + bbox 동시).
+
+### 검증
+- web typecheck baseline 7 그대로 (stage 3 신규 0).
+- BFF /events?bbox=126.8,37.4,127.1,37.7 → 3964 (서울 영역 거의 전부 — 기대 동작)
+- 5173 dev server 200, Vite HMR 자동 reload (Web BFF 변경 0 — 클라이언트만).
+- chat:eval 22/22 영향 없음 (chat 결합 무관).
+- wiki:lint 0 drift.
+
+### UX 효과
+- 한 줌 깊이 들어가면 viewport 범위 안 events 만 fetch — pin 밀도 자연스럽게 viewport-relative.
+- Limit 500 이 글로벌이 아닌 viewport-local 이라 zoom 깊이에 따라 dense viewport 도 cover.
+- 300ms debounce 로 빠른 panning 시 server 부하 차단 (idle 후 1회만 fetch).
+
+### 후속 (v5 후보 잔여)
+- PostGIS stage 4 — lat/lng 컬럼 DROP. 응답 형식 변경 (GeoJSON Point 또는 lat/lng 유지)
+  결정 + Web 동시 변경 + 1+ sprint 검증 후.
+- Streaming idempotent resume — Last-Event-ID + Redis 캐시 (비용 트리거 대기).
+- 본인인증 prod / 사업자번호 정부 API — Phase 2.
+
+### 본 세션 누적 ship
+v4.1 (pg_trgm token) + v4.2 (Streaming reconnect) + v4.3 (PostGIS stage 1+2+3).
+A 미착수 5건 중 4건 ship (PostGIS stage 1-3 = 1건 처리). 잔여 1.5건 (본인인증 / 사업자번호
+는 Phase 2 swap 대기, PostGIS stage 4 는 검증 기간 대기, 클러스터 정렬은 UX 결정 대기).

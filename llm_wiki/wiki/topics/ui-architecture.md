@@ -28,7 +28,7 @@ A_200 메인 페이지 웹 UI 의 **현재 코드 상태**를 정본화. Phase 1
 | 라우팅 | react-router | 7 | 단일 `/` + `/me` `/uploader` `/admin` `/events/:id` 등 |
 | 스타일 | Tailwind CSS | 4 | `@tailwindcss/vite` 플러그인, `@theme` 블록에 DESIGN.md 토큰 등록 |
 | 서체 | Pretendard Variable | 1.3.9 | jsdelivr CDN, `@font-face` 자동 로딩 |
-| 지도 | react-kakao-maps-sdk + Kakao Maps JS SDK | 1.2 | `useKakaoLoader` 로 dynamic load, 클러스터러 + vermilion pulse pin |
+| 지도 | react-kakao-maps-sdk + Kakao Maps JS SDK | 1.2 | `useKakaoLoader` 로 dynamic load, 클러스터러 + vermilion pulse pin, v4.3 viewport bbox refetch (300ms debounce) |
 | 로깅 (dev) | `HealthBadge` | 자체 | 10초마다 `/api/health` ping |
 | Streaming | `apps/web/src/lib/api/chat.ts::streamChat` | 자체 | SSE → reply_delta / meta / reply_sealed / suggestions / reply_override / done |
 
