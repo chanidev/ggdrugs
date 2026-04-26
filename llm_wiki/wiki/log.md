@@ -943,3 +943,47 @@ ChatDock·MobileChatTab 메시지 풍선에 v4-A 시각 폴리시 4건 추가 + 
 ## 2026-04-26T16:15  graph  trend
 - nodes 1024 · edges 1248 · communities 178
 - INFERRED 75 (6.0%, avg conf 0.81) · AMBIGUOUS 0 · EXTRACTED 1173
+
+## 2026-04-26T16:35  feature  pg_trgm 한국어 recall — v4.1 token-level word_similarity
+
+semantic-search.md OQ "pg_trgm 한국어 recall 개선" 해소 — bench v4 가 노출시킨
+인접 문제 (12 query 중 11건 kwHits=0) 의 root cause 가 한국어 자연어 query 의
+노이즈 token (이번 / 주말 등) 이 full-query word_similarity 0.30 threshold 미달이었음.
+
+### 변경
+`apps/bff/src/routes/chat.ts::fetchKeywordHits`:
+- v3.3: 단일 호출 `word_similarity(query, title)`.
+- v4.1: user text 를 token 으로 split (whitespace + 구두점 `\s,.!?·•、()<>"'""''`,
+  length ≥ 2 — 한 글자 token 은 한글 trigram 노이즈 → drop). SQL `unnest($1::text[])
+  AS u(t)` + 각 token 별 `<<%` 매치 (GIN bitmap scan) → event 별
+  `MAX(GREATEST(word_similarity(t, title), word_similarity(t, ai_summary)))` 집계.
+
+### 효과 (bench v4.1, 1 repeat smoke)
+| config   | v4 (3-rep) | v4.1 (1-rep) | Δ      |
+|----------|------------|--------------|--------|
+| max      | 2.970      | 2.805        | -5.6%  |
+| vec      | 2.669      | 2.857        | +7.0%  |
+| **kw**   | **0.250**  | **2.422**    | **+869%** |
+| w0.5-0.5 | 2.679      | 2.570        | -4.1%  |
+| w0.7-0.3 | 2.774      | 2.734        | -1.4%  |
+| w0.3-0.7 | 2.732      | 2.446        | -10.5% |
+
+핵심: **kw signal 0.250 → 2.422 (~10× DCG)** — 한국어 자연어 query 에서 의미 있는
+신호로 부활. zero_results 도 max/weighted 모두 0건 (v4 는 3/36).
+
+max 의 -5.6% 는 1 repeat 노이즈 범위 (v4 audit 의 "1 repeat 에선 w0.3-0.7 +5.2%,
+3 repeat -8%" 패턴과 동일). vec 의 +1.9% (vs max) 도 5% promote threshold 미달 →
+**winner=max promote=NO 그대로 유지**.
+
+### 검증
+- `pnpm -F bff chat:eval` — 22/22 PASS (avg 5881ms). `fallback-no-match` /
+  `multi-axis` / `intent-negation` 3건의 sugg 1→5 로 recall 증가 (assertion 영향 없음).
+- `pnpm -F bff bench:chat-rank --repeat 1` — 360s, 12 query × 6 config × 1 repeat.
+  audit `wiki/audit/chat-rank-bench-2026-04-26.md` 자동 박제.
+- `pnpm -F bff wiki:lint` — 0 drift.
+- BFF typecheck PASS.
+
+### 후속
+- 3 repeat 풀 bench (~13.5min, ~$0.18) 는 v4.1 baseline 박제 후속 후보.
+- single-token (proper-noun) query 는 unnest 1개 행 = full query 와 동일 — 회귀 0.
+- 후속 v4 OQ 잔여: Streaming reconnect, PostGIS geom 전환.

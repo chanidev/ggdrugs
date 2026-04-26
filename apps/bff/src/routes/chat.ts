@@ -516,40 +516,57 @@ export async function fetchVectorHits(
 }
 
 /**
- * Postgres pg_trgm `word_similarity` — 긴 쿼리의 부분 문자열이 title/ai_summary
- * 에서 얼마나 잘 매치되는지. `similarity` 대비 긴 쿼리→짧은 title 시나리오에
- * 관대함 (예: "2026 서울 일러스트코리아" vs "서울 일러스트" = 0.875).
+ * Postgres pg_trgm — token-level word_similarity (v4.1 — 2026-04-26).
  *
- * 한글 trigram 특성상 3글자 미만은 의미 있는 매치 불가 → 즉시 반환.
+ * 기존 (v3.3): 전체 query 에 대해 `word_similarity(query, title)` 단일 호출.
+ *   문제 — 한국어 자연어 ("이번 주말 강남 공연") 는 노이즈 token 이 길어
+ *   target title 과의 word_similarity 가 0.30 threshold 미달. bench v4 에서
+ *   12 query 중 11건 0 hit 노출.
+ *
+ * v4.1: user text 를 token 으로 split (whitespace + 구두점, length ≥ 2),
+ *   각 token 별 `word_similarity` 계산 후 event 당 max() 집계. 한 token 만 강하게
+ *   매치되어도 후보 진입 가능. proper-noun heavy query (단일 token) 는 기존과 동일.
+ *
+ * GIN index 활용은 token 별 `<<%` 연산자 — 각 token 단위로 trgm bitmap scan.
+ * `pg_trgm.word_similarity_threshold` 는 token 단위에서 적용되므로 v3.3 의 0.30 유지.
+ *
  * 실패 (extension 없음 / 연결 문제) 는 빈 배열 — vector 쪽이 fallback.
  */
 export async function fetchKeywordHits(query: string): Promise<HybridHit[]> {
   const clean = query.replace(/\s+/g, ' ').trim();
   if (clean.length < 3) return [];
+  // Token 분해 — 한국어 자연어 단어 경계 (whitespace + 구두점). length ≥ 2 만 유지
+  // (한 글자 token 은 한글 trigram 노이즈 — "이"/"가" 같은 조사가 false positive).
+  const tokens = clean
+    .split(/[\s,.!?·•、()<>"'‘’“”]+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 2);
+  if (tokens.length === 0) return [];
   try {
-    // `<<%` (word similarity ≥ pg_trgm.word_similarity_threshold) 는 GIN trgm
-    // index 를 사용 가능. `word_similarity(...) > X` 는 함수 호출이라 index off.
-    // SET LOCAL 은 트랜잭션 종료 시 reset — Prisma 의 implicit tx 안에서 안전.
     const rows = await prisma.$transaction(async (tx) => {
       await tx.$executeRawUnsafe(
         `SET LOCAL pg_trgm.word_similarity_threshold = ${KEYWORD_SIMILARITY_MIN}`,
       );
-      return tx.$queryRaw<{ event_id: bigint; score: number }[]>`
-        SELECT event_id, GREATEST(
-          word_similarity(${clean}, title),
-          word_similarity(${clean}, COALESCE(ai_summary, ''))
-        )::float AS score
-        FROM events
-        WHERE approval_status = 'approved'
-          AND is_deleted = false
-          AND phase != 'ended'
-          AND (
-            ${clean} <<% title
-            OR ${clean} <<% COALESCE(ai_summary, '')
-          )
+      return tx.$queryRawUnsafe<{ event_id: bigint; score: number }[]>(
+        `
+        SELECT event_id, MAX(score)::float AS score FROM (
+          SELECT e.event_id, GREATEST(
+            word_similarity(t, e.title),
+            word_similarity(t, COALESCE(e.ai_summary, ''))
+          ) AS score
+          FROM events e, unnest($1::text[]) AS u(t)
+          WHERE e.approval_status = 'approved'
+            AND e.is_deleted = false
+            AND e.phase != 'ended'
+            AND (t <<% e.title OR t <<% COALESCE(e.ai_summary, ''))
+        ) sub
+        GROUP BY event_id
         ORDER BY score DESC
-        LIMIT ${KEYWORD_OVERFETCH}
-      `;
+        LIMIT $2
+        `,
+        tokens,
+        KEYWORD_OVERFETCH,
+      );
     });
     return rows.map((r) => ({
       eventId: r.event_id.toString(),
