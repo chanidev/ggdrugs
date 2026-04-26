@@ -1229,3 +1229,46 @@ GPS / sigungu / Kakao Places 는 v5 후보.
 ### 본 세션 누적 ship
 v4.1 (pg_trgm) + v4.2 (Streaming reconnect) + v4.3 stage 1+2+3 (PostGIS) + v4.4 (sort) + v4.5 (distance).
 A 미착수 5건 모두 ship + 결정 분리 1건 (거리순 anchor 확장) 도 v5 후보로 박제 종결.
+
+## 2026-04-26T19:00  feature  거리순 anchor 확장 — v4.6 region centroid 자동 적용
+
+v4.5 distance sort 의 anchor priority 를 확장: 사용자가 단일 region 필터 적용 시 그
+자치구 청사 좌표가 자동 anchor.
+
+### 결정
+- region centroid 좌표 source: 서울 25 자치구 **구청 청사 좌표** (대표성 + 안정).
+- 단일 region 만 처리 — multi-region 은 평균 / centroid 의 ambiguity 회피, bbox center 로 fallback.
+- sigungu 단위만 채움 — sido / dong row 는 NULL (향후 확장 시 별 마이그레이션).
+
+### 마이그레이션 — 20260426185500_regions_center_coords
+- `regions.center_lat / center_lng DECIMAL(10,7)` 추가.
+- 서울 25 자치구 backfill (UPDATE 25행). 검증: `SELECT COUNT(*) FROM regions WHERE center_lat IS NOT NULL` → 25.
+
+### Prisma schema — apps/bff/prisma/schema.prisma
+- Region 모델에 `centerLat / centerLng Decimal? @db.Decimal(10, 7)` 추가.
+- 트랩 — Prisma generator 가 `///` 코멘트 본문 끝의 `*/` 를 그대로 emit 해 .d.ts 가 깨짐.
+  fix: schema 의 doc comment 에 `*/` 수동 종료 표시 금지.
+
+### BFF — apps/bff/src/routes/events.ts
+- sort=distance 분기에서 region centroid lookup 추가 (raw `$queryRaw` — 다른 영역의 Prisma
+  client regen 충돌 회피 패턴 일관 유지).
+- anchor priority 갱신: explicit `?anchor=lng,lat` > region centroid (`regionIds.length === 1`
+  + center 좌표 보유) > bbox center > 400.
+
+### 검증
+- BFF typecheck PASS.
+- /events?sort=distance&regionIds=27 (강남구) → total 124, 첫 결과 44m (강남구 평생학습센터,
+  37.5176, 127.0475 — 청사 좌표 (37.5172, 127.0473) 인근).
+- chat:eval 22/22 PASS (회귀 0).
+- web 변경 0 — UI 측 통합 자동 (FullListPanel 의 fetch 가 region 필터 + sort=distance 결합 시
+  BFF 가 자동 anchor 처리).
+
+### 후속 (v5+ 잔여)
+- 사용자 GPS anchor (Geolocation API + opt-in 버튼 + 권한 흐름).
+- Kakao Places 검색 anchor (지오코딩 통합).
+- 거리 라벨 단위 토글 (km/mile, i18n).
+- multi-region centroid (mean / convex hull / 등) — UX 결정 트리거 대기.
+
+### 본 세션 누적 ship 갱신
+v4.1 (pg_trgm) + v4.2 (Streaming reconnect) + v4.3 stage 1+2+3 (PostGIS) + v4.4 (sort)
++ v4.5 (distance) + v4.6 (region anchor).

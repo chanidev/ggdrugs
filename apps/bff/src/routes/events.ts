@@ -197,8 +197,25 @@ export async function listEvents(req: Request, res: Response) {
   // v4.5 — sort=distance 는 PostGIS KNN 정렬 + 거리값 계산이 raw 연산이라 일반 흐름과 분리.
   if (sort === 'distance') {
     const explicitAnchor = parseAnchor(req.query.anchor);
+
+    // v4.6 — 단일 region 필터 + sort=distance 시 region centroid 를 anchor 로 자동 적용.
+    // priority: explicit > region centroid (regionIds 단일) > bbox center > 400.
+    // raw query 로 lookup — center_lat/center_lng 는 v4.6 마이그레이션에서 추가된 컬럼.
+    let regionAnchor: { lng: number; lat: number } | null = null;
+    if (!explicitAnchor && regionIds.length === 1) {
+      const rows = await prisma.$queryRaw<{ center_lat: number | null; center_lng: number | null }[]>`
+        SELECT center_lat::float AS center_lat, center_lng::float AS center_lng
+        FROM regions WHERE region_id = ${regionIds[0]}
+      `;
+      const r = rows[0];
+      if (r?.center_lat != null && r?.center_lng != null) {
+        regionAnchor = { lng: Number(r.center_lng), lat: Number(r.center_lat) };
+      }
+    }
+
     const anchor: { lng: number; lat: number } | null =
       explicitAnchor ??
+      regionAnchor ??
       (bbox
         ? { lng: (bbox.minLng + bbox.maxLng) / 2, lat: (bbox.minLat + bbox.maxLat) / 2 }
         : null);

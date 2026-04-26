@@ -31,6 +31,9 @@ model Region {
   sigunguName  String?  @map("sigungu_name") @db.VarChar(30)
   dongName     String?  @map("dong_name")    @db.VarChar(30)
   fullAddress  String   @map("full_address") @db.VarChar(100)
+  /// v4.6 — distance sort 의 region centroid anchor 용 (구청 좌표). sigungu 단위만 채움.
+  centerLat    Decimal? @map("center_lat") @db.Decimal(10, 7)
+  centerLng    Decimal? @map("center_lng") @db.Decimal(10, 7)
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   users  User[]
