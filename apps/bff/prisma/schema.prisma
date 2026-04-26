@@ -185,6 +185,9 @@ model Event {
   addressDetail               String?   @map("address_detail")       @db.VarChar(255)
   latitude                    Decimal?  @db.Decimal(10, 7)
   longitude                   Decimal?  @db.Decimal(10, 7)
+  /// v4.3 — PostGIS geometry(Point, 4326) WGS84. lat/lng 와 dual-write 단계.
+  /// Prisma client 생성에서 제외 (raw query 로만 접근). bbox / 반경 검색용.
+  locationGeom                Unsupported("geometry(Point, 4326)")? @map("location_geom")
   startDate                   DateTime  @map("start_date")           @db.Date
   endDate                     DateTime  @map("end_date")             @db.Date
   operatingHours              String?   @map("operating_hours")      @db.VarChar(100)

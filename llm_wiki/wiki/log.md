@@ -1033,3 +1033,53 @@ replay 로직 등 인프라 큼 — v5 후보로 박제. 본 v4.2 는 server 측
 
 ### 누적 v4 OQ 잔여
 - PostGIS geom 전환 (지도 viewport bbox / 반경 검색).
+
+## 2026-04-26T17:35  feature  PostGIS geom 전환 — v4.3 stage 1+2 ship
+
+semantic-search.md OQ "PostGIS geom 전환" stage 1+2 해소. 지도 viewport bbox /
+반경 검색을 위한 PostGIS 인프라 ship — Web 변경 없이 backend 만 준비.
+
+### 4-stage migration 설계
+- **stage 1 (이번)**: ADD `location_geom geometry(Point, 4326)` + backfill from
+  lat/lng + GiST 인덱스. 코드 변경 0, dual-write 가능 상태.
+- **stage 2 (이번)**: BFF `/events?bbox=minLng,minLat,maxLng,maxLat` 추가.
+  `ST_Within(location_geom, ST_MakeEnvelope(...))` 로 viewport 필터.
+- **stage 3 (UX 트리거 대기)**: Web SeoulMap `bounds_changed` → debounce 300ms
+  → `/events?bbox=...` refetch.
+- **stage 4 (먼훗날)**: dual-write 종료 + lat/lng 컬럼 DROP.
+
+### 변경 — apps/bff/prisma/migrations/20260426171500_events_location_geom_postgis
+```sql
+ALTER TABLE events ADD COLUMN location_geom geometry(Point, 4326);
+UPDATE events SET location_geom = ST_SetSRID(ST_MakePoint(longitude::float, latitude::float), 4326)
+WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
+CREATE INDEX idx_events_location_geom ON events USING GIST (location_geom);
+```
+- Backfill 결과: 4186 / 4188 (lat/lng 보유분 100% 매핑, lat/lng NULL 인 2건만 geom NULL)
+- Prisma schema: `locationGeom Unsupported("geometry(Point, 4326)")?` (raw query 만 사용,
+  Prisma client 에 TS 필드 X — 기존 코드 회귀 0)
+
+### 변경 — apps/bff/src/routes/events.ts
+- `parseBbox(raw)` 헬퍼 — "minLng,minLat,maxLng,maxLat" 형식 + 범위 (-180..180 / -90..90) +
+  min < max 검증. 잘못된 형식은 null 반환 (caller 가 ignore).
+- `listEvents` 의 where 빌드 직전에 bbox 파싱 → `prisma.$queryRaw` 로
+  `ST_Within(location_geom, ST_MakeEnvelope(...,4326))` event_id 부분집합 추출 →
+  `where.eventId = { in: bboxEventIds }`. 빈 결과면 short-circuit (count + findMany 둘 다 skip).
+
+### 검증
+- Seoul bbox (`?bbox=126.8,37.4,127.1,37.7`) → total 3964 events 매치 (서울 영역 거의 전부).
+- Pacific bbox (`?bbox=140,30,141,31`) → total 0 (정상 reject).
+- bbox 미지정 — 기존 응답 그대로 (회귀 0).
+- BFF typecheck PASS.
+- chat:eval 22/22 PASS — chat 결합 영향 없음.
+- wiki:lint 0 drift.
+
+### 후속 (v5 후보)
+- stage 3: Web SeoulMap `bounds_changed` viewport hook (panning UX 결정 트리거 대기).
+- stage 4: lat/lng DROP (stage 3 검증 1+ sprint 후).
+- Streaming idempotent resume (v4.2 보강) — Last-Event-ID + Redis 캐시. 비용 트리거 대기.
+
+### A 미착수 항목 진척
+이번 세션 ship: pg_trgm token-level (v4.1) + Streaming reconnect (v4.2) + PostGIS stage 1+2 (v4.3).
+잔여: 본인인증 prod (PASS/NICE/카카오), 사업자번호 정부 API, 클러스터 정렬 UX,
+PostGIS stage 3-4 (UX/검증 트리거 대기).

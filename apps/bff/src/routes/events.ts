@@ -67,6 +67,21 @@ function parseIntClamp(raw: unknown, fallback: number, min: number, max: number)
   return Math.min(Math.max(n, min), max);
 }
 
+/**
+ * v4.3 — bbox=minLng,minLat,maxLng,maxLat 파싱 + 범위 검증.
+ * 잘못된 형식 / 범위 위반은 null 반환 (caller 가 ignore — 안전한 default).
+ * Lng -180..180, Lat -90..90, min < max.
+ */
+function parseBbox(raw: unknown): { minLng: number; minLat: number; maxLng: number; maxLat: number } | null {
+  if (typeof raw !== 'string' || raw.length === 0) return null;
+  const parts = raw.split(',').map((s) => Number.parseFloat(s.trim()));
+  if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n))) return null;
+  const [minLng, minLat, maxLng, maxLat] = parts as [number, number, number, number];
+  if (minLng < -180 || maxLng > 180 || minLat < -90 || maxLat > 90) return null;
+  if (minLng >= maxLng || minLat >= maxLat) return null;
+  return { minLng, minLat, maxLng, maxLat };
+}
+
 function parsePeriod(q: Request['query']): { start: Date | null; end: Date | null; error?: string } {
   const kind = typeof q.period === 'string' ? q.period : 'all';
   if (!PERIOD_ENUM.has(kind)) return { start: null, end: null, error: 'invalid period' };
@@ -109,11 +124,33 @@ export async function listEvents(req: Request, res: Response) {
     res.status(400).json({ error: periodResult.error });
     return;
   }
+  const bbox = parseBbox(req.query.bbox);
 
   const where: Prisma.EventWhereInput = {
     approvalStatus: 'approved',
     isDeleted: false,
   };
+
+  // v4.3 — bbox 필터: PostGIS ST_Within(location_geom, ST_MakeEnvelope(...)) 로
+  // event_id 부분집합 추출 후 일반 where 에 IN clause 추가. lat/lng IS NULL 인 2건은
+  // 자연스럽게 탈락 (location_geom NULL).
+  if (bbox) {
+    const ids = await prisma.$queryRaw<{ event_id: bigint }[]>`
+      SELECT event_id FROM events
+      WHERE location_geom IS NOT NULL
+        AND ST_Within(
+          location_geom,
+          ST_MakeEnvelope(${bbox.minLng}, ${bbox.minLat}, ${bbox.maxLng}, ${bbox.maxLat}, 4326)
+        )
+    `;
+    const bboxEventIds = ids.map((r) => r.event_id);
+    if (bboxEventIds.length === 0) {
+      // 빈 bbox — 빈 응답으로 short-circuit (count + findMany 둘 다 0).
+      res.json({ page, limit, total: 0, items: [] });
+      return;
+    }
+    where.eventId = { in: bboxEventIds };
+  }
 
   if (regionIds.length > 0) where.regionId = { in: regionIds };
   if (periodResult.start || periodResult.end) {
