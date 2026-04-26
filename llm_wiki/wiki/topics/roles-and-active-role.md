@@ -11,8 +11,8 @@ related:
   - uploader-flow.md
   - admin-flow.md
   - admin-account-management.md
-  - ../../docs/decisions/0003-uploader-pii-policy.md
-  - ../../docs/decisions/0005-admin-account-management.md
+  - ../../../docs/decisions/0003-uploader-pii-policy.md
+  - ../../../docs/decisions/0005-admin-account-management.md
 ---
 
 # 역할(role)과 active_role

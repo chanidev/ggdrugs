@@ -30,6 +30,7 @@
     "chat:eval": "dotenv -e ../../.env -- tsx src/jobs/chat-eval.ts",
     "bench:chat-rank": "dotenv -e ../../.env -- tsx src/jobs/chat-rank-bench.ts",
     "audit:news-mappings": "dotenv -e ../../.env -- tsx src/jobs/audit-news-mappings.ts",
+    "wiki:lint": "tsx src/jobs/wiki-lint.ts",
     "sweep:sessions": "dotenv -e ../../.env -- tsx src/jobs/session-sweep.ts",
     "aggregate:taste": "dotenv -e ../../.env -- tsx src/jobs/aggregate-taste-profiles.ts",
     "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"

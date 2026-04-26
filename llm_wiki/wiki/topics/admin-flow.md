@@ -13,7 +13,7 @@ related:
   - use-cases-index.md
   - subscriptions-notifications.md
   - admin-account-management.md
-  - ../../docs/decisions/0005-admin-account-management.md
+  - ../../../docs/decisions/0005-admin-account-management.md
 ---
 
 # 관리자 플로우

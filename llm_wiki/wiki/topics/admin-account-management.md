@@ -9,9 +9,9 @@ related:
   - auth-flow.md
   - uploader-flow.md
   - roles-and-active-role.md
-  - ../../docs/decisions/0005-admin-account-management.md
-  - ../../docs/decisions/0004-session-invalidation-policy.md
-  - ../../docs/decisions/0003-uploader-pii-policy.md
+  - ../../../docs/decisions/0005-admin-account-management.md
+  - ../../../docs/decisions/0004-session-invalidation-policy.md
+  - ../../../docs/decisions/0003-uploader-pii-policy.md
 ---
 
 # 관리자 계정 관리 + 작업 감사 (ADR 0005)

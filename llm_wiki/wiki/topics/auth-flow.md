@@ -8,7 +8,7 @@ related:
   - terminology-glossary.md
   - roles-and-active-role.md
   - db-schema-overview.md
-  - ../../docs/decisions/0004-session-invalidation-policy.md
+  - ../../../docs/decisions/0004-session-invalidation-policy.md
   - ../entities/google.md
   - ../entities/kakao.md
 ---

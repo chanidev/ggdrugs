@@ -939,3 +939,7 @@ ChatDock·MobileChatTab 메시지 풍선에 v4-A 시각 폴리시 4건 추가 + 
 - **G-1**: `ui-architecture.md` 2026-04-17 부터 8 sprint stale — Sprint A 폴리시 / MobileShell / v3.x backend 결합 모두 미반영. 1 sprint 단독 갱신 후보.
 - **O-1/O-2**: `raw/error1.png` (신규) + `raw/GGdrugs Design System.zip` (사전) source 페이지 부재 — 1:1 invariant.
 - **I-1**: `wiki/audit/` 디렉터리 index.md Meta 섹션 미언급.
+
+## 2026-04-26T16:15  graph  trend
+- nodes 1024 · edges 1248 · communities 178
+- INFERRED 75 (6.0%, avg conf 0.81) · AMBIGUOUS 0 · EXTRACTED 1173

@@ -1,0 +1,42 @@
+name: wiki:lint
+
+# llm_wiki invariant 정적 검증 — raw/ ↔ sources/ 1:1, related: refs resolve, index 등재.
+# BFF/LLM/DB 의존 없음 — install + tsx 만 필요. PR 평균 ~30s.
+#
+# chat:eval / 전체 typecheck 같은 인프라 의존 게이트는 별도 workflow 후보 (B-3 후속).
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'llm_wiki/**'
+      - 'docs/decisions/**'
+      - 'apps/bff/src/jobs/wiki-lint.ts'
+      - '.github/workflows/wiki-lint.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'llm_wiki/**'
+      - 'docs/decisions/**'
+      - 'apps/bff/src/jobs/wiki-lint.ts'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install (bff workspace only — wiki:lint 은 외부 의존 0)
+        run: pnpm install --filter=@ggdrugs/bff... --frozen-lockfile
+
+      - name: Run wiki:lint
+        run: pnpm -F bff wiki:lint
