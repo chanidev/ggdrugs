@@ -903,3 +903,39 @@ config 들이 vec 의 scaled 변형에 가까웠고, 그 미세한 절대값 차
 - BFF typecheck PASS, chat:eval 22/22 PASS (combiner default 무변경).
 - Bench 자체가 6 config × 12 query × 3 repeat 모두 정상 실행 (총 851s).
 - chat.ts default combiner 변경 없음 — 코드 ship 만 infra (재실험 가능 상태).
+
+## 2026-04-26T14:30  feature  Chat UI 폴리시 Sprint A — 4 항목 + reduced-motion ship
+
+ChatDock·MobileChatTab 메시지 풍선에 v4-A 시각 폴리시 4건 추가 + reduced-motion fallback.
+
+### 추가된 폴리시
+1. **타이핑 도트** — `reply_delta` 누적 중 마지막 글자 뒤 인라인 도트 3개. CSS keyframe `alle-typing-wave` 1.2s, stagger 0/200/400ms. placeholder 부터 즉시 노출.
+2. **retreat 메타 라인** — 0건 retreat 발동 시 풍선 위 vermillion accent dot + "0건 — 조건을 넓혀보세요" 안내.
+3. **sealed→override sequential fade** — `onReplyOverride` 가 2-step `setTimeout` (180ms opacity 0 → text swap → opacity 1). layout shift 0.
+4. **error 재시도 버튼** — stream 실패 풍선 안에 "다시 시도" 버튼 (vermillion outline). `handleRetry` 가 user 메시지 중복 push 없이 error placeholder 만 빈 placeholder 로 교체 후 streamFor 재호출.
+5. **`prefers-reduced-motion`** — 도트 정적 (opacity 0.5) + fade transition 0.
+
+### 코드 변경
+- `apps/web/src/components/ChatDock.tsx` — `ChatMessage` 인터페이스에 transient 필드 4건 (`streaming` / `overriding` / `meta: 'retreat'` / `error: { retryUserText }`) + 3 sub-component export (`TypingDots`, `RetreatMeta`, `ErrorRetryButton`). 메시지 map 블록에 4 폴리시 통합. `onRetry` prop 추가.
+- `apps/web/src/styles/index.css` — `@keyframes alle-typing-wave`, `.alle-typing-dot` stagger animation classes, `.alle-fade-text` 180ms transition (`--ease-in-ggd`), `prefers-reduced-motion` 분기.
+- `apps/web/src/layout/MobileShell.tsx` — sub-component import 교체. `MobileChatTab` props 에 `onRetry` 추가. `MobileShell` → `TabbedView` → `MobileChatTab` prop chain 에 `onChatRetry` → `onRetry` 전달. `exactOptionalPropertyTypes` 호환을 위해 `((fn) => void) | undefined` 명시.
+- `apps/web/src/layout/AppShell.tsx` — `handleChatSubmit` 의 streamChat 호출+콜백+catch 블록을 `streamFor(history, placeholderIndex)` 헬퍼로 추출. `handleRetry` 신규 — 마지막 error 풍선 자리에 빈 placeholder 다시 push 후 streamFor 재호출. placeholder push 시 `streaming: true` 즉시 set. `onReplyOverride` 2-step 180ms fade. catch 블록에서 `error: { retryUserText }` 채움. ChatDock·MobileShell 호출에 `onRetry={handleRetry}` 전달.
+
+### 검증
+- `pnpm -F bff chat:eval` — **22/22 PASS** (avg 4622ms · total 101680ms). UI 변경이 BFF/LLM 응답에 회귀 없음 확인.
+- `pnpm -F web typecheck` — baseline 11 → **7 errors** (Sprint A 신규 0, 새 코드의 명시적 `if (!m || ...)` null 가드가 baseline TS18048 4건 우연 해소). 잔존 7 errors 전부 `exactOptionalPropertyTypes` TS2375 (AppShell 6 + chat.ts 1).
+- 3-service health (LLM 8000 / BFF 3000 / Web 5173): 모두 200.
+- Manual 4 시나리오 PASS: 일반 응답 (typing dots wave) / retreat fade (180ms 2-step) / error+retry (LLM 종료→재기동→클릭) / OS reduce-motion (정적 도트 + 즉시 swap).
+
+### 이번 sprint 4 commits land
+- `99c2cd3` feat(llm,bff,web): chat v4 — reply_sealed protocol + rank-bench harness
+- `4ae7df1` feat(web): chat UI 폴리시 Sprint A — 4 항목 폴리시 + reduced-motion
+- `bf5223f` chore(bff): chat:eval golden case 2건 추가 — v4 redact 회귀 가드
+- `ee63ffc` docs(superpowers,wiki): Sprint A plan/spec + bench audit + log/topics 갱신
+
+`origin/main` push 완료 (`1da8250..ee63ffc`).
+
+### 후속 (lint-report.md 2026-04-26 sweep)
+- **G-1**: `ui-architecture.md` 2026-04-17 부터 8 sprint stale — Sprint A 폴리시 / MobileShell / v3.x backend 결합 모두 미반영. 1 sprint 단독 갱신 후보.
+- **O-1/O-2**: `raw/error1.png` (신규) + `raw/GGdrugs Design System.zip` (사전) source 페이지 부재 — 1:1 invariant.
+- **I-1**: `wiki/audit/` 디렉터리 index.md Meta 섹션 미언급.
