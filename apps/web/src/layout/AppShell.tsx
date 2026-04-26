@@ -121,118 +121,182 @@ export function AppShell() {
   const toggleSection = (key: SidebarSection) =>
     setOpen((prev) => (prev === key ? null : key));
 
-  const handleChatSubmit = (text: string) => {
-    // 이전 stream 이 진행 중이면 즉시 취소 — 새 메시지 응답과 섞이지 않도록.
+  /**
+   * v4-A — stream + 콜백 처리 본체. handleChatSubmit / handleRetry 양쪽이 공유.
+   * placeholderIndex 는 이미 messages 에 push 된 placeholder assistant 메시지의 index.
+   */
+  const streamFor = (history: ChatMessage[], placeholderIndex: number) => {
     chatStreamAbortRef.current?.abort();
     const controller = new AbortController();
     chatStreamAbortRef.current = controller;
 
-    const userMsg: ChatMessage = { role: 'user', text };
-    const history = [...messages, userMsg];
-    setMessages(history);
-    setChatValue('');
-    if (dockCollapsed) setDockCollapsed(false);
-
-    // v3.5 — grounded followup: 직전 assistant 턴에서 suggestions 를 받았다면 요약으로
-    // 보내 LLM 이 referential 질문("그 중에", "아까 그거") 을 인식할 수 있게.
+    // v3.5 — grounded followup: 직전 assistant 턴 suggestions 를 LastSuggestionRef 로 변환.
     const lastRefs: LastSuggestionRef[] = (() => {
-      for (let i = messages.length - 1; i >= 0; i--) {
-        const m = messages[i];
-        if (m.role !== 'assistant') continue;
+      for (let i = history.length - 1; i >= 0; i--) {
+        const m = history[i];
+        if (!m || m.role !== 'assistant') continue;
         if (!m.suggestions || m.suggestions.length === 0) continue;
         return m.suggestions.map(toLastSuggestionRef);
       }
       return [];
     })();
 
-    // placeholder assistant 메시지 — streamChat 델타를 이 텍스트에 누적.
-    const placeholderIndex = history.length; // user 메시지 바로 뒤
-    setMessages((prev) => [...prev, { role: 'assistant', text: '' }]);
-
     let accumulatedReply = '';
-    let retreatApplied = false;
+    let replySealed = false;
 
     (async () => {
       try {
         await streamChat(
           history,
           {
-          onReplyDelta: (chunk) => {
-            if (retreatApplied) return; // retreat 후 오는 델타 무시 (stream 종료 순서 보장 안됨)
-            accumulatedReply += chunk;
-            setMessages((prev) => {
-              if (placeholderIndex >= prev.length) return prev;
-              const next = prev.slice();
-              next[placeholderIndex] = { ...next[placeholderIndex], text: accumulatedReply };
-              return next;
-            });
-          },
-          onMeta: (meta) => {
-            // filters 확정 즉시 지도 갱신.
-            const q = chatFiltersToQuery(meta.filters);
-            if (q) {
-              setMapFilter(q);
-              setHighlightRegionIds(meta.filters.regionIds);
-            }
-            if (meta.followups.length > 0) {
+            onReplyDelta: (chunk) => {
+              if (replySealed) return;
+              accumulatedReply += chunk;
               setMessages((prev) => {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
                 next[placeholderIndex] = {
                   ...next[placeholderIndex],
-                  followups: meta.followups,
+                  text: accumulatedReply,
+                  streaming: true,
                 };
                 return next;
               });
-            }
-          },
-          onSuggestions: (items) => {
-            if (items.length === 0) return;
-            setMessages((prev) => {
-              if (placeholderIndex >= prev.length) return prev;
-              const next = prev.slice();
-              next[placeholderIndex] = { ...next[placeholderIndex], suggestions: items };
-              return next;
-            });
-          },
-          onReplyOverride: (p) => {
-            retreatApplied = true;
-            accumulatedReply = p.text;
-            setMessages((prev) => {
-              if (placeholderIndex >= prev.length) return prev;
-              const next = prev.slice();
-              next[placeholderIndex] = {
-                ...next[placeholderIndex],
-                text: p.text,
-                followups: p.followups.length > 0 ? p.followups : next[placeholderIndex].followups,
-              };
-              return next;
-            });
-          },
+            },
+            onReplySealed: (p) => {
+              replySealed = true;
+              const canonical = p.text && p.text !== accumulatedReply ? p.text : accumulatedReply;
+              if (p.text && p.text !== accumulatedReply) accumulatedReply = p.text;
+              setMessages((prev) => {
+                if (placeholderIndex >= prev.length) return prev;
+                const next = prev.slice();
+                next[placeholderIndex] = {
+                  ...next[placeholderIndex],
+                  text: canonical,
+                  streaming: false,
+                };
+                return next;
+              });
+            },
+            onMeta: (meta) => {
+              const q = chatFiltersToQuery(meta.filters);
+              if (q) {
+                setMapFilter(q);
+                setHighlightRegionIds(meta.filters.regionIds);
+              }
+              if (meta.followups.length > 0) {
+                setMessages((prev) => {
+                  if (placeholderIndex >= prev.length) return prev;
+                  const next = prev.slice();
+                  next[placeholderIndex] = {
+                    ...next[placeholderIndex],
+                    followups: meta.followups,
+                  };
+                  return next;
+                });
+              }
+            },
+            onSuggestions: (items) => {
+              if (items.length === 0) return;
+              setMessages((prev) => {
+                if (placeholderIndex >= prev.length) return prev;
+                const next = prev.slice();
+                next[placeholderIndex] = { ...next[placeholderIndex], suggestions: items };
+                return next;
+              });
+            },
+            onReplyOverride: (p) => {
+              replySealed = true;
+              // v4-A — 2-step fade. step 1: opacity 0 (overriding=true).
+              setMessages((prev) => {
+                if (placeholderIndex >= prev.length) return prev;
+                const next = prev.slice();
+                next[placeholderIndex] = { ...next[placeholderIndex], overriding: true };
+                return next;
+              });
+              // step 2: 180ms 후 텍스트 swap + opacity 1 + retreat 메타.
+              setTimeout(() => {
+                accumulatedReply = p.text;
+                setMessages((prev) => {
+                  if (placeholderIndex >= prev.length) return prev;
+                  const next = prev.slice();
+                  const cur = next[placeholderIndex]!;
+                  next[placeholderIndex] = {
+                    ...cur,
+                    text: p.text,
+                    followups: p.followups.length > 0 ? p.followups : cur.followups,
+                    streaming: false,
+                    overriding: false,
+                    meta: 'retreat',
+                  };
+                  return next;
+                });
+              }, 180);
+            },
           },
           controller.signal,
           lastRefs.length > 0 ? lastRefs : undefined,
         );
       } catch (err) {
-        // AbortError — 사용자가 새 메시지를 submit 해서 의도적으로 끊은 경우. UI 건드리지 않음.
         if ((err as { name?: string })?.name === 'AbortError') return;
         const msg =
           (err as Error).message === 'LLM_UNREACHABLE'
             ? 'LLM 서비스에 연결하지 못했어요. 서비스가 올라와 있는지 확인해 주세요.'
             : '응답을 받지 못했어요. 잠시 후 다시 시도해 주세요.';
+        // 직전 user 메시지 텍스트 — retry 버튼이 같은 메시지로 재시도.
+        const lastUser = [...history].reverse().find((m) => m.role === 'user');
+        const retryUserText = lastUser?.text ?? '';
         setMessages((prev) => {
-          if (placeholderIndex >= prev.length) return [...prev, { role: 'assistant', text: msg }];
+          if (placeholderIndex >= prev.length) {
+            return [...prev, { role: 'assistant', text: msg, error: { retryUserText } }];
+          }
           const next = prev.slice();
-          next[placeholderIndex] = { role: 'assistant', text: msg };
+          next[placeholderIndex] = {
+            role: 'assistant',
+            text: msg,
+            error: { retryUserText },
+          };
           return next;
         });
       } finally {
-        // 이 요청의 controller 가 여전히 현재 ref 이면 해제 (새 submit 이 이미 교체했으면 그대로).
         if (chatStreamAbortRef.current === controller) {
           chatStreamAbortRef.current = null;
         }
       }
     })();
+  };
+
+  const handleChatSubmit = (text: string) => {
+    const userMsg: ChatMessage = { role: 'user', text };
+    const history = [...messages, userMsg];
+    setMessages(history);
+    setChatValue('');
+    if (dockCollapsed) setDockCollapsed(false);
+
+    // placeholder assistant 메시지 — streaming: true 즉시 set 으로 첫 토큰 도착 전부터 도트 노출.
+    const placeholderIndex = history.length;
+    setMessages((prev) => [...prev, { role: 'assistant', text: '', streaming: true }]);
+
+    streamFor([...history], placeholderIndex);
+  };
+
+  /**
+   * v4-A — error 풍선의 "다시 시도" 클릭. user 메시지를 새로 push 하지 않고
+   * 직전 error placeholder 만 새 빈 placeholder 로 교체 후 streamFor 재호출.
+   */
+  const handleRetry = (retryUserText: string) => {
+    const errorIdx = messages.length - 1;
+    if (errorIdx < 0 || messages[errorIdx]?.role !== 'assistant') return;
+    const history = messages.slice(0, errorIdx);
+    const lastUser = history[history.length - 1];
+    if (!lastUser || lastUser.role !== 'user' || lastUser.text !== retryUserText) {
+      // 안전장치 — history 가 예상과 다르면 새 user 메시지로 fallback.
+      handleChatSubmit(retryUserText);
+      return;
+    }
+    const placeholderIndex = history.length;
+    setMessages([...history, { role: 'assistant', text: '', streaming: true }]);
+    streamFor([...history], placeholderIndex);
   };
 
   return (
@@ -293,6 +357,7 @@ export function AppShell() {
                 onChange={setChatValue}
                 onSubmit={handleChatSubmit}
                 onSuggestionClick={setSelectedEventId}
+                onRetry={handleRetry}
                 messages={messages}
                 collapsed={dockCollapsed}
                 onToggleCollapsed={() => setDockCollapsed((c) => !c)}
@@ -314,6 +379,7 @@ export function AppShell() {
         setChatValue={setChatValue}
         messages={messages}
         onChatSubmit={handleChatSubmit}
+        onChatRetry={handleRetry}
       />
     </>
   );

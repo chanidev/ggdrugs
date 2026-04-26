@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import { LogoMark } from '../components/brand/Logo';
 import { Icon } from '../components/Icon';
@@ -14,7 +14,12 @@ import { FullListPanel } from '../components/FullListPanel';
 import { EventSummaryContent } from '../components/EventSummaryPanel';
 import { SUGGESTIONS } from '../data/mock';
 import { PhaseBadge } from '../components/PhaseBadge';
-import type { ChatMessage } from '../components/ChatDock';
+import {
+  ErrorRetryButton,
+  RetreatMeta,
+  TypingDots,
+  type ChatMessage,
+} from '../components/ChatDock';
 import type { ChatSuggestion, EventListQuery } from '../lib/api';
 
 type MobileTab = 'filter' | 'list' | 'chat';
@@ -48,6 +53,7 @@ export function MobileShell({
   setChatValue,
   messages,
   onChatSubmit,
+  onChatRetry,
 }: {
   mapFilter: EventListQuery | null;
   setMapFilter: (q: EventListQuery | null) => void;
@@ -59,6 +65,8 @@ export function MobileShell({
   setChatValue: (v: string) => void;
   messages: ChatMessage[];
   onChatSubmit: (text: string) => void;
+  /** v4-A — error 풍선의 "다시 시도" 클릭 콜백. AppShell.handleRetry 가 주입. */
+  onChatRetry?: ((retryUserText: string) => void) | undefined;
 }) {
   const [snap, setSnap] = useState<SheetSnap>('peek');
   const [tab, setTab] = useState<MobileTab>('list');
@@ -112,6 +120,7 @@ export function MobileShell({
             setChatValue={setChatValue}
             messages={messages}
             onChatSubmit={onChatSubmit}
+            onChatRetry={onChatRetry}
             onAfterChatPick={() => setSnap('full')}
           />
         )}
@@ -185,6 +194,7 @@ function TabbedView({
   setChatValue,
   messages,
   onChatSubmit,
+  onChatRetry,
   onAfterChatPick,
 }: {
   tab: MobileTab;
@@ -198,6 +208,7 @@ function TabbedView({
   setChatValue: (v: string) => void;
   messages: ChatMessage[];
   onChatSubmit: (text: string) => void;
+  onChatRetry?: ((retryUserText: string) => void) | undefined;
   onAfterChatPick: () => void;
 }) {
   return (
@@ -262,6 +273,7 @@ function TabbedView({
             onSuggestionClick={(eid) => {
               onSelectEvent(eid);
             }}
+            onRetry={onChatRetry}
           />
         )}
       </div>
@@ -313,13 +325,23 @@ function MobileChatTab({
   onSubmit,
   messages,
   onSuggestionClick,
+  onRetry,
 }: {
   value: string;
   onChange: (v: string) => void;
   onSubmit: (text: string) => void;
   messages: ChatMessage[];
   onSuggestionClick: (eventId: string) => void;
+  /** v4-A — error 풍선의 "다시 시도" 클릭 콜백. */
+  onRetry?: ((retryUserText: string) => void) | undefined;
 }) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const lastMsg = messages[messages.length - 1];
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages.length, lastMsg?.text, lastMsg?.suggestions?.length]);
   return (
     <form
       className="flex min-h-0 flex-1 flex-col"
@@ -329,7 +351,10 @@ function MobileChatTab({
         if (t) onSubmit(t);
       }}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3">
+      <div
+        ref={scrollRef}
+        className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3"
+      >
         {messages.length === 0 ? (
           <div className="flex flex-col gap-3">
             <p className="m-0 text-[12px] leading-[1.5] text-(--color-text-muted)">
@@ -353,8 +378,10 @@ function MobileChatTab({
           messages.map((m, i) => {
             const isLastAssistant =
               m.role === 'assistant' && i === messages.length - 1;
+            const isError = m.role === 'assistant' && m.error;
             return (
               <div key={i} className="flex flex-col gap-1.5">
+                {m.role === 'assistant' && m.meta === 'retreat' && <RetreatMeta />}
                 <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <span
                     className={`inline-block max-w-[82%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
@@ -363,7 +390,13 @@ function MobileChatTab({
                         : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
                     }`}
                   >
-                    {m.text}
+                    <span className={`alle-fade-text ${m.overriding ? 'opacity-0' : 'opacity-100'}`}>
+                      {m.text}
+                    </span>
+                    {m.role === 'assistant' && m.streaming && <TypingDots />}
+                    {isError && m.error && (
+                      <ErrorRetryButton onRetry={() => onRetry?.(m.error!.retryUserText)} />
+                    )}
                   </span>
                 </div>
                 {m.role === 'assistant' && m.suggestions && m.suggestions.length > 0 && (

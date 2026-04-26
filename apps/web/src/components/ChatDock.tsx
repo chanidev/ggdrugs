@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { SUGGESTIONS } from '../data/mock';
 import { Icon } from './Icon';
 import { PhaseBadge } from './PhaseBadge';
@@ -10,6 +11,14 @@ export interface ChatMessage {
   suggestions?: ChatSuggestion[];
   /** assistant 메시지에만 — LLM 이 제안한 다음 user 발화 후보 칩 (최대 3). */
   followups?: string[];
+  /** v4-A — reply_delta 누적 중. sealed/override 시 해제. typing dots 렌더 트리거. */
+  streaming?: boolean;
+  /** v4-A — sealed→override 전환 중간(180ms fade-out 단계). opacity 0 으로 토글. */
+  overriding?: boolean;
+  /** v4-A — retreat 발동 메타 (현재 유일 값 'retreat'). assistant 풍선 위 inline 라인. */
+  meta?: 'retreat';
+  /** v4-A — stream 실패 정보. retry 버튼 클릭 시 재호출용 user text 보존. */
+  error?: { retryUserText: string };
 }
 
 /**
@@ -30,6 +39,7 @@ export function ChatDock({
   onChange,
   onSubmit,
   onSuggestionClick,
+  onRetry,
   messages,
   collapsed,
   onToggleCollapsed,
@@ -39,10 +49,20 @@ export function ChatDock({
   onSubmit: (text: string) => void;
   /** 제안 이벤트 클릭 시 (AppShell 이 summary panel 을 열도록). */
   onSuggestionClick?: (eventId: string) => void;
+  /** v4-A — error 풍선의 "다시 시도" 클릭 콜백. caller (AppShell) 가 retry 로직 주입. */
+  onRetry?: (retryUserText: string) => void;
   messages: ChatMessage[];
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const lastMsg = messages[messages.length - 1];
+  useEffect(() => {
+    if (collapsed) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [messages.length, lastMsg?.text, lastMsg?.suggestions?.length, collapsed]);
   return (
     <form
       // 데스크톱 전용 floating dock — 모바일 메인은 BottomSheet 채팅 탭 사용.
@@ -80,16 +100,21 @@ export function ChatDock({
       <div className="m-0 max-w-full">
         <div
           className={`overflow-hidden transition-[max-height,opacity,margin] duration-[280ms] ease-[cubic-bezier(0,0,0.2,1)] ${
-            collapsed ? 'pointer-events-none !mb-0 max-h-0 opacity-0' : 'max-h-[600px] opacity-100'
+            collapsed ? 'pointer-events-none !mb-0 max-h-0 opacity-0' : 'max-h-[820px] opacity-100'
           }`}
         >
           {messages.length > 0 && (
-            <div className="mb-2.5 flex max-h-[260px] flex-col gap-2 overflow-y-auto rounded-(--radius-lg) bg-(--color-surface-alt) px-3.5 py-2.5">
+            <div
+              ref={scrollRef}
+              className="mb-2.5 flex max-h-[460px] min-h-[280px] flex-col gap-2 overflow-y-auto rounded-(--radius-lg) bg-(--color-surface-alt) px-3.5 py-3"
+            >
               {messages.map((m, i) => {
                 const isLastAssistant =
                   m.role === 'assistant' && i === messages.length - 1;
+                const isError = m.role === 'assistant' && m.error;
                 return (
                   <div key={i} className="flex flex-col gap-1.5">
+                    {m.role === 'assistant' && m.meta === 'retreat' && <RetreatMeta />}
                     <div className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                       <span
                         className={`inline-block max-w-[80%] rounded-(--radius-lg) px-3 py-2 text-[14px] leading-[1.5] ${
@@ -98,7 +123,13 @@ export function ChatDock({
                             : 'rounded-bl-[4px] border border-(--color-border) bg-(--color-surface) text-(--color-text)'
                         }`}
                       >
-                        {m.text}
+                        <span className={`alle-fade-text ${m.overriding ? 'opacity-0' : 'opacity-100'}`}>
+                          {m.text}
+                        </span>
+                        {m.role === 'assistant' && m.streaming && <TypingDots />}
+                        {isError && m.error && (
+                          <ErrorRetryButton onRetry={() => onRetry?.(m.error!.retryUserText)} />
+                        )}
                       </span>
                     </div>
                     {m.role === 'assistant' && m.suggestions && m.suggestions.length > 0 && (
@@ -233,5 +264,54 @@ function SuggestionsRow({
         ))}
       </div>
     </div>
+  );
+}
+
+/**
+ * v4-A — reply_delta 누적 중에 마지막 글자 뒤에 인라인으로 표시. CSS keyframe
+ * `alle-typing-wave` 가 도트 3개를 stagger fade 흐름으로 깜빡인다 (1.2s, ease-inout).
+ * `prefers-reduced-motion` 시 정적 도트로 fallback.
+ */
+export function TypingDots() {
+  return (
+    <span
+      aria-hidden
+      className="ml-1.5 inline-flex items-center align-baseline"
+      data-testid="typing-dots"
+    >
+      <span className="alle-typing-dot mx-[1.5px] h-1 w-1 rounded-full bg-(--color-text-subtle)" />
+      <span className="alle-typing-dot alle-typing-dot-2 mx-[1.5px] h-1 w-1 rounded-full bg-(--color-text-subtle)" />
+      <span className="alle-typing-dot alle-typing-dot-3 mx-[1.5px] h-1 w-1 rounded-full bg-(--color-text-subtle)" />
+    </span>
+  );
+}
+
+/**
+ * v4-A — retreat (suggestions 0건) 발동 시 assistant 풍선 위에 표시되는 한 줄.
+ * vermillion accent dot + muted 안내 텍스트. 모바일·데스크톱 동일 사용.
+ */
+export function RetreatMeta() {
+  return (
+    <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-(--color-text-subtle)">
+      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
+      <span>0건 — 조건을 넓혀보세요</span>
+    </div>
+  );
+}
+
+/**
+ * v4-A — stream 실패 풍선 안에 렌더되는 재시도 버튼. DESIGN.md secondary button 토큰
+ * (vermillion 텍스트·테두리, surface bg). 클릭 시 caller(AppShell) 의 retry 핸들러 호출.
+ */
+export function ErrorRetryButton({ onRetry }: { onRetry: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onRetry}
+      className="mt-1.5 inline-flex h-7 items-center gap-1 rounded-(--radius-md) border border-(--color-accent) bg-(--color-surface) px-2.5 text-[12px] font-medium text-(--color-accent) transition-colors duration-[180ms] hover:bg-(--color-accent-bg)"
+    >
+      <Icon name="sparkles" size={12} />
+      다시 시도
+    </button>
   );
 }

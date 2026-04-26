@@ -135,6 +135,35 @@
   80%, 100% { box-shadow: 0 0 0 8px rgba(232, 86, 45, 0); }
 }
 
+/* v4-A — TypingDots: 마지막 글자 뒤 도트 3개 stagger fade. 1.2s, ease-inout. */
+@keyframes alle-typing-wave {
+  0%, 80%, 100% { opacity: 0.2; }
+  40%           { opacity: 1; }
+}
+.alle-typing-dot {
+  animation: alle-typing-wave 1.2s var(--ease-inout-ggd, cubic-bezier(0.4, 0, 0.2, 1)) infinite;
+}
+.alle-typing-dot-2 { animation-delay: 200ms; }
+.alle-typing-dot-3 { animation-delay: 400ms; }
+
+/* v4-A — sealed→override sequential fade. opacity 토글로 layout shift 0. */
+.alle-fade-text {
+  transition: opacity 180ms var(--ease-in-ggd, cubic-bezier(0.4, 0, 1, 1));
+}
+
+/* prefers-reduced-motion — 정적 도트 (opacity 0.5 고정) 로 fallback. */
+@media (prefers-reduced-motion: reduce) {
+  .alle-typing-dot,
+  .alle-typing-dot-2,
+  .alle-typing-dot-3 {
+    animation: none;
+    opacity: 0.5;
+  }
+  .alle-fade-text {
+    transition: none !important;
+  }
+}
+
 /* -- Base layer: 기본 태그 정리 -- */
 @layer base {
   html {
