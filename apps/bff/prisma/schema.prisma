@@ -186,10 +186,9 @@ model Event {
   /// (fn_invalidate_ai_summary_on_description_change). 감사/eval 목적.
   descriptionHash             String?   @map("description_hash") @db.Char(32)
   addressDetail               String?   @map("address_detail")       @db.VarChar(255)
-  latitude                    Decimal?  @db.Decimal(10, 7)
-  longitude                   Decimal?  @db.Decimal(10, 7)
-  /// v4.3 — PostGIS geometry(Point, 4326) WGS84. lat/lng 와 dual-write 단계.
-  /// Prisma client 생성에서 제외 (raw query 로만 접근). bbox / 반경 검색용.
+  /// v4.3 — PostGIS geometry(Point, 4326) WGS84. v4.10 (stage 4b) — lat/lng 컬럼 DROP 후
+  /// 단일 source of truth. Prisma client 생성에서 제외 (raw query 로만 접근).
+  /// 응답의 lat/lng 는 ST_X/ST_Y 로 derive — Web 측 변경 0.
   locationGeom                Unsupported("geometry(Point, 4326)")? @map("location_geom")
   startDate                   DateTime  @map("start_date")           @db.Date
   endDate                     DateTime  @map("end_date")             @db.Date
@@ -229,7 +228,6 @@ model Event {
   @@index([phase, startDate], map: "idx_events_phase")
   @@index([approvalStatus, createdAt], map: "idx_events_approval")
   @@index([uploaderId], map: "idx_events_uploader")
-  @@index([latitude, longitude], map: "idx_events_geo")
   @@index([startDate, endDate], map: "idx_events_dates")
   @@map("events")
 }

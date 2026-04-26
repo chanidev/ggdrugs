@@ -280,20 +280,16 @@ export async function createUploaderEvent(req: Request, res: Response) {
   const admissionFee = b.admissionFee == null ? null : trimStr(b.admissionFee, 100) || null;
   const posterImageUrl = b.posterImageUrl == null ? null : trimStr(b.posterImageUrl, 500) || null;
 
+  // v4.10 — lat/lng 컬럼 DROP 후 location_geom 단일 source. 입력은 그대로 lat/lng 받되
+  // INSERT 후 별도 raw UPDATE 로 location_geom 채움.
   const latRaw = b.latitude;
   const lngRaw = b.longitude;
-  const latitude =
-    latRaw == null || latRaw === ''
-      ? null
-      : Number.isFinite(Number(latRaw))
-        ? new Prisma.Decimal(Number(latRaw).toFixed(7))
-        : null;
-  const longitude =
-    lngRaw == null || lngRaw === ''
-      ? null
-      : Number.isFinite(Number(lngRaw))
-        ? new Prisma.Decimal(Number(lngRaw).toFixed(7))
-        : null;
+  const latNum =
+    latRaw == null || latRaw === '' ? null
+      : Number.isFinite(Number(latRaw)) ? Number(Number(latRaw).toFixed(7)) : null;
+  const lngNum =
+    lngRaw == null || lngRaw === '' ? null
+      : Number.isFinite(Number(lngRaw)) ? Number(Number(lngRaw).toFixed(7)) : null;
 
   const primary = b.expectedCompanionPrimary;
   const secondary = b.expectedCompanionSecondary;
@@ -361,8 +357,6 @@ export async function createUploaderEvent(req: Request, res: Response) {
         title,
         description,
         addressDetail,
-        latitude,
-        longitude,
         startDate,
         endDate,
         operatingHours,
@@ -384,6 +378,14 @@ export async function createUploaderEvent(req: Request, res: Response) {
         createdAt: true,
       },
     });
+      // v4.10 — location_geom 별도 raw UPDATE (Unsupported field 라 prisma.create 미지원).
+      if (latNum !== null && lngNum !== null) {
+        await tx.$executeRaw`
+          UPDATE events
+          SET location_geom = ST_SetSRID(ST_MakePoint(${lngNum}::float, ${latNum}::float), 4326)
+          WHERE event_id = ${event.eventId}
+        `;
+      }
       await tx.approvalDocument.createMany({
         data: docs.map((d) => ({
           eventId: event.eventId,
@@ -438,8 +440,6 @@ export async function getMyUploaderEvent(req: Request, res: Response) {
       title: true,
       description: true,
       addressDetail: true,
-      latitude: true,
-      longitude: true,
       startDate: true,
       endDate: true,
       operatingHours: true,
@@ -477,6 +477,15 @@ export async function getMyUploaderEvent(req: Request, res: Response) {
     return;
   }
 
+  // v4.10 — lat/lng 컬럼 DROP 후 location_geom 단일 source. ST_X/ST_Y derive.
+  const coordRows = await prisma.$queryRaw<{ lng: number | null; lat: number | null }[]>`
+    SELECT ST_X(location_geom)::float AS lng, ST_Y(location_geom)::float AS lat
+    FROM events WHERE event_id = ${eventId} AND location_geom IS NOT NULL
+  `;
+  const coord = coordRows[0];
+  const latitude = coord?.lat != null ? Number(coord.lat).toString() : null;
+  const longitude = coord?.lng != null ? Number(coord.lng).toString() : null;
+
   const documents = await Promise.all(
     row.approvalDocuments.map(async (d) => ({
       documentId: d.documentId.toString(),
@@ -499,8 +508,8 @@ export async function getMyUploaderEvent(req: Request, res: Response) {
       startDate: row.startDate.toISOString().slice(0, 10),
       endDate: row.endDate.toISOString().slice(0, 10),
       addressDetail: row.addressDetail,
-      latitude: row.latitude?.toString() ?? null,
-      longitude: row.longitude?.toString() ?? null,
+      latitude,
+      longitude,
       operatingHours: row.operatingHours,
       targetAudience: row.targetAudience,
       admissionFee: row.admissionFee,

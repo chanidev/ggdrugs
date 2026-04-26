@@ -170,14 +170,6 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
     title: ev.title.slice(0, 200),
     description: ev.description ? ev.description.slice(0, 10_000) : null,
     addressDetail: ev.addressText?.slice(0, 255) ?? null,
-    latitude:
-      ev.latitude !== null && Number.isFinite(ev.latitude)
-        ? new Prisma.Decimal(ev.latitude.toFixed(7))
-        : null,
-    longitude:
-      ev.longitude !== null && Number.isFinite(ev.longitude)
-        ? new Prisma.Decimal(ev.longitude.toFixed(7))
-        : null,
     startDate: ev.startDate,
     endDate: ev.endDate,
     posterImageUrl: ev.posterImageUrl?.slice(0, 500) ?? null,
@@ -186,7 +178,9 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
     approvedAt: new Date(),
   } satisfies Omit<Prisma.EventUncheckedCreateInput, 'externalSourceId'>;
 
-  await prisma.event.upsert({
+  // v4.10 — lat/lng 컬럼 DROP 후 location_geom 단일 source. Prisma client 가 Unsupported 필드라
+  // create/update 에서 직접 set 불가 → upsert 후 별도 raw UPDATE 로 채움. NULL coords 면 NULL.
+  const upserted = await prisma.event.upsert({
     where: {
       crawlOrigin_externalSourceId: {
         crawlOrigin: ev.crawlOrigin,
@@ -198,8 +192,6 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
       title: data.title,
       description: data.description,
       addressDetail: data.addressDetail,
-      latitude: data.latitude,
-      longitude: data.longitude,
       startDate: data.startDate,
       endDate: data.endDate,
       posterImageUrl: data.posterImageUrl,
@@ -208,6 +200,21 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
       regionId: data.regionId,
     },
   });
+
+  const validLat = ev.latitude !== null && Number.isFinite(ev.latitude);
+  const validLng = ev.longitude !== null && Number.isFinite(ev.longitude);
+  if (validLat && validLng) {
+    await prisma.$executeRaw`
+      UPDATE events
+      SET location_geom = ST_SetSRID(ST_MakePoint(${ev.longitude!}::float, ${ev.latitude!}::float), 4326)
+      WHERE event_id = ${upserted.eventId}
+    `;
+  } else {
+    // 좌표 부재 시 명시 NULL set (이전 row 의 location_geom 잔존 가능 — 명시적 정리).
+    await prisma.$executeRaw`
+      UPDATE events SET location_geom = NULL WHERE event_id = ${upserted.eventId}
+    `;
+  }
 }
 
 /** HTML tag 제거 + 엔티티 디코드(&nbsp; 등) + 공백 정규화. 100K 길이 컷오프. */

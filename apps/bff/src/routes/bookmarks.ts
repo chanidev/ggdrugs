@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
+import { fetchEventCoords } from './events.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
 /**
@@ -184,8 +185,6 @@ export async function listMyBookmarks(req: Request, res: Response) {
             startDate: true,
             endDate: true,
             phase: true,
-            latitude: true,
-            longitude: true,
             posterImageUrl: true,
             bookmarkCount: true,
             avgRating: true,
@@ -216,7 +215,11 @@ export async function listMyBookmarks(req: Request, res: Response) {
     }),
   ]);
 
-  const items = rows.map((r) => ({
+  // v4.10 — lat/lng 컬럼 DROP 후 ST_X/ST_Y derive (events.ts::fetchEventCoords).
+  const coords = await fetchEventCoords(rows.map((r) => r.event.eventId));
+  const items = rows.map((r) => {
+    const c = coords.get(r.event.eventId.toString());
+    return {
     bookmarkId: r.bookmarkId.toString(),
     bookmarkedAt: r.createdAt.toISOString(),
     event: {
@@ -236,8 +239,8 @@ export async function listMyBookmarks(req: Request, res: Response) {
       startDate: r.event.startDate.toISOString().slice(0, 10),
       endDate: r.event.endDate.toISOString().slice(0, 10),
       phase: r.event.phase,
-      latitude: r.event.latitude ? Number(r.event.latitude) : null,
-      longitude: r.event.longitude ? Number(r.event.longitude) : null,
+      latitude: c ? c.lat : null,
+      longitude: c ? c.lng : null,
       posterImageUrl: r.event.posterImageUrl,
       addressDetail: r.event.addressDetail,
       admissionFee: r.event.admissionFee,
@@ -253,7 +256,8 @@ export async function listMyBookmarks(req: Request, res: Response) {
         group: va.vibe.vibeGroup,
       })),
     },
-  }));
+    };
+  });
 
   res.json({ page, limit, total, items });
 }

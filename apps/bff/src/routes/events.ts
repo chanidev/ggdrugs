@@ -224,12 +224,25 @@ export async function listEvents(req: Request, res: Response) {
       return;
     }
 
-    // Pass A: 일반 where + location_geom 보유 candidate eventIds.
+    // Pass A: 일반 where 의 candidate eventIds 중 location_geom NOT NULL 인 것만 추출.
+    // v4.10 — lat/lng 컬럼 DROP 후 location_geom 단일 source. raw query 로 필터링.
     const candidateRows = await prisma.event.findMany({
-      where: { ...where, latitude: { not: null }, longitude: { not: null } },
+      where,
       select: { eventId: true },
     });
-    const candidateIds = candidateRows.map((r) => r.eventId);
+    const allCandidateIds = candidateRows.map((r) => r.eventId);
+    if (allCandidateIds.length === 0) {
+      res.json({ page, limit, total: 0, items: [] });
+      return;
+    }
+    const geomCandidates = await prisma.$queryRaw<{ event_id: bigint }[]>(
+      Prisma.sql`
+        SELECT event_id FROM events
+        WHERE event_id IN (${Prisma.join(allCandidateIds)})
+          AND location_geom IS NOT NULL
+      `,
+    );
+    const candidateIds = geomCandidates.map((r) => r.event_id);
     if (candidateIds.length > 50_000) {
       res.status(413).json({
         error: 'too many candidates for distance sort, narrow filter or use bbox',
@@ -263,15 +276,19 @@ export async function listEvents(req: Request, res: Response) {
     );
 
     // Pass C: 상세 fetch + KNN 순서 보존 reorder + distanceMeters 첨부.
-    const rows = await prisma.event.findMany({
-      where: { eventId: { in: orderedIds } },
-      select: EVENT_SELECT,
-    });
+    // v4.10 — coords map 별도 fetch (ST_X/ST_Y derive).
+    const [rows, coords] = await Promise.all([
+      prisma.event.findMany({
+        where: { eventId: { in: orderedIds } },
+        select: EVENT_SELECT,
+      }),
+      fetchEventCoords(orderedIds),
+    ]);
     const byId = new Map(rows.map((r) => [r.eventId.toString(), r]));
     const items = orderedIds
       .map((id) => byId.get(id.toString()))
       .filter((r): r is NonNullable<typeof r> => r !== undefined)
-      .map((r) => mapEventRow(r, distanceById.get(r.eventId.toString())));
+      .map((r) => mapEventRow(r, coords, distanceById.get(r.eventId.toString())));
 
     res.json({ page, limit, total: candidateIds.length, items });
     return;
@@ -296,7 +313,9 @@ export async function listEvents(req: Request, res: Response) {
     }),
   ]);
 
-  const items = rows.map((r) => mapEventRow(r));
+  // v4.10 — coords map 별도 fetch (lat/lng 컬럼 DROP 후 ST_X/ST_Y derive).
+  const coords = await fetchEventCoords(rows.map((r) => r.eventId));
+  const items = rows.map((r) => mapEventRow(r, coords));
 
   res.json({
     page,
@@ -313,8 +332,6 @@ const EVENT_SELECT = {
   startDate: true,
   endDate: true,
   phase: true,
-  latitude: true,
-  longitude: true,
   posterImageUrl: true,
   bookmarkCount: true,
   avgRating: true,
@@ -338,8 +355,40 @@ const EVENT_SELECT = {
 
 type EventRowFromSelect = Prisma.EventGetPayload<{ select: typeof EVENT_SELECT }>;
 
-/** Prisma row → API item. v4.5 distance sort 시 distanceMeters 첨부, 그 외 omit. */
-function mapEventRow(r: EventRowFromSelect, distanceMeters?: number) {
+/**
+ * v4.10 — events.latitude/longitude 컬럼 DROP 후 location_geom 단일 source.
+ * 응답 형식 (lat/lng 필드) 유지 위해 ST_X/ST_Y 로 derive — 별도 raw query 1회.
+ */
+export async function fetchEventCoords(
+  eventIds: bigint[],
+): Promise<Map<string, { lat: number; lng: number }>> {
+  if (eventIds.length === 0) return new Map();
+  const rows = await prisma.$queryRaw<{ event_id: bigint; lng: number | null; lat: number | null }[]>(
+    Prisma.sql`
+      SELECT event_id,
+             ST_X(location_geom)::float AS lng,
+             ST_Y(location_geom)::float AS lat
+      FROM events
+      WHERE event_id IN (${Prisma.join(eventIds)})
+        AND location_geom IS NOT NULL
+    `,
+  );
+  const map = new Map<string, { lat: number; lng: number }>();
+  for (const r of rows) {
+    if (r.lat != null && r.lng != null) {
+      map.set(r.event_id.toString(), { lat: Number(r.lat), lng: Number(r.lng) });
+    }
+  }
+  return map;
+}
+
+/** Prisma row → API item. v4.5 distance sort 시 distanceMeters 첨부, 그 외 omit. v4.10 — coords map 으로 lat/lng derive. */
+function mapEventRow(
+  r: EventRowFromSelect,
+  coords: Map<string, { lat: number; lng: number }>,
+  distanceMeters?: number,
+) {
+  const c = coords.get(r.eventId.toString());
   return {
     eventId: r.eventId.toString(),
     title: r.title,
@@ -357,8 +406,8 @@ function mapEventRow(r: EventRowFromSelect, distanceMeters?: number) {
     startDate: r.startDate.toISOString().slice(0, 10),
     endDate: r.endDate.toISOString().slice(0, 10),
     phase: r.phase,
-    latitude: r.latitude ? Number(r.latitude) : null,
-    longitude: r.longitude ? Number(r.longitude) : null,
+    latitude: c ? c.lat : null,
+    longitude: c ? c.lng : null,
     posterImageUrl: r.posterImageUrl,
     bookmarkCount: r.bookmarkCount,
     avgRating: Number(r.avgRating),

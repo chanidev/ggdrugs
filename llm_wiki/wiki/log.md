@@ -1390,3 +1390,75 @@ v4.1 + v4.2 + v4.3 (stage 1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (stage 4a) + v4.8 (
 ### 본 세션 누적 ship
 v4.1 + v4.2 + v4.3 (stage 1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (stage 4a) + v4.8 (GPS) +
 v4.9 (Kakao Places). 거리순 anchor 5종 후보 모두 ship 종결 — multi-region 만 잔여.
+
+## 2026-04-26T20:25  feature  PostGIS stage 4b — lat/lng 컬럼 DROP
+
+**4-stage PostGIS 마이그레이션 종결.** events.latitude / longitude 컬럼이 사라지고
+location_geom 이 단일 source of truth.
+
+### 마이그레이션 — 20260426203000_events_drop_lat_lng_columns
+- DROP TRIGGER tr_events_sync_location_geom (stage 4a 의 dual-write 트리거)
+- DROP FUNCTION fn_events_sync_location_geom()
+- ALTER TABLE events DROP COLUMN latitude
+- ALTER TABLE events DROP COLUMN longitude
+  → btree idx_events_geo 자동 사라짐 (lat/lng 컬럼과 함께)
+
+### Prisma schema
+- Event 모델에서 latitude / longitude / @@index([latitude, longitude]) 제거
+- locationGeom Unsupported 필드만 유지 (raw query 전용)
+
+### BFF READ 경로 swap
+- apps/bff/src/routes/events.ts:
+  - EVENT_SELECT 에서 lat/lng 제거
+  - `fetchEventCoords(eventIds)` 헬퍼 추가 — `SELECT ST_X(location_geom)::float AS lng,
+    ST_Y(location_geom)::float AS lat FROM events WHERE event_id IN (...)` → Map.
+  - mapEventRow(row, coords, distance?) 시그니처 — coords map 으로 lat/lng derive.
+  - listEvents 의 일반 흐름 + distance sort Pass C 모두 fetchEventCoords 호출.
+  - distance Pass A 의 candidate 필터 변경: lat/lng not null → location_geom IS NOT NULL
+    (raw query 추가).
+- apps/bff/src/routes/event-detail.ts: select 에서 lat/lng 제거, $queryRaw 로 ST_X/ST_Y
+  derive, 응답 lat/lng 채움.
+- apps/bff/src/routes/bookmarks.ts: select 에서 lat/lng 제거, fetchEventCoords import +
+  사용. lambda 를 `(r) => ({ ... })` 에서 `(r) => { const c = ...; return { ... } }` 로 변경.
+- apps/bff/src/routes/uploader/events.ts: 상세 조회 select 도 lat/lng 제거 + 별도 raw
+  query 로 derive.
+
+### BFF WRITE 경로 swap
+- apps/bff/src/jobs/ingest-common.ts: prisma.event.upsert 의 latitude/longitude 필드 제거.
+  upsert 후 `UPDATE events SET location_geom = ST_SetSRID(...) WHERE event_id = ...` raw 실행.
+  좌표 부재 시 명시 NULL set.
+- apps/bff/src/routes/uploader/events.ts: prisma.event.create 의 latitude/longitude 필드
+  제거. 트랜잭션 내 별도 $executeRaw 로 location_geom 채움.
+
+### 응답 호환성
+- /events, /events/:id, /me/bookmarks, /uploader/events/:id 모두 응답에 lat/lng 필드 유지.
+- ST_X / ST_Y 로 derived. Web (SeoulMap, EventList, EventSummary 등) **변경 0**.
+- 정밀도 — DECIMAL(10,7) 에서 float 으로 전환 (PostGIS geometry 가 double precision).
+  소수점 최대 ~15자리. SeoulMap pin 위치 정확도 동일.
+
+### 검증
+- BFF typecheck PASS, web typecheck baseline 7 그대로 (Web 변경 0)
+- /events?limit=2 → lat/lng 응답 정상 (37.6075510290657 / 126.9348233297409 등)
+- /events?sort=distance&bbox=... → distance sort 정상, distanceMeters + lat/lng 모두 응답
+- chat:eval 22/22 PASS (avg 6288ms)
+- DB schema verify: events 테이블의 lat/lng 컬럼 부재 확인 (location_geom 만 남음)
+- wiki:lint 0 drift
+
+### 4-stage PostGIS 마이그레이션 정리
+| stage | sprint | 내용 |
+|---|---|---|
+| 1 | v4.3 | location_geom 컬럼 추가 + backfill + GiST 인덱스 |
+| 2 | v4.3 | BFF /events?bbox=... ST_Within 쿼리 |
+| 3 | v4.3 | Web SeoulMap viewport hook (300ms debounce) |
+| 4a | v4.7 | dual-write 트리거 + catch-up backfill |
+| **4b** | **v4.10** | **lat/lng 컬럼 DROP — location_geom 단일 source** |
+
+### 후속 (v5+ 잔여)
+- multi-region centroid (mean / convex hull) UX 결정.
+- Streaming idempotent resume (Last-Event-ID + Redis 캐시).
+- 본인인증 prod / 사업자번호 정부 API (Phase 2).
+- chat:eval CI 게이트.
+
+### 본 세션 누적
+v4.1 + v4.2 + v4.3 (stage 1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (4a) + v4.8 (GPS) +
+v4.9 (Places) + v4.10 (4b). PostGIS 마이그레이션 4-stage 완전 종결.

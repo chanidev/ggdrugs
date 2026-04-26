@@ -36,8 +36,6 @@ export async function getEventDetail(req: Request, res: Response) {
       startDate: true,
       endDate: true,
       phase: true,
-      latitude: true,
-      longitude: true,
       posterImageUrl: true,
       bookmarkCount: true,
       avgRating: true,
@@ -74,6 +72,15 @@ export async function getEventDetail(req: Request, res: Response) {
     return;
   }
 
+  // v4.10 — lat/lng 컬럼 DROP 후 location_geom 단일 source. ST_X/ST_Y derive.
+  const coordRows = await prisma.$queryRaw<{ lng: number | null; lat: number | null }[]>`
+    SELECT ST_X(location_geom)::float AS lng, ST_Y(location_geom)::float AS lat
+    FROM events WHERE event_id = ${id} AND location_geom IS NOT NULL
+  `;
+  const coord = coordRows[0];
+  const latitude = coord?.lat != null ? Number(coord.lat) : null;
+  const longitude = coord?.lng != null ? Number(coord.lng) : null;
+
   // 옵셔널 인증: 쿠키 있으면 resolveAuth 미들웨어가 req.auth 채움.
   const auth = (req as AuthenticatedRequest).auth;
   let isBookmarked: boolean | null = null;
@@ -108,8 +115,8 @@ export async function getEventDetail(req: Request, res: Response) {
     startDate: row.startDate.toISOString().slice(0, 10),
     endDate: row.endDate.toISOString().slice(0, 10),
     phase: row.phase,
-    latitude: row.latitude ? Number(row.latitude) : null,
-    longitude: row.longitude ? Number(row.longitude) : null,
+    latitude,
+    longitude,
     posterImageUrl: row.posterImageUrl,
     bookmarkCount: row.bookmarkCount,
     avgRating: Number(row.avgRating),
