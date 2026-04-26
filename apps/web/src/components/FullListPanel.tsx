@@ -20,18 +20,19 @@ const PHASE_TABS: { key: PhaseKey; label: string }[] = [
   { key: 'ended', label: '종료' },
 ];
 
-/** v4.4 — 정렬 옵션 표기. 사용자 선택은 localStorage 에 persist. */
+/** v4.4 — 정렬 옵션 표기. 사용자 선택은 localStorage 에 persist. v4.5 — 'distance' 추가 (mapBbox 필요). */
 const SORT_OPTIONS: { key: EventSort; label: string }[] = [
   { key: 'ending', label: '종료임박' },
   { key: 'recent', label: '최신' },
   { key: 'popular', label: '인기' },
+  { key: 'distance', label: '거리' },
 ];
 const SORT_STORAGE_KEY = 'alle.fullList.sort';
 
 function loadSortPref(): EventSort {
   try {
     const v = localStorage.getItem(SORT_STORAGE_KEY);
-    if (v === 'ending' || v === 'recent' || v === 'popular') return v;
+    if (v === 'ending' || v === 'recent' || v === 'popular' || v === 'distance') return v;
   } catch {
     // SSR 또는 storage 차단 환경 — default 로 fallback.
   }
@@ -49,10 +50,13 @@ function loadSortPref(): EventSort {
 export function FullListPanel({
   activeEventId,
   onSelect,
+  mapBbox,
 }: {
   activeEventId?: string | null;
   /** 카드 클릭 시 호출 — navigate 대신 요약 패널을 여는 상위 핸들러. */
   onSelect?: (id: string) => void;
+  /** v4.5 — SeoulMap viewport bbox. distance sort 활성 시 BFF 의 anchor 로 사용 (BFF 가 center 자동 계산). null 이면 distance 옵션 disabled. */
+  mapBbox?: string | null;
 }) {
   const [stats, setStats] = useState<EventsStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
@@ -76,6 +80,10 @@ export function FullListPanel({
     return () => ctrl.abort();
   }, []);
 
+  // v4.5 — saved sort 가 'distance' 인데 mapBbox 없으면 fetch 만 'ending' 으로 fallback
+  // (UI 의 segmented 는 saved 값 표시 + disabled 상태로 클릭 불가). 지도 활성 후 자동 복귀.
+  const effectiveSort: EventSort = sort === 'distance' && !mapBbox ? 'ending' : sort;
+
   useEffect(() => {
     const ctrl = new AbortController();
     setListState({ loading: true, error: null, data: null });
@@ -84,7 +92,8 @@ export function FullListPanel({
         eventTypes: selected === 'all' ? [] : [selected],
         phases: phase === 'all' ? [] : [phase],
         limit: 100,
-        sort,
+        sort: effectiveSort,
+        ...(effectiveSort === 'distance' && mapBbox ? { bbox: mapBbox } : {}),
       },
       ctrl.signal,
     )
@@ -94,7 +103,7 @@ export function FullListPanel({
         setListState({ loading: false, error: (err as Error).message, data: null });
       });
     return () => ctrl.abort();
-  }, [selected, phase, sort]);
+  }, [selected, phase, effectiveSort, mapBbox]);
 
   // v4.4 — 사용자 정렬 선택을 localStorage 에 persist (다음 세션 유지).
   useEffect(() => {
@@ -183,17 +192,27 @@ export function FullListPanel({
         <div role="radiogroup" aria-label="정렬 기준" className="inline-flex items-center gap-0.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-0.5">
           {SORT_OPTIONS.map((opt) => {
             const active = sort === opt.key;
+            // v4.5 — distance 옵션은 mapBbox 가 있어야 활성. SeoulMap 의 첫 idle 후 자동 활성.
+            const disabled = opt.key === 'distance' && !mapBbox;
             return (
               <button
                 key={opt.key}
                 type="button"
                 role="radio"
                 aria-checked={active}
-                onClick={() => setSort(opt.key)}
+                aria-disabled={disabled}
+                disabled={disabled}
+                title={disabled ? '지도 활성화 후 사용 가능' : undefined}
+                onClick={() => {
+                  if (disabled) return;
+                  setSort(opt.key);
+                }}
                 className={`inline-flex h-7 items-center rounded-(--radius-sm) px-2.5 text-[12px] font-medium transition-colors ${
-                  active
-                    ? 'bg-(--color-surface) text-(--color-accent) shadow-(--shadow-sm)'
-                    : 'text-(--color-text-muted) hover:text-(--color-text)'
+                  disabled
+                    ? 'cursor-not-allowed text-(--color-text-subtle) opacity-60'
+                    : active
+                      ? 'bg-(--color-surface) text-(--color-accent) shadow-(--shadow-sm)'
+                      : 'text-(--color-text-muted) hover:text-(--color-text)'
                 }`}
               >
                 {opt.label}

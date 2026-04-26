@@ -106,6 +106,8 @@ export function AppShell() {
   const [mapFilter, setMapFilter] = useState<EventListQuery | null>(null);
   const [highlightRegionIds, setHighlightRegionIds] = useState<string[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+  // v4.5 — SeoulMap viewport bbox 를 lift up. FullListPanel 의 distance sort anchor 로 활용.
+  const [mapBbox, setMapBbox] = useState<string | null>(null);
 
   // v3.4 — 진행 중인 /chat/stream 요청 AbortController. 새 submit 시 이전 stream 취소.
   const chatStreamAbortRef = useRef<AbortController | null>(null);
@@ -336,6 +338,7 @@ export function AppShell() {
               <FullListPanel
                 activeEventId={selectedEventId}
                 onSelect={setSelectedEventId}
+                mapBbox={mapBbox}
               />
             )}
             {open === 'chat' && (
@@ -362,6 +365,7 @@ export function AppShell() {
                   highlightRegionIds={highlightRegionIds}
                   selectedEventId={selectedEventId}
                   onSelectEvent={setSelectedEventId}
+                  onBboxChange={setMapBbox}
                 />
               </ErrorBoundary>
               <HealthBadge />
@@ -393,6 +397,8 @@ export function AppShell() {
         messages={messages}
         onChatSubmit={handleChatSubmit}
         onChatRetry={handleRetry}
+        mapBbox={mapBbox}
+        setMapBbox={setMapBbox}
       />
     </>
   );

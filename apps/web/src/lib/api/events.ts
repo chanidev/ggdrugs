@@ -23,6 +23,8 @@ export interface BffEventItem {
   avgRating: number;
   reviewCount: number;
   vibes: { vibeId: string; name: string; group: string }[];
+  /** v4.5 — sort=distance 응답에만 포함. anchor 또는 bbox center 기준 미터. */
+  distanceMeters?: number;
 }
 
 export interface EventListResponse {
@@ -32,8 +34,8 @@ export interface EventListResponse {
   items: BffEventItem[];
 }
 
-/** v4.4 — 정렬 옵션. ending(default) / recent / popular. distance 는 별도 sprint. */
-export type EventSort = 'ending' | 'recent' | 'popular';
+/** v4.4 — 정렬 옵션. ending(default) / recent / popular. v4.5 — distance 추가 (anchor 또는 bbox 필요). */
+export type EventSort = 'ending' | 'recent' | 'popular' | 'distance';
 
 export interface EventListQuery {
   regionIds?: string[];
@@ -50,6 +52,8 @@ export interface EventListQuery {
   bbox?: string;
   /** v4.4 — 정렬 키. 미지정 시 BFF default ('ending'). */
   sort?: EventSort;
+  /** v4.5 — sort=distance 명시 anchor "lng,lat". 미지정 시 BFF 가 bbox center fallback. */
+  anchor?: string;
 }
 
 function buildQuery(q: EventListQuery): string {
@@ -66,6 +70,7 @@ function buildQuery(q: EventListQuery): string {
   if (q.limit) sp.set('limit', String(q.limit));
   if (q.bbox) sp.set('bbox', q.bbox);
   if (q.sort) sp.set('sort', q.sort);
+  if (q.anchor) sp.set('anchor', q.anchor);
   return sp.toString();
 }
 

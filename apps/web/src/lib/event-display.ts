@@ -16,6 +16,8 @@ export interface DisplayEvent {
   phase: 'upcoming' | 'ongoing' | 'ended';
   posterImageUrl: string | null;
   posterFallbackColor: string;
+  /** v4.5 — sort=distance 일 때만 채워짐. 사람이 읽는 라벨 ("850m" / "2.3km"). */
+  distanceLabel?: string;
 }
 
 /** id 기반 해시 색상 — 포스터 이미지 없을 때 placeholder 배경. DESIGN 토큰 팔레트에서 선택. */
@@ -43,7 +45,18 @@ function shortRegion(sido: string, sigungu: string | null): string {
   return sigungu ? `${sido} ${sigungu}` : sido;
 }
 
+/**
+ * v4.5 — 거리 라벨. < 1000m → "%dm" (정수), >= 1000m → "%.1fkm" (소수 1자리).
+ * undefined 입력은 undefined 반환 — 카드 렌더에서 미표시.
+ */
+function formatDistance(meters: number | undefined): string | undefined {
+  if (meters === undefined || !Number.isFinite(meters)) return undefined;
+  if (meters < 1000) return `${Math.round(meters)}m`;
+  return `${(meters / 1000).toFixed(1)}km`;
+}
+
 export function fromBffItem(item: BffEventItem): DisplayEvent {
+  const distanceLabel = formatDistance(item.distanceMeters);
   return {
     id: item.eventId,
     category: item.category.code,
@@ -55,6 +68,7 @@ export function fromBffItem(item: BffEventItem): DisplayEvent {
     phase: item.phase,
     posterImageUrl: item.posterImageUrl,
     posterFallbackColor: hashToColor(item.eventId),
+    ...(distanceLabel ? { distanceLabel } : {}),
   };
 }
 

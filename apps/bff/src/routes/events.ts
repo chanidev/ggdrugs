@@ -39,9 +39,9 @@ const EVENT_TYPE_ENUM = new Set([
 ]);
 const PERIOD_ENUM = new Set(['3m', '6m', 'all', 'custom']);
 const PHASE_ENUM = new Set(['upcoming', 'ongoing', 'ended']);
-/** v4.4 — 정렬 옵션. ending(default) / recent / popular. distance 는 별도 sprint (anchor 결정). */
-const SORT_ENUM = new Set(['ending', 'recent', 'popular']);
-type SortKey = 'ending' | 'recent' | 'popular';
+/** v4.4 — 정렬 옵션. ending(default) / recent / popular. v4.5 — distance 추가 (anchor 또는 bbox 필요). */
+const SORT_ENUM = new Set(['ending', 'recent', 'popular', 'distance']);
+type SortKey = 'ending' | 'recent' | 'popular' | 'distance';
 
 function parseCsv(raw: unknown): string[] {
   if (typeof raw !== 'string' || raw.length === 0) return [];
@@ -83,6 +83,19 @@ function parseBbox(raw: unknown): { minLng: number; minLat: number; maxLng: numb
   if (minLng < -180 || maxLng > 180 || minLat < -90 || maxLat > 90) return null;
   if (minLng >= maxLng || minLat >= maxLat) return null;
   return { minLng, minLat, maxLng, maxLat };
+}
+
+/**
+ * v4.5 — anchor=lng,lat 파싱 + 범위 검증. parseBbox 와 동일 패턴.
+ * 잘못된 형식 / 범위 위반은 null 반환.
+ */
+function parseAnchor(raw: unknown): { lng: number; lat: number } | null {
+  if (typeof raw !== 'string' || raw.length === 0) return null;
+  const parts = raw.split(',').map((s) => Number.parseFloat(s.trim()));
+  if (parts.length !== 2 || parts.some((n) => !Number.isFinite(n))) return null;
+  const [lng, lat] = parts as [number, number];
+  if (lng < -180 || lng > 180 || lat < -90 || lat > 90) return null;
+  return { lng, lat };
 }
 
 function parsePeriod(q: Request['query']): { start: Date | null; end: Date | null; error?: string } {
@@ -181,6 +194,72 @@ export async function listEvents(req: Request, res: Response) {
     where.phase = { in: phases };
   }
 
+  // v4.5 — sort=distance 는 PostGIS KNN 정렬 + 거리값 계산이 raw 연산이라 일반 흐름과 분리.
+  if (sort === 'distance') {
+    const explicitAnchor = parseAnchor(req.query.anchor);
+    const anchor: { lng: number; lat: number } | null =
+      explicitAnchor ??
+      (bbox
+        ? { lng: (bbox.minLng + bbox.maxLng) / 2, lat: (bbox.minLat + bbox.maxLat) / 2 }
+        : null);
+    if (!anchor) {
+      res.status(400).json({ error: 'anchor or bbox required for sort=distance' });
+      return;
+    }
+
+    // Pass A: 일반 where + location_geom 보유 candidate eventIds.
+    const candidateRows = await prisma.event.findMany({
+      where: { ...where, latitude: { not: null }, longitude: { not: null } },
+      select: { eventId: true },
+    });
+    const candidateIds = candidateRows.map((r) => r.eventId);
+    if (candidateIds.length > 50_000) {
+      res.status(413).json({
+        error: 'too many candidates for distance sort, narrow filter or use bbox',
+      });
+      return;
+    }
+    if (candidateIds.length === 0) {
+      res.json({ page, limit, total: 0, items: [] });
+      return;
+    }
+
+    // Pass B: KNN ORDER BY (GiST 활용) + ST_Distance(geography) 미터 단위 거리값.
+    const offset = (page - 1) * limit;
+    const ranked = await prisma.$queryRaw<{ event_id: bigint; distance_m: number }[]>(
+      Prisma.sql`
+        SELECT event_id,
+               ST_Distance(
+                 location_geom::geography,
+                 ST_SetSRID(ST_MakePoint(${anchor.lng}, ${anchor.lat}), 4326)::geography
+               ) AS distance_m
+        FROM events
+        WHERE event_id IN (${Prisma.join(candidateIds)})
+        ORDER BY location_geom <-> ST_SetSRID(ST_MakePoint(${anchor.lng}, ${anchor.lat}), 4326),
+                 event_id ASC
+        LIMIT ${limit} OFFSET ${offset}
+      `,
+    );
+    const orderedIds = ranked.map((r) => r.event_id);
+    const distanceById = new Map<string, number>(
+      ranked.map((r) => [r.event_id.toString(), Math.round(Number(r.distance_m))]),
+    );
+
+    // Pass C: 상세 fetch + KNN 순서 보존 reorder + distanceMeters 첨부.
+    const rows = await prisma.event.findMany({
+      where: { eventId: { in: orderedIds } },
+      select: EVENT_SELECT,
+    });
+    const byId = new Map(rows.map((r) => [r.eventId.toString(), r]));
+    const items = orderedIds
+      .map((id) => byId.get(id.toString()))
+      .filter((r): r is NonNullable<typeof r> => r !== undefined)
+      .map((r) => mapEventRow(r, distanceById.get(r.eventId.toString())));
+
+    res.json({ page, limit, total: candidateIds.length, items });
+    return;
+  }
+
   // v4.4 — sort 별 orderBy 매핑. 모두 eventId asc tie-break 으로 결정론적 페이지네이션 보장.
   const orderBy: Prisma.EventOrderByWithRelationInput[] =
     sort === 'recent'
@@ -196,38 +275,55 @@ export async function listEvents(req: Request, res: Response) {
       orderBy,
       skip: (page - 1) * limit,
       take: limit,
-      select: {
-        eventId: true,
-        title: true,
-        startDate: true,
-        endDate: true,
-        phase: true,
-        latitude: true,
-        longitude: true,
-        posterImageUrl: true,
-        bookmarkCount: true,
-        avgRating: true,
-        reviewCount: true,
-        category: { select: { categoryCode: true, displayName: true } },
-        region: {
-          select: {
-            regionId: true,
-            sidoName: true,
-            sigunguName: true,
-            dongName: true,
-            fullAddress: true,
-          },
-        },
-        vibeAssignments: {
-          select: {
-            vibe: { select: { vibeId: true, vibeName: true, vibeGroup: true } },
-          },
-        },
-      },
+      select: EVENT_SELECT,
     }),
   ]);
 
-  const items = rows.map((r) => ({
+  const items = rows.map((r) => mapEventRow(r));
+
+  res.json({
+    page,
+    limit,
+    total,
+    items,
+  });
+}
+
+/** 공유 select — 일반 흐름과 distance Pass C 가 동일 필드 응답. */
+const EVENT_SELECT = {
+  eventId: true,
+  title: true,
+  startDate: true,
+  endDate: true,
+  phase: true,
+  latitude: true,
+  longitude: true,
+  posterImageUrl: true,
+  bookmarkCount: true,
+  avgRating: true,
+  reviewCount: true,
+  category: { select: { categoryCode: true, displayName: true } },
+  region: {
+    select: {
+      regionId: true,
+      sidoName: true,
+      sigunguName: true,
+      dongName: true,
+      fullAddress: true,
+    },
+  },
+  vibeAssignments: {
+    select: {
+      vibe: { select: { vibeId: true, vibeName: true, vibeGroup: true } },
+    },
+  },
+} as const satisfies Prisma.EventSelect;
+
+type EventRowFromSelect = Prisma.EventGetPayload<{ select: typeof EVENT_SELECT }>;
+
+/** Prisma row → API item. v4.5 distance sort 시 distanceMeters 첨부, 그 외 omit. */
+function mapEventRow(r: EventRowFromSelect, distanceMeters?: number) {
+  return {
     eventId: r.eventId.toString(),
     title: r.title,
     category: {
@@ -255,12 +351,6 @@ export async function listEvents(req: Request, res: Response) {
       name: va.vibe.vibeName,
       group: va.vibe.vibeGroup,
     })),
-  }));
-
-  res.json({
-    page,
-    limit,
-    total,
-    items,
-  });
+    ...(distanceMeters !== undefined ? { distanceMeters } : {}),
+  };
 }

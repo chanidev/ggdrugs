@@ -105,7 +105,17 @@ function EventCard({
           </h3>
           <PhaseBadge phase={event.phase} />
         </div>
-        <p className="m-0 text-[13px] text-(--color-text-muted)">{event.region}</p>
+        <p className="m-0 flex items-center gap-1.5 text-[13px] text-(--color-text-muted)">
+          <span>{event.region}</span>
+          {event.distanceLabel && (
+            <>
+              <span aria-hidden className="text-(--color-text-subtle)">·</span>
+              <span className="tabular text-(--color-accent)" aria-label={`거리 ${event.distanceLabel}`}>
+                {event.distanceLabel}
+              </span>
+            </>
+          )}
+        </p>
         <p className="tabular m-0 text-[13px] text-(--color-text-muted)">{event.dateRange}</p>
         {event.vibes.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-1.5">

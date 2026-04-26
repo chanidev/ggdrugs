@@ -54,6 +54,8 @@ export function MobileShell({
   messages,
   onChatSubmit,
   onChatRetry,
+  mapBbox,
+  setMapBbox,
 }: {
   mapFilter: EventListQuery | null;
   setMapFilter: (q: EventListQuery | null) => void;
@@ -67,6 +69,9 @@ export function MobileShell({
   onChatSubmit: (text: string) => void;
   /** v4-A — error 풍선의 "다시 시도" 클릭 콜백. AppShell.handleRetry 가 주입. */
   onChatRetry?: ((retryUserText: string) => void) | undefined;
+  /** v4.5 — SeoulMap viewport bbox lift. distance sort anchor 로 활용. */
+  mapBbox: string | null;
+  setMapBbox: (b: string | null) => void;
 }) {
   const [snap, setSnap] = useState<SheetSnap>('peek');
   const [tab, setTab] = useState<MobileTab>('list');
@@ -93,6 +98,7 @@ export function MobileShell({
             highlightRegionIds={highlightRegionIds}
             selectedEventId={selectedEventId}
             onSelectEvent={handleMapSelectEvent}
+            onBboxChange={setMapBbox}
           />
         </ErrorBoundary>
         <HealthBadge />
@@ -122,6 +128,7 @@ export function MobileShell({
             onChatSubmit={onChatSubmit}
             onChatRetry={onChatRetry}
             onAfterChatPick={() => setSnap('full')}
+            mapBbox={mapBbox}
           />
         )}
       </BottomSheet>
@@ -196,6 +203,7 @@ function TabbedView({
   onChatSubmit,
   onChatRetry,
   onAfterChatPick,
+  mapBbox,
 }: {
   tab: MobileTab;
   onTabChange: (t: MobileTab) => void;
@@ -210,6 +218,8 @@ function TabbedView({
   onChatSubmit: (text: string) => void;
   onChatRetry?: ((retryUserText: string) => void) | undefined;
   onAfterChatPick: () => void;
+  /** v4.5 — distance sort anchor 로 활용. */
+  mapBbox: string | null;
 }) {
   return (
     <>
@@ -259,7 +269,11 @@ function TabbedView({
           />
         )}
         {tab === 'list' && (
-          <FullListPanel activeEventId={selectedEventId} onSelect={onSelectEvent} />
+          <FullListPanel
+            activeEventId={selectedEventId}
+            onSelect={onSelectEvent}
+            mapBbox={mapBbox}
+          />
         )}
         {tab === 'chat' && (
           <MobileChatTab

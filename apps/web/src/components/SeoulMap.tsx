@@ -129,12 +129,15 @@ export function SeoulMap({
   highlightRegionIds,
   selectedEventId,
   onSelectEvent,
+  onBboxChange,
 }: {
   filter?: EventListQuery | null;
   /** 필터 chip 클릭 즉시 발행되는 지역 id 목록 — 폴리곤 하이라이트용 (mapFilter 와 분리). */
   highlightRegionIds?: string[];
   selectedEventId?: string | null;
   onSelectEvent?: (id: string | null) => void;
+  /** v4.5 — 지도 viewport bbox 가 변경될 때 부모로 lift up. distance sort 의 anchor 로 활용. */
+  onBboxChange?: ((bbox: string | null) => void) | undefined;
 }) {
   const appkey = import.meta.env.VITE_KAKAO_MAP_JS_KEY as string | undefined;
 
@@ -229,17 +232,22 @@ export function SeoulMap({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appkey, queryKey]);
 
-  // v4.3 stage 3 — debounce 타이머는 unmount 시 cleanup.
+  // v4.3 stage 3 — debounce 타이머는 unmount 시 cleanup. v4.5 — 부모에 bbox null emit.
   useEffect(() => {
     return () => {
       if (bboxTimerRef.current) clearTimeout(bboxTimerRef.current);
+      onBboxChange?.(null);
     };
+    // onBboxChange 는 stable 가정 (caller 가 useCallback 또는 setState dispatcher 전달).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /**
    * v4.3 stage 3 — Kakao Map onBoundsChanged 핸들러.
    * 사용자 panning / zoom 마다 발화 → 300ms debounce 후 bbox state 갱신 → query 변경 →
    * fetchEvents refetch (phases/filter + bbox 결합 → BFF ST_Within).
+   * v4.5 — onBboxChange 가 있으면 부모 (AppShell/MobileShell) state 도 lift up
+   * (FullListPanel 의 distance sort anchor 활용).
    */
   const handleBoundsChanged = (map: kakao.maps.Map) => {
     if (bboxTimerRef.current) clearTimeout(bboxTimerRef.current);
@@ -247,7 +255,9 @@ export function SeoulMap({
       const b = map.getBounds();
       const sw = b.getSouthWest();
       const ne = b.getNorthEast();
-      setMapBbox(`${sw.getLng()},${sw.getLat()},${ne.getLng()},${ne.getLat()}`);
+      const bbox = `${sw.getLng()},${sw.getLat()},${ne.getLng()},${ne.getLat()}`;
+      setMapBbox(bbox);
+      onBboxChange?.(bbox);
     }, 300);
   };
 
