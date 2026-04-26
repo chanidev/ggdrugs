@@ -56,9 +56,13 @@ def _today_context() -> str:
     today = date.today()
     wd = _WEEKDAY_KO[today.weekday()]
     tomorrow = today + timedelta(days=1)
-    days_to_sat = (5 - today.weekday()) % 7
-    sat = today + timedelta(days=days_to_sat or 7 if today.weekday() == 5 else days_to_sat)
-    sun = sat + timedelta(days=1)
+    # 이번 주(Mon-Sun) 의 토/일.
+    this_mon = today - timedelta(days=today.weekday())
+    sat = this_mon + timedelta(days=5)
+    sun = this_mon + timedelta(days=6)
+    # 다음 주 = 다음 월요일부터 그 주 일요일까지. 한국어 관용 (월요일 시작).
+    next_mon = this_mon + timedelta(days=7)
+    next_sun = next_mon + timedelta(days=6)
     season = (
         "봄" if today.month in (3, 4, 5)
         else "여름" if today.month in (6, 7, 8)
@@ -67,7 +71,12 @@ def _today_context() -> str:
     )
     return (
         f"오늘은 {today.isoformat()} ({wd}요일), 계절은 {season}입니다. "
-        f"내일은 {tomorrow.isoformat()}, 이번 주말은 {sat.isoformat()}~{sun.isoformat()} 입니다."
+        f"내일은 {tomorrow.isoformat()}, 이번 주말은 {sat.isoformat()}(토)~{sun.isoformat()}(일) 입니다. "
+        f"다음 주는 {next_mon.isoformat()}(월)~{next_sun.isoformat()}(일) 입니다 — "
+        f"'다음주 월'={next_mon.isoformat()}, '다음주 화'={(next_mon + timedelta(days=1)).isoformat()}, "
+        f"'다음주 수'={(next_mon + timedelta(days=2)).isoformat()}, '다음주 목'={(next_mon + timedelta(days=3)).isoformat()}, "
+        f"'다음주 금'={(next_mon + timedelta(days=4)).isoformat()}, '다음주 토'={(next_mon + timedelta(days=5)).isoformat()}, "
+        f"'다음주 일'={next_sun.isoformat()}."
     )
 
 
@@ -153,6 +162,26 @@ _FEWSHOT = """예시:
     reply: "오늘 진행 중인 이벤트로 좁혀봤어요. 동행이나 종류를 알려주시면 더 정확하게 추천드릴게요.",
     followups: ["가족이랑", "혼자서", "이번 주말로"]
   }
+
+- "다음주 일요일에 갈 만한 거" (다음 주 특정 요일 — [오늘 컨텍스트] 의 "'다음주 일' = YYYY-MM-DD" 값을 그대로 복사):
+  ※ 가정: [오늘 컨텍스트] 가 "'다음주 일'=2026-05-03" 라고 명시한 경우.
+  {
+    filters: {},
+    specificDate: "2026-05-03",
+    referencesLast: false,
+    reply: "다음 주 일요일 기준으로 찾아볼게요. 동행이나 종류를 알려주시면 더 정확하게 추천드릴게요.",
+    followups: ["가족이랑은", "전시 위주로", "토요일도 함께"]
+  }
+
+- "다음주 토요일 야외 페스티벌" (periodKey 채우지 않음, specificDate 만):
+  ※ 가정: [오늘 컨텍스트] 가 "'다음주 토'=2026-05-02" 라고 명시한 경우.
+  {
+    filters: {eventTypes:["festival"], vibes:["활동적"]},
+    specificDate: "2026-05-02",
+    referencesLast: false,
+    reply: "다음 주 토요일 활동적 분위기 페스티벌 기준으로 찾아봤어요.",
+    followups: ["일요일도 보기", "가족이랑은", "공연도 함께"]
+  }
 """
 
 
@@ -174,11 +203,20 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시
   "보러" → "관람형", "배움" → "교육형", "사람들" → "네트워킹 중심".
 - "팝업 스토어/플리마켓/마켓" 도 festival 로 분류 (현 카테고리 체계 한도).
 
-[specificDate — 선택]
-- 사용자가 명확한 단일 날짜를 지정한 경우만 ISO YYYY-MM-DD 로 반환. 그 외엔 null.
-- 예: "5월 1일" → 올해 "2026-05-01", "다음주 토요일" / "이번주 일요일" / "내일" → 절대 날짜 계산.
-- 절대 추측하지 말 것 — "이번 주말" 같은 모호한 표현은 specificDate 없이 periodKey="weekend" 로만.
-- 오늘 컨텍스트 절대 날짜를 활용해 정확히 계산.
+[specificDate — 매우 중요, 어기면 실패]
+- 단일 날짜가 지정된 경우 **반드시** ISO YYYY-MM-DD 로 채울 것. null 로 두지 말 것.
+- 트리거 (모두 [오늘 컨텍스트] 의 절대 날짜를 그대로 복사):
+  - 명시 날짜 ("5월 1일" → "2026-05-01")
+  - "내일" → 컨텍스트의 "내일은 ..." 값
+  - "이번주 X요일" / "이번 X요일" → 이번 주 (오늘 포함 월~일) 안의 X요일. 토/일은 컨텍스트 "이번 주말은 ..." 사용.
+  - **"다음주 X요일"** (예: "다음주 월", "다음주 화요일", "담주 일요일", "다음 주 토") → **반드시** 컨텍스트의 **"'다음주 X'=YYYY-MM-DD"** 표에서 해당 요일 값을 그대로 복사하여 specificDate 에 채울 것. **null 금지**. "내일" 이나 "이번 주 X요일" 로 재해석하지 말 것 — 오늘이 토요일·일요일이어도 "다음주 일" 은 컨텍스트 표의 다음 주 일요일이지 이번 주말이 아님.
+- 직접 요일 산수 금지 — 컨텍스트 표를 그대로 복사. 오늘 요일 위치에 따라 ±7일 오류가 나기 쉽다.
+- 모호한 범위 표현 ("이번 주말", "다음 주", "이번 달") 은 specificDate=null 로 두고 periodKey 만 사용.
+
+[specificDate 자가 점검 — 출력 직전]
+- reply 텍스트에 "(M/D)" 또는 "M월 D일" 같은 단일 날짜를 적었다면 → 동일한 날짜를 specificDate 에 ISO 로도 채울 것. reply 와 specificDate 가 다른 값을 가리키면 안 됨.
+- 사용자 발화에 "다음주" + 요일이 있으면 specificDate 는 절대 null 이면 안 됨. 컨텍스트 표를 다시 보고 채울 것.
+- "다음주 X요일" 입력 시 periodKey 는 "tomorrow" 로 설정하지 말 것 (다음주는 내일이 아님). periodKey 는 빈 값 또는 "week" 가능.
 
 [referencesLast — 불리언]
 - 입력에 `[직전 제안]` 블록이 주어지고, 사용자 최근 발화가 그 목록을 명시적·묵시적으로
@@ -269,6 +307,73 @@ def _sanitize_user_text(s: str, *, max_len: int = 2000) -> str:
     import re as _re
     normalized = _re.sub(r"[  　 -  ]{3,}", "  ", normalized)
     return normalized[:max_len]
+
+
+# 결정론적 specificDate 보정 — LLM 이 "다음주 X요일" / "내일" 같은 명확한 트리거를
+# 가끔 누락하는 비결정성을 보정. user 발화에 명시 트리거가 있고 LLM 이 specificDate
+# 를 비웠으면 오늘 컨텍스트 테이블에서 채워 넣는다.
+import re as _re_date
+_NEXT_WEEK_WD_RE = _re_date.compile(r"(?:다음\s*주|담주|다다음\s*주|next\s*week)\s*[ ,]*([월화수목금토일])(?:요일)?")
+_THIS_WEEK_WD_RE = _re_date.compile(r"(?:이번\s*주|금주|this\s*week)\s*[ ,]*([월화수목금토일])(?:요일)?")
+_TOMORROW_RE = _re_date.compile(r"(?<![가-힣])내일(?![가-힣])")
+_KO_WD_INDEX = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4, "토": 5, "일": 6}
+
+
+def _coerce_specific_date(user_text: str, current: str | None) -> str | None:
+    """user 발화에 결정 가능한 단일 날짜 트리거가 있으면 ISO 날짜로 **강제 override**.
+    명시 트리거가 없으면 current 유지.
+
+    LLM 이 같은 입력에 대해 (a) specificDate 누락 (null) 또는 (b) 잘못된 ISO (예:
+    "다음주 일요일" 인데 4/30 같이 화·목 반환) 를 비결정적으로 반복하는 문제를 구조적으로
+    막는 fallback. 명시적인 한국어 표현 ("다음주 X요일", "이번주 X요일", "내일") 은
+    여기서 정규식으로 직접 계산해 LLM 결과보다 우선.
+    """
+    if not user_text:
+        return current
+    today = date.today()
+    m = _NEXT_WEEK_WD_RE.search(user_text)
+    if m:
+        wd = _KO_WD_INDEX.get(m.group(1))
+        if wd is not None:
+            this_mon = today - timedelta(days=today.weekday())
+            target = this_mon + timedelta(days=7 + wd)
+            return target.isoformat()
+    m = _THIS_WEEK_WD_RE.search(user_text)
+    if m:
+        wd = _KO_WD_INDEX.get(m.group(1))
+        if wd is not None:
+            this_mon = today - timedelta(days=today.weekday())
+            target = this_mon + timedelta(days=wd)
+            return target.isoformat()
+    if _TOMORROW_RE.search(user_text):
+        return (today + timedelta(days=1)).isoformat()
+    return current
+
+
+# LLM reply 출력에서 외부 링크·연락처·시크릿 패턴 제거. system prompt 가 1차
+# 방어이지만 패턴 매칭 redact 를 2차 방어로 깔아 generation drift 시에도 leak 방지.
+# 보존 목표: 한국어 자연어. 따라서 매칭은 정규식이 잡는 패턴만 → 한국어 문장은 변형 0.
+import re as _re_redact
+_URL_RE = _re_redact.compile(r"\bhttps?://[^\s)>\]\}　]+|\bwww\.[A-Za-z0-9.-]+\.[A-Za-z]{2,}(?:/[^\s)>\]\}　]*)?")
+_EMAIL_RE = _re_redact.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+# 전화: 010-XXXX-XXXX / 02-XXX-XXXX / +82-... / 7+ 자리 숫자(공백·하이픈 허용).
+_PHONE_RE = _re_redact.compile(r"(?:\+?\d{1,3}[-\s]?)?0?\d{1,3}[-\s.]?\d{3,4}[-\s.]?\d{4}")
+# OpenAI 스타일 시크릿 (sk-, sk-proj-, anthropic ant- 등).
+_SECRET_RE = _re_redact.compile(r"\b(?:sk|ant|rk|pk|hf|gh[oprsu])[-_][A-Za-z0-9_-]{16,}\b")
+
+
+def _redact_reply_text(s: str) -> str:
+    """LLM reply 에서 URL / 이메일 / 전화번호 / API 키 패턴을 placeholder 로 치환.
+
+    system prompt §보안 블록 위반 시 (모델 drift) 안전망. 한국어 자연어는 영향 없음.
+    """
+    if not s:
+        return s
+    out = _URL_RE.sub("[링크 생략]", s)
+    out = _EMAIL_RE.sub("[이메일 생략]", out)
+    out = _SECRET_RE.sub("[REDACTED]", out)
+    out = _PHONE_RE.sub("[전화 생략]", out)
+    return out
 
 
 def _sanitize_signal_value(v: Any, *, max_len: int = 80) -> str:
@@ -559,17 +664,24 @@ def extract_via_openai(
         model=MODEL,
         messages=chat,
         response_format={"type": "json_schema", "json_schema": _SCHEMA},
-        temperature=0.2,  # reply 자연스러움 위해 약간의 변동성 허용. 추출은 결정론에 가깝게 유지.
+        temperature=0.0,  # 추출 안정성 우선 — specificDate / referencesLast 같은 구조 필드의 비결정성 최소화.
         max_tokens=500,
     )
     _track_usage("chat", resp)
     content = resp.choices[0].message.content or "{}"
-    return _parse_chat_extract(content)
+    parsed = _parse_chat_extract(content)
+    last_user = next(
+        (m.get("text", "") for m in reversed(messages) if m.get("role") == "user"),
+        "",
+    )
+    parsed["specificDate"] = _coerce_specific_date(last_user, parsed.get("specificDate"))
+    return parsed
 
 
 def _parse_chat_extract(raw_json: str) -> dict[str, Any]:
     """_SCHEMA 결과 문자열 → 정규화된 dict. 스트리밍 종료 시점에도 재사용."""
     data = json.loads(raw_json)
+    raw_reply = (data.get("reply") or "").strip()
     return {
         "companions": list(data.get("companions") or []),
         "eventTypes": list(data.get("eventTypes") or []),
@@ -578,8 +690,12 @@ def _parse_chat_extract(raw_json: str) -> dict[str, Any]:
         "regionHints": list(data.get("regionHints") or []),
         "specificDate": data.get("specificDate"),
         "referencesLast": bool(data.get("referencesLast") or False),
-        "reply": (data.get("reply") or "").strip(),
-        "followups": [s.strip() for s in (data.get("followups") or []) if s and s.strip()][:3],
+        "reply": _redact_reply_text(raw_reply),
+        "followups": [
+            _redact_reply_text(s.strip())
+            for s in (data.get("followups") or [])
+            if s and s.strip()
+        ][:3],
     }
 
 
@@ -621,7 +737,7 @@ def extract_via_openai_stream(
         model=MODEL,
         messages=chat,
         response_format={"type": "json_schema", "json_schema": _SCHEMA},
-        temperature=0.2,
+        temperature=0.0,
         max_tokens=500,
         stream=True,
         stream_options={"include_usage": True},
@@ -659,6 +775,11 @@ def extract_via_openai_stream(
         _track_usage("chat", r)
 
     final = _parse_chat_extract(buf or "{}")
+    last_user = next(
+        (m.get("text", "") for m in reversed(messages) if m.get("role") == "user"),
+        "",
+    )
+    final["specificDate"] = _coerce_specific_date(last_user, final.get("specificDate"))
     yield "final", final
 
 
@@ -801,8 +922,12 @@ def compose_retreat(
     content = resp.choices[0].message.content or "{}"
     data = json.loads(content)
     return {
-        "reply": (data.get("reply") or "").strip(),
-        "followups": [s.strip() for s in (data.get("followups") or []) if s and s.strip()][:3],
+        "reply": _redact_reply_text((data.get("reply") or "").strip()),
+        "followups": [
+            _redact_reply_text(s.strip())
+            for s in (data.get("followups") or [])
+            if s and s.strip()
+        ][:3],
     }
 
 
@@ -903,7 +1028,7 @@ def rerank_candidates(
             {"role": "user", "content": user_msg},
         ],
         response_format={"type": "json_schema", "json_schema": _RERANK_SCHEMA},
-        temperature=0.1,
+        temperature=0.0,
         max_tokens=600,
     )
     _track_usage("rerank", resp)
@@ -916,9 +1041,115 @@ def rerank_candidates(
         if not eid or eid in seen_ids:
             continue
         seen_ids.add(eid)
-        out.append({"eventId": eid, "reason": (item.get("reason") or "").strip()})
+        out.append({"eventId": eid, "reason": _redact_reply_text((item.get("reason") or "").strip())})
         if len(out) >= top_k:
             break
+    return out
+
+
+# v4 (2026-04-25) — A/B bench harness 가 사용하는 LLM-as-judge.
+# 동일한 (query, suggestion) 쌍에 대해 0~3 의 graded relevance 와 1줄 reason.
+# 비용은 후보 약 5건 / 호출 ≈ ~$0.0007 (gpt-4o-mini).
+_JUDGE_SCHEMA = {
+    "name": "judge_relevance",
+    "strict": True,
+    "schema": {
+        "type": "object",
+        "additionalProperties": False,
+        "properties": {
+            "scores": {
+                "type": "array",
+                "description": "후보별 0~3 정수 점수 + 한 줄 reason. 입력 순서·길이와 동일하게.",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "properties": {
+                        "eventId": {"type": "string"},
+                        "score": {"type": "integer", "minimum": 0, "maximum": 3},
+                        "reason": {"type": "string", "minLength": 1, "maxLength": 60},
+                    },
+                    "required": ["eventId", "score", "reason"],
+                },
+            },
+        },
+        "required": ["scores"],
+    },
+}
+
+
+def judge_relevance(
+    *,
+    query: str,
+    candidates: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """
+    LLM-as-judge — bench harness 전용. 0(관련 없음) ~ 3(완벽 매치) graded score.
+
+    candidates: [{eventId, title, category, region, startDate, endDate, matchReason}]
+    반환: [{eventId, score:int, reason:str}] — 입력 후보 전부에 대해 응답.
+
+    위치 편향 차단을 위해 후보 순서는 호출자가 미리 셔플 추천. 결정론을 위해 temperature=0.
+    실패 시 예외 → bench 가 해당 (query,config) 를 skip.
+    """
+    if not candidates:
+        return []
+    client = OpenAI()
+    sys = (
+        "당신은 한국어 이벤트 추천 평가자(judge) 입니다. "
+        f"{_today_context()}\n\n"
+        "사용자 query 와 후보 이벤트 목록을 보고, 각 이벤트가 query 의도에 얼마나 부합하는지\n"
+        "0~3 정수로 평가하세요:\n"
+        "  3 = 완벽 매치 (의도·시점·동행·분위기·카테고리 모두 부합)\n"
+        "  2 = 강한 부분 매치 (핵심 의도 일치, 1~2 축 어긋남)\n"
+        "  1 = 약한 매치 (느슨한 카테고리·지역 겹침만, 의도 어긋남)\n"
+        "  0 = 무관 또는 잘못된 매치\n\n"
+        "[규칙]\n"
+        "- 위치 순서는 평가에 영향 X — title·meta 만 보고 결정.\n"
+        "- matchReason 이 있으면 단서로 활용하지만 그 자체를 점수의 근거로 삼지 말 것.\n"
+        "- reason 은 한국어 12~40자, 점수 근거 한 점.\n"
+        "- 모든 입력 후보에 대해 동일 순서로 응답 — eventId 는 입력값 그대로 복사."
+    )
+    cand_lines: list[str] = []
+    for c in candidates:
+        title_safe = _sanitize_user_text(str(c.get("title") or ""), max_len=60).replace("\n", " ")
+        match_reason = _sanitize_user_text(str(c.get("matchReason") or ""), max_len=80).replace("\n", " ")
+        line = (
+            f"- id={c.get('eventId')}, title={title_safe}, "
+            f"category={c.get('category','')}, region={c.get('region','')}, "
+            f"date={c.get('startDate','')}~{c.get('endDate','')}"
+        )
+        if match_reason:
+            line += f"\n  matchReason: {match_reason}"
+        cand_lines.append(line)
+    user_msg = (
+        f"query: {_sanitize_user_text(query, max_len=500)}\n\n"
+        f"후보 ({len(candidates)}건):\n" + "\n".join(cand_lines)
+    )
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": sys},
+            {"role": "user", "content": user_msg},
+        ],
+        response_format={"type": "json_schema", "json_schema": _JUDGE_SCHEMA},
+        temperature=0.0,
+        max_tokens=400,
+    )
+    _track_usage("judge", resp)
+    content = resp.choices[0].message.content or "{}"
+    data = json.loads(content)
+    out: list[dict[str, Any]] = []
+    for item in data.get("scores") or []:
+        eid = str(item.get("eventId") or "").strip()
+        if not eid:
+            continue
+        try:
+            score = int(item.get("score") or 0)
+        except (TypeError, ValueError):
+            score = 0
+        score = max(0, min(3, score))
+        reason = _redact_reply_text((item.get("reason") or "").strip())
+        out.append({"eventId": eid, "score": score, "reason": reason})
     return out
 
 

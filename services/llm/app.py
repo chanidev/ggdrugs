@@ -472,6 +472,53 @@ def chat_compose_retreat(req: RetreatRequest) -> RetreatResponse:
     )
 
 
+# v4 (2026-04-25) — A/B bench harness 전용. (query, suggestion[]) → 0~3 graded score.
+class JudgeCandidate(BaseModel):
+    eventId: str
+    title: str
+    category: str = ""
+    region: str = ""
+    startDate: str = ""
+    endDate: str = ""
+    matchReason: str = ""
+
+
+class JudgeRequest(BaseModel):
+    query: str = Field(min_length=1, max_length=500)
+    candidates: list[JudgeCandidate] = Field(min_length=1, max_length=20)
+
+
+class JudgeItem(BaseModel):
+    eventId: str
+    score: int = Field(ge=0, le=3)
+    reason: str
+
+
+class JudgeResponse(BaseModel):
+    scores: list[JudgeItem]
+
+
+@app.post("/judge/relevance", response_model=JudgeResponse)
+def judge_relevance_endpoint(req: JudgeRequest) -> JudgeResponse:
+    """
+    LLM-as-judge — chat-rank-bench 가 호출. 각 후보에 0~3 graded relevance score.
+    LLM 비활성이면 503.
+    """
+    from fastapi import HTTPException
+
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="judge unavailable (no key or over budget)")
+    try:
+        from openai_chain import judge_relevance
+        scored = judge_relevance(
+            query=req.query,
+            candidates=[c.model_dump() for c in req.candidates],
+        )
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"judge failed: {e.__class__.__name__}")
+    return JudgeResponse(scores=[JudgeItem(**s) for s in scored])
+
+
 @app.post("/events/rerank", response_model=RerankResponse)
 def events_rerank(req: RerankRequest) -> RerankResponse:
     """

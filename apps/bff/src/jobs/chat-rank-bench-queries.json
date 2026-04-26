@@ -1,0 +1,90 @@
+{
+  "version": 1,
+  "note": "chat hybrid combiner A/B 평가용. chat-eval 과 별개 — 여기는 ranking 품질, 거기는 structural. 카테고리: proper-noun(고유명사 위주), generic(일반 토픽/분위기), region-date(지역+날짜), edge(짧은/무관).",
+  "queries": [
+    {
+      "id": "proper-noun-illust",
+      "category": "proper-noun",
+      "userTexts": ["2026 서울 일러스트코리아 보러 가고 싶어"],
+      "filters": { "eventTypes": [], "companions": [], "periodKey": null, "vibes": [], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "proper-noun-hangang-spring",
+      "category": "proper-noun",
+      "userTexts": ["한강 봄 축제 진행 중이야?"],
+      "filters": { "eventTypes": ["festival"], "companions": [], "periodKey": null, "vibes": [], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "proper-noun-ddp-design",
+      "category": "proper-noun",
+      "userTexts": ["DDP 디자인 페어 가보려고"],
+      "filters": { "eventTypes": [], "companions": [], "periodKey": null, "vibes": [], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "generic-solo-calm",
+      "category": "generic",
+      "userTexts": ["혼자 조용히 시간 보낼 만한 데"],
+      "filters": { "eventTypes": [], "companions": ["solo"], "periodKey": null, "vibes": ["정적"], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "generic-active-family",
+      "category": "generic",
+      "userTexts": ["애들이랑 활동적인 행사 갈 데"],
+      "filters": { "eventTypes": [], "companions": ["family"], "periodKey": null, "vibes": ["활동적"], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "generic-couple-exhibition",
+      "category": "generic",
+      "userTexts": ["데이트하기 좋은 잔잔한 전시"],
+      "filters": { "eventTypes": ["exhibition"], "companions": ["couple"], "periodKey": null, "vibes": ["정적"], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "region-date-gangnam-weekend",
+      "category": "region-date",
+      "userTexts": ["이번 주말 강남 공연"],
+      "filters": { "eventTypes": ["performance"], "companions": [], "periodKey": "weekend", "vibes": [], "regionHints": ["강남구"] },
+      "specificDate": null
+    },
+    {
+      "id": "region-date-jongno-next-sunday",
+      "category": "region-date",
+      "userTexts": ["다음주 일요일 종로 행사"],
+      "filters": { "eventTypes": [], "companions": [], "periodKey": null, "vibes": [], "regionHints": ["종로구"] },
+      "specificDate": "2026-05-03"
+    },
+    {
+      "id": "multi-turn-narrow-outdoor",
+      "category": "multi-turn",
+      "userTexts": ["전시 추천해줘", "그 중에 야외인 거"],
+      "filters": { "eventTypes": ["exhibition"], "companions": [], "periodKey": null, "vibes": ["활동적"], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "multi-turn-change-companion",
+      "category": "multi-turn",
+      "userTexts": ["혼자 갈 만한 전시", "혼자 말고 친구랑 가는 체험"],
+      "filters": { "eventTypes": [], "companions": ["friend"], "periodKey": null, "vibes": ["체험형"], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "edge-trivial-short",
+      "category": "edge",
+      "userTexts": ["ㅋㅋ"],
+      "filters": { "eventTypes": [], "companions": [], "periodKey": null, "vibes": [], "regionHints": [] },
+      "specificDate": null
+    },
+    {
+      "id": "edge-no-match",
+      "category": "edge",
+      "userTexts": ["남극에서 진행하는 축제 있어?"],
+      "filters": { "eventTypes": ["festival"], "companions": [], "periodKey": null, "vibes": [], "regionHints": [] },
+      "specificDate": null
+    }
+  ]
+}

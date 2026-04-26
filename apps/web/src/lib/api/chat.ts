@@ -106,9 +106,11 @@ export interface ChatStreamHandlers {
     followups: string[];
     referencesLast: boolean;
   }) => void;
+  /** v4 — LLM reply 토큰 스트림 종료. 이후 reply_delta 는 emit 되지 않음. canonical reply 텍스트 동봉. */
+  onReplySealed?: (payload: { text: string }) => void;
   /** Qdrant + rerank 결과. meta 뒤 도착. 0건일 수 있음. */
   onSuggestions?: (items: ChatSuggestion[]) => void;
-  /** retreat 발동 — 지금까지 누적된 reply 를 이 텍스트로 교체하고 followups 대체. */
+  /** retreat 발동 — sealed reply 를 이 텍스트로 교체하고 followups 대체. */
   onReplyOverride?: (payload: { text: string; followups: string[] }) => void;
   /** LLM/BFF 레벨 에러. stream 은 계속될 수도, 여기서 끝날 수도 있음. */
   onError?: (message: string) => void;
@@ -219,6 +221,9 @@ function dispatchSseEvent(event: string, data: unknown, h: ChatStreamHandlers) {
       followups: m.followups ?? [],
       referencesLast: m.referencesLast === true,
     });
+  } else if (event === 'reply_sealed' && typeof data === 'object' && data !== null) {
+    const t = (data as { text?: unknown }).text;
+    h.onReplySealed?.({ text: typeof t === 'string' ? t : '' });
   } else if (event === 'suggestions' && typeof data === 'object' && data !== null) {
     const items = (data as { items?: ChatSuggestion[] }).items;
     if (Array.isArray(items)) h.onSuggestions?.(items);

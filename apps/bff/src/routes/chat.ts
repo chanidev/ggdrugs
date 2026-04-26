@@ -416,26 +416,82 @@ export async function postChat(req: Request, res: Response) {
   });
 }
 
-interface SemanticOpts {
+export interface SemanticOpts {
   userTexts: string[];
   filters: LlmFilters;
   specificDate: string | null;
   regionIds: string[];
+  /** v4 — bench/A-B 가 combiner 를 교체할 때 전달. production caller 는 omit (default max). */
+  combiner?: CombinerMode;
 }
+
+/** v4 — bench harness 가 ChatSuggestion 타입을 그대로 사용. */
+export type { ChatSuggestion };
 
 // ----------------------------------------------------------------------------
 // v3.3 — Hybrid search. Vector (Qdrant) + Keyword (pg_trgm) 병렬.
+// v4 (2026-04-25) — combiner pluggable (max | weighted | vec | kw). bench harness
+// (apps/bff/src/jobs/chat-rank-bench.ts) 가 weighted 후보를 직접 호출.
 // ----------------------------------------------------------------------------
 
-interface HybridHit {
+export interface HybridHit {
   eventId: string;
   score: number;
+}
+
+export type CombinerMode =
+  | { kind: 'max' }
+  | { kind: 'weighted'; alpha: number; beta: number }
+  | { kind: 'vec' }
+  | { kind: 'kw' };
+
+/**
+ * Vector + keyword hits → eventId → combined score.
+ *
+ * Pure 함수 — 단위 테스트·bench 에서 직접 호출. semanticSuggestions 의 default 는
+ * `{kind:'max'}` (v3.3 동작 유지). bench 가 weighted/vec/kw 를 시도.
+ *
+ * `weighted(α,β)`: missing side = 0. α+β 합 1.0 강제 안 함 — bench 가 정규화.
+ */
+export function combineHits(
+  vec: HybridHit[],
+  kw: HybridHit[],
+  mode: CombinerMode,
+): Map<string, number> {
+  const out = new Map<string, number>();
+  if (mode.kind === 'vec') {
+    for (const h of vec) out.set(h.eventId, h.score);
+    return out;
+  }
+  if (mode.kind === 'kw') {
+    for (const h of kw) out.set(h.eventId, h.score);
+    return out;
+  }
+  if (mode.kind === 'weighted') {
+    const { alpha, beta } = mode;
+    const vecMap = new Map(vec.map((h) => [h.eventId, h.score]));
+    const kwMap = new Map(kw.map((h) => [h.eventId, h.score]));
+    const ids = new Set<string>([...vecMap.keys(), ...kwMap.keys()]);
+    for (const id of ids) {
+      const v = vecMap.get(id) ?? 0;
+      const k = kwMap.get(id) ?? 0;
+      out.set(id, alpha * v + beta * k);
+    }
+    return out;
+  }
+  // max — 기본. v3.3 동작.
+  for (const h of vec) out.set(h.eventId, h.score);
+  for (const h of kw) {
+    const prev = out.get(h.eventId) ?? 0;
+    if (h.score > prev) out.set(h.eventId, h.score);
+  }
+  return out;
 }
 
 /**
  * Qdrant kNN via LLM service. score_threshold 0.25. LLM/Qdrant 503 → 빈 배열.
  */
-async function fetchVectorHits(
+export async function fetchVectorHits(
   query: string,
   filter: Record<string, unknown>,
 ): Promise<HybridHit[]> {
@@ -467,28 +523,34 @@ async function fetchVectorHits(
  * 한글 trigram 특성상 3글자 미만은 의미 있는 매치 불가 → 즉시 반환.
  * 실패 (extension 없음 / 연결 문제) 는 빈 배열 — vector 쪽이 fallback.
  */
-async function fetchKeywordHits(query: string): Promise<HybridHit[]> {
+export async function fetchKeywordHits(query: string): Promise<HybridHit[]> {
   const clean = query.replace(/\s+/g, ' ').trim();
   if (clean.length < 3) return [];
   try {
-    const rows = await prisma.$queryRaw<
-      { event_id: bigint; score: number }[]
-    >`
-      SELECT event_id, GREATEST(
-        word_similarity(${clean}, title),
-        word_similarity(${clean}, COALESCE(ai_summary, ''))
-      )::float AS score
-      FROM events
-      WHERE approval_status = 'approved'
-        AND is_deleted = false
-        AND phase != 'ended'
-        AND (
-          word_similarity(${clean}, title) > ${KEYWORD_SIMILARITY_MIN}
-          OR word_similarity(${clean}, COALESCE(ai_summary, '')) > ${KEYWORD_SIMILARITY_MIN}
-        )
-      ORDER BY score DESC
-      LIMIT ${KEYWORD_OVERFETCH}
-    `;
+    // `<<%` (word similarity ≥ pg_trgm.word_similarity_threshold) 는 GIN trgm
+    // index 를 사용 가능. `word_similarity(...) > X` 는 함수 호출이라 index off.
+    // SET LOCAL 은 트랜잭션 종료 시 reset — Prisma 의 implicit tx 안에서 안전.
+    const rows = await prisma.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(
+        `SET LOCAL pg_trgm.word_similarity_threshold = ${KEYWORD_SIMILARITY_MIN}`,
+      );
+      return tx.$queryRaw<{ event_id: bigint; score: number }[]>`
+        SELECT event_id, GREATEST(
+          word_similarity(${clean}, title),
+          word_similarity(${clean}, COALESCE(ai_summary, ''))
+        )::float AS score
+        FROM events
+        WHERE approval_status = 'approved'
+          AND is_deleted = false
+          AND phase != 'ended'
+          AND (
+            ${clean} <<% title
+            OR ${clean} <<% COALESCE(ai_summary, '')
+          )
+        ORDER BY score DESC
+        LIMIT ${KEYWORD_OVERFETCH}
+      `;
+    });
     return rows.map((r) => ({
       eventId: r.event_id.toString(),
       score: typeof r.score === 'number' ? r.score : Number(r.score),
@@ -509,7 +571,7 @@ async function fetchKeywordHits(query: string): Promise<HybridHit[]> {
  *
  * LLM/Qdrant/DB 실패는 fall-through (빈 배열 또는 다른 쪽 결과만 유지).
  */
-async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]> {
+export async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]> {
   if (opts.userTexts.length === 0) return [];
   const query = opts.userTexts.slice(-3).join('\n').slice(0, 500);
 
@@ -526,13 +588,31 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
     fetchKeywordHits(keywordQuery),
   ]);
 
-  // eventId → combined score. max(vec, trgm) — 두 score 모두 0~1 정규화되어 있음.
-  const combinedScore = new Map<string, number>();
-  for (const h of vectorHits) combinedScore.set(h.eventId, h.score);
-  for (const h of keywordHitsArr) {
-    const prev = combinedScore.get(h.eventId) ?? 0;
-    if (h.score > prev) combinedScore.set(h.eventId, h.score);
-  }
+  return resolveAndRank({
+    vectorHits,
+    keywordHits: keywordHitsArr,
+    opts,
+    rerankQuery: query,
+  });
+}
+
+/**
+ * v4 — combiner 적용 + Prisma resolve + rerank 단계만 수행. bench 가 hit fetch 결과를
+ * config 간 공유하기 위해 export.
+ *
+ * 입력의 vectorHits/keywordHits 는 한 query 당 한 번만 fetch 하면 되고 — combiner mode
+ * 만 바뀌어도 동일 hit 풀에서 재구성 가능하다는 점을 활용. semanticSuggestions 의 default
+ * combiner 는 `{kind:'max'}` (v3.3 동작 유지).
+ */
+export async function resolveAndRank(args: {
+  vectorHits: HybridHit[];
+  keywordHits: HybridHit[];
+  opts: SemanticOpts;
+  /** rerank LLM 에 보낼 query — 보통 userTexts 최근 3턴 join 한 텍스트. */
+  rerankQuery: string;
+}): Promise<ChatSuggestion[]> {
+  const { vectorHits, keywordHits, opts, rerankQuery } = args;
+  const combinedScore = combineHits(vectorHits, keywordHits, opts.combiner ?? { kind: 'max' });
   if (combinedScore.size === 0) return [];
 
   const eventIds: bigint[] = [];
@@ -603,7 +683,7 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
   // Rerank — 후보가 풍부하고 (≥6) query 가 단순 echo 가 아닐 때.
   let reasonById = new Map<string, string>();
   let order: string[] | null = null;
-  if (scored.length >= 6 && query.length >= 8) {
+  if (scored.length >= 6 && rerankQuery.length >= 8) {
     // v3.2 — Article RAG. rerank 입력 후보들에 대해 top 1 매핑 기사 snippet fetch.
     // 기사 없는 후보는 빈 snippet 으로 전달.
     const rerankPool = scored.slice(0, RERANK_INPUT_CAP);
@@ -615,7 +695,7 @@ async function semanticSuggestions(opts: SemanticOpts): Promise<ChatSuggestion[]
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=utf-8' },
         body: JSON.stringify({
-          query,
+          query: rerankQuery,
           top_k: SEMANTIC_DISPLAY_LIMIT,
           candidates: rerankPool.map((s) => ({
             eventId: s.eventId,
@@ -917,19 +997,25 @@ async function composeRetreat(opts: RetreatOpts): Promise<LlmRetreatResponse> {
 // ============================================================================
 
 /**
- * 이벤트:
- *   reply_delta   {text: string}             # LLM 이 생성 중인 reply 텍스트 증분
- *   meta          {filters, specificDate, followups, reply}
- *   suggestions   {items: ChatSuggestion[]}  # semantic + rerank 결과
- *   reply_override {text, followups}         # retreat 발동 시 reply 교체
- *   done          {}
- *   error         {message}
+ * 이벤트 (방출 순서 보장):
+ *   reply_delta    {text: string}             # LLM 이 생성 중인 reply 토큰 증분 (0..N)
+ *   meta           {filters, specificDate, followups, reply, referencesLast}
+ *   reply_sealed   {text: string}             # LLM 토큰 스트림 종료 — 이후 reply_delta 없음
+ *   suggestions    {items: ChatSuggestion[]}  # semantic + rerank 결과
+ *   reply_override {text, followups}          # retreat 발동 시 reply 교체 (sealed 이후, optional)
+ *   done           {}
+ *   error          {message}
  *
  * 흐름:
  *   1. LLM /chat/stream proxy — reply_delta 이벤트는 즉시 client 로 relay.
- *   2. meta 수신 → regionIds / vibeIds resolve + semantic + rerank 병렬 시작.
- *   3. suggestions 확정 → 이벤트 emit. 0건이면 compose-retreat 호출 → reply_override.
+ *   2. meta 수신 → regionIds / vibeIds resolve + reply_sealed emit.
+ *   3. semantic + rerank → suggestions emit. 0건이면 compose-retreat → reply_override.
  *   4. done.
+ *
+ * reply_sealed 도입 (v4 — 2026-04-25): 기존엔 client 가 retreatApplied 플래그로 reply_override
+ * 이후의 stale delta 를 차단했지만, 서버 시퀀스가 이미 deltas → meta → ... 로 보장되므로
+ * meta 직후 sealed 를 명시 emit 해 client 가 placeholder 누적을 끊을 수 있게 함. retreat
+ * 경합 UI race 가 구조적으로 사라짐.
  */
 export async function postChatStream(req: Request, res: Response) {
   const val = validateChatBody(req.body);
@@ -1107,6 +1193,10 @@ export async function postChatStream(req: Request, res: Response) {
     referencesLast: useGrounded,
   });
 
+  // reply_sealed — LLM 의 reply 토큰 스트림은 끝났음을 명시. 이후 reply_delta 는 emit 안 됨.
+  // client 는 이 시점부터 placeholder text 누적을 멈추고, retreat 발동 시에만 reply_override 로 교체.
+  emit('reply_sealed', { text: metaPayload.reply });
+
   let suggestions: ChatSuggestion[] = [];
   try {
     suggestions = useGrounded
@@ -1228,6 +1318,7 @@ async function streamFallbackFromNonStream(opts: FallbackOpts): Promise<void> {
     followups: (data.followups ?? []).slice(0, 3),
     referencesLast: useGrounded,
   });
+  opts.emit('reply_sealed', { text: data.reply ?? '' });
 
   let suggestions: ChatSuggestion[] = [];
   try {
