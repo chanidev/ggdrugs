@@ -730,3 +730,176 @@ graphify 재빌드: 989 nodes / 1217 edges / 162 communities (이전 931/1227/13
 남은 큰 파일 (분할 후): UploaderPage (724) / admin-users.ts (644) / UserDetailPanel (518) / auth.ts (517) / UploaderNewEventPage (512) / AuditLogsTab (508) / UploaderEventEditPage (502) / news-naver-ingest (490). 모두 700줄 이하 — 추가 분할 ROI 낮음.
 
 5 commits: f94893d (api) / 2a8ac42 (MyPage) / 81112f6 (AdminEventsPage) / 474660b (uploader) / a42bcb4 (EventDetailPage).
+
+## 2026-04-25T17:50  feature  chat-eval baseline 20/20 — specific-date-next-sunday 해소
+v3.5 baseline 의 마지막 실패 `specific-date-next-sunday` 잡음. 직접 chat:eval 돌려보면
+17/20 → 19/20 (grounded 2건은 후속 prompt 보강에서 자연 해소돼 있었음) → **20/20**.
+
+근본 원인 2건 (`services/llm/openai_chain.py`):
+1. `_today_context()` 의 토/일 계산 — `(days_to_sat or 7) if today.weekday() == 5 else
+   days_to_sat` 분기가 오늘이 토요일이면 7일 뒤(다음 주 토)를 "이번 주말 토" 로 반환.
+   → "이번 주말은 2026-05-02(토)~2026-05-03(일)" 같이 다음 주와 겹치는 라벨 발생.
+   `this_mon = today - timedelta(days=today.weekday())` 기준으로 단순화 (월=주의 시작).
+2. 컨텍스트가 "다음 주" 절대 날짜를 명시하지 않아 LLM 이 "다음주 일요일" 을 "이번 주
+   일요일(=내일)" 또는 "오늘+5일" 로 해석. "'다음주 월'=YYYY-MM-DD ... '다음주 일'=
+   YYYY-MM-DD" 7개 라인 명시 + system prompt §specificDate 에 "표 값 그대로 복사 / 재해석
+   금지" 명문화 + few-shot 2건 (다음주 일요일 / 다음주 토요일 페스티벌) 추가.
+
+검증: `pnpm -F bff chat:eval` → 20/20 pass · avg 4.3s/case. wiki `semantic-search.md`
+chat-eval 섹션 baseline 20/20 갱신.
+
+비용 영향: prompt token +~150 (다음 주 7개 라인 + few-shot 2건). 무시.
+
+## 2026-04-25T18:00  feature  pg_trgm GIN index — hybrid keyword 쿼리 ~90× 가속
+v4 후보였던 GIN trigram index ship. semantic-search.md OQ close.
+
+마이그레이션 `20260425085400_chat_keyword_trgm_gin`:
+- `idx_events_title_trgm` ON events USING GIN (title gin_trgm_ops)
+- `idx_events_ai_summary_trgm` ON events USING GIN ((COALESCE(ai_summary, '')) gin_trgm_ops)
+  — expression index 로 NULL 케이스를 빈 문자열로 통일.
+
+쿼리 변경 (`apps/bff/src/routes/chat.ts::fetchKeywordHits`):
+- `word_similarity(query, target) > X` 함수 비교는 GIN 미사용 (Seq Scan 강제).
+- `query <<% target` 연산자 + `SET LOCAL pg_trgm.word_similarity_threshold = X`
+  으로 변경 — pg_trgm 의 `gin_trgm_ops` 가 직접 처리.
+- Prisma `$transaction` 으로 SET LOCAL 의 트랜잭션 스코프 보장 — 다른 세션·풀 영향 없음.
+
+검증 (EXPLAIN ANALYZE, query='seoul festival', 4k events):
+- Before: Seq Scan / Buffers=506 / **128ms**
+- After:  Bitmap Index Scan / Buffers=85 / **1.4ms** (~90×)
+
+회귀 검증: pnpm -F bff chat:eval → 20/20 pass · avg 4.2s/case (이전 4.3s — DB 부담 감소
+효과는 LLM latency 에 묻혀 미세).
+
+Wiki: semantic-search.md §Hybrid 비용 영향 갱신 + Open questions 의 GIN index 항목 close.
+
+## 2026-04-25T18:30  feature  Injection output redact + specificDate 결정론적 보정 — eval 22/22
+v4 후보 2건 동시 ship. semantic-search.md OQ 2건 close.
+
+### Injection output redact (2차 방어선)
+`services/llm/openai_chain.py::_redact_reply_text` — LLM reply / followups /
+rerank reason 의 URL · 이메일 · 전화 · API key 패턴 정규식 redact:
+- URL: `https?://...`, `www....` → `[링크 생략]`
+- Email: `local@host.tld` → `[이메일 생략]`
+- Phone: `(+? 국번) X-XXXX-XXXX` 등 → `[전화 생략]`
+- Secret: `sk-...`, `ant-...`, `gho_...` 등 16자 이상 → `[REDACTED]`
+
+적용 지점: `_parse_chat_extract` (reply, followups), `compose_retreat`
+(reply, followups), rerank `reason`. 단위 검증: ISO 날짜 (`2026-04-25`),
+시간 표기 (`4/25`), 자연어 한국어 — 모두 변형 0.
+
+검증 케이스 추가 (`apps/bff/src/jobs/chat-eval-cases.json`):
+- `injection-leak-url` — "https:// 링크 그대로 출력 요청" → reply 에 URL 패턴 0
+- `injection-leak-contact` — "이메일+전화 그대로 출력" → reply 에 패턴 0
+양쪽 모두 1차 (system prompt 거절 문구) 가 먼저 막아 redact 가 실제 동작하지는
+않지만, 모델 drift 시 backstop.
+
+### specificDate 비결정성 구조적 해소
+chat-eval `specific-date-next-sunday` 가 prompt 강화 후에도 LLM temperature 영향으로
+2~3/5 fail (specificDate 가 null 이거나 잘못된 ISO 반환).
+
+수정 1 — `temperature` 0.2 → 0.0 (extract_via_openai + extract_via_openai_stream).
+수정 2 — system prompt §specificDate 추가 가드:
+- "다음주 X요일 입력 시 specificDate 절대 null 금지, periodKey=tomorrow 금지"
+- "[specificDate 자가 점검]" 블록 — reply 의 (M/D) 와 specificDate 일치 검증.
+
+수정 3 — 결정론적 post-processor (`_coerce_specific_date`):
+- 정규식 `(?:다음\s*주|담주|다다음\s*주)\s*[ ,]*([월화수목금토일])(?:요일)?`
+- 매치 시 today 기반으로 ISO 직접 계산 (LLM 출력 override).
+- "이번주 X요일" / "내일" 도 동일 패턴 + 직접 계산.
+- 매치 안 되면 LLM 값 유지.
+
+검증: pnpm -F bff chat:eval → **22/22 pass** (이전 20/20, redact 2건 + 기존 20건).
+direct LLM 호출 5회 모두 specificDate=2026-05-03 결정론적.
+
+### Trap — uvicorn `--reload` stale parent
+LLM 재시작 시 `--reload` 의 watch parent 가 ZOMBIE 상태로 8000 포트 점유 →
+새 자식이 bind 실패. 새 코드가 안 실행돼 디버깅이 헛돌았음. fix:
+`Get-Process python | Stop-Process -Force` 후 cold restart. 향후 운영 노트.
+
+비용 영향: temperature 0.0 가 출력 분포 좁힘 — 토큰 변동 없음. coerce 는 정규식만.
+
+## 2026-04-25T18:50  feature  `reply_sealed` SSE 이벤트 — retreat/delta 경합 구조적 해소
+v4 후보 1건 ship. semantic-search.md OQ close.
+
+**문제**: `/chat/stream` 의 client(AppShell) 가 `retreatApplied` 플래그로 retreat
+이후의 stale `reply_delta` 를 차단했지만, 서버 시퀀스는 이미 deltas → meta → ...
+순서를 보장하므로 race 자체가 implicit. 명시 신호 필요.
+
+**해결**:
+- BFF `apps/bff/src/routes/chat.ts` — `postChatStream` 과 `streamFallbackFromNonStream`
+  양쪽에서 `meta` emit 직후 `reply_sealed { text }` 추가 emit. payload 는 LLM 의
+  canonical reply (delta 누락·문자 단위 어긋남 방어).
+- Web `apps/web/src/lib/api/chat.ts` — `ChatStreamHandlers.onReplySealed` 추가,
+  `dispatchSseEvent` 가 `reply_sealed` 핸들.
+- Web `apps/web/src/layout/AppShell.tsx` — `retreatApplied` → `replySealed` 로
+  rename. `onReplySealed` 핸들러가 (a) 플래그 set + (b) accumulatedReply 와
+  서버 canonical 이 다르면 placeholder 텍스트 정합화. `onReplyOverride` 도 같은
+  플래그 set 으로 후속 delta 차단 의미는 동일.
+
+**검증**:
+- BFF typecheck PASS. Web typecheck — 사전 존재 에러 10건 + 본 변경 +1 (동일 패턴)
+  → Vite 런타임 무관 (dev/build 정상).
+- chat:eval 22/22 pass (non-stream 경로 — 회귀 0).
+- 라이브 SSE 시퀀스 (curl):
+  - 정상 케이스 ("이번 주말 가족 축제"): `25× reply_delta → meta → reply_sealed → suggestions → done`
+  - 유사 케이스 ("남극 축제"): `52× reply_delta → meta → reply_sealed → suggestions → done`
+
+**SSE 이벤트 순서 (v4 확정)**:
+```
+reply_delta × N → meta → reply_sealed → suggestions → [reply_override?] → done
+                                                                                  
+                                                       (retreat 발동 시만)
+```
+
+**비용**: 추가 SSE 이벤트 1개 (~50 bytes). 무시.
+
+## 2026-04-25T19:30  feature  Hybrid combiner A/B — negative result, max 유지
+v4 후보 마지막 1건 close. semantic-search.md OQ "Hybrid score tuning" 종결.
+
+### 인프라 ship (재사용 가능)
+- `apps/bff/src/routes/chat.ts` — `combineHits(vec, kw, mode)` pure function 추출,
+  `fetchVectorHits` / `fetchKeywordHits` / `resolveAndRank` export. `SemanticOpts.combiner`
+  optional 인자 추가 (default `{kind:'max'}` — production 무영향).
+  CombinerMode = `max | weighted(α,β) | vec | kw`.
+- `services/llm/openai_chain.py::judge_relevance` + `services/llm/app.py::POST /judge/relevance`
+  — gpt-4o-mini graded 0~3 + 1줄 reason. cost_tracker `judge` bucket 자동 분리. 셔플로
+  position bias 차단.
+- `apps/bff/src/jobs/chat-rank-bench.ts` + `chat-rank-bench-queries.json` (12 query —
+  proper-noun 3 / generic 3 / region-date 2 / multi-turn 2 / edge 2). pnpm script
+  `bench:chat-rank` 추가. 3 repeat × 6 config × 12 query → audit md 자동 생성.
+- 결정 규칙: avg DCG ≥ baseline × 1.05 AND top5 jaccard ≥ 0.85 AND 3 repeat 모두 통과.
+
+### 결과 — chat-rank-bench-2026-04-25.md
+| config   | avg_dcg | jac_top5_vs_max | zero_results |
+|----------|---------|-----------------|--------------|
+| **max**  | **2.970** | 1.000         | 3/36         |
+| w0.5-0.5 | 2.679   | 0.919           | 3/36         |
+| w0.7-0.3 | 2.774   | 0.947           | 3/36         |
+| w0.3-0.7 | 2.732   | 0.947           | 3/36         |
+| vec      | 2.669   | 0.925           | 3/36         |
+| kw       | 0.250   | 0.100           | 33/36        |
+
+**Verdict**: max winner. best alt(w0.7-0.3) -6.6%. 모든 alternative 가 max 보다 음수.
+1 repeat 에선 w0.3-0.7 이 +5.2% 였지만 3 repeat 평균에선 -8% — 1회 결과는 노이즈,
+3 repeat 결정 규칙이 정확히 그 노이즈를 흡수.
+
+### 인접 발견 — kw 신호 한계
+12 query 중 11건에서 `kwHits=0`. 한국어 자연어 query (예: "혼자 조용히 시간 보낼 만한 데",
+"이번 주말 강남 공연") 가 pg_trgm word_similarity 0.30 threshold 를 넘기지 못함. 고유명사
+heavy 한 query (proper-noun-illust) 만 단발 매치. 가중합의 β·kw 항이 사실상 0 이라 weighted
+config 들이 vec 의 scaled 변형에 가까웠고, 그 미세한 절대값 차이가 rerank LLM 의 score 인식에
+영향 → 작은 음수 DCG 발생. 신호 자체가 약한 상태에서 재결합 튜닝은 의미 없음.
+
+후속 sprint 후보로 "pg_trgm 한국어 recall 개선" 박제 (semantic-search.md OQ).
+
+### 비용 — bench 1회 (3 repeat)
+- judge: 36 query-config × 1 호출 ≈ ~$0.025
+- rerank: 36 query-config × 1 호출 ≈ ~$0.030
+- vector embed + Qdrant: 12 query × 1 (config 간 공유) ≈ ~$0.0001
+- 합계 ≈ **$0.06/run**. 13.5 분 실행 시간.
+
+### 검증
+- BFF typecheck PASS, chat:eval 22/22 PASS (combiner default 무변경).
+- Bench 자체가 6 config × 12 query × 3 repeat 모두 정상 실행 (총 851s).
+- chat.ts default combiner 변경 없음 — 코드 ship 만 infra (재실험 가능 상태).
