@@ -13,3 +13,4 @@ export * from './admin-users.js';
 export * from './admin-audit.js';
 export * from './articles.js';
 export * from './recommendations.js';
+export * from './places.js';

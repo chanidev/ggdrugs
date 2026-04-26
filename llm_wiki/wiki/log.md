@@ -1346,3 +1346,47 @@ BFF 는 이미 v4.5 에서 explicit `?anchor=lng,lat` 지원 — 즉시 통과.
 
 ### 본 세션 누적 ship
 v4.1 + v4.2 + v4.3 (stage 1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (stage 4a) + v4.8 (GPS).
+
+## 2026-04-26T20:00  feature  Kakao Places 검색 anchor — v4.9 거리순 anchor 마지막 확장
+
+거리순 anchor 5종 후보 (explicit / region / bbox / GPS / Place) 중 마지막 항목 ship.
+사용자가 자연어 keyword ("강남역", "북서울 미술관") 로 anchor 직접 지정 가능.
+
+### BFF — apps/bff/src/routes/places.ts (NEW) + app.ts route 등록
+- `GET /places/search?q=<keyword>&limit=<N>` (default 5, max 15).
+- Kakao Local API `/v2/local/search/keyword.json` proxy. REST API 키 (KAKAO_REST_API_KEY)
+  는 server-only 보존 — Web 은 BFF 만 호출.
+- 응답 정규화: { items: PlaceItem[], total }. PlaceItem = { name, address, roadAddress?,
+  category?, lng, lat }.
+- 실패 처리: q 길이 < 2 → 400, 키 미설정 → 503, upstream 비-2xx → 502.
+
+### Web — apps/web/src/lib/api/places.ts (NEW) + index.ts re-export
+- `searchPlaces(query, signal?)` — BFF /places/search 호출, AbortController 지원.
+- PlaceItem 타입 export.
+
+### Web — apps/web/src/components/FullListPanel.tsx
+- `placeAnchor: { lng, lat, label } | null` state — current anchor + 사용자에게 보여줄 라벨.
+- distance sort active 시 segmented control 위에 별도 라인으로 PlacesSearch 노출.
+  (그 외 sort 에서는 hidden — 노이즈 방지.)
+- `<PlacesSearch>` sub-component:
+  - 입력 → 300ms debounce → BFF fetch → dropdown (max 8건).
+  - 결과 클릭 → onPick → placeAnchor 설정 + 자동 sort='distance' (이미 active 상태).
+  - 외부 클릭 시 dropdown 자동 close (mousedown listener).
+  - 선택 후 input 은 라벨 chip + "해제" 버튼으로 전환.
+- distanceReady = mapBbox || gpsAnchor || placeAnchor — 셋 중 하나만 있어도 distance 활성.
+- anchorParam 우선순위 (Web→BFF): place > GPS > bbox.
+- 상호 배타: Place 선택 시 GPS clear, GPS 받을 시 Place clear (한 anchor 만 활성 — UX 명료).
+
+### 검증
+- BFF typecheck PASS, web typecheck baseline 7 (v4.9 신규 0).
+- /places/search?q=%EA%B0%95%EB%82%A8%EC%97%AD (강남역) → 강남역 좌표 (127.028, 37.498) 정확.
+- chat:eval 22/22 PASS, wiki:lint 0 drift.
+
+### 후속 (v5+)
+- multi-region centroid — multi-region 필터 시 mean / convex hull 어느 쪽 default 결정.
+- Kakao Local API 사용량 모니터링 (free tier 일일 30,000 호출, 충분).
+- 검색 history (recent 3-5건) localStorage persist 후보 — 단, PII 고려 필요.
+
+### 본 세션 누적 ship
+v4.1 + v4.2 + v4.3 (stage 1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (stage 4a) + v4.8 (GPS) +
+v4.9 (Kakao Places). 거리순 anchor 5종 후보 모두 ship 종결 — multi-region 만 잔여.

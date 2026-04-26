@@ -9,6 +9,7 @@ import { getEventDetail } from './routes/event-detail.js';
 import { listEventReviews, createEventReview, deleteMyReview } from './routes/event-reviews.js';
 import { listEventArticles } from './routes/event-articles.js';
 import { listRegions, listVibes } from './routes/lookups.js';
+import { searchPlaces } from './routes/places.js';
 import {
   devLogin,
   me,
@@ -216,6 +217,10 @@ export function createApp(): Express {
   });
   app.get('/vibes', (req: Request, res: Response, next: NextFunction) => {
     listVibes(req, res).catch(next);
+  });
+  // v4.9 — Kakao Places 키워드 검색 proxy (distance sort anchor 후보).
+  app.get('/places/search', (req: Request, res: Response, next: NextFunction) => {
+    searchPlaces(req, res).catch(next);
   });
 
   app.post(

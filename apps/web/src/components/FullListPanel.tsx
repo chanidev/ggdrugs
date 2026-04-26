@@ -1,11 +1,13 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import {
   fetchEvents,
   fetchEventsStats,
+  searchPlaces,
   type EventListResponse,
   type EventsStatsResponse,
   type EventPhase,
   type EventSort,
+  type PlaceItem,
 } from '../lib/api';
 import { fromBffItem, type DisplayEvent } from '../lib/event-display';
 import { EventList } from './EventList';
@@ -70,6 +72,8 @@ export function FullListPanel({
   // v4.8 — GPS opt-in. 권한 prompt 는 사용자 button 클릭 시에만, 좌표는 메모리만 (PII).
   const [gpsAnchor, setGpsAnchor] = useState<{ lng: number; lat: number } | null>(null);
   const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
+  // v4.9 — Kakao Places 검색 anchor. 사용자 입력 → BFF proxy → 결과 클릭 → 좌표.
+  const [placeAnchor, setPlaceAnchor] = useState<{ lng: number; lat: number; label: string } | null>(null);
   const [listState, setListState] = useState<{
     loading: boolean;
     error: string | null;
@@ -87,11 +91,14 @@ export function FullListPanel({
     return () => ctrl.abort();
   }, []);
 
-  // v4.5 — saved sort 가 'distance' 인데 mapBbox / gpsAnchor 둘 다 없으면 fetch 만 'ending' fallback.
-  // v4.8 — gpsAnchor 가 있으면 distance 활성화 가능 (mapBbox 없어도 OK).
-  const distanceReady = Boolean(mapBbox || gpsAnchor);
+  // v4.5 — saved sort 가 'distance' 인데 anchor 후보 (mapBbox / GPS / Place) 모두 없으면
+  // fetch 만 'ending' fallback. v4.8/v4.9 — GPS / Place 도 distance 활성화 트리거.
+  const distanceReady = Boolean(mapBbox || gpsAnchor || placeAnchor);
   const effectiveSort: EventSort = sort === 'distance' && !distanceReady ? 'ending' : sort;
-  const anchorParam = gpsAnchor ? `${gpsAnchor.lng},${gpsAnchor.lat}` : null;
+  // anchor 우선순위 (Web → BFF): place (사용자 명시) > GPS (현재 위치) > bbox (지도 viewport) — BFF 가 또 한번
+  // priority 정리 (explicit > region centroid > bbox center > 400). place/GPS 모두 explicit anchor 로 통과.
+  const explicit = placeAnchor ?? gpsAnchor;
+  const anchorParam = explicit ? `${explicit.lng},${explicit.lat}` : null;
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -143,6 +150,8 @@ export function FullListPanel({
         setGpsStatus('granted');
         // GPS 받은 직후 사용자가 거리 정렬을 의도했다고 가정 — 자동 sort='distance'.
         setSort('distance');
+        // v4.9 — GPS 활성 시 Place anchor 와 충돌 회피. 한 anchor 만 활성.
+        if (placeAnchor) setPlaceAnchor(null);
       },
       (err) => {
         setGpsStatus(err.code === err.PERMISSION_DENIED ? 'denied' : 'error');
@@ -226,6 +235,24 @@ export function FullListPanel({
           );
         })}
       </div>
+      {/* v4.9 — 거리순 정렬 시 Place 검색으로 anchor 설정. distance 가 active 일 때만 노출. */}
+      {sort === 'distance' && (
+        <div className="flex shrink-0 items-center gap-2 border-b border-(--color-border) bg-(--color-surface-alt) px-5 py-2">
+          <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-(--color-text-subtle)">기준점</span>
+          <PlacesSearch
+            current={placeAnchor}
+            onPick={(p) => {
+              setPlaceAnchor({ lng: p.lng, lat: p.lat, label: p.name });
+              // GPS 와 충돌 시 Place 우선 — GPS clear (한 anchor 만 활성화).
+              if (gpsAnchor) {
+                setGpsAnchor(null);
+                setGpsStatus('idle');
+              }
+            }}
+            onClear={() => setPlaceAnchor(null)}
+          />
+        </div>
+      )}
       {/* v4.4 — 정렬 segmented control. localStorage persist. v4.8 — GPS opt-in 버튼 + status 라벨. */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-(--color-border) px-5 py-2">
         <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-(--color-text-subtle)">
@@ -315,6 +342,131 @@ export function FullListPanel({
           listState.data ? `${listState.data.total.toLocaleString()}개의 이벤트` : undefined
         }
       />
+    </div>
+  );
+}
+
+/**
+ * v4.9 — Kakao Places 검색 anchor input. 입력 → 300ms debounce → BFF /places/search →
+ * dropdown → 결과 클릭 시 anchor 설정. 선택 후 input 은 라벨 + clear 버튼으로 전환.
+ *
+ * 한 번에 하나의 anchor 만 활성화 (caller 가 GPS 와 상호배제).
+ */
+function PlacesSearch({
+  current,
+  onPick,
+  onClear,
+}: {
+  current: { lng: number; lat: number; label: string } | null;
+  onPick: (p: PlaceItem) => void;
+  onClear: () => void;
+}) {
+  const [q, setQ] = useState('');
+  const [items, setItems] = useState<PlaceItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
+
+  // 외부 클릭 시 dropdown 닫기.
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDocClick);
+    return () => document.removeEventListener('mousedown', onDocClick);
+  }, []);
+
+  // 디바운스 검색.
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (q.trim().length < 2) {
+      setItems([]);
+      return;
+    }
+    setLoading(true);
+    const ctrl = new AbortController();
+    debounceRef.current = setTimeout(() => {
+      searchPlaces(q, ctrl.signal)
+        .then((res) => {
+          setItems(res.items);
+          setLoading(false);
+        })
+        .catch((err) => {
+          if ((err as Error).name === 'AbortError') return;
+          setLoading(false);
+        });
+    }, 300);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      ctrl.abort();
+    };
+  }, [q]);
+
+  if (current) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <span
+          className="inline-flex h-7 max-w-[200px] items-center gap-1 truncate rounded-(--radius-sm) border border-(--color-accent) bg-(--color-accent-bg) px-2 text-[11px] font-medium text-(--color-accent)"
+          title={current.label}
+        >
+          <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-(--color-accent)" />
+          <span className="truncate">{current.label}</span>
+        </span>
+        <button
+          type="button"
+          onClick={onClear}
+          className="inline-flex h-7 items-center rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface) px-2 text-[11px] font-medium text-(--color-text-muted) transition-colors hover:text-(--color-text)"
+          title="기준점 해제"
+        >
+          해제
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div ref={wrapRef} className="relative flex-1">
+      <input
+        type="text"
+        value={q}
+        onChange={(e) => {
+          setQ(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        placeholder="장소 또는 주소 (예: 강남역, 북서울 미술관)"
+        className="h-7 w-full rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface) px-2 text-[12px] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-accent) focus:outline-none"
+        aria-label="장소 검색으로 거리 정렬 기준점 설정"
+      />
+      {open && (q.trim().length >= 2 || loading) && (
+        <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) shadow-(--shadow-md)">
+          {loading && (
+            <div className="px-3 py-2 text-[11px] text-(--color-text-subtle)">검색 중…</div>
+          )}
+          {!loading && items.length === 0 && (
+            <div className="px-3 py-2 text-[11px] text-(--color-text-subtle)">결과 없음</div>
+          )}
+          {!loading &&
+            items.map((p, i) => (
+              <button
+                key={`${i}-${p.name}`}
+                type="button"
+                onClick={() => {
+                  onPick(p);
+                  setQ('');
+                  setItems([]);
+                  setOpen(false);
+                }}
+                className="flex w-full flex-col items-start gap-0.5 border-b border-(--color-border) px-3 py-2 text-left text-[12px] last:border-b-0 hover:bg-(--color-surface-alt)"
+              >
+                <span className="font-medium text-(--color-text)">{p.name}</span>
+                <span className="truncate text-[11px] text-(--color-text-subtle)">
+                  {p.roadAddress ?? p.address}
+                </span>
+              </button>
+            ))}
+        </div>
+      )}
     </div>
   );
 }
