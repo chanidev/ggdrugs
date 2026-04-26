@@ -9,6 +9,10 @@ import {
 } from '../lib/api';
 import { fromBffItem, type DisplayEvent } from '../lib/event-display';
 import { EventList } from './EventList';
+import { Icon } from './Icon';
+
+/** v4.8 — Geolocation API 상태. v1: 메모리 cache (한 세션 내 1회 fetch 후 reuse), localStorage persist 안 함 (PII 보호). */
+type GpsStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unsupported' | 'error';
 
 type SelectedKey = string; // 'all' | category code (ex. 'festival')
 type PhaseKey = 'all' | EventPhase;
@@ -63,6 +67,9 @@ export function FullListPanel({
   const [selected, setSelected] = useState<SelectedKey>('all');
   const [phase, setPhase] = useState<PhaseKey>('all');
   const [sort, setSort] = useState<EventSort>(() => loadSortPref());
+  // v4.8 — GPS opt-in. 권한 prompt 는 사용자 button 클릭 시에만, 좌표는 메모리만 (PII).
+  const [gpsAnchor, setGpsAnchor] = useState<{ lng: number; lat: number } | null>(null);
+  const [gpsStatus, setGpsStatus] = useState<GpsStatus>('idle');
   const [listState, setListState] = useState<{
     loading: boolean;
     error: string | null;
@@ -80,9 +87,11 @@ export function FullListPanel({
     return () => ctrl.abort();
   }, []);
 
-  // v4.5 — saved sort 가 'distance' 인데 mapBbox 없으면 fetch 만 'ending' 으로 fallback
-  // (UI 의 segmented 는 saved 값 표시 + disabled 상태로 클릭 불가). 지도 활성 후 자동 복귀.
-  const effectiveSort: EventSort = sort === 'distance' && !mapBbox ? 'ending' : sort;
+  // v4.5 — saved sort 가 'distance' 인데 mapBbox / gpsAnchor 둘 다 없으면 fetch 만 'ending' fallback.
+  // v4.8 — gpsAnchor 가 있으면 distance 활성화 가능 (mapBbox 없어도 OK).
+  const distanceReady = Boolean(mapBbox || gpsAnchor);
+  const effectiveSort: EventSort = sort === 'distance' && !distanceReady ? 'ending' : sort;
+  const anchorParam = gpsAnchor ? `${gpsAnchor.lng},${gpsAnchor.lat}` : null;
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -93,7 +102,10 @@ export function FullListPanel({
         phases: phase === 'all' ? [] : [phase],
         limit: 100,
         sort: effectiveSort,
-        ...(effectiveSort === 'distance' && mapBbox ? { bbox: mapBbox } : {}),
+        // v4.8 — anchor priority 는 BFF 가 처리: explicit anchor > region centroid > bbox center.
+        // GPS 활성 시 anchor 직접 전달 → BFF 가 GPS 우선 사용.
+        ...(effectiveSort === 'distance' && anchorParam ? { anchor: anchorParam } : {}),
+        ...(effectiveSort === 'distance' && !anchorParam && mapBbox ? { bbox: mapBbox } : {}),
       },
       ctrl.signal,
     )
@@ -103,7 +115,7 @@ export function FullListPanel({
         setListState({ loading: false, error: (err as Error).message, data: null });
       });
     return () => ctrl.abort();
-  }, [selected, phase, effectiveSort, mapBbox]);
+  }, [selected, phase, effectiveSort, mapBbox, anchorParam]);
 
   // v4.4 — 사용자 정렬 선택을 localStorage 에 persist (다음 세션 유지).
   useEffect(() => {
@@ -113,6 +125,36 @@ export function FullListPanel({
       // storage 차단 — 무시.
     }
   }, [sort]);
+
+  /**
+   * v4.8 — GPS opt-in 클릭 핸들러. 권한 prompt → 성공 시 좌표 set + sort='distance' 자동 활성.
+   * 권한 거부 / 실패 / 미지원 시 status 만 표시 (toast 없음 — 인라인 라벨로 처리).
+   * 좌표는 메모리에만 — localStorage / cookie persist 안 함 (PII).
+   */
+  const requestGps = () => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGpsStatus('unsupported');
+      return;
+    }
+    setGpsStatus('requesting');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setGpsAnchor({ lng: pos.coords.longitude, lat: pos.coords.latitude });
+        setGpsStatus('granted');
+        // GPS 받은 직후 사용자가 거리 정렬을 의도했다고 가정 — 자동 sort='distance'.
+        setSort('distance');
+      },
+      (err) => {
+        setGpsStatus(err.code === err.PERMISSION_DENIED ? 'denied' : 'error');
+      },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+    );
+  };
+
+  const clearGps = () => {
+    setGpsAnchor(null);
+    setGpsStatus('idle');
+  };
 
   const chips: { key: SelectedKey; label: string; count: number | null }[] = [
     { key: 'all', label: '전체', count: stats?.total ?? null },
@@ -184,41 +226,49 @@ export function FullListPanel({
           );
         })}
       </div>
-      {/* v4.4 — 정렬 segmented control. localStorage persist. */}
+      {/* v4.4 — 정렬 segmented control. localStorage persist. v4.8 — GPS opt-in 버튼 + status 라벨. */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-(--color-border) px-5 py-2">
         <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-(--color-text-subtle)">
           정렬
         </span>
-        <div role="radiogroup" aria-label="정렬 기준" className="inline-flex items-center gap-0.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-0.5">
-          {SORT_OPTIONS.map((opt) => {
-            const active = sort === opt.key;
-            // v4.5 — distance 옵션은 mapBbox 가 있어야 활성. SeoulMap 의 첫 idle 후 자동 활성.
-            const disabled = opt.key === 'distance' && !mapBbox;
-            return (
-              <button
-                key={opt.key}
-                type="button"
-                role="radio"
-                aria-checked={active}
-                aria-disabled={disabled}
-                disabled={disabled}
-                title={disabled ? '지도 활성화 후 사용 가능' : undefined}
-                onClick={() => {
-                  if (disabled) return;
-                  setSort(opt.key);
-                }}
-                className={`inline-flex h-7 items-center rounded-(--radius-sm) px-2.5 text-[12px] font-medium transition-colors ${
-                  disabled
-                    ? 'cursor-not-allowed text-(--color-text-subtle) opacity-60'
-                    : active
-                      ? 'bg-(--color-surface) text-(--color-accent) shadow-(--shadow-sm)'
-                      : 'text-(--color-text-muted) hover:text-(--color-text)'
-                }`}
-              >
-                {opt.label}
-              </button>
-            );
-          })}
+        <div className="flex items-center gap-2">
+          <GpsButton
+            status={gpsStatus}
+            anchored={gpsAnchor !== null}
+            onRequest={requestGps}
+            onClear={clearGps}
+          />
+          <div role="radiogroup" aria-label="정렬 기준" className="inline-flex items-center gap-0.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-0.5">
+            {SORT_OPTIONS.map((opt) => {
+              const active = sort === opt.key;
+              // v4.5 — distance 옵션은 mapBbox 또는 gpsAnchor 가 있어야 활성.
+              const disabled = opt.key === 'distance' && !distanceReady;
+              return (
+                <button
+                  key={opt.key}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-disabled={disabled}
+                  disabled={disabled}
+                  title={disabled ? '지도 활성화 또는 내 위치 사용 시 활성' : undefined}
+                  onClick={() => {
+                    if (disabled) return;
+                    setSort(opt.key);
+                  }}
+                  className={`inline-flex h-7 items-center rounded-(--radius-sm) px-2.5 text-[12px] font-medium transition-colors ${
+                    disabled
+                      ? 'cursor-not-allowed text-(--color-text-subtle) opacity-60'
+                      : active
+                        ? 'bg-(--color-surface) text-(--color-accent) shadow-(--shadow-sm)'
+                        : 'text-(--color-text-muted) hover:text-(--color-text)'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
       <div className="flex shrink-0 flex-wrap gap-1.5 border-b border-(--color-border) px-5 py-3">
@@ -266,5 +316,72 @@ export function FullListPanel({
         }
       />
     </div>
+  );
+}
+
+/**
+ * v4.8 — GPS opt-in 버튼. idle/granted/denied/error/unsupported 5 상태.
+ * granted 시 vermillion 배경 + 좌표 사용 중 표시. denied/error 는 인라인 텍스트로 신호.
+ */
+function GpsButton({
+  status,
+  anchored,
+  onRequest,
+  onClear,
+}: {
+  status: GpsStatus;
+  anchored: boolean;
+  onRequest: () => void;
+  onClear: () => void;
+}) {
+  if (status === 'requesting') {
+    return (
+      <span className="inline-flex h-7 items-center gap-1 rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface-alt) px-2 text-[11px] font-medium text-(--color-text-muted)">
+        <Icon name="sparkles" size={12} />
+        위치 확인 중…
+      </span>
+    );
+  }
+  if (anchored && status === 'granted') {
+    return (
+      <button
+        type="button"
+        onClick={onClear}
+        title="내 위치 anchor 해제"
+        className="inline-flex h-7 items-center gap-1 rounded-(--radius-sm) border border-(--color-accent) bg-(--color-accent-bg) px-2 text-[11px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/10"
+      >
+        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
+        내 위치 ON
+      </button>
+    );
+  }
+  const denied = status === 'denied';
+  const errored = status === 'error';
+  const unsupported = status === 'unsupported';
+  return (
+    <button
+      type="button"
+      onClick={onRequest}
+      disabled={unsupported}
+      title={
+        denied
+          ? '권한이 거부됨 — 브라우저 설정에서 허용 후 다시 시도'
+          : errored
+            ? '위치 가져오기 실패 — 다시 시도'
+            : unsupported
+              ? '브라우저가 위치 서비스를 지원하지 않음'
+              : '내 위치를 거리 정렬의 기준점으로 사용'
+      }
+      className={`inline-flex h-7 items-center gap-1 rounded-(--radius-sm) border px-2 text-[11px] font-medium transition-colors ${
+        unsupported
+          ? 'cursor-not-allowed border-(--color-border) bg-(--color-surface-alt) text-(--color-text-subtle) opacity-60'
+          : denied || errored
+            ? 'border-(--color-error)/50 bg-(--color-error)/5 text-(--color-error) hover:bg-(--color-error)/10'
+            : 'border-(--color-border) bg-(--color-surface) text-(--color-text-muted) hover:border-(--color-accent) hover:text-(--color-accent)'
+      }`}
+    >
+      <Icon name="sparkles" size={12} />
+      {denied ? '권한 거부됨' : errored ? '재시도' : unsupported ? '미지원' : '내 위치'}
+    </button>
   );
 }
