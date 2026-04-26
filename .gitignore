@@ -53,6 +53,10 @@ coverage/
 # User screenshots (ad-hoc, not project assets)
 image.png
 screenshot*.png
+# llm_wiki — 디버깅 잔여 스크린샷이 raw/ append-only invariant 와 충돌하지 않도록 차단.
+# 의도적으로 raw/ 에 ingest 할 자료라면 source-id 로 rename 후 commit (e.g. 2026-04-26_xxx.png).
+llm_wiki/raw/error*.png
+llm_wiki/raw/screenshot*.png
 .gstack/
 
 # Playwright verification output (regenerable — script committed, screenshots not)

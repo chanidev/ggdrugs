@@ -6,11 +6,13 @@
  *   pnpm -F bff chat:eval --id basic-today-minimal   # 단일 case
  *   pnpm -F bff chat:eval --verbose           # case 별 전체 응답 출력
  *   pnpm -F bff chat:eval --base http://localhost:3000  # BFF URL (기본)
+ *   pnpm -F bff chat:eval --emit-audit        # llm_wiki/wiki/audit/chat-eval-YYYY-MM-DD.md 박제
  *
  * 사전조건: BFF + LLM 서비스 + Postgres + Qdrant 기동. `@ggdrugs/bff` dev 서버 띄운 상태.
  *
  * 출력:
  *   case 별 PASS / FAIL + 실패 사유. 종료 코드: 실패 있으면 1.
+ *   --emit-audit 시 markdown 트렌드 박제 (lint-report I-1 후속).
  *
  * 목적:
  *   - chat v3.x 변경 시 filter 추출 · grounded followup · injection 방어 · 기본
@@ -18,9 +20,9 @@
  *   - LLM-judge 없이 구조적 assertion 만 — 빠르고 결정적.
  */
 
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -72,6 +74,7 @@ interface Options {
   base: string;
   verbose: boolean;
   onlyId: string | null;
+  emitAudit: boolean;
 }
 
 function parseArgs(argv: string[]): Options {
@@ -80,6 +83,7 @@ function parseArgs(argv: string[]): Options {
     base: 'http://localhost:3000',
     verbose: false,
     onlyId: null,
+    emitAudit: false,
   };
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
@@ -97,9 +101,70 @@ function parseArgs(argv: string[]): Options {
         opts.onlyId = next;
         i++;
       }
+    } else if (a === '--emit-audit') {
+      opts.emitAudit = true;
     }
   }
   return opts;
+}
+
+/**
+ * llm_wiki/wiki/audit/chat-eval-YYYY-MM-DD.md 박제. 전체 case 결과 + summary.
+ * 동일 날짜 재실행 시 overwrite — 1 sweep = 1 file.
+ */
+function emitAuditMarkdown(results: CaseResult[], totalMs: number, base: string): string {
+  const passed = results.filter((r) => r.pass).length;
+  const failed = results.length - passed;
+  const avgMs = Math.round(totalMs / Math.max(1, results.length));
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+  const lines: string[] = [];
+  lines.push('---');
+  lines.push(`title: chat:eval 회귀 결과 — ${today}`);
+  lines.push('type: audit');
+  lines.push(`created: ${today}`);
+  lines.push(`updated: ${today}`);
+  lines.push('sources: []');
+  lines.push('related:');
+  lines.push('  - ../topics/semantic-search.md');
+  lines.push('---');
+  lines.push('');
+  lines.push(`# chat:eval 회귀 결과 — ${today}`);
+  lines.push('');
+  lines.push('## Summary');
+  lines.push('');
+  lines.push(`- **${passed}/${results.length} passed, ${failed} failed**`);
+  lines.push(`- avg ${avgMs}ms · total ${totalMs}ms`);
+  lines.push(`- BFF base: \`${base}\``);
+  lines.push('');
+  lines.push('## Case 결과');
+  lines.push('');
+  lines.push('| ID | 결과 | elapsed | refLast | sugg |');
+  lines.push('|---|---|---|---|---|');
+  for (const r of results) {
+    const tag = r.pass ? 'PASS' : '**FAIL**';
+    const refLast = r.reply ? String(r.reply.referencesLast === true) : '—';
+    const sugg = r.reply ? String(r.reply.suggestions.length) : '—';
+    lines.push(`| ${r.id} | ${tag} | ${r.elapsedMs}ms | ${refLast} | ${sugg} |`);
+  }
+  if (failed > 0) {
+    lines.push('');
+    lines.push('## 실패 상세');
+    lines.push('');
+    for (const r of results) {
+      if (r.pass) continue;
+      lines.push(`### ${r.id}`);
+      for (const f of r.failures) lines.push(`- ${f}`);
+      lines.push('');
+    }
+  }
+  lines.push('');
+  lines.push('## References');
+  lines.push('');
+  lines.push('- [semantic-search.md §Chat eval harness](../topics/semantic-search.md)');
+  lines.push('- 코드: `apps/bff/src/jobs/chat-eval.ts`, cases `apps/bff/src/jobs/chat-eval-cases.json`');
+  lines.push('');
+  return lines.join('\n');
 }
 
 /**
@@ -278,6 +343,15 @@ async function main(): Promise<void> {
   console.log(
     `summary: ${passed}/${results.length} passed, ${failed} failed · avg ${avgMs}ms · total ${totalMs}ms`,
   );
+
+  if (opts.emitAudit) {
+    const today = new Date().toISOString().slice(0, 10);
+    const auditDir = resolve(__dirname, '../../../../llm_wiki/wiki/audit');
+    const auditPath = join(auditDir, `chat-eval-${today}.md`);
+    mkdirSync(auditDir, { recursive: true });
+    writeFileSync(auditPath, emitAuditMarkdown(results, totalMs, opts.base), 'utf-8');
+    console.log(`audit emitted: ${auditPath}`);
+  }
 
   if (failed > 0) process.exit(1);
 }
