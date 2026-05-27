@@ -29,6 +29,28 @@
 - **읍/면/동 포함 (수천 행)**: master data 무거움, UI 3-level 필요. 시기상조. 기각.
 - **별도 `cities` / `districts` 테이블 분리**: 스키마 변경 + Prisma 수정. 합성 표기로 충분. 기각.
 
+## Appendix A: Backfill 표본 측정 (2026-05-27)
+
+KCISA `--kcisa-max-pages 5` 표본 실행 결과:
+
+운영 환경에 KCISA_API_KEY 미배포 — 표본 실행 보류, 키 확보 후 운영자 1회 실행 예정.
+
+- fetched: N/A (키 없음)
+- upserted: N/A
+- skipped: N/A
+- errors: N/A
+- errors / fetched: N/A
+
+Runner 실제 출력:
+```
+WARN: KCISA_API_KEY missing — skip
+INFO: manual ingest completed  { fetched: 0, upserted: 0, skipped: 0, errors: 0 }
+```
+
+Sido 별 신규 events 분포: 키 확보 전까지 측정 불가.
+
+비용 추정 (전체 backfill 시): KCISA `--kcisa-max-pages 50` 약 5000 row 예상. 후속 4단계 (summary/news/embed/audit) 별도 실행 시 OpenAI/Naver 호출 증가. 운영자 권장: source 별 분할 실행.
+
 ## References
 
 - spec: `docs/superpowers/specs/2026-05-27-nationwide-region-expansion-design.md`
