@@ -19,7 +19,7 @@ related:
 
 ## Summary
 
-Alle 의 이벤트 데이터는 **3개 공공/문화 API 를 forward-looking 일일 배치** 로 수집한다. 각 소스는 독립 러너를 가지며, `ingest-common.ts` 가 공통 중복 방지·지역 추출·Seoul 주소 필터·날짜 정규화를 담당. 현재 DB 4,084 행이 이 파이프라인의 결과물. `events.source_type`·`crawl_origin`·`external_source_id` 세 컬럼이 프로비넌스 추적을 책임진다.
+Alle 의 이벤트 데이터는 **3개 공공/문화 API 를 forward-looking 일일 배치** 로 수집한다. 각 소스는 독립 러너를 가지며, `ingest-common.ts` 가 공통 중복 방지·지역 추출(전국)·날짜 정규화를 담당. ADR 0006 (2026-05-27) 이전에는 Seoul 필터로 비-서울 row 를 조기 skip 했으나 현재는 전국 17 시/도 + 약 230 시/군/구 매칭. 현재 DB 4,084 행이 이 파이프라인의 결과물. `events.source_type`·`crawl_origin`·`external_source_id` 세 컬럼이 프로비넌스 추적을 책임진다.
 
 ## 소스별 러너 (`apps/bff/src/jobs/`)
 
@@ -27,7 +27,7 @@ Alle 의 이벤트 데이터는 **3개 공공/문화 API 를 forward-looking 일
 |---|---|---|---|---|
 | TourAPI | 한국관광공사 `searchFestival2` | `TOUR_API_KEY` (URL-인코딩 보존) | 전국 축제, forward-looking | `tourapi-ingest.ts` |
 | Seoul Culture | `data.seoul.go.kr culturalEventInfo` | `SEOUL_OPEN_API_KEY` | 서울 문화행사 전 카테고리 | `seoul-culture-ingest.ts` |
-| KCISA | 한국문화정보원 `API_CCA_145` | `KCISA_API_KEY` | 공연·전시 전국 (Seoul 필터) | `kcisa-ingest.ts` |
+| KCISA | 한국문화정보원 `API_CCA_145` | `KCISA_API_KEY` | 공연·전시 전국 (가드 없음) | `kcisa-ingest.ts` |
 
 스케줄러 (`scheduler.ts`): 부팅 후 2초 뒤 첫 실행, 이후 24h 주기. `run-ingest.ts` CLI 로 수동 실행 가능 (`pnpm ingest:seoul` 등).
 
@@ -37,9 +37,9 @@ Alle 의 이벤트 데이터는 **3개 공공/문화 API 를 forward-looking 일
 
 각 러너가 원본 payload 를 `NormalizedEvent` 로 정규화 → 공통 upsert 경로로 전달. 다음 단계를 거친다:
 
-1. **Seoul guard (`isSeoulAddress`)** — 주소·sigungu·title 정규식 조합으로 서울 판정. 타 광역시 행은 조기 skip.
-2. **sigungu 추출 (`extractSeoulGu`)** — "서울특별시 종로구 세종로" 같은 자유문 주소에서 "종로구" 25개 중 첫 매치. 실패 시 null.
-3. **regionId resolve** — `regions` 테이블에서 `sido_name='서울' AND sigungu_name=<gu> AND dong_name IS NULL` 단일 행 조회 (district 레벨). fallback: 광역시 전체("서울") 행.
+1. **(deprecated) Seoul guard** — ADR 0006 으로 제거됨. 가드 없이 전국 row 통과.
+2. **region 추출 (`extractKoreanRegion`)** — sido 패턴 17개 매칭 후 시/군/구 캡처. 자치구 있는 일반시 10개는 합성형 ("수원시 영통구") 반환. 실패 시 null.
+3. **regionId resolve (`resolveRegionId`)** — 4단 fallback: (sido, sigungu) exact → (sido, "<시>") 시 단위 → (sido, NULL) 광역 → null.
 4. **category 매핑 (`classifyCategory`)** — Seoul CODENAME ("축제/자연(하천)", "공연/클래식" 등) → 8종 event_category 매핑. TourAPI·KCISA 는 각 소스의 `cat1~3` 또는 `genreNm` 기반.
 5. **중복 방지 (`existsInOtherOrigin`)** — 같은 외부 id 뿐 아니라 **다른 소스의 같은 이벤트** 까지 잡아냄. 현재는 제목·start_date 정확 일치 기준 (향후 pg_trgm similarity 강화 예정). 중복이면 skip, 원본 소스 정보만 유지.
 6. **phase 계산** — `start_date`/`end_date` 기준 upcoming/ongoing/ended. 트리거 없이 매 쿼리·ingest 에서 재계산 안 하고 `events.phase` 컬럼에 저장 (계산 cache).
@@ -89,10 +89,10 @@ CLI `pnpm ingest` 는 tourapi → seoul-culture → kcisa 순차 실행. 각 러
 
 `GET /events/:id` 응답의 `source` 객체 + EventDetailPage `Provenance` 섹션에 노출.
 
-## 현황 (2026-04-19)
+## 현황 (2026-05-27, ADR 0006 적용 후 backfill 전)
 
-- DB 총 4,084 행 (phases `{upcoming:163, ongoing:260, ended:3661}`).
-- 소스 분포는 Seoul Culture 압도적 (전시·공연·교육 포함 8종 풀 스펙트럼).
+- DB 총 4,111 행 (모두 서울). 전국 backfill 운영자 1회 실행 후 수치 갱신 예정.
+- 소스 분포는 Seoul Culture 압도적. KCISA backfill 후 전국 공연·전시 row 증가 예상.
 - TourAPI: forward window 가 짧아 fetched=0 반복 (정상).
 - KCISA: `KCISA_API_KEY` 미설정 시 러너 시작 시점 skip (warn 로그 1줄).
 
