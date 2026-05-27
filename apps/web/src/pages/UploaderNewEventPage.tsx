@@ -120,9 +120,14 @@ export function UploaderNewEventPage() {
     return () => ctrl.abort();
   }, [authLoading, user]);
 
-  const seoulRegions = useMemo(
-    () => regions.filter((r) => r.sido === '서울' && r.sigungu !== null),
+  const sidoList = useMemo(
+    () => Array.from(new Set(regions.map((r) => r.sido))).sort(),
     [regions],
+  );
+  const [selectedSido, setSelectedSido] = useState<string>('');
+  const sigunguOptions = useMemo(
+    () => regions.filter((r) => r.sido === selectedSido && r.sigungu !== null),
+    [regions, selectedSido],
   );
 
   const canSubmit =
@@ -301,19 +306,37 @@ export function UploaderNewEventPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="지역 (서울 구)" required>
-                <select
-                  value={form.regionId}
-                  onChange={(e) => setForm((f) => ({ ...f, regionId: e.target.value }))}
-                  className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
-                >
-                  <option value="">선택</option>
-                  {seoulRegions.map((r) => (
-                    <option key={r.regionId} value={r.regionId}>
-                      {r.sigungu}
-                    </option>
-                  ))}
-                </select>
+              <Field label="지역" required>
+                <div className="flex flex-col gap-2">
+                  <select
+                    value={selectedSido}
+                    onChange={(e) => {
+                      setSelectedSido(e.target.value);
+                      setForm((f) => ({ ...f, regionId: '' }));
+                    }}
+                    className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
+                  >
+                    <option value="">시·도 선택</option>
+                    {sidoList.map((sido) => (
+                      <option key={sido} value={sido}>
+                        {sido}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={form.regionId}
+                    onChange={(e) => setForm((f) => ({ ...f, regionId: e.target.value }))}
+                    disabled={selectedSido === ''}
+                    className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <option value="">시·군·구 선택</option>
+                    {sigunguOptions.map((r) => (
+                      <option key={r.regionId} value={r.regionId}>
+                        {r.sigungu}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </Field>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
