@@ -122,10 +122,28 @@ export function FilterSearchPanel({
     return () => ctrl.abort();
   }, []);
 
-  const seoulRegions = useMemo(
-    () => regions.filter((r) => r.sido === '서울' && r.sigungu !== null),
-    [regions],
-  );
+  /** sido 별 그룹: { 시도명: [그 시도의 시/군/구 행 배열] }. 광역 row(sigungu=null) 는 제외. */
+  const regionsBySido = useMemo(() => {
+    const map = new Map<string, RegionItem[]>();
+    for (const r of regions) {
+      if (r.sigungu === null) continue;
+      const list = map.get(r.sido) ?? [];
+      list.push(r);
+      map.set(r.sido, list);
+    }
+    return Array.from(map.entries()).map(([sido, items]) => ({ sido, items }));
+  }, [regions]);
+
+  /** 어떤 sido 섹션이 펼쳐져 있는지. 기본은 서울만 펼침 (기존 UX 유지). */
+  const [expandedSido, setExpandedSido] = useState<Set<string>>(new Set(['서울']));
+  const toggleSido = (sido: string) => {
+    setExpandedSido((prev) => {
+      const next = new Set(prev);
+      if (next.has(sido)) next.delete(sido);
+      else next.add(sido);
+      return next;
+    });
+  };
 
   const toggleIn = (setter: React.Dispatch<React.SetStateAction<Set<string>>>) =>
     (k: string) => {
@@ -218,14 +236,36 @@ export function FilterSearchPanel({
         <FilterBlock title="지역" count={region.size}>
           {lookupError ? (
             <div className="text-[12px] text-(--color-error)">지역 로드 실패: {lookupError}</div>
-          ) : seoulRegions.length === 0 ? (
+          ) : regionsBySido.length === 0 ? (
             <div className="text-[12px] text-(--color-text-subtle)">불러오는 중…</div>
           ) : (
-            <ChipGroup
-              items={seoulRegions.map((r) => ({ k: r.regionId, l: r.sigungu! }))}
-              isActive={(k) => region.has(k)}
-              onToggle={toggleIn(setRegion)}
-            />
+            <div className="flex flex-col gap-2">
+              {regionsBySido.map(({ sido, items }) => {
+                const expanded = expandedSido.has(sido);
+                const selectedCount = items.filter((r) => region.has(r.regionId)).length;
+                return (
+                  <div key={sido} className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface)">
+                    <button
+                      type="button"
+                      onClick={() => toggleSido(sido)}
+                      className="flex w-full items-center justify-between px-3 py-2 text-[13px] font-medium text-(--color-text)"
+                    >
+                      <span>{sido}{selectedCount > 0 ? ` (${selectedCount})` : ''}</span>
+                      <span className="text-(--color-text-subtle)">{expanded ? '−' : '+'}</span>
+                    </button>
+                    {expanded && (
+                      <div className="border-t border-(--color-border) px-3 py-2">
+                        <ChipGroup
+                          items={items.map((r) => ({ k: r.regionId, l: r.sigungu! }))}
+                          isActive={(k) => region.has(k)}
+                          onToggle={toggleIn(setRegion)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </FilterBlock>
         <FilterBlock title="기간">
