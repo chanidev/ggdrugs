@@ -165,12 +165,43 @@ export function extractKoreanRegion(
 }
 
 /**
- * STUB — Task 6 에서 본 구현으로 교체.
+ * 주소 텍스트 → regions.regionId 매핑. 4단 fallback:
+ *  1. (sido, sigungu) exact 매치
+ *  2. (sido, "<시>") 시 단위 fallback (자치구 있는 일반시인데 자치구가 sigungu 와 시드 모두 안 맞을 때)
+ *  3. (sido, NULL) 광역 단일 row
+ *  4. null — 호출자 (upsertCrawledEvent) 가 throw
  */
 export async function resolveRegionId(
-  _addr: string | null | undefined,
+  addr: string | null | undefined,
 ): Promise<bigint | null> {
-  throw new Error('resolveRegionId: not implemented');
+  const r = extractKoreanRegion(addr);
+  if (!r) return null;
+
+  // 1. exact match
+  if (r.sigungu) {
+    const exact = await prisma.region.findFirst({
+      where: { sidoName: r.sido, sigunguName: r.sigungu, dongName: null },
+      select: { regionId: true },
+    });
+    if (exact) return exact.regionId;
+
+    // 2. 합성형이면 시 단위 fallback
+    if (r.sigungu.includes(' ')) {
+      const cityOnly = r.sigungu.split(' ')[0]!;
+      const cityRow = await prisma.region.findFirst({
+        where: { sidoName: r.sido, sigunguName: cityOnly, dongName: null },
+        select: { regionId: true },
+      });
+      if (cityRow) return cityRow.regionId;
+    }
+  }
+
+  // 3. 광역 fallback
+  const sidoRow = await prisma.region.findFirst({
+    where: { sidoName: r.sido, sigunguName: null, dongName: null },
+    select: { regionId: true },
+  });
+  return sidoRow?.regionId ?? null;
 }
 
 /**
@@ -247,7 +278,7 @@ export async function upsertCrawledEvent(ev: NormalizedEvent): Promise<void> {
   if (await existsInOtherOrigin(ev)) return;
 
   const categoryId = await getCategoryId(ev.categoryCode);
-  const regionId = await resolveSeoulRegionId(ev.addressText);
+  const regionId = await resolveRegionId(ev.addressText);
   if (!regionId) throw new Error('region resolution failed');
 
   // update 절에 categoryId·regionId 도 포함 — 분류 로직 개선 후 재ingest 시 기존 row 도 교정.
