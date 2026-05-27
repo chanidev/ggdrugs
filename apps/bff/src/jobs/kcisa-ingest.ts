@@ -133,15 +133,24 @@ function toNormalized(item: KcisaItem): NormalizedEvent | null {
   };
 }
 
-export async function runKcisaIngest(): Promise<IngestResult> {
+export interface KcisaIngestOptions {
+  /** true 면 forward-looking 필터 우회 (ended 포함). 운영자 backfill 전용. */
+  includePast?: boolean;
+  /** 최대 페이지 수 (기본 10 = 1000 row). backfill 시 50 정도로 증가. */
+  maxPages?: number;
+}
+
+export async function runKcisaIngest(opts: KcisaIngestOptions = {}): Promise<IngestResult> {
   const log = logger.child({ job: 'kcisa-ingest' });
   const result: IngestResult = { fetched: 0, upserted: 0, skipped: 0, errors: 0 };
+  const includePast = opts.includePast ?? false;
+  const maxPages = opts.maxPages ?? 10;
 
   if (!env.KCISA_API_KEY) {
     log.warn('KCISA_API_KEY missing — skip');
     return result;
   }
-  log.info('start');
+  log.info({ includePast, maxPages }, 'start');
 
   let pageNo = 1;
   while (true) {
@@ -158,7 +167,11 @@ export async function runKcisaIngest(): Promise<IngestResult> {
 
     for (const raw of page.items) {
       const ev = toNormalized(raw);
-      if (!ev || !isForwardLooking(ev.startDate, ev.endDate)) {
+      if (!ev) {
+        result.skipped += 1;
+        continue;
+      }
+      if (!includePast && !isForwardLooking(ev.startDate, ev.endDate)) {
         result.skipped += 1;
         continue;
       }
@@ -172,8 +185,8 @@ export async function runKcisaIngest(): Promise<IngestResult> {
     }
     if (result.fetched >= page.total) break;
     pageNo += 1;
-    // 안전장치: 10페이지 (1000건) 이후는 다음 주기
-    if (pageNo > 10) break;
+    // 안전장치: maxPages 이후는 다음 주기
+    if (pageNo > maxPages) break;
   }
   log.info(result, 'done');
   return result;

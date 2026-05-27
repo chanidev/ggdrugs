@@ -10,6 +10,8 @@
  *   `... run-ingest.ts tourapi 20240101`     (TourAPI 전용 backfill — 해당 날짜 이후 전체)
  *   `... run-ingest.ts seoul-culture`
  *   `... run-ingest.ts kcisa`
+ *   `... run-ingest.ts kcisa --kcisa-backfill`                    (KCISA 종료 포함 재수집)
+ *   `... run-ingest.ts kcisa --kcisa-backfill --kcisa-max-pages 50` (페이지 상한 지정)
  *   `... run-ingest.ts news-naver`           (approved 이벤트 → 네이버 뉴스 검색 매핑)
  *
  * 주기적 배치는 forward-only (오늘 이후) — 이미 종료된 이벤트는 skip.
@@ -26,11 +28,17 @@ import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
 
 const which = (process.argv[2] ?? 'all').toLowerCase();
+const args = process.argv.slice(2);
 const tourapiFloor = process.argv[3]; // YYYYMMDD optional (tourapi 전용)
 // `--backfill` 이 아무 위치에 있으면 seoul-culture 를 전체(종료 포함) 재분류 모드로.
-const seoulBackfill = process.argv.slice(2).includes('--backfill');
+const seoulBackfill = args.includes('--backfill');
+// `--kcisa-backfill` — KCISA forward-looking 필터 우회 (종료 이벤트 포함 재수집).
+const kcisaBackfill = args.includes('--kcisa-backfill');
+// `--kcisa-max-pages <N>` — KCISA 페이지 상한 지정 (기본 10).
+const kcisaMaxPagesIdx = args.indexOf('--kcisa-max-pages');
+const kcisaMaxPages = kcisaMaxPagesIdx !== -1 ? Number(args[kcisaMaxPagesIdx + 1]) : undefined;
 // `--no-summarize` 로 ingest 후 AI 요약 단계를 스킵할 수 있음 (배치 시간 단축 / 비용 회피).
-const skipSummarize = process.argv.slice(2).includes('--no-summarize');
+const skipSummarize = args.includes('--no-summarize');
 
 async function main() {
   const results: Record<string, unknown> = {};
@@ -39,14 +47,18 @@ async function main() {
   }
   if (which === 'seoul-culture' || which === 'seoul' || which === 'all')
     results['seoul-culture'] = await runSeoulCultureIngest({ includePast: seoulBackfill });
-  if (which === 'kcisa' || which === 'all') results.kcisa = await runKcisaIngest();
+  if (which === 'kcisa' || which === 'all') {
+    const kcisaOpts = kcisaMaxPages !== undefined
+      ? { includePast: kcisaBackfill, maxPages: kcisaMaxPages }
+      : { includePast: kcisaBackfill };
+    results.kcisa = await runKcisaIngest(kcisaOpts);
+  }
   // news-naver 는 이벤트 ingest 와 독립. 'all' 에 기본 포함하지 않음 — 이벤트 테이블이
   // 비어있는 dev 첫 기동에서 불필요한 네이버 호출을 피하기 위함. 명시 호출만.
   //   news-naver              — 최신 50 이벤트
   //   news-naver --all        — approved 이벤트 전체 (초기 backfill)
   //   news-naver --missing    — mapping 0건인 이벤트만 (incremental)
   if (which === 'news-naver' || which === 'news') {
-    const args = process.argv.slice(2);
     const opts: { eventLimit?: number | 'all'; onlyMissing?: boolean } = {};
     if (args.includes('--all')) opts.eventLimit = 'all';
     if (args.includes('--missing')) opts.onlyMissing = true;
@@ -70,7 +82,6 @@ async function main() {
     }
   }
   if (which === 'embed-events' || which === 'embed') {
-    const args = process.argv.slice(2);
     const opts: { eventLimit?: number | 'all'; onlyMissing?: boolean } = {};
     if (args.includes('--all')) opts.eventLimit = 'all';
     if (args.includes('--missing')) opts.onlyMissing = true;
