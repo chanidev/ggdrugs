@@ -85,6 +85,27 @@
       "userTexts": ["남극에서 진행하는 축제 있어?"],
       "filters": { "eventTypes": ["festival"], "companions": [], "periodKey": null, "vibes": [], "regionHints": [] },
       "specificDate": null
+    },
+    {
+      "id": "nationwide-busan-fireworks",
+      "category": "region-date",
+      "userTexts": ["부산 불꽃축제 언제야?"],
+      "filters": { "eventTypes": ["festival"], "companions": [], "periodKey": null, "vibes": [], "regionHints": ["부산"] },
+      "specificDate": null
+    },
+    {
+      "id": "nationwide-suwon-hwaseong",
+      "category": "region-date",
+      "userTexts": ["수원 화성행궁 근처 행사 있어?"],
+      "filters": { "eventTypes": [], "companions": [], "periodKey": null, "vibes": [], "regionHints": ["수원"] },
+      "specificDate": null
+    },
+    {
+      "id": "nationwide-gangneung-coffee",
+      "category": "region-date",
+      "userTexts": ["강릉 커피축제 가보고 싶어"],
+      "filters": { "eventTypes": ["festival"], "companions": [], "periodKey": null, "vibes": [], "regionHints": ["강릉"] },
+      "specificDate": null
     }
   ]
 }
