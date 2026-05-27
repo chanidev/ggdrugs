@@ -4,9 +4,7 @@ import { logger } from '../logger.js';
 import { fetchWithRetry } from './lib/fetch-with-retry.js';
 import {
   cleanDescription,
-  extractSeoulGu,
   isForwardLooking,
-  isSeoulAddress,
   parseYmd,
   upsertCrawledEvent,
   type EventCategoryCode,
@@ -20,7 +18,6 @@ import {
  * - 엔드포인트: https://api.kcisa.kr/openapi/API_CCA_145/request
  * - 응답: XML (JSON 미지원). 단순 <TAG>value</TAG> 구조라 regex 파싱.
  * - 키는 URL-encoded (공공데이터포털·KCISA 모두 동일 관례).
- * - 서울만 필터 (EVENT_SITE 에 "서울" 포함 여부).
  * - GENRE 키워드로 4 카테고리 분류 (박람회/심포지움/컨퍼런스/그 외 festival).
  */
 
@@ -114,11 +111,9 @@ async function fetchPage(pageNo: number): Promise<{ items: KcisaItem[]; total: n
 
 function toNormalized(item: KcisaItem): NormalizedEvent | null {
   if (!item.TITLE) return null;
-  if (!isSeoulAddress(item.EVENT_SITE)) return null; // 서울 아닌 건 skip (현재 regions 커버리지)
   const period = parsePeriod(item.EVENT_PERIOD);
   if (!period) return null;
-  const gu = extractSeoulGu(item.EVENT_SITE);
-  const addressText = item.EVENT_SITE ?? (gu ? `서울 ${gu}` : '서울');
+  const addressText = item.EVENT_SITE ?? null;
   const descParts: string[] = [];
   if (item.SUB_TITLE) descParts.push(item.SUB_TITLE);
   if (item.DESCRIPTION) descParts.push(item.DESCRIPTION);

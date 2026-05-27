@@ -204,39 +204,6 @@ export async function resolveRegionId(
   return sidoRow?.regionId ?? null;
 }
 
-/**
- * 주소 텍스트에서 서울 구 이름 추출. 예: "서울특별시 종로구 ..." → "종로구".
- * 구 이름이 없으면 null (→ 서울 전체로 fallback).
- */
-export function extractSeoulGu(addr: string | null | undefined): string | null {
-  if (!addr) return null;
-  const match = addr.match(/서울(?:특별시)?\s*(\S{1,5}구)/);
-  return match ? match[1]! : null;
-}
-
-/** 서울이 아닌 지역의 주소면 null (현재 시드 커버리지가 서울만이라 지원 안 함). */
-export function isSeoulAddress(addr: string | null | undefined): boolean {
-  if (!addr) return false;
-  return /서울(?:특별시)?/.test(addr);
-}
-
-/** 서울 sigungu 이름 기반 regions 조회. 실패 시 서울 전체 row. */
-export async function resolveSeoulRegionId(addr: string | null | undefined): Promise<bigint | null> {
-  const sigungu = extractSeoulGu(addr);
-  if (sigungu) {
-    const row = await prisma.region.findFirst({
-      where: { sidoName: '서울', sigunguName: sigungu, dongName: null },
-      select: { regionId: true },
-    });
-    if (row) return row.regionId;
-  }
-  const fallback = await prisma.region.findFirst({
-    where: { sidoName: '서울', sigunguName: null, dongName: null },
-    select: { regionId: true },
-  });
-  return fallback?.regionId ?? null;
-}
-
 const categoryIdCache = new Map<EventCategoryCode, bigint>();
 
 export async function getCategoryId(code: EventCategoryCode): Promise<bigint> {
