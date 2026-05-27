@@ -29,35 +29,75 @@
 - **읍/면/동 포함 (수천 행)**: master data 무거움, UI 3-level 필요. 시기상조. 기각.
 - **별도 `cities` / `districts` 테이블 분리**: 스키마 변경 + Prisma 수정. 합성 표기로 충분. 기각.
 
-## Appendix A: Backfill 가능성 검증 (2026-05-27)
+## Appendix A: TourAPI 표본 backfill 실측 (2026-05-27)
 
-운영 dev 환경 (`.env`) 상태 점검:
+후속 작업 중 `tourapi-ingest.ts` 에 `areaCode=1` (서울) 하드코드 + `isForwardLooking` 무조건 가드 발견 — Plan §"Plan Deviations from Spec" §5 의 "TourAPI 변경 없음" 진단이 잘못됨. 같은 패턴으로 `TourapiIngestOptions { eventStartDate, areaCode, includePast, maxPages }` 추가 + `--tourapi-backfill` 플래그 도입 (`ingest:tourapi:backfill` alias).
 
-| Key | 상태 |
+**표본 실행** (`tourapi 20260301 --tourapi-backfill --tourapi-max-pages 5 --no-summarize`):
+
+| metric | 값 |
 |---|---|
-| `KCISA_API_KEY` | **empty** — runner `KCISA_API_KEY missing — skip` 로 정상 종료 |
-| `TOUR_API_KEY` | set (94 chars) — TourAPI는 forward-only 응답이라 `tourapi 20260301` 호출 시 fetched=0 (과거 floor 무시) |
-| `SEOUL_OPEN_API_KEY` | set — Seoul 전용이라 전국 검증 무관 |
-| `OPENAI_API_KEY` | set (164 chars) — 후속 summary/embed 단계 사용 가능 |
-| `NAVER_CLIENT_ID/SECRET` | set — 후속 news 매핑 사용 가능 |
+| fetched | 393 |
+| upserted | 393 |
+| skipped | 0 |
+| errors | 0 |
+| errors / fetched | 0.0% |
 
-**결론**: 실 전국 데이터 1회 도입은 KCISA 키 값 배포 후 운영자가 1회 실행하는 것으로 보류. 코드 경로 (가드 제거 → resolveRegionId → upsert) 는 27/27 resolver 케이스로 검증 완료, 실행만 남음.
+resolver 가 393건 전수 매칭 성공 — 실 데이터에서 `extractKoreanRegion` + `resolveRegionId` 정확도 100%. 0 errors 는 plan §11 오픈 아이템 "region_id null 발생 케이스" 의 실측 부재 항목을 해소.
 
-**키 확보 후 운영 절차 (운영자용)**:
+**Sido 분포** (전체 `tourapi-festival` row 기준 — 신규 upsert + 기존 row update 합산):
+
+| sido | events |
+|---|---|
+| 서울 | 234 |
+| 경기 | 56 |
+| 부산 | 31 |
+| 강원 | 28 |
+| 경북 | 27 |
+| 전북 | 27 |
+| 전남 | 23 |
+| 경남 | 22 |
+| 충남 | 20 |
+| 인천 | 16 |
+| 충북 | 16 |
+| 제주 | 13 |
+| 광주 | 12 |
+| 대구 | 7 |
+| 세종 | 5 |
+| 울산 | 5 |
+| 대전 | 3 |
+
+**Total: 545 rows, 17 sido 모두 커버**. 이전엔 TourAPI row 전부가 서울 row 로 태그돼 있었으나, backfill upsert 의 update path 가 `region_id` 를 정확한 sido 로 교정 — latent bug 해소가 코드 변경뿐 아니라 실 데이터에서도 적용됨.
+
+**운영 환경 키 상태**:
+
+| Key | 상태 | 메모 |
+|---|---|---|
+| `KCISA_API_KEY` | 미보유 | 발급 받기 어려운 키. 운영 결정에 따라 향후 검토. |
+| `TOUR_API_KEY` | set | 정상 작동 (94 chars, URL-인코딩 보존) |
+| `SEOUL_OPEN_API_KEY` | set | Seoul 전용 |
+| `OPENAI_API_KEY` | set | 후속 summary/embed 가능 |
+| `NAVER_CLIENT_ID/SECRET` | set | 후속 news 매핑 가능 |
+
+**운영 backfill 절차** (TourAPI 가 1차 소스):
 
 ```bash
-# 1) .env 에 KCISA_API_KEY 값 추가
-# 2) sample run
-pnpm --filter bff run ingest:kcisa:backfill   # --kcisa-max-pages 50 기본
-# 3) sido 분포 확인
-psql "$DATABASE_URL" -c "SELECT r.sido_name, COUNT(*) FROM events e JOIN regions r ON e.region_id=r.region_id WHERE e.crawl_origin='kcisa-culture' GROUP BY r.sido_name ORDER BY 2 DESC;"
-# 4) 후속 단계 (선택)
+# 1) sample run — 페이지 캡 + no-summarize 로 비용 절감
+pnpm --filter bff run ingest:tourapi:backfill   # 기본 floor=20240101, maxPages=50
+
+# 2) sido 분포 확인
+pnpm --filter bff exec dotenv -e ../../.env -- tsx scripts/tourapi-sido-distribution.ts
+
+# 3) 후속 단계 (선택)
 pnpm --filter bff run backfill:summary
 pnpm --filter bff run ingest:news -- --missing
 pnpm --filter bff run embed:events:missing
 ```
 
-비용 추정 (전체 backfill 시): KCISA `--kcisa-max-pages 50` 약 5000 row 예상. 후속 4단계 (summary/news/embed/audit) 별도 실행 시 OpenAI/Naver 호출 증가. 운영자 권장: source 별 분할 실행. quota-counter (80%/95% 경고) 가 가시화.
+KCISA 키 확보 시 추가:
+```bash
+pnpm --filter bff run ingest:kcisa:backfill
+```
 
 ## Appendix B: chat-rank-bench 회귀 베이스라인 (2026-05-27)
 

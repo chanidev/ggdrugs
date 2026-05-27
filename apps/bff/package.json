@@ -20,6 +20,7 @@
     "ingest:seoul": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts seoul-culture",
     "ingest:kcisa": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts kcisa",
     "ingest:kcisa:backfill": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts kcisa --kcisa-backfill --kcisa-max-pages 50",
+    "ingest:tourapi:backfill": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts tourapi 20240101 --tourapi-backfill --tourapi-max-pages 50",
     "ingest:news": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts news-naver",
     "ingest:news:all": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts news-naver --all",
     "ingest:news:missing": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts news-naver --missing",

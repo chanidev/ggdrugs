@@ -89,12 +89,12 @@ CLI `pnpm ingest` 는 tourapi → seoul-culture → kcisa 순차 실행. 각 러
 
 `GET /events/:id` 응답의 `source` 객체 + EventDetailPage `Provenance` 섹션에 노출.
 
-## 현황 (2026-05-27, ADR 0006 적용 후 backfill 전)
+## 현황 (2026-05-27, ADR 0006 적용 + TourAPI 표본 backfill 후)
 
-- DB 총 4,111 행 (모두 서울). 전국 backfill 운영자 1회 실행 후 수치 갱신 예정.
-- 소스 분포는 Seoul Culture 압도적. KCISA backfill 후 전국 공연·전시 row 증가 예상.
-- TourAPI: forward window 가 짧아 fetched=0 반복 (정상).
-- KCISA: `KCISA_API_KEY` 미설정 시 러너 시작 시점 skip (warn 로그 1줄).
+- TourAPI 표본 backfill (`--tourapi-max-pages 5`, floor `20260301`) 393건 fetch / 393 upsert / **0 errors** — resolver 실 데이터 정확도 100%.
+- `tourapi-festival` 545 행 sido 분포: 서울 234 / 경기 56 / 부산 31 / 강원 28 / 경북 27 / 전북 27 / 전남 23 / 경남 22 / 충남 20 / 인천 16 / 충북 16 / 제주 13 / 광주 12 / 대구 7 / 세종 5 / 울산 5 / 대전 3 — **17 시/도 모두 커버**.
+- 이전 TourAPI 의 latent fallback (non-Seoul → 서울 광역 row 미스태깅) 이 upsert update path 로 자동 교정됨.
+- KCISA: 키 미보유, 향후 검토. Seoul Culture: 소스 자체가 서울이라 변동 없음.
 
 ## Open questions
 

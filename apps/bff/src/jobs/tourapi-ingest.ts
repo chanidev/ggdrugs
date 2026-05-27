@@ -14,8 +14,8 @@ import {
  * TourAPI (한국관광공사) 축제 크롤 ingest.
  *
  * - 엔드포인트: KorService2/searchFestival2 (contentTypeId=15 축제공연행사)
- * - 대상: 서울(areaCode=1), eventStartDate=오늘 이후 (forward-looking 전용)
- *   초기 backfill 은 수동 실행 시 `--full` 옵션 고려 대상. 현재 일일 배치는 오늘 기준.
+ * - 대상: 전국 (ADR 0006 — 2026-05-27 areaCode 하드코드 제거). eventStartDate=오늘 이후가 기본.
+ *   backfill 시 `runTourapiIngest({ eventStartDate: '20260101', includePast: true })` 로 과거 포함.
  * - TOUR_API_KEY 는 공공데이터포털 발급값이 이미 URL-인코딩돼 있어서 URLSearchParams
  *   로 재인코딩하면 이중 인코딩됨. 쿼리 문자열을 수동 조립.
  */
@@ -24,6 +24,7 @@ const BASE_URL = 'https://apis.data.go.kr/B551011/KorService2/searchFestival2';
 const CRAWL_ORIGIN = 'tourapi-festival';
 const PAGE_SIZE = 100;
 const MOBILE_APP = 'alle';
+const DEFAULT_MAX_PAGES = 50;
 
 interface TourApiItem {
   contentid: string;
@@ -48,9 +49,13 @@ interface TourApiResponse {
   };
 }
 
-async function fetchPage(pageNo: number, eventStartDate: string): Promise<{ items: TourApiItem[]; total: number }> {
+async function fetchPage(
+  pageNo: number,
+  eventStartDate: string,
+  areaCode?: string,
+): Promise<{ items: TourApiItem[]; total: number }> {
   if (!env.TOUR_API_KEY) throw new Error('TOUR_API_KEY is not set');
-  const qs = [
+  const params = [
     `serviceKey=${env.TOUR_API_KEY}`,
     'MobileOS=ETC',
     `MobileApp=${MOBILE_APP}`,
@@ -58,9 +63,11 @@ async function fetchPage(pageNo: number, eventStartDate: string): Promise<{ item
     'arrange=A',
     `numOfRows=${PAGE_SIZE}`,
     `pageNo=${pageNo}`,
-    'areaCode=1',
     `eventStartDate=${eventStartDate}`,
-  ].join('&');
+  ];
+  // areaCode 미지정 시 전국 (ADR 0006). 1=서울, 6=부산, 31=경기, … 운영자가 명시한 경우만 필터.
+  if (areaCode) params.push(`areaCode=${areaCode}`);
+  const qs = params.join('&');
 
   const res = await fetchWithRetry(
     `${BASE_URL}?${qs}`,
@@ -107,11 +114,27 @@ function toNormalized(item: TourApiItem): NormalizedEvent | null {
   };
 }
 
-/**
- * @param eventStartDate YYYYMMDD 문자열. 기본값은 오늘 (forward-looking). 전체 backfill 원하면 '20240101' 등 명시.
- */
-export async function runTourapiIngest(eventStartDate: string = todayYmd()): Promise<IngestResult> {
-  const log = logger.child({ job: 'tourapi-ingest', floor: eventStartDate });
+export interface TourapiIngestOptions {
+  /** YYYYMMDD floor. 기본은 오늘 (forward-looking). backfill 시 과거 날짜 지정. */
+  eventStartDate?: string;
+  /** TourAPI areaCode (1=서울, 6=부산, 31=경기, …). 미지정 시 전국. ADR 0006 이전엔 '1' 하드코드. */
+  areaCode?: string;
+  /** true 면 isForwardLooking 가드 우회 (ended 포함). 운영자 backfill 전용. */
+  includePast?: boolean;
+  /** 페이지 캡. 기본 50 (= 5000 row). backfill 시 증가 가능. */
+  maxPages?: number;
+}
+
+/** 하위 호환: 옛 `runTourapiIngest(string)` 호출도 floor 로 해석. */
+export async function runTourapiIngest(
+  optsOrFloor: TourapiIngestOptions | string = {},
+): Promise<IngestResult> {
+  const opts: TourapiIngestOptions = typeof optsOrFloor === 'string' ? { eventStartDate: optsOrFloor } : optsOrFloor;
+  const eventStartDate = opts.eventStartDate ?? todayYmd();
+  const areaCode = opts.areaCode;
+  const includePast = opts.includePast ?? false;
+  const maxPages = opts.maxPages ?? DEFAULT_MAX_PAGES;
+  const log = logger.child({ job: 'tourapi-ingest', floor: eventStartDate, areaCode: areaCode ?? '전국', includePast });
   const result: IngestResult = { fetched: 0, upserted: 0, skipped: 0, errors: 0 };
 
   if (!env.TOUR_API_KEY) {
@@ -124,7 +147,7 @@ export async function runTourapiIngest(eventStartDate: string = todayYmd()): Pro
   while (true) {
     let page: Awaited<ReturnType<typeof fetchPage>>;
     try {
-      page = await fetchPage(pageNo, eventStartDate);
+      page = await fetchPage(pageNo, eventStartDate, areaCode);
     } catch (err) {
       log.error({ pageNo, err: err instanceof Error ? err.message : String(err) }, 'fetch failed');
       result.errors += 1;
@@ -135,7 +158,11 @@ export async function runTourapiIngest(eventStartDate: string = todayYmd()): Pro
 
     for (const raw of page.items) {
       const ev = toNormalized(raw);
-      if (!ev || !isForwardLooking(ev.startDate, ev.endDate)) {
+      if (!ev) {
+        result.skipped += 1;
+        continue;
+      }
+      if (!includePast && !isForwardLooking(ev.startDate, ev.endDate)) {
         result.skipped += 1;
         continue;
       }
@@ -149,6 +176,7 @@ export async function runTourapiIngest(eventStartDate: string = todayYmd()): Pro
     }
     if (result.fetched >= page.total) break;
     pageNo += 1;
+    if (pageNo > maxPages) break;
   }
   log.info(result, 'done');
   return result;

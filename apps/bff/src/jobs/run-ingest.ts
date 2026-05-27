@@ -29,7 +29,9 @@ import { logger } from '../logger.js';
 
 const which = (process.argv[2] ?? 'all').toLowerCase();
 const args = process.argv.slice(2);
-const tourapiFloor = process.argv[3]; // YYYYMMDD optional (tourapi 전용)
+// positional YYYYMMDD floor (tourapi 전용 — `... run-ingest.ts tourapi 20260101`).
+// `--` 로 시작하면 플래그라 floor 아님.
+const tourapiFloor = process.argv[3] && !process.argv[3].startsWith('--') ? process.argv[3] : undefined;
 // `--backfill` 이 아무 위치에 있으면 seoul-culture 를 전체(종료 포함) 재분류 모드로.
 const seoulBackfill = args.includes('--backfill');
 // `--kcisa-backfill` — KCISA forward-looking 필터 우회 (종료 이벤트 포함 재수집).
@@ -37,13 +39,27 @@ const kcisaBackfill = args.includes('--kcisa-backfill');
 // `--kcisa-max-pages <N>` — KCISA 페이지 상한 지정 (기본 10).
 const kcisaMaxPagesIdx = args.indexOf('--kcisa-max-pages');
 const kcisaMaxPages = kcisaMaxPagesIdx !== -1 ? Number(args[kcisaMaxPagesIdx + 1]) : undefined;
+// `--tourapi-backfill` — TourAPI forward-looking 가드 우회 + areaCode 미지정(전국).
+const tourapiBackfill = args.includes('--tourapi-backfill');
+// `--tourapi-max-pages <N>` — TourAPI 페이지 상한 (기본 50).
+const tourapiMaxPagesIdx = args.indexOf('--tourapi-max-pages');
+const tourapiMaxPages = tourapiMaxPagesIdx !== -1 ? Number(args[tourapiMaxPagesIdx + 1]) : undefined;
+// `--tourapi-area-code <code>` — 특정 areaCode 만 가져오기 (1=서울, 6=부산, …). 미지정 시 전국.
+const tourapiAreaCodeIdx = args.indexOf('--tourapi-area-code');
+const tourapiAreaCode = tourapiAreaCodeIdx !== -1 ? args[tourapiAreaCodeIdx + 1] : undefined;
 // `--no-summarize` 로 ingest 후 AI 요약 단계를 스킵할 수 있음 (배치 시간 단축 / 비용 회피).
 const skipSummarize = args.includes('--no-summarize');
 
 async function main() {
   const results: Record<string, unknown> = {};
   if (which === 'tourapi' || which === 'all') {
-    results.tourapi = await runTourapiIngest(tourapiFloor);
+    const tourapiOpts: Parameters<typeof runTourapiIngest>[0] = {
+      includePast: tourapiBackfill,
+    };
+    if (tourapiFloor) (tourapiOpts as { eventStartDate?: string }).eventStartDate = tourapiFloor;
+    if (tourapiAreaCode) (tourapiOpts as { areaCode?: string }).areaCode = tourapiAreaCode;
+    if (tourapiMaxPages !== undefined) (tourapiOpts as { maxPages?: number }).maxPages = tourapiMaxPages;
+    results.tourapi = await runTourapiIngest(tourapiOpts);
   }
   if (which === 'seoul-culture' || which === 'seoul' || which === 'all')
     results['seoul-culture'] = await runSeoulCultureIngest({ includePast: seoulBackfill });
