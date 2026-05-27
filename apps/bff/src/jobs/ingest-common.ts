@@ -83,6 +83,25 @@ export function parseYmd(s: string | undefined | null): Date | null {
 }
 
 /**
+ * STUB — Task 5 에서 본 구현으로 교체.
+ * 빌드를 통과시키고 RED 상태(런타임 실패) 를 명시적으로 만들기 위해 throw.
+ */
+export function extractKoreanRegion(
+  _addr: string | null | undefined,
+): { sido: string; sigungu: string | null } | null {
+  throw new Error('extractKoreanRegion: not implemented');
+}
+
+/**
+ * STUB — Task 6 에서 본 구현으로 교체.
+ */
+export async function resolveRegionId(
+  _addr: string | null | undefined,
+): Promise<bigint | null> {
+  throw new Error('resolveRegionId: not implemented');
+}
+
+/**
  * 주소 텍스트에서 서울 구 이름 추출. 예: "서울특별시 종로구 ..." → "종로구".
  * 구 이름이 없으면 null (→ 서울 전체로 fallback).
  */

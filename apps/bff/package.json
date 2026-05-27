@@ -25,6 +25,7 @@
     "embed:events": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events",
     "embed:events:all": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events --all",
     "embed:events:missing": "dotenv -e ../../.env -- tsx src/jobs/run-ingest.ts embed-events --missing",
+    "check:regions": "dotenv -e ../../.env -- tsx src/jobs/region-resolver-check.ts",
     "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts",
     "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
     "chat:eval": "dotenv -e ../../.env -- tsx src/jobs/chat-eval.ts",
