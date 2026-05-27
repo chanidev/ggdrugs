@@ -83,13 +83,85 @@ export function parseYmd(s: string | undefined | null): Date | null {
 }
 
 /**
- * STUB — Task 5 에서 본 구현으로 교체.
- * 빌드를 통과시키고 RED 상태(런타임 실패) 를 명시적으로 만들기 위해 throw.
+ * 전국 광역시·도 매칭 패턴. 단축형(sido_name) + 정식명칭 모두 인식.
+ * 순서: 더 긴 정식명 우선 ("강원특별자치도" → "강원특별자치도" 가 먼저, "강원" 은 뒤).
+ */
+const SIDO_PATTERNS: ReadonlyArray<{ name: string; re: RegExp }> = [
+  { name: '서울', re: /서울(?:특별시)?/ },
+  { name: '부산', re: /부산(?:광역시)?/ },
+  { name: '대구', re: /대구(?:광역시)?/ },
+  { name: '인천', re: /인천(?:광역시)?/ },
+  { name: '광주', re: /광주(?:광역시)?/ },
+  { name: '대전', re: /대전(?:광역시)?/ },
+  { name: '울산', re: /울산(?:광역시)?/ },
+  { name: '세종', re: /세종(?:특별자치시)?/ },
+  { name: '경기', re: /경기(?:도)?/ },
+  { name: '강원', re: /강원(?:특별자치도|도)?/ },
+  { name: '충북', re: /(?:충청북도|충북)/ },
+  { name: '충남', re: /(?:충청남도|충남)/ },
+  { name: '전북', re: /(?:전북특별자치도|전라북도|전북)/ },
+  { name: '전남', re: /(?:전라남도|전남)/ },
+  { name: '경북', re: /(?:경상북도|경북)/ },
+  { name: '경남', re: /(?:경상남도|경남)/ },
+  { name: '제주', re: /제주(?:특별자치도|도)?/ },
+];
+
+/**
+ * 자치구가 있는 일반시 목록 — sigungu 매칭 시 "<시명> <자치구>" 합성형 우선.
+ * 광역시 산하 자치구 ("부산 해운대구") 와 충돌 없음 (sido 매칭 먼저).
+ */
+const CITIES_WITH_AUTONOMOUS_DISTRICTS = [
+  '수원시', '성남시', '고양시', '용인시', '청주시', '천안시', '전주시', '포항시', '창원시', '안산시',
+] as const;
+
+/**
+ * 주소 텍스트에서 시/도 + 시/군/구 추출. 자치구 있는 일반시는 합성형 ("수원시 영통구") 으로 반환.
+ *
+ * 알고리즘:
+ *  1. SIDO_PATTERNS 순회해 첫 매치를 sido 로 채택.
+ *  2. 시도 접두사를 제거한 나머지 문자열에서 sigungu 를 탐색 (시도명이 sigungu 로 오인되는 문제 방지).
+ *  3. 자치구 있는 일반시 합성형 우선 매칭: "<시명> <n>구" 패턴.
+ *  4. 합성형 매칭 안 되면 단순 "<n>(시|군|구)" 단일 캡처.
+ *  5. 시 단위 row fallback 은 resolveRegionId 가 담당 (여기서는 sigungu 그대로).
  */
 export function extractKoreanRegion(
-  _addr: string | null | undefined,
+  addr: string | null | undefined,
 ): { sido: string; sigungu: string | null } | null {
-  throw new Error('extractKoreanRegion: not implemented');
+  if (!addr) return null;
+
+  // sido 매칭
+  let sido: string | null = null;
+  let sidoPattern: RegExp | null = null;
+  for (const p of SIDO_PATTERNS) {
+    if (p.re.test(addr)) {
+      sido = p.name;
+      sidoPattern = p.re;
+      break;
+    }
+  }
+  if (!sido || !sidoPattern) return null;
+
+  // 시도 접두사 제거 — 광역시/도 명칭이 sigungu 로 캡처되는 것을 방지.
+  // 예: "서울특별시 종로구" → " 종로구", "부산광역시 해운대구" → " 해운대구"
+  const rest = addr.replace(sidoPattern, '');
+
+  // 합성형 우선 매칭: "수원시 영통구" 등 — rest 에서 탐색
+  for (const city of CITIES_WITH_AUTONOMOUS_DISTRICTS) {
+    const re = new RegExp(`${city}\\s*([가-힣]{1,5}구)`);
+    const m = rest.match(re);
+    if (m) return { sido, sigungu: `${city} ${m[1]!}` };
+  }
+
+  // 일반 시/군/구 단일 매칭 — 한글 1~5자 + 시/군/구 (마산합포구 등 긴 자치구명 대응)
+  const sgMatch = rest.match(/([가-힣]{1,5}(?:시|군|구))/);
+  if (sgMatch) {
+    const sg = sgMatch[1]!;
+    // "서울시" 같은 모호 표기는 sigungu 아님 (광역만 인식)
+    if (sg === '서울시') return { sido, sigungu: null };
+    return { sido, sigungu: sg };
+  }
+
+  return { sido, sigungu: null };
 }
 
 /**
