@@ -357,6 +357,10 @@ _NEXT_WEEK_WD_RE = _re_date.compile(r"(?<!다)(?:다음\s*주|담주|next\s*week
 # 다다음주 = 다음 다음 월~일 (오늘로부터 +14일 후).
 _AFTER_NEXT_WEEK_WD_RE = _re_date.compile(r"다다음\s*주\s*[ ,]*([월화수목금토일])(?:요일)?")
 _THIS_WEEK_WD_RE = _re_date.compile(r"(?:이번\s*주|금주|this\s*week)\s*[ ,]*([월화수목금토일])(?:요일)?")
+# "이번 토요일" / "오는 일요일" 같이 주 prefix 생략한 단축형. 가장 가까운 이번주 X요일 alias.
+# lookbehind (?<![가-힣다]) 로 "다다음", "지난번" 같은 더 긴 표현 안의 "이번"·"오는" 충돌 차단.
+# lookahead (?!\s*주) 로 "이번 주 X요일" (정식) 과 충돌 차단 — 정식은 _THIS_WEEK_WD_RE 가 먼저 처리.
+_THIS_WD_SHORT_RE = _re_date.compile(r"(?<![가-힣다])(?:이번|오는)\s*([월화수목금토일])(?!\s*주)(?:요일)?")
 _TOMORROW_RE = _re_date.compile(r"(?<![가-힣])내일(?![가-힣])")
 _KO_WD_INDEX = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4, "토": 5, "일": 6}
 
@@ -396,6 +400,14 @@ def _coerce_specific_date(
             target = this_mon + timedelta(days=7 + wd)
             return target.isoformat()
     m = _THIS_WEEK_WD_RE.search(user_text)
+    if m:
+        wd = _KO_WD_INDEX.get(m.group(1))
+        if wd is not None:
+            this_mon = today - timedelta(days=today.weekday())
+            target = this_mon + timedelta(days=wd)
+            return target.isoformat()
+    # 단축형 "이번 토요일" / "오는 일" — 이번주 X요일 alias.
+    m = _THIS_WD_SHORT_RE.search(user_text)
     if m:
         wd = _KO_WD_INDEX.get(m.group(1))
         if wd is not None:
