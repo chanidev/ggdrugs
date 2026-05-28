@@ -15,25 +15,42 @@ import {
   type RegionItem,
 } from '../lib/api';
 
-/** GeoJSON 데이터 타입 (필요한 서브셋만). southkorea/seoul-maps 형식. */
-interface SeoulGuFeature {
+/**
+ * 전국 시/군/구 GeoJSON 타입 (southkorea-maps `skorea-municipalities-2018-geo.json` 기반,
+ * `apps/web/scripts/simplify-geojson.mjs` 로 단순화한 결과).
+ * properties: { code: KOSTAT 5자리, name: 공백 없는 sigungu 표기 ("수원시영통구") }.
+ */
+interface MunicipalityFeature {
   type: 'Feature';
-  properties: { name: string; [k: string]: unknown };
+  properties: { code: string; name: string };
   geometry: { type: 'Polygon' | 'MultiPolygon'; coordinates: number[][][] | number[][][][] };
 }
-interface SeoulGuGeoJson {
+interface MunicipalityGeoJson {
   type: 'FeatureCollection';
-  features: SeoulGuFeature[];
+  features: MunicipalityFeature[];
 }
 
+/** KOSTAT 행정코드 첫 2자리 → DB sido_name 단축형. ADR 0006 — 전국 17 시/도. */
+const SIDO_CODE_MAP: Record<string, string> = {
+  '11': '서울', '21': '부산', '22': '대구', '23': '인천', '24': '광주',
+  '25': '대전', '26': '울산', '29': '세종', '31': '경기', '32': '강원',
+  '33': '충북', '34': '충남', '35': '전북', '36': '전남', '37': '경북',
+  '38': '경남', '39': '제주',
+};
+
 /** GeoJSON Polygon 의 외곽 링 → Kakao path. MultiPolygon 이면 첫 외곽 링만 사용. */
-function geojsonToKakaoPath(geom: SeoulGuFeature['geometry']): { lat: number; lng: number }[] {
+function geojsonToKakaoPath(geom: MunicipalityFeature['geometry']): { lat: number; lng: number }[] {
   const ring =
     geom.type === 'Polygon'
       ? (geom.coordinates as number[][][])[0]
       : (geom.coordinates as number[][][][])[0]?.[0];
   if (!ring) return [];
   return ring.map(([lng, lat]) => ({ lat: lat!, lng: lng! }));
+}
+
+/** sigungu_name 정규화 — 공백 제거. DB "수원시 영통구" ↔ GeoJSON "수원시영통구" 매칭 키. */
+function normalizeSigungu(s: string | null): string {
+  return s ? s.replace(/\s+/g, '') : '';
 }
 
 /**
@@ -148,7 +165,7 @@ export function SeoulMap({
 
   const [pins, setPins] = useState<Pin[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
-  const [geojson, setGeojson] = useState<SeoulGuGeoJson | null>(null);
+  const [geojson, setGeojson] = useState<MunicipalityGeoJson | null>(null);
   const [regions, setRegions] = useState<RegionItem[]>([]);
   // v4.3 stage 3 — viewport bbox. 사용자가 panning / zoom 시 300ms debounce 후 갱신.
   // null 인 동안엔 기본 fetch (phases 또는 filter 만 적용) — 첫 idle 후 bbox 등록.
@@ -157,11 +174,11 @@ export function SeoulMap({
   // ADR 0006 — 비-서울 region chip 선택 시 지도 panTo anchor. Kakao Map 인스턴스 보관.
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
 
-  // lookups (geojson + regions) — 페이지당 1회.
+  // lookups (geojson + regions) — 페이지당 1회. ADR 0006: 전국 시/군/구 GeoJSON (~2.7 MB).
   useEffect(() => {
     const ctrl = new AbortController();
-    fetch('/data/seoul-gu.geojson', { signal: ctrl.signal })
-      .then((r) => r.json() as Promise<SeoulGuGeoJson>)
+    fetch('/data/skorea-municipalities.geojson', { signal: ctrl.signal })
+      .then((r) => r.json() as Promise<MunicipalityGeoJson>)
       .then(setGeojson)
       .catch(() => {
         // 경계 데이터 없어도 지도 자체는 동작 — 조용히 skip.
@@ -172,16 +189,24 @@ export function SeoulMap({
     return () => ctrl.abort();
   }, []);
 
-  // 선택된 regionId → sigungu name → Kakao path.
-  // highlightRegionIds 우선 (chip 클릭 즉시), 없으면 filter.regionIds (이전 호환) fallback.
+  // 선택된 regionId → (sido, 정규화 sigungu) 키 → GeoJSON feature 매칭 → Kakao path.
+  //   - DB sigungu "수원시 영통구" (공백) ↔ GeoJSON name "수원시영통구" (무공백): normalizeSigungu 로 정합.
+  //   - "중구" 처럼 여러 sido 에 동명 자치구 — feature.code 첫 2자리 → SIDO_CODE_MAP 으로 sido 추출해 disambiguate.
+  //   - 광역 row (sigungu=null) 는 chip 으로 노출 안 되니 무시.
   const highlightedGu = useMemo(() => {
     const ids = highlightRegionIds?.length ? highlightRegionIds : filter?.regionIds;
     if (!geojson || !ids?.length || regions.length === 0) return [];
-    const nameById = new Map(regions.map((r) => [r.regionId, r.sigungu ?? '']));
-    const names = new Set(ids.map((id) => nameById.get(id)).filter((n): n is string => !!n));
-    if (names.size === 0) return [];
+    const targets = ids
+      .map((id) => regions.find((r) => r.regionId === id))
+      .filter((r): r is RegionItem => !!r && !!r.sigungu)
+      .map((r) => ({ sido: r.sido, key: normalizeSigungu(r.sigungu) }));
+    if (targets.length === 0) return [];
     return geojson.features
-      .filter((f) => names.has(f.properties.name))
+      .filter((f) => {
+        const featureSido = SIDO_CODE_MAP[f.properties.code.slice(0, 2)];
+        if (!featureSido) return false;
+        return targets.some((t) => t.sido === featureSido && t.key === f.properties.name);
+      })
       .map((f) => ({ name: f.properties.name, path: geojsonToKakaoPath(f.geometry) }));
   }, [geojson, regions, highlightRegionIds, filter?.regionIds]);
 
