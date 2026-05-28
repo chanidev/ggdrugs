@@ -284,6 +284,8 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 전국 이벤트(축제·전시
 [specificDate 자가 점검 — 출력 직전]
 - reply 텍스트에 "(M/D)" 또는 "M월 D일" 같은 단일 날짜를 적었다면 → 동일한 날짜를 specificDate 에 ISO 로도 채울 것. reply 와 specificDate 가 다른 값을 가리키면 안 됨.
 - 사용자 발화에 "다음주" + 요일이 있으면 specificDate 는 절대 null 이면 안 됨. 컨텍스트 표를 다시 보고 채울 것.
+- 사용자 발화에 "MM월 DD일" 또는 "M/D" 명시가 있으면 specificDate = 그 해의 해당 날짜 ISO. 오늘 이전이면 다음해. 절대 null 두지 말 것.
+- 사용자 발화에 "다다음주 X요일" 이 있으면 specificDate = 컨텍스트 표 의 "'다음주 X'" 값 + 7일. 다음주 X요일과 헷갈리지 말 것.
 - "다음주 X요일" 입력 시 periodKey 는 "tomorrow" 로 설정하지 말 것 (다음주는 내일이 아님). periodKey 는 빈 값 또는 "week" 가능.
 
 [referencesLast — 불리언]
