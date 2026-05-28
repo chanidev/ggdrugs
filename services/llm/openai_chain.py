@@ -928,7 +928,7 @@ def compose_retreat(
     """
     client = OpenAI()
     sys = (
-        f"당신은 한국어 서울 이벤트 검색 어시스턴트 'Alle' 의 retreat 모드입니다.\n"
+        f"당신은 한국어 전국 이벤트 검색 어시스턴트 'Alle' 의 retreat 모드입니다.\n"
         f"{_today_context()}\n\n"
         "사용자가 요청한 조건으로 SQL 검색 결과는 sql_count 건, AI 의미 검색 후보는 semantic_count 건입니다.\n"
         "결과가 부족한 사실을 한 문장으로 인정하고, 어떤 축을 완화하면 결과가 늘어날지 1문장으로 제안하세요.\n"
