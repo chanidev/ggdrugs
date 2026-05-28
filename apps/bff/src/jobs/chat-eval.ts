@@ -35,6 +35,8 @@ interface Case {
   expect: {
     filters?: Record<string, unknown>;
     specificDateExact?: string;
+    /** 동적 토큰 — today 기준 ISO 계산 후 비교. 예: "this-week-saturday", "next-week-sunday", "after-next-week-saturday". */
+    specificDateRelative?: string;
     referencesLast?: boolean;
     minSuggestions?: number;
     maxSuggestions?: number;
@@ -106,6 +108,43 @@ function parseArgs(argv: string[]): Options {
     }
   }
   return opts;
+}
+
+/**
+ * specificDateRelative 토큰을 today 기준 ISO 날짜로 변환.
+ * 토큰: "this-week-<weekday>", "next-week-<weekday>", "after-next-week-<weekday>".
+ * weekday: monday|tuesday|wednesday|thursday|friday|saturday|sunday.
+ *
+ * 알 수 없는 토큰 → null (호출자가 명시 에러 처리).
+ */
+function resolveRelative(token: string): string | null {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const day = today.getDay(); // 0=Sun ... 6=Sat
+  const monOffset = day === 0 ? -6 : 1 - day;
+  const thisMon = new Date(today);
+  thisMon.setDate(today.getDate() + monOffset);
+
+  const WEEKDAY_OFFSET: Record<string, number> = {
+    monday: 0,
+    tuesday: 1,
+    wednesday: 2,
+    thursday: 3,
+    friday: 4,
+    saturday: 5,
+    sunday: 6,
+  };
+
+  const match = token.match(/^(this|next|after-next)-week-(\w+)$/);
+  if (!match) return null;
+  const weekKey = match[1]!;
+  const wdName = match[2]!;
+  const wd = WEEKDAY_OFFSET[wdName];
+  if (wd === undefined) return null;
+  const weekShift = weekKey === 'this' ? 0 : weekKey === 'next' ? 7 : 14;
+  const target = new Date(thisMon);
+  target.setDate(thisMon.getDate() + weekShift + wd);
+  return target.toISOString().slice(0, 10);
 }
 
 /**
@@ -206,7 +245,18 @@ function checkCase(c: Case, reply: ChatReply): string[] {
   if (c.expect.filters) {
     failures.push(...checkFilters(c.expect.filters, reply.filters));
   }
-  if (c.expect.specificDateExact !== undefined) {
+  if (c.expect.specificDateRelative !== undefined) {
+    const expected = resolveRelative(c.expect.specificDateRelative);
+    if (expected === null) {
+      failures.push(
+        `specificDateRelative: unknown token ${c.expect.specificDateRelative}`,
+      );
+    } else if (reply.specificDate !== expected) {
+      failures.push(
+        `specificDate: expected ${expected} (from ${c.expect.specificDateRelative}), got ${reply.specificDate ?? 'null'}`,
+      );
+    }
+  } else if (c.expect.specificDateExact !== undefined) {
     if (reply.specificDate !== c.expect.specificDateExact) {
       failures.push(
         `specificDate: expected ${c.expect.specificDateExact}, got ${reply.specificDate ?? 'null'}`,
