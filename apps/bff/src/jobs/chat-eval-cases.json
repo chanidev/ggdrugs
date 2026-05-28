@@ -199,6 +199,53 @@
         "filters": { "companions": ["friend"], "vibes": ["체험형"] },
         "referencesLast": false
       }
+    },
+    {
+      "id": "nationwide-busan-haeundae-couple-quiet",
+      "messages": [{ "role": "user", "text": "부산 해운대 데이트로 갈만한 잔잔한 전시" }],
+      "expect": {
+        "filters": {
+          "companions": ["couple"],
+          "eventTypes": ["exhibition"],
+          "vibes": ["정적"],
+          "regionHints": ["해운대구"]
+        },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "nationwide-suwon-yeongtong-family",
+      "messages": [{ "role": "user", "text": "수원시 영통구 가족이랑 갈만한 행사" }],
+      "expect": {
+        "filters": {
+          "companions": ["family"],
+          "regionHints": ["수원시 영통구"]
+        },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "nationwide-gangneung-festival",
+      "messages": [{ "role": "user", "text": "강릉 축제 가보고 싶어" }],
+      "expect": {
+        "filters": {
+          "eventTypes": ["festival"],
+          "regionHints": ["강릉시"]
+        },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "nationwide-cheongju-heungdeok-weekend",
+      "messages": [{ "role": "user", "text": "청주시 흥덕구 이번주 주말 전시" }],
+      "expect": {
+        "filters": {
+          "eventTypes": ["exhibition"],
+          "periodKey": "weekend",
+          "regionHints": ["청주시 흥덕구"]
+        },
+        "referencesLast": false
+      }
     }
   ]
 }
