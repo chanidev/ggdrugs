@@ -52,12 +52,11 @@ VIBE_TABLE: list[tuple[list[str], str]] = [
     (["네트워킹", "교류", "친목", "사람들", "인맥"], "네트워킹 중심"),
 ]
 
-# 서울 25개 구 — 단순 텍스트 매칭. BFF /regions 가 실제 regionId 로 resolve.
-SEOUL_GU = [
-    "종로구", "중구", "용산구", "성동구", "광진구", "동대문구", "중랑구",
-    "성북구", "강북구", "도봉구", "노원구", "은평구", "서대문구", "마포구",
-    "양천구", "강서구", "구로구", "금천구", "영등포구", "동작구", "관악구",
-    "서초구", "강남구", "송파구", "강동구",
+# ADR 0006 — LLM 없는 dev/CI fallback. sido 17 단축형만 매칭. 자치구·시·군 미인식.
+# 정확도 우선순위 낮음 (LLM stage 가 정상 작동하면 이 경로는 거의 안 탐).
+_SIDO_KEYWORDS = [
+    "서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종",
+    "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주",
 ]
 
 
@@ -92,9 +91,8 @@ def extract(text: str) -> dict[str, Any]:
         "eventTypes": _match_any(t, EVENT_TYPE_TABLE),
         "periodKey":  _match_first(t, PERIOD_TABLE),
         "vibes":      _match_any(t, VIBE_TABLE),
-        # 접미어 "구" 만 떼서 매칭 — str.replace 가 전체 "구" 를 제거해 "구로구"→"로"로
-        # 너무 짧아져 오매칭 되던 문제 fix. (예: "종로구" 만 써도 "종로"에만 hit.)
-        "regionHints": [gu for gu in SEOUL_GU if gu in t or gu[:-1] in t],
+        # Sido 17 lite fallback — LLM stage 2 비활성화 시만 사용.
+        "regionHints": [k for k in _SIDO_KEYWORDS if k in t],
     }
 
 
