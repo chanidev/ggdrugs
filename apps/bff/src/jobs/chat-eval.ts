@@ -111,6 +111,17 @@ function parseArgs(argv: string[]): Options {
 }
 
 /**
+ * Date → "YYYY-MM-DD" 로컬 날짜 포맷. toISOString() 은 UTC 변환 시 KST(+9) 환경에서
+ * 자정을 전날 15:00Z 로 내보내 off-by-one 이 생기므로 로컬 년/월/일을 직접 조립.
+ */
+function toLocalISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/**
  * specificDateRelative 토큰을 today 기준 ISO 날짜로 변환.
  * 토큰: "this-week-<weekday>", "next-week-<weekday>", "after-next-week-<weekday>".
  * weekday: monday|tuesday|wednesday|thursday|friday|saturday|sunday.
@@ -144,7 +155,7 @@ function resolveRelative(token: string): string | null {
   const weekShift = weekKey === 'this' ? 0 : weekKey === 'next' ? 7 : 14;
   const target = new Date(thisMon);
   target.setDate(thisMon.getDate() + weekShift + wd);
-  return target.toISOString().slice(0, 10);
+  return toLocalISODate(target);
 }
 
 /**
