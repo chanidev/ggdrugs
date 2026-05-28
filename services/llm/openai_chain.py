@@ -361,6 +361,8 @@ _THIS_WEEK_WD_RE = _re_date.compile(r"(?:이번\s*주|금주|this\s*week)\s*[ ,]
 # lookbehind (?<![가-힣다]) 로 "다다음", "지난번" 같은 더 긴 표현 안의 "이번"·"오는" 충돌 차단.
 # lookahead (?!\s*주) 로 "이번 주 X요일" (정식) 과 충돌 차단 — 정식은 _THIS_WEEK_WD_RE 가 먼저 처리.
 _THIS_WD_SHORT_RE = _re_date.compile(r"(?<![가-힣다])(?:이번|오는)\s*([월화수목금토일])(?!\s*주)(?:요일)?")
+# "6월 15일" 또는 "6/15" 명시 날짜. lookbehind/ahead 로 "12.34.56" 같은 일반 숫자 충돌 차단.
+_MD_DATE_RE = _re_date.compile(r"(?<!\d)(?:(\d{1,2})\s*월\s*(\d{1,2})\s*일|(\d{1,2})/(\d{1,2}))(?!\d)")
 _TOMORROW_RE = _re_date.compile(r"(?<![가-힣])내일(?![가-힣])")
 _KO_WD_INDEX = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4, "토": 5, "일": 6}
 
@@ -414,6 +416,22 @@ def _coerce_specific_date(
             this_mon = today - timedelta(days=today.weekday())
             target = this_mon + timedelta(days=wd)
             return target.isoformat()
+    # "6월 15일" / "6/15" — 명시 날짜. 오늘 이전이면 다음해.
+    m = _MD_DATE_RE.search(user_text)
+    if m:
+        m_str = m.group(1) or m.group(3)
+        d_str = m.group(2) or m.group(4)
+        try:
+            month = int(m_str)
+            day = int(d_str)
+            year = today.year
+            candidate = date(year, month, day)
+            if candidate < today:
+                candidate = date(year + 1, month, day)
+            return candidate.isoformat()
+        except ValueError:
+            # 잘못된 날짜 (2월 30일 등) — 다음 단계로 넘어감
+            pass
     if _TOMORROW_RE.search(user_text):
         return (today + timedelta(days=1)).isoformat()
     return current
