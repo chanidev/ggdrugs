@@ -192,6 +192,34 @@ _FEWSHOT = """예시:
     reply: "다음 주 토요일 활동적 분위기 페스티벌 기준으로 찾아봤어요.",
     followups: ["일요일도 보기", "가족이랑은", "공연도 함께"]
   }
+
+- "부산 해운대 데이트 잔잔한 전시":
+  {
+    filters: {regionHints:["해운대구"], companions:["couple"], eventTypes:["exhibition"], vibes:["정적"]},
+    specificDate: null,
+    referencesLast: false,
+    reply: "부산 해운대구 · 연인 동행 · 전시 · 정적 분위기로 좁혔어요. 마음에 드는 것 있는지 확인해 보세요.",
+    followups: ["야간 운영 위주", "공연도 같이", "다른 지역도 보기"]
+  }
+
+- "다음주 토요일 강릉 커피축제" (구체 날짜 — specificDate 사용, [오늘 컨텍스트] 의 "'다음주 토'=YYYY-MM-DD" 복사):
+  ※ 가정: [오늘 컨텍스트] 가 "'다음주 토'=2026-06-06" 라고 명시한 경우.
+  {
+    filters: {regionHints:["강릉시"], eventTypes:["festival"]},
+    specificDate: "2026-06-06",
+    referencesLast: false,
+    reply: "다음 주 토요일(6/6) 강릉시 축제 기준으로 찾아봤어요. 커피 관련 일정이 있는지 결과에서 확인해 주세요.",
+    followups: ["일요일도 보기", "전시도 함께", "이번 주말로"]
+  }
+
+- "수원시 영통구 가족 행사":
+  {
+    filters: {regionHints:["수원시 영통구"], companions:["family"]},
+    specificDate: null,
+    referencesLast: false,
+    reply: "수원시 영통구 · 가족 동행 기준으로 찾아봤어요. 종류(축제·전시·교육 등)를 알려주시면 더 정확히 좁혀드려요.",
+    followups: ["축제만", "체험 위주", "이번 주말로"]
+  }
 """
 
 
