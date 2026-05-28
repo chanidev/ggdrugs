@@ -38,6 +38,11 @@ const SIDO_CODE_MAP: Record<string, string> = {
   '38': '경남', '39': '제주',
 };
 
+/** 행정구역 시점차 보정 — KOSTAT 2018 GeoJSON 와 2026 행정구역의 차이. */
+const SIDO_CODE_OVERRIDE: Record<string, string> = {
+  '37310': '대구', // 군위군: 2023-07-01 경북 → 대구 편입
+};
+
 /** GeoJSON Polygon 의 외곽 링 → Kakao path. MultiPolygon 이면 첫 외곽 링만 사용. */
 function geojsonToKakaoPath(geom: MunicipalityFeature['geometry']): { lat: number; lng: number }[] {
   const ring =
@@ -192,6 +197,9 @@ export function SeoulMap({
   // 선택된 regionId → (sido, 정규화 sigungu) 키 → GeoJSON feature 매칭 → Kakao path.
   //   - DB sigungu "수원시 영통구" (공백) ↔ GeoJSON name "수원시영통구" (무공백): normalizeSigungu 로 정합.
   //   - "중구" 처럼 여러 sido 에 동명 자치구 — feature.code 첫 2자리 → SIDO_CODE_MAP 으로 sido 추출해 disambiguate.
+  //   - 시 단위 row ("수원시" 등 10개 자치구 있는 일반시): GeoJSON 엔 자치구 단독 ("수원시영통구")
+  //     만 있고 시 자체는 없음 → "<시>" 로 끝나는 key 가 자치구 prefix 면 합집합 highlight (수원시 chip
+  //     1개 → 자치구 4개 polygon 모두 표시).
   //   - 광역 row (sigungu=null) 는 chip 으로 노출 안 되니 무시.
   const highlightedGu = useMemo(() => {
     const ids = highlightRegionIds?.length ? highlightRegionIds : filter?.regionIds;
@@ -203,9 +211,16 @@ export function SeoulMap({
     if (targets.length === 0) return [];
     return geojson.features
       .filter((f) => {
-        const featureSido = SIDO_CODE_MAP[f.properties.code.slice(0, 2)];
+        const featureSido = SIDO_CODE_OVERRIDE[f.properties.code] ?? SIDO_CODE_MAP[f.properties.code.slice(0, 2)];
         if (!featureSido) return false;
-        return targets.some((t) => t.sido === featureSido && t.key === f.properties.name);
+        const featureName = f.properties.name;
+        return targets.some((t) => {
+          if (t.sido !== featureSido) return false;
+          if (t.key === featureName) return true;
+          // 시 단위 ("수원시", "성남시" 등) — 자치구 합집합 매칭. "<시>구|군" 으로 끝나는 key 는 prefix fallback 제외.
+          if (t.key.endsWith('시') && featureName.startsWith(t.key) && featureName !== t.key) return true;
+          return false;
+        });
       })
       .map((f) => ({ name: f.properties.name, path: geojsonToKakaoPath(f.geometry) }));
   }, [geojson, regions, highlightRegionIds, filter?.regionIds]);
