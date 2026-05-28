@@ -76,8 +76,8 @@
       "id": "specific-date-saturday-this-week",
       "messages": [{ "role": "user", "text": "이번 주 토요일 야외 행사" }],
       "expect": {
-        "filters": { "periodKey": "weekend" },
-        "specificDateExact": "2026-04-25",
+        "filters": { "vibes": ["활동적"] },
+        "specificDateRelative": "this-week-saturday",
         "referencesLast": false
       }
     },
@@ -86,7 +86,7 @@
       "messages": [{ "role": "user", "text": "다음주 일요일에 갈 만한 거" }],
       "expect": {
         "filters": {},
-        "specificDateExact": "2026-05-03",
+        "specificDateRelative": "next-week-sunday",
         "referencesLast": false
       }
     },
@@ -244,6 +244,41 @@
           "periodKey": "weekend",
           "regionHints": ["청주시 흥덕구"]
         },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "specific-date-after-next-saturday",
+      "messages": [{ "role": "user", "text": "다다음주 토요일 페스티벌" }],
+      "expect": {
+        "filters": { "eventTypes": ["festival"] },
+        "specificDateRelative": "after-next-week-saturday",
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "specific-date-md-explicit",
+      "messages": [{ "role": "user", "text": "6월 15일 행사 있어?" }],
+      "expect": {
+        "specificDateExact": "2026-06-15",
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "specific-date-this-saturday-short",
+      "messages": [{ "role": "user", "text": "이번 토요일 야외 행사" }],
+      "expect": {
+        "filters": { "vibes": ["활동적"] },
+        "specificDateRelative": "this-week-saturday",
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "specific-date-coming-sunday",
+      "messages": [{ "role": "user", "text": "오는 일요일 가족이랑 갈 곳" }],
+      "expect": {
+        "filters": { "companions": ["family"] },
+        "specificDateRelative": "this-week-sunday",
         "referencesLast": false
       }
     }
