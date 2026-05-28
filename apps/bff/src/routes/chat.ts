@@ -12,6 +12,41 @@ import {
 } from '../lib/stream-cache.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
+const SIDO_NAMES = [
+  '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종',
+  '경기', '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주',
+] as const;
+
+/**
+ * LLM 이 반환한 regionHints 를 regionId 목록으로 resolve. ADR 0006 전국 도메인.
+ *
+ * 룰:
+ *  - sido 단축형 (예: "부산") → 그 sido 산하 모든 sigungu row 의 regionId 합집합
+ *  - 자치구·시·군 표기 ("해운대구", "강릉시", "수원시 영통구") → sigungu_name 정확 매칭
+ *  - 둘이 섞이면 합집합
+ *
+ * 빈 hints → 빈 배열. dongName IS NULL 행만 (동 단위 제외).
+ */
+async function resolveRegionHintsToIds(hints: string[]): Promise<string[]> {
+  if (hints.length === 0) return [];
+  const sidos = hints.filter((h) => (SIDO_NAMES as readonly string[]).includes(h));
+  const sigungus = hints.filter((h) => !(SIDO_NAMES as readonly string[]).includes(h));
+  const rows = await prisma.region.findMany({
+    where: {
+      OR: [
+        ...(sigungus.length > 0
+          ? [{ sigunguName: { in: sigungus }, dongName: null }]
+          : []),
+        ...(sidos.length > 0
+          ? [{ sidoName: { in: sidos }, sigunguName: { not: null }, dongName: null }]
+          : []),
+      ],
+    },
+    select: { regionId: true },
+  });
+  return rows.map((r) => r.regionId.toString());
+}
+
 type PeriodKey = 'today' | 'tomorrow' | 'weekend' | 'week' | 'month' | null;
 
 interface LlmFilters {
@@ -349,14 +384,7 @@ export async function postChat(req: Request, res: Response) {
   const hints = data.filters?.regionHints ?? [];
   const vibeNames = data.filters?.vibes ?? [];
 
-  let regionIds: string[] = [];
-  if (hints.length > 0) {
-    const rows = await prisma.region.findMany({
-      where: { sigunguName: { in: hints }, dongName: null },
-      select: { regionId: true, sigunguName: true },
-    });
-    regionIds = rows.map((r) => r.regionId.toString());
-  }
+  const regionIds = await resolveRegionHintsToIds(hints);
 
   let vibeIds: string[] = [];
   if (vibeNames.length > 0) {
@@ -1220,14 +1248,7 @@ export async function postChatStream(req: Request, res: Response) {
   const hints = metaPayload.filters.regionHints ?? [];
   const vibeNames = metaPayload.filters.vibes ?? [];
 
-  let regionIds: string[] = [];
-  if (hints.length > 0) {
-    const rows = await prisma.region.findMany({
-      where: { sigunguName: { in: hints }, dongName: null },
-      select: { regionId: true },
-    });
-    regionIds = rows.map((r) => r.regionId.toString());
-  }
+  const regionIds = await resolveRegionHintsToIds(hints);
 
   let vibeIds: string[] = [];
   if (vibeNames.length > 0) {
@@ -1355,14 +1376,7 @@ async function streamFallbackFromNonStream(opts: FallbackOpts): Promise<void> {
   // region/vibe resolve (postChat 과 동일).
   const hints = data.filters?.regionHints ?? [];
   const vibeNames = data.filters?.vibes ?? [];
-  let regionIds: string[] = [];
-  if (hints.length > 0) {
-    const rows = await prisma.region.findMany({
-      where: { sigunguName: { in: hints }, dongName: null },
-      select: { regionId: true },
-    });
-    regionIds = rows.map((r) => r.regionId.toString());
-  }
+  const regionIds = await resolveRegionHintsToIds(hints);
   let vibeIds: string[] = [];
   if (vibeNames.length > 0) {
     const rows = await prisma.eventVibe.findMany({
