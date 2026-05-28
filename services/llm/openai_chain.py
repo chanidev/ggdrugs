@@ -26,10 +26,9 @@ from openai import OpenAI
 
 from filters import (  # noqa: F401 — ALLOW 값 참조
     COMPANION_TABLE,
-    EVENT_TYPE_TABLE,
     PERIOD_TABLE,
+    EVENT_TYPE_TABLE,
     VIBE_TABLE,
-    SEOUL_GU,
 )
 from summary_guard import sanitize_summary
 from cost_tracker import tracker as _cost_tracker
@@ -41,7 +40,18 @@ _ALLOWED_COMPANIONS = sorted({v for _, v in COMPANION_TABLE})
 _ALLOWED_EVENT_TYPES = sorted({v for _, v in EVENT_TYPE_TABLE})
 _ALLOWED_PERIOD = [None, "today", "tomorrow", "weekend", "week", "month"]
 _ALLOWED_VIBES = sorted({v for _, v in VIBE_TABLE})
-_ALLOWED_REGIONS = SEOUL_GU
+# ADR 0006 — 전국 17 시/도 단축형. LLM 에 sido 또는 산하 시/군/구 자유 추출 허용.
+# 옵션 B (spec §2): sido 17 명시 + 시/군/구 예시. 시/군/구 257건 전체 list 미인라인.
+_REGION_HINTS_DESCRIPTION = (
+    "전국 17 시/도 단축형 (서울·부산·대구·인천·광주·대전·울산·세종·"
+    "경기·강원·충북·충남·전북·전남·경북·경남·제주) 또는 그 산하 시/군/구. "
+    "예시 — 서울 자치구: 종로구·강남구, 광역시 자치구: 해운대구·수성구·미추홀구, "
+    "일반시·군: 수원시·강릉시·통영시·고흥군, 자치구 있는 일반시 합성형: "
+    "수원시 영통구·성남시 분당구·청주시 흥덕구·창원시 마산합포구. "
+    "모든 시/군/구 257건 중 사용자 발화에 매칭되는 것 1개 이상 추출. "
+    "사용자가 sido 만 (예: '부산') 언급했고 자치구가 불명확하면 sido 단축형 "
+    "그대로 반환 ('부산'). BFF 가 sido → 산하 자치구 합집합으로 expand 함."
+)
 
 # 한국어 요일 (0=Mon).
 _WEEKDAY_KO = ["월", "화", "수", "목", "금", "토", "일"]
@@ -185,7 +195,7 @@ _FEWSHOT = """예시:
 """
 
 
-SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시·공연·박람회 등) 검색 어시스턴트 'Alle' 입니다.
+SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 전국 이벤트(축제·전시·공연·박람회 등) 검색 어시스턴트 'Alle' 입니다. 대한민국 전국 17 시/도 (서울·부산·대구·인천·광주·대전·울산·세종·경기·강원·충북·충남·전북·전남·경북·경남·제주) 의 이벤트를 다룹니다.
 
 목표: 사용자 발화에서 5개 필터 축 + (선택)구체 날짜 추출, 자연어 응답(reply) 작성,
 다음 행동을 유도하는 후속 추천(followups) 2~3개를 동시에 생성합니다.
@@ -197,8 +207,9 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시
   이전 턴 다중값 축은 무시하고 최근 턴만 반영.
 - 부정+긍정 혼합("가족 말고 연인"): 부정값 제외 + 긍정값 포함.
 - periodKey 단일값. 가장 최근 턴 우선.
-- "강남" → "강남구" 처럼 접미어 없어도 매칭. 단 "구로구" 같이 글자 일부가 다른 구와
-  겹치면 정확히 일치하는 구만.
+- 사용자 발화의 지역어 → 가장 가까운 정식 시/군/구 표기. "강남" → "강남구", "해운대" → "해운대구", "영통" → "수원시 영통구" (자치구 있는 일반시는 합성형 "<시명> <자치구>", 공백 1개).
+- 글자 일부가 다른 구와 겹치면 정확 일치하는 것만 (예: "구로" → "구로구"만, "동구"는 sido 가 명시되면 그 sido 의 동구로).
+- sido 만 언급되고 자치구가 불명확하면 sido 단축형 반환 ("부산"). BFF 가 사후 expand 처리.
 - vibes 의미 매핑: "힐링·잔잔" → "정적", "신나는·역동" → "활동적", "직접·DIY" → "체험형",
   "보러" → "관람형", "배움" → "교육형", "사람들" → "네트워킹 중심".
 - "팝업 스토어/플리마켓/마켓" 도 festival 로 분류 (현 카테고리 체계 한도).
@@ -268,7 +279,7 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 서울 이벤트(축제·전시
 - eventTypes: {_ALLOWED_EVENT_TYPES}
 - periodKey:  {_ALLOWED_PERIOD}
 - vibes:      {_ALLOWED_VIBES}
-- regionHints: 서울 25개 구 ({", ".join(_ALLOWED_REGIONS[:5])} ... {", ".join(_ALLOWED_REGIONS[-3:])})
+- regionHints: {_REGION_HINTS_DESCRIPTION}
 
 {_FEWSHOT}
 """
@@ -482,7 +493,8 @@ _SCHEMA = {
             },
             "regionHints": {
                 "type": "array",
-                "items": {"type": "string", "enum": _ALLOWED_REGIONS},
+                "items": {"type": "string"},
+                "description": "ADR 0006 — sido 단축형 또는 시/군/구명. enum 미사용 (전국 257건).",
             },
             "specificDate": {
                 "type": ["string", "null"],
