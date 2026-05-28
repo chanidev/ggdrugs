@@ -352,7 +352,10 @@ def _sanitize_user_text(s: str, *, max_len: int = 2000) -> str:
 # 가끔 누락하는 비결정성을 보정. user 발화에 명시 트리거가 있고 LLM 이 specificDate
 # 를 비웠으면 오늘 컨텍스트 테이블에서 채워 넣는다.
 import re as _re_date
-_NEXT_WEEK_WD_RE = _re_date.compile(r"(?:다음\s*주|담주|다다음\s*주|next\s*week)\s*[ ,]*([월화수목금토일])(?:요일)?")
+# 다음주 = 다음 월~일. lookbehind (?<!다) 로 "다다음주" 안의 "다음" 매칭 차단.
+_NEXT_WEEK_WD_RE = _re_date.compile(r"(?<!다)(?:다음\s*주|담주|next\s*week)\s*[ ,]*([월화수목금토일])(?:요일)?")
+# 다다음주 = 다음 다음 월~일 (오늘로부터 +14일 후).
+_AFTER_NEXT_WEEK_WD_RE = _re_date.compile(r"다다음\s*주\s*[ ,]*([월화수목금토일])(?:요일)?")
 _THIS_WEEK_WD_RE = _re_date.compile(r"(?:이번\s*주|금주|this\s*week)\s*[ ,]*([월화수목금토일])(?:요일)?")
 _TOMORROW_RE = _re_date.compile(r"(?<![가-힣])내일(?![가-힣])")
 _KO_WD_INDEX = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4, "토": 5, "일": 6}
@@ -377,6 +380,14 @@ def _coerce_specific_date(
         return current
     if today is None:
         today = date.today()
+    # 다다음주 X요일 — 다음주 우선 매칭이라 먼저 검사.
+    m = _AFTER_NEXT_WEEK_WD_RE.search(user_text)
+    if m:
+        wd = _KO_WD_INDEX.get(m.group(1))
+        if wd is not None:
+            this_mon = today - timedelta(days=today.weekday())
+            target = this_mon + timedelta(days=14 + wd)
+            return target.isoformat()
     m = _NEXT_WEEK_WD_RE.search(user_text)
     if m:
         wd = _KO_WD_INDEX.get(m.group(1))
