@@ -358,9 +358,15 @@ _TOMORROW_RE = _re_date.compile(r"(?<![가-힣])내일(?![가-힣])")
 _KO_WD_INDEX = {"월": 0, "화": 1, "수": 2, "목": 3, "금": 4, "토": 5, "일": 6}
 
 
-def _coerce_specific_date(user_text: str, current: str | None) -> str | None:
+def _coerce_specific_date(
+    user_text: str,
+    current: str | None,
+    today: date | None = None,
+) -> str | None:
     """user 발화에 결정 가능한 단일 날짜 트리거가 있으면 ISO 날짜로 **강제 override**.
     명시 트리거가 없으면 current 유지.
+
+    today: 결정론 테스트용 override. None 이면 date.today() 호출.
 
     LLM 이 같은 입력에 대해 (a) specificDate 누락 (null) 또는 (b) 잘못된 ISO (예:
     "다음주 일요일" 인데 4/30 같이 화·목 반환) 를 비결정적으로 반복하는 문제를 구조적으로
@@ -369,7 +375,8 @@ def _coerce_specific_date(user_text: str, current: str | None) -> str | None:
     """
     if not user_text:
         return current
-    today = date.today()
+    if today is None:
+        today = date.today()
     m = _NEXT_WEEK_WD_RE.search(user_text)
     if m:
         wd = _KO_WD_INDEX.get(m.group(1))
