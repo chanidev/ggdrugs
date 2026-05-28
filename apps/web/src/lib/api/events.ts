@@ -107,6 +107,9 @@ export interface RegionItem {
   sido: string;
   sigungu: string | null;
   fullAddress: string;
+  /** chip 클릭 시 지도 panTo anchor. null 이면 panning skip. */
+  centerLat: number | null;
+  centerLng: number | null;
 }
 
 export async function fetchRegions(signal?: AbortSignal): Promise<RegionItem[]> {

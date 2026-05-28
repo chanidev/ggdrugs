@@ -154,6 +154,8 @@ export function SeoulMap({
   // null 인 동안엔 기본 fetch (phases 또는 filter 만 적용) — 첫 idle 후 bbox 등록.
   const [mapBbox, setMapBbox] = useState<string | null>(null);
   const bboxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // ADR 0006 — 비-서울 region chip 선택 시 지도 panTo anchor. Kakao Map 인스턴스 보관.
+  const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
 
   // lookups (geojson + regions) — 페이지당 1회.
   useEffect(() => {
@@ -182,6 +184,21 @@ export function SeoulMap({
       .filter((f) => names.has(f.properties.name))
       .map((f) => ({ name: f.properties.name, path: geojsonToKakaoPath(f.geometry) }));
   }, [geojson, regions, highlightRegionIds, filter?.regionIds]);
+
+  // ADR 0006 — region chip 클릭 즉시 지도 panTo. 폴리곤이 있든 없든 (서울 외 sido)
+  // 시각 반응을 보장. 첫 선택 region 의 center 사용. 광역(sigungu=null)은 줌아웃, 자치구는 줌인.
+  // centerLat/Lng 은 BFF 가 자치구 NULL 시 sido 광역으로 COALESCE 해 보장.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || regions.length === 0) return;
+    if (!highlightRegionIds || highlightRegionIds.length === 0) return;
+    const firstId = highlightRegionIds[0]!;
+    const region = regions.find((r) => r.regionId === firstId);
+    if (!region || region.centerLat === null || region.centerLng === null) return;
+    map.panTo(new kakao.maps.LatLng(region.centerLat, region.centerLng));
+    // 광역 row(sigungu=null) 는 시/도 시야로 줌아웃, 자치구·시 row 는 자치구 시야.
+    map.setLevel(region.sigungu === null ? 9 : 7);
+  }, [highlightRegionIds, regions]);
 
   // 폴리곤 pulse — Kakao Polygon 은 canvas/svg 라 CSS 애니메이션 불가. React state 로 주기적
   // strokeOpacity / fillOpacity 토글. 하이라이트 있을 때만 interval 돌림.
@@ -271,9 +288,10 @@ export function SeoulMap({
         center={SEOUL_CENTER}
         level={DEFAULT_LEVEL}
         style={{ width: '100%', height: '100%' }}
-        aria-label="서울 이벤트 지도"
+        aria-label="이벤트 지도"
         onClick={() => onSelectEvent?.(null)}
         onBoundsChanged={handleBoundsChanged}
+        onCreate={(map) => { mapInstanceRef.current = map; }}
       >
         {highlightedGu.map((gu) => (
           <Polygon
