@@ -173,6 +173,17 @@ ADR 0006 으로 데이터·BFF·Web 가 전국으로 확장된 후 services/llm 
 
 `judge_relevance` system prompt 는 이미 일반화돼있어 변경 불필요.
 
+## specificDate 자가점검 강화 (2026-05-28, Slice A)
+
+`_coerce_specific_date` 결정론 트리거 어휘 확장 + SYSTEM_PROMPT 자가점검 룰 보강 + chat-eval 케이스 동적화.
+
+- 정규식 분리/추가: `_NEXT_WEEK_WD_RE` lookbehind `(?<!다)` 로 다다음 충돌 차단, `_AFTER_NEXT_WEEK_WD_RE` 신규 (+14일), `_THIS_WD_SHORT_RE` "이번/오는 X요일" 단축형, `_MD_DATE_RE` "MM월 DD일"·"M/D" 명시.
+- `_coerce_specific_date(user_text, current, today=None)` 시그니처 — `today` optional 로 결정론 테스트 가능.
+- `_FEWSHOT` specificDate 케이스 3건 추가 — 다다음주 토 / MM월 DD일 / 이번 토 단축. 총 17건.
+- SYSTEM_PROMPT `[specificDate 자가 점검]` 2 룰 추가 — MM월 DD일·M/D 채움 강제, 다다음주 ↔ 다음주 헷갈림 차단.
+- chat-eval-cases 의 stale 하드코드 날짜 (4월 작성) 2건 → `specificDateRelative` 동적 토큰 (`this-week-saturday` 등). 신규 회귀 4건 (다다음주·MM월DD일·이번 토·오는 일).
+- 단위 검증: `services/llm/scripts/check-coerce-date.py` 16 cases 결정론 (fake today=2026-05-25 월요일).
+
 ## References
 
 - `services/llm/openai_chain.py` — `extract_via_openai`, `summarize_event`,
