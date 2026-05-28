@@ -160,6 +160,19 @@ fallback 으로 전환 (stage label 변경).
 샘플 출력 (title, description 발췌, ai_summary, 생성 시점, hash prefix).
 사람이 직접 읽어서 환각·이모지·과장 탐지. `apps/bff/src/jobs/eval-summaries.ts`.
 
+## 채팅 프롬프트 전국 도메인 (2026-05-28, ADR 0006 follow-up)
+
+ADR 0006 으로 데이터·BFF·Web 가 전국으로 확장된 후 services/llm 프롬프트도 일관화.
+- `SYSTEM_PROMPT_TEMPLATE` 도메인: "서울 이벤트" → "전국 이벤트 (17 시/도)"
+- `regionHints` 허용 표현: 옵션 B — sido 17 단축형 + 시/군/구 예시 (full 257 list 미인라인, 토큰 절약)
+- `_FEWSHOT` 신규 3건: 부산 해운대 데이트, 강릉 specificDate, 수원시 영통구 합성형
+- `compose_retreat` "서울" 제거
+- `filters.py` SEOUL_GU 삭제, fallback 은 sido 17 lite 매칭 (LLM 없는 dev/CI 한정 자치구 미인식 양보)
+- BFF `chat.ts` `resolveRegionHintsToIds` 헬퍼 — LLM 이 sido 단축형 ("부산") 반환 시 그 sido 산하 sigungu 합집합 expand
+- chat-eval-cases 비-서울 회귀 4건 (해운대·영통·강릉·흥덕) — 모두 PASS 검증 (2026-05-28 chat-eval 24/26, 잔여 2건은 무관한 specificDate 날짜 drift)
+
+`judge_relevance` system prompt 는 이미 일반화돼있어 변경 불필요.
+
 ## References
 
 - `services/llm/openai_chain.py` — `extract_via_openai`, `summarize_event`,
