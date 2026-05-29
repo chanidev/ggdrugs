@@ -36,16 +36,22 @@ export function ProfilePage() {
 
   // 메이트지수 조회
   useEffect(() => {
+    let mounted = true;
     setMateLoading(true);
     getMyMateProfileWithIndex()
       .then((p) => {
-        setMateIndex(p ? p.mateIndex : null);
-        setMateLoading(false);
+        if (mounted) {
+          setMateIndex(p ? p.mateIndex : null);
+          setMateLoading(false);
+        }
       })
       .catch(() => {
-        setMateIndex(null);
-        setMateLoading(false);
+        if (mounted) {
+          setMateIndex(null);
+          setMateLoading(false);
+        }
       });
+    return () => { mounted = false; };
   }, []);
 
   const saveNickname = async () => {
