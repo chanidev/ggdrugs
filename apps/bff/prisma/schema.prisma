@@ -38,6 +38,8 @@ model Region {
 
   users  User[]
   events Event[]
+  mateRegions     MateProfile[] @relation("MateRegion")
+  matePrefRegions MateProfile[] @relation("MatePrefRegion")
 
   @@index([sidoName], map: "idx_regions_sido")
   @@index([sidoName, sigunguName], map: "idx_regions_sigungu")
@@ -81,6 +83,8 @@ model User {
   posts           Post[]
   comments        Comment[]
   postLikes       PostLike[]
+  mateProfile     MateProfile?
+  mateIndex       MateIndex?
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -675,4 +679,54 @@ model PostLike {
   @@unique([postId, userId], map: "uq_post_like")
   @@index([postId], map: "idx_post_likes_post")
   @@map("post_likes")
+}
+
+// =============================================================
+// MATE PROFILE  (Phase 2 / ADR 0007 — A_801 메이트 프로필, PII)
+// =============================================================
+model MateProfile {
+  mateProfileId   BigInt    @id @default(autoincrement()) @map("mate_profile_id")
+  userId          BigInt    @unique @map("user_id")
+  gender          String    @db.Char(1) // M | F
+  ageRangeLower   Int       @map("age_range_lower") // 10/15/.../50 (5세 단위 하한)
+  regionId        BigInt?   @map("region_id")
+  hasCar          Boolean   @map("has_car")
+  nationality     String    @db.VarChar(20)
+  koreanOk        Boolean   @map("korean_ok")
+  // 선호 조건 (NULL = 상관없음)
+  prefGender      String?   @map("pref_gender") @db.Char(1)
+  prefAgeLower    Int?      @map("pref_age_lower")
+  prefRegionId    BigInt?   @map("pref_region_id")
+  prefHasCar      Boolean?  @map("pref_has_car")
+  prefNationality String?   @map("pref_nationality") @db.VarChar(20)
+  prefKoreanOk    Boolean?  @map("pref_korean_ok")
+  autoRecommend   Boolean   @default(false) @map("auto_recommend")
+  groupApply      Boolean   @default(false) @map("group_apply")
+  consentedAt     DateTime? @map("consented_at") @db.Timestamptz // null=미동의→매칭불가
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  user       User    @relation(fields: [userId], references: [userId])
+  region     Region? @relation("MateRegion", fields: [regionId], references: [regionId])
+  prefRegion Region? @relation("MatePrefRegion", fields: [prefRegionId], references: [regionId])
+
+  @@index([consentedAt, regionId], map: "idx_mate_profiles_pool")
+  @@map("mate_profiles")
+}
+
+// =============================================================
+// MATE INDEX  (메이트 지수 — 수정불가, 갱신 슬라이스5)
+// =============================================================
+model MateIndex {
+  mateIndexId BigInt   @id @default(autoincrement()) @map("mate_index_id")
+  userId      BigInt   @unique @map("user_id")
+  indexValue  Int      @default(50) @map("index_value") // 0~100
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("mate_indexes")
 }
