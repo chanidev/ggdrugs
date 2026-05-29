@@ -171,7 +171,7 @@ export function AppShell() {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
                 next[placeholderIndex] = {
-                  ...next[placeholderIndex],
+                  ...next[placeholderIndex]!,
                   text: accumulatedReply,
                   streaming: true,
                 };
@@ -186,7 +186,7 @@ export function AppShell() {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
                 next[placeholderIndex] = {
-                  ...next[placeholderIndex],
+                  ...next[placeholderIndex]!,
                   text: canonical,
                   streaming: false,
                 };
@@ -204,7 +204,7 @@ export function AppShell() {
                   if (placeholderIndex >= prev.length) return prev;
                   const next = prev.slice();
                   next[placeholderIndex] = {
-                    ...next[placeholderIndex],
+                    ...next[placeholderIndex]!,
                     followups: meta.followups,
                   };
                   return next;
@@ -216,7 +216,7 @@ export function AppShell() {
               setMessages((prev) => {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
-                next[placeholderIndex] = { ...next[placeholderIndex], suggestions: items };
+                next[placeholderIndex] = { ...next[placeholderIndex]!, suggestions: items };
                 return next;
               });
             },
@@ -226,7 +226,7 @@ export function AppShell() {
               setMessages((prev) => {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
-                next[placeholderIndex] = { ...next[placeholderIndex], overriding: true };
+                next[placeholderIndex] = { ...next[placeholderIndex]!, overriding: true };
                 return next;
               });
               // step 2: 180ms 후 텍스트 swap + opacity 1 + retreat 메타.
@@ -236,10 +236,11 @@ export function AppShell() {
                   if (placeholderIndex >= prev.length) return prev;
                   const next = prev.slice();
                   const cur = next[placeholderIndex]!;
+                  const mergedFollowups = p.followups.length > 0 ? p.followups : cur.followups;
                   next[placeholderIndex] = {
                     ...cur,
                     text: p.text,
-                    followups: p.followups.length > 0 ? p.followups : cur.followups,
+                    ...(mergedFollowups !== undefined ? { followups: mergedFollowups } : {}),
                     streaming: false,
                     overriding: false,
                     meta: 'retreat',

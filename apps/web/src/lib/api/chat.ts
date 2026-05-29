@@ -213,7 +213,7 @@ async function attemptStream(
           ? { last_suggestions: lastSuggestions }
           : {}),
       }),
-      signal,
+      ...(signal != null ? { signal } : {}),
     }),
   );
 
