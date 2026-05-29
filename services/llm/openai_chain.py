@@ -348,6 +348,8 @@ SYSTEM_PROMPT_TEMPLATE = f"""당신은 한국어 전국 이벤트(축제·전시
 [referencesLast — 불리언]
 - 입력에 `[직전 제안]` 블록이 주어지고, 사용자 최근 발화가 그 목록을 명시적·묵시적으로
   가리키면 true. 그렇지 않으면 false.
+- 입력에 `[직전 제안]` 블록이 없거나 비어있으면 referencesLast=false 강제. 이 경우 발화가 "그 중에" 같이 보여도 무시.
+- true 일 때 사용자가 새 axis (companions/eventTypes/vibes/regionHints) 를 같이 언급했으면 filters 에 그 새 axis 도 포함 (예: "그 중에 가족도 OK" → referencesLast=true + filters.companions=["family"]). BFF 가 직전 제안 안에서 새 axis 로 필터.
 - true 예: "그 중에 무료인 거 있어?", "아까 그 전시 언제까지야?", "2번째 이벤트는 어디야?",
   "방금 본 거 다 주말이야?", "그거 말고 다른 거".
 - false 예: "이번 주말 가족 축제" (새 쿼리), "강남 공연" (새 축 추가).
