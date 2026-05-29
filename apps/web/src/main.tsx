@@ -9,6 +9,7 @@ import { UploaderNewEventPage } from './pages/UploaderNewEventPage';
 import { UploaderEventEditPage } from './pages/UploaderEventEditPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { PostDetailPage } from './pages/PostDetailPage';
 import { AuthProvider } from './lib/auth-context';
 import '@seed-design/css/base.css';
 import './styles/index.css';
@@ -35,6 +36,7 @@ createRoot(rootEl).render(
         <Route path="/uploader/events/:id/edit" element={<UploaderEventEditPage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/community" element={<CommunityPage />} />
+        <Route path="/community/posts/:id" element={<PostDetailPage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,
