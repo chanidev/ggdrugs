@@ -157,27 +157,32 @@ export async function createComment(req: Request, res: Response) {
     if (!parentCommentId) { res.status(400).json({ error: 'invalid parentCommentId' }); return; }
   }
 
-  const post = await prisma.post.findFirst({
-    where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
-    select: { postId: true },
-  });
-  if (!post) { res.status(404).json({ error: 'post not found' }); return; }
-
-  if (parentCommentId !== null) {
-    // postId 동봉 — 부모가 같은 게시글 소속이 아니면 404 (cross-post parent 방어).
-    const parent = await prisma.comment.findFirst({
-      where: { commentId: parentCommentId, postId, isDeleted: false },
-      select: { parentCommentId: true },
-    });
-    if (!parent) { res.status(404).json({ error: 'parent comment not found' }); return; }
-    // depth 1 강제 — 대댓글에 답글 불가 (GG-POST-003). 요청 형식은 유효하나 도메인 규칙 위반 → 422.
-    if (parent.parentCommentId !== null) {
-      res.status(422).json({ error: 'reply_to_reply_not_allowed' });
-      return;
-    }
-  }
+  // post 존재 확인 + 댓글 생성 + commentCount 갱신 — 모두 하나의 트랜잭션 안에서 실행.
+  // (post 존재 체크를 트랜잭션 밖에서 먼저 수행하면 체크 후 expiresAt 경과/soft-delete 가
+  //  발생하는 race window 가 생기므로, tx 안으로 이동하여 단일 직렬화 단위로 처리한다.)
+  let earlyErr: { status: number; body: object } | null = null;
 
   const created = await prisma.$transaction(async (tx) => {
+    const post = await tx.post.findFirst({
+      where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
+      select: { postId: true },
+    });
+    if (!post) { earlyErr = { status: 404, body: { error: 'post not found' } }; return null; }
+
+    if (parentCommentId !== null) {
+      // postId 동봉 — 부모가 같은 게시글 소속이 아니면 404 (cross-post parent 방어).
+      const parent = await tx.comment.findFirst({
+        where: { commentId: parentCommentId, postId, isDeleted: false },
+        select: { parentCommentId: true },
+      });
+      if (!parent) { earlyErr = { status: 404, body: { error: 'parent comment not found' } }; return null; }
+      // depth 1 강제 — 대댓글에 답글 불가 (GG-POST-003). 요청 형식은 유효하나 도메인 규칙 위반 → 422.
+      if (parent.parentCommentId !== null) {
+        earlyErr = { status: 422, body: { error: 'reply_to_reply_not_allowed' } };
+        return null;
+      }
+    }
+
     const c = await tx.comment.create({
       data: { postId, userId: auth.userId, parentCommentId, body: text },
       select: { commentId: true, parentCommentId: true, body: true, createdAt: true },
@@ -186,6 +191,13 @@ export async function createComment(req: Request, res: Response) {
     await tx.post.update({ where: { postId }, data: { commentCount: count } });
     return c;
   });
+
+  if (earlyErr) {
+    const { status, body } = earlyErr as { status: number; body: object };
+    res.status(status).json(body);
+    return;
+  }
+  if (!created) { res.status(500).json({ error: 'internal error' }); return; }
 
   res.status(201).json({
     commentId: created.commentId.toString(),
@@ -206,7 +218,8 @@ export async function updateComment(req: Request, res: Response) {
   const commentId = parseBigId(req.params.id);
   if (!commentId) { res.status(400).json({ error: 'invalid id' }); return; }
 
-  const text = typeof (req.body ?? {}).body === 'string' ? String((req.body as Record<string, unknown>).body).trim() : '';
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const text = typeof body.body === 'string' ? body.body.trim() : '';
   if (text.length < 1 || text.length > 1000) { res.status(400).json({ error: 'body 는 1~1000자' }); return; }
 
   const existing = await prisma.comment.findUnique({

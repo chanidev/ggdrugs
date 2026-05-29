@@ -103,7 +103,7 @@ async function main() {
       });
       return f;
     });
-    // CASE comment: 작성 → 201, root parent null, commentCount 반영
+    // CASE comment: 작성 → 201, root parent null, commentCount 1로 갱신
     let rootCommentId = '';
     await check('comment.create.ok', async () => {
       const res = mockRes();
@@ -113,7 +113,32 @@ async function main() {
       if (res._c.status !== 201) f.push(`status ${res._c.status}`);
       if (!b?.commentId) f.push('no commentId'); else rootCommentId = b.commentId;
       if (b?.parentCommentId !== null) f.push('root parent must be null');
+      // commentCount 반영 검증 — 상세 조회로 실제 카운트 확인.
+      const rg = mockRes();
+      await getPostDetail(mockReq({ params: { id: createdPostId }, auth }), rg);
+      const gb = rg._c.json as { commentCount?: number };
+      if (gb?.commentCount !== 1) f.push(`commentCount ${gb?.commentCount} != 1`);
       return f;
+    });
+
+    // CASE comment update: 본인 댓글 수정 → 200 + 수정된 body/updatedAt 반환 (GG-POST-006)
+    await check('comment.update.ok', async () => {
+      const res = mockRes();
+      await updateComment(mockReq({ params: { id: rootCommentId }, auth, body: { body: '수정된 댓글' } }), res);
+      const b = res._c.json as { commentId?: string; body?: string; updatedAt?: string };
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status}`);
+      if (b?.body !== '수정된 댓글') f.push(`body "${b?.body}" != "수정된 댓글"`);
+      if (!b?.updatedAt) f.push('no updatedAt');
+      return f;
+    });
+
+    // CASE comment update forbidden: 다른 userId → 403 (GG-POST-006)
+    await check('comment.update.forbidden', async () => {
+      const otherAuth = { userId: auth.userId + 1n, nickname: 'other', activeRole: 'user' };
+      const res = mockRes();
+      await updateComment(mockReq({ params: { id: rootCommentId }, auth: otherAuth, body: { body: '탈취 시도' } }), res);
+      return res._c.status === 403 ? [] : [`status ${res._c.status} != 403`];
     });
 
     // CASE reply: 대댓글 1단계 OK
