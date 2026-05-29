@@ -16,7 +16,7 @@ function CommentItem({
   node: CommentNode;
   postId: string;
   isReply: boolean;
-  onAuthorClick: (nickname: string) => void;
+  onAuthorClick: (nickname: string, userId: string) => void;
   onChanged: () => void;
 }) {
   const [replying, setReplying] = useState(false);
@@ -61,7 +61,7 @@ function CommentItem({
           {/* SEED Avatar — 이니셜 fallback, 작성자 클릭 → 프로필 모달 */}
           <button
             type="button"
-            onClick={() => onAuthorClick(node.authorNickname)}
+            onClick={() => onAuthorClick(node.authorNickname, node.authorUserId)}
             className="flex items-center gap-1.5 text-[12px] font-medium text-(--color-text) hover:underline"
             aria-label={`${node.authorNickname} 프로필 보기`}
           >
@@ -169,7 +169,7 @@ export function CommentTree({
 }: {
   comments: CommentNode[];
   postId: string;
-  onAuthorClick: (nickname: string) => void;
+  onAuthorClick: (nickname: string, userId: string) => void;
   onChanged: () => void;
 }) {
   if (comments.length === 0)

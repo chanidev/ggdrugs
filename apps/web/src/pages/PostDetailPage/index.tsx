@@ -29,7 +29,7 @@ export function PostDetailPage() {
   const [error, setError] = useState<'NOT_FOUND' | 'ERROR' | null>(null);
   const [loading, setLoading] = useState(true);
   const [likeLoading, setLikeLoading] = useState(false);
-  const [modalNick, setModalNick] = useState<string | null>(null);
+  const [modalAuthor, setModalAuthor] = useState<{ nickname: string; userId: string } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
   const reload = useCallback(
@@ -115,7 +115,7 @@ export function PostDetailPage() {
           <div className="mb-4 flex items-center gap-2 text-[12px] text-(--color-text-muted)">
             <button
               type="button"
-              onClick={() => setModalNick(detail.authorNickname)}
+              onClick={() => setModalAuthor({ nickname: detail.authorNickname, userId: detail.authorUserId })}
               className="font-medium text-(--color-text) hover:underline"
             >
               {detail.authorNickname}
@@ -180,7 +180,7 @@ export function PostDetailPage() {
             <CommentTree
               comments={detail.comments}
               postId={detail.postId}
-              onAuthorClick={setModalNick}
+              onAuthorClick={(nickname, userId) => setModalAuthor({ nickname, userId })}
               onChanged={() => reload()}
             />
           </section>
@@ -188,8 +188,12 @@ export function PostDetailPage() {
       )}
 
       {/* GG-POST-008: 작성자 프로필 모달 */}
-      {modalNick && (
-        <AuthorProfileModal nickname={modalNick} onClose={() => setModalNick(null)} />
+      {modalAuthor && (
+        <AuthorProfileModal
+          nickname={modalAuthor.nickname}
+          authorUserId={modalAuthor.userId}
+          onClose={() => setModalAuthor(null)}
+        />
       )}
 
       {/* GG-POST-004: 수정 모달 — ComposeModal edit 모드 */}

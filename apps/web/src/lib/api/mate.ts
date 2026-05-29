@@ -66,7 +66,7 @@ export type RecommendationsResponse = RecommendationsBlind | RecommendationsList
 
 export interface MateIndexResult {
   userId: string;
-  indexValue: number;
+  indexValue: number | null; // null = MateIndex 레코드 없음 (메이트 프로필 미등록)
 }
 
 // ============================================================
