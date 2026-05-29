@@ -79,6 +79,12 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from './routes/notifications.js';
+import {
+  saveMateProfile,
+  getMyMateProfile,
+  getMyMateProfileWithIndex,
+  getMateIndex,
+} from './routes/mate.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -266,6 +272,26 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => toggleLike(req, res).catch(next),
   );
+
+  // A_801 메이트 프로필 저장/조회 + A_807 메이트지수 (Phase 2 / ADR 0007)
+  // NOTE: /profile/me 를 /profile/:id 보다 먼저 등록해야 충돌 없음.
+  app.get(
+    '/community/mate/profile/me',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getMyMateProfileWithIndex(req, res).catch(next),
+  );
+  app.post(
+    '/community/mate/profile',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => saveMateProfile(req, res).catch(next),
+  );
+  app.get(
+    '/community/mate/profile',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getMyMateProfile(req, res).catch(next),
+  );
+  // 경량 메이트지수 조회 (작성자 프로필 모달 — Task 6 연결 예정)
+  app.get('/community/mate/index/:userId', (req, res, next) => getMateIndex(req, res).catch(next));
 
   app.post(
     '/chat',
