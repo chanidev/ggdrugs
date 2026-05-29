@@ -184,6 +184,18 @@ ADR 0006 으로 데이터·BFF·Web 가 전국으로 확장된 후 services/llm 
 - chat-eval-cases 의 stale 하드코드 날짜 (4월 작성) 2건 → `specificDateRelative` 동적 토큰 (`this-week-saturday` 등). 신규 회귀 4건 (다다음주·MM월DD일·이번 토·오는 일).
 - 단위 검증: `services/llm/scripts/check-coerce-date.py` 16 cases 결정론 (fake today=2026-05-25 월요일).
 
+## 다중 턴 처리 심화 (2026-05-29, Slice B)
+
+intent shift (의도 변경) + referencesLast (직전 제안 지칭) 다양화.
+
+- `_FEWSHOT` 신규 6건 (17 → 23): intent shift 4 (카테고리/지역구/sido/전체리셋) + referencesLast 2 (시간 표현·새 axis 동시).
+- SYSTEM_PROMPT `[추출 규칙 — filters]` 룰 2 추가: 축 단위 부정 ("축제 말고 전시" → 해당 축 교체, 다른 축 union 유지) + 전체 리셋 ("다 빼고", "처음부터", "다시 보여줘" → filters 비움).
+- SYSTEM_PROMPT `[referencesLast — 불리언]` 룰 2 추가: lastSuggestions 빈 입력 → false 강제 + 새 axis 동시 추출 (referencesLast=true + filters.companions 등).
+- BFF `chat.ts` `groundedRerank` 에 `filterSuggestionsByFilters` helper — lastSuggestions 안에서 새 axis (eventTypes/vibes/regionHints) 사후 필터. companions 는 events 메타 무관이라 대상 외.
+- chat-eval 신규 6건 회귀 — 30 → 36. 신규 6 + 기존 다중 턴 4 (intent-negation, multi-turn-intent-change-companion, grounded-*) 10/10 PASS.
+
+`lastSuggestions` 가짜 데이터는 chat-eval 의 기존 `Case.lastSuggestions` 필드로 직접 주입 (신규 stub 필드 불필요).
+
 ## References
 
 - `services/llm/openai_chain.py` — `extract_via_openai`, `summarize_event`,
