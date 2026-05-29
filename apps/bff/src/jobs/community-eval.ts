@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
-import { listPosts, getPostDetail, createPost, createComment, updateComment, deleteComment, POST_TTL_MS } from '../routes/posts.js';
+import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment, POST_TTL_MS } from '../routes/posts.js';
 
 interface MockReq { params?: Record<string, string>; query?: Record<string, string>; body?: unknown; auth?: { userId: bigint; nickname: string; activeRole: string }; }
 interface Captured { status: number; json: unknown; }
@@ -173,6 +173,38 @@ async function main() {
       const gb = rg._c.json as { comments?: Array<{ commentId: string; replies: Array<{ commentId: string }> }> };
       const stillThere = gb?.comments?.some((c) => c.replies.some((r) => r.commentId === replyId));
       if (stillThere) f.push('deleted reply still in tree');
+      return f;
+    });
+    // CASE post update: 본인 → 200
+    await check('post.update.ok', async () => {
+      const res = mockRes();
+      await updatePost(mockReq({ params: { id: createdPostId }, auth, body: { title: '수정된 제목', body: '수정된 본문' } }), res);
+      return res._c.status === 200 ? [] : [`status ${res._c.status}`];
+    });
+
+    // CASE like toggle: on(liked true, count 1) → off(liked false, count 0)
+    await check('post.like.toggle', async () => {
+      const r1 = mockRes();
+      await toggleLike(mockReq({ params: { id: createdPostId }, auth }), r1);
+      const b1 = r1._c.json as { liked?: boolean; likeCount?: number };
+      const r2 = mockRes();
+      await toggleLike(mockReq({ params: { id: createdPostId }, auth }), r2);
+      const b2 = r2._c.json as { liked?: boolean; likeCount?: number };
+      const f: string[] = [];
+      if (b1?.liked !== true || b1?.likeCount !== 1) f.push(`first toggle ${JSON.stringify(b1)}`);
+      if (b2?.liked !== false || b2?.likeCount !== 0) f.push(`second toggle ${JSON.stringify(b2)}`);
+      return f;
+    });
+
+    // CASE post delete: 본인 → soft-delete, 이후 detail 404
+    await check('post.delete.then404', async () => {
+      const rd = mockRes();
+      await deletePost(mockReq({ params: { id: createdPostId }, auth }), rd);
+      const rg = mockRes();
+      await getPostDetail(mockReq({ params: { id: createdPostId }, auth }), rg);
+      const f: string[] = [];
+      if (rd._c.status !== 200) f.push(`delete status ${rd._c.status}`);
+      if (rg._c.status !== 404) f.push(`after-delete detail ${rg._c.status} != 404`);
       return f;
     });
   } finally {

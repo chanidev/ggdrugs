@@ -247,6 +247,89 @@ export async function deleteComment(req: Request, res: Response) {
   res.json({ ok: true });
 }
 
+/** PATCH /community/posts/:id — 본인 게시글 수정 (GG-POST-004). category 변경 불가. */
+export async function updatePost(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) { res.status(401).json({ error: 'unauthenticated' }); return; }
+  const postId = parseBigId(req.params.id);
+  if (!postId) { res.status(400).json({ error: 'invalid id' }); return; }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const title = typeof body.title === 'string' ? body.title.trim() : '';
+  const text = typeof body.body === 'string' ? body.body.trim() : '';
+  if (title.length < 2 || title.length > 200) { res.status(400).json({ error: 'title 은 2~200자' }); return; }
+  if (text.length < 2 || text.length > 5000) { res.status(400).json({ error: 'body 는 2~5000자' }); return; }
+
+  const existing = await prisma.post.findFirst({
+    where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
+    select: { postId: true, userId: true },
+  });
+  if (!existing) { res.status(404).json({ error: 'post not found' }); return; }
+  if (existing.userId !== auth.userId) { res.status(403).json({ error: 'forbidden' }); return; }
+
+  const updated = await prisma.post.update({
+    where: { postId },
+    data: { title, body: text },
+    select: { postId: true, title: true, body: true, updatedAt: true },
+  });
+  res.json({ postId: updated.postId.toString(), title: updated.title, body: updated.body, updatedAt: updated.updatedAt.toISOString() });
+}
+
+/** DELETE /community/posts/:id — 본인 게시글 soft-delete (GG-POST-005). */
+export async function deletePost(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) { res.status(401).json({ error: 'unauthenticated' }); return; }
+  const postId = parseBigId(req.params.id);
+  if (!postId) { res.status(400).json({ error: 'invalid id' }); return; }
+
+  const existing = await prisma.post.findFirst({
+    where: { postId, isDeleted: false },
+    select: { postId: true, userId: true },
+  });
+  if (!existing) { res.status(404).json({ error: 'post not found' }); return; }
+  if (existing.userId !== auth.userId) { res.status(403).json({ error: 'forbidden' }); return; }
+
+  await prisma.post.update({ where: { postId }, data: { isDeleted: true, deletedAt: new Date() } });
+  res.json({ ok: true });
+}
+
+/** POST /community/posts/:id/like — 좋아요/하트 토글. likeCount 캐시 갱신. 응답은 in-tx 계산값. */
+export async function toggleLike(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) { res.status(401).json({ error: 'unauthenticated' }); return; }
+  const postId = parseBigId(req.params.id);
+  if (!postId) { res.status(400).json({ error: 'invalid id' }); return; }
+
+  const post = await prisma.post.findFirst({
+    where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
+    select: { postId: true },
+  });
+  if (!post) { res.status(404).json({ error: 'post not found' }); return; }
+
+  let liked = false;
+  let likeCount = 0;
+  await prisma.$transaction(async (tx) => {
+    const del = await tx.postLike.deleteMany({ where: { postId, userId: auth.userId } });
+    if (del.count === 0) {
+      // 없었음 → 좋아요 추가. 동시 POST 경합(둘 다 del.count=0)에서 한쪽이 P2002 →
+      // 멱등 안전망으로 liked=true 유지(이미 타 요청이 생성). 최종 count 는 아래서 in-tx 재집계.
+      try {
+        await tx.postLike.create({ data: { postId, userId: auth.userId } });
+      } catch (err) {
+        if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) throw err;
+      }
+      liked = true;
+    } else {
+      liked = false;
+    }
+    // 트랜잭션 내부에서 계산 → 응답에 그대로 사용(트랜잭션 밖 재count 없음 → DB-응답 정합).
+    likeCount = await tx.postLike.count({ where: { postId } });
+    await tx.post.update({ where: { postId }, data: { likeCount } });
+  });
+
+  res.json({ liked, likeCount });
+}
+
 /** POST /community/posts — 글쓰기 (requireAuth). expiresAt = now + 7d. */
 export async function createPost(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;

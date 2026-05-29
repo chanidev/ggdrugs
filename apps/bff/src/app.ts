@@ -22,7 +22,7 @@ import {
 } from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
-import { listPosts, getPostDetail, createPost, createComment, updateComment, deleteComment } from './routes/posts.js';
+import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment } from './routes/posts.js';
 import { listMyRecommendations } from './routes/me-recommendations.js';
 import { postChat, postChatStream } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
@@ -250,6 +250,21 @@ export function createApp(): Express {
     '/community/comments/:id',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => deleteComment(req, res).catch(next),
+  );
+  app.patch(
+    '/community/posts/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => updatePost(req, res).catch(next),
+  );
+  app.delete(
+    '/community/posts/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => deletePost(req, res).catch(next),
+  );
+  app.post(
+    '/community/posts/:id/like',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => toggleLike(req, res).catch(next),
   );
 
   app.post(
