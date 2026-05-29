@@ -896,6 +896,40 @@ function buildArticleSnippet(a: {
 // 재정렬하려는 의도이므로.
 // ----------------------------------------------------------------------------
 
+/**
+ * groundedRerank 의 lastSuggestions events 메타를 새 axis (companions/eventTypes/
+ * vibes/regionHints) 로 사후 필터링. 빈 filters axis 는 무시 (모두 통과).
+ *
+ * 매개:
+ *   scored — DB 에서 메타 조회한 events 배열 (groundedRerank 내부 타입)
+ *   filters — LLM 이 추출한 filters (sido/sigungu hint 가 이미 regionHints 에 있음)
+ *
+ * 반환: filters 모두 만족하는 부분집합. 0건 시 모두 탈락 — 호출자는 retreat 처리.
+ */
+function filterSuggestionsByFilters<T extends {
+  eventId: string;
+  category: { code: string };
+  region: { sidoName: string; sigunguName: string | null };
+  vibesNames: string[];
+}>(scored: T[], filters: LlmFilters): T[] {
+  const wantCategories = filters.eventTypes ?? [];
+  const wantVibes = filters.vibes ?? [];
+  const wantRegions = filters.regionHints ?? [];
+  if (wantCategories.length === 0 && wantVibes.length === 0 && wantRegions.length === 0) {
+    return scored;
+  }
+  return scored.filter((s) => {
+    if (wantCategories.length > 0 && !wantCategories.includes(s.category.code)) return false;
+    if (wantVibes.length > 0 && !s.vibesNames.some((v) => wantVibes.includes(v))) return false;
+    if (wantRegions.length > 0) {
+      const sigunguMatch = s.region.sigunguName !== null && wantRegions.includes(s.region.sigunguName);
+      const sidoMatch = wantRegions.includes(s.region.sidoName);
+      if (!sigunguMatch && !sidoMatch) return false;
+    }
+    return true;
+  });
+}
+
 interface GroundedOpts {
   lastSuggestions: ClientLastSuggestion[];
   userTexts: string[];
@@ -966,13 +1000,21 @@ async function groundedRerank(opts: GroundedOpts): Promise<ChatSuggestion[]> {
     }))
     .sort((a, b) => b.score - a.score);
 
+  // ADR 0006 follow-up — 사용자가 새 axis (eventTypes/vibes/regionHints) 를 같이 언급
+  // 했으면 lastSuggestions 안에서 사후 필터 (LLM rerank 만으로 strict 보장 안 됨).
+  const filteredScored = filterSuggestionsByFilters(scored, opts.filters);
+  if (filteredScored.length === 0) {
+    // 직전 제안 안에 새 조건을 만족하는 건 없음. 빈 배열 반환 → 호출자가 retreat.
+    return [];
+  }
+
   // rerank query 는 사용자 turn 전체 history 반영 — 직전 제안 기반이라도 의도 변화 반영해야.
   const query = opts.userTexts.slice(-3).join('\n').slice(0, 500);
-  const articleSnippets = await fetchTopArticleSnippets(scored.map((s) => s.eventId));
+  const articleSnippets = await fetchTopArticleSnippets(filteredScored.map((s) => s.eventId));
 
   let reasonById = new Map<string, string>();
   let order: string[] | null = null;
-  if (scored.length >= 2 && query.length >= 4) {
+  if (filteredScored.length >= 2 && query.length >= 4) {
     try {
       const rerankRes = await fetch(`${env.LLM_SERVICE_URL}/events/rerank`, {
         method: 'POST',
@@ -980,7 +1022,7 @@ async function groundedRerank(opts: GroundedOpts): Promise<ChatSuggestion[]> {
         body: JSON.stringify({
           query,
           top_k: SEMANTIC_DISPLAY_LIMIT,
-          candidates: scored.map((s) => ({
+          candidates: filteredScored.map((s) => ({
             eventId: s.eventId,
             title: s.title,
             phase: s.phase,
@@ -1004,10 +1046,10 @@ async function groundedRerank(opts: GroundedOpts): Promise<ChatSuggestion[]> {
     }
   }
 
-  const byId = new Map(scored.map((s) => [s.eventId, s]));
+  const byId = new Map(filteredScored.map((s) => [s.eventId, s]));
   const finalOrder = order && order.length > 0
-    ? order.map((id) => byId.get(id)).filter((s): s is (typeof scored)[number] => Boolean(s))
-    : scored.slice(0, SEMANTIC_DISPLAY_LIMIT);
+    ? order.map((id) => byId.get(id)).filter((s): s is (typeof filteredScored)[number] => Boolean(s))
+    : filteredScored.slice(0, SEMANTIC_DISPLAY_LIMIT);
 
   return finalOrder.slice(0, SEMANTIC_DISPLAY_LIMIT).map((s) => ({
     eventId: s.eventId,
