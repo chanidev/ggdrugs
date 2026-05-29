@@ -52,18 +52,20 @@ export function CommunityPage() {
     <CommunityShell rightRail={<MateRecoPlaceholder />}>
       <CategoryGrid active={cat} onSelect={setCat} />
       <div className="mb-3 flex justify-end">
-        {/* GG-COMM-002 글쓰기 — 비로그인은 disabled + 로그인 유도 title (숨김 대신 노출). */}
-        <ActionButton
-          variant="brandSolid"
-          size="medium"
-          onClick={() => {
-            if (user) setComposeOpen(true);
-          }}
-          disabled={!user}
-          aria-label={user ? '글쓰기' : '로그인이 필요해요'}
-        >
-          글쓰기
-        </ActionButton>
+        {/* GG-COMM-002 글쓰기 — 비로그인은 disabled + 로그인 유도 title (숨김 대신 노출).
+            disabled 버튼은 브라우저에서 자체 title을 억제하므로 <span>으로 감싸 tooltip 보장. */}
+        <span title={user ? undefined : '로그인이 필요해요'}>
+          <ActionButton
+            variant="brandSolid"
+            size="medium"
+            onClick={() => {
+              if (user) setComposeOpen(true);
+            }}
+            disabled={!user}
+          >
+            글쓰기
+          </ActionButton>
+        </span>
       </div>
       <PostList items={items} loading={loading} error={error} />
       {composeOpen && (
