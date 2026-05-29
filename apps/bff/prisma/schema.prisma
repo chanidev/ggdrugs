@@ -26,15 +26,15 @@ datasource db {
 // 1. REGIONS
 // =============================================================
 model Region {
-  regionId     BigInt   @id @default(autoincrement()) @map("region_id")
-  sidoName     String   @map("sido_name")    @db.VarChar(30)
-  sigunguName  String?  @map("sigungu_name") @db.VarChar(30)
-  dongName     String?  @map("dong_name")    @db.VarChar(30)
-  fullAddress  String   @map("full_address") @db.VarChar(100)
+  regionId    BigInt   @id @default(autoincrement()) @map("region_id")
+  sidoName    String   @map("sido_name") @db.VarChar(30)
+  sigunguName String?  @map("sigungu_name") @db.VarChar(30)
+  dongName    String?  @map("dong_name") @db.VarChar(30)
+  fullAddress String   @map("full_address") @db.VarChar(100)
   /// v4.6 — distance sort 의 region centroid anchor 용 (구청 좌표). sigungu 단위만 채움.
-  centerLat    Decimal? @map("center_lat") @db.Decimal(10, 7)
-  centerLng    Decimal? @map("center_lng") @db.Decimal(10, 7)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  centerLat   Decimal? @map("center_lat") @db.Decimal(10, 7)
+  centerLng   Decimal? @map("center_lng") @db.Decimal(10, 7)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   users  User[]
   events Event[]
@@ -48,36 +48,39 @@ model Region {
 // 2. USERS  (ADR 0001 #2: active_role 추가)
 // =============================================================
 model User {
-  userId            BigInt    @id @default(autoincrement()) @map("user_id")
-  socialUid         String    @map("social_uid")     @db.VarChar(255)
-  authProvider      String    @map("auth_provider")  @db.VarChar(20) // google | kakao
-  nickname          String    @db.VarChar(50)
-  gender            String?   @db.Char(1) // M | F | null
-  dateOfBirth       DateTime? @map("date_of_birth")  @db.Date
-  regionId          BigInt?   @map("region_id")
-  activeRole        String    @default("user") @map("active_role") @db.VarChar(20) // user | uploader  (ADR 0001 #2)
-  isNotificationOn  Boolean   @default(false) @map("is_notification_on")
-  isDeleted         Boolean   @default(false) @map("is_deleted")
-  lastLoggedInAt    DateTime? @map("last_logged_in_at") @db.Timestamptz
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+  userId           BigInt    @id @default(autoincrement()) @map("user_id")
+  socialUid        String    @map("social_uid") @db.VarChar(255)
+  authProvider     String    @map("auth_provider") @db.VarChar(20) // google | kakao
+  nickname         String    @db.VarChar(50)
+  gender           String?   @db.Char(1) // M | F | null
+  dateOfBirth      DateTime? @map("date_of_birth") @db.Date
+  regionId         BigInt?   @map("region_id")
+  activeRole       String    @default("user") @map("active_role") @db.VarChar(20) // user | uploader  (ADR 0001 #2)
+  isNotificationOn Boolean   @default(false) @map("is_notification_on")
+  isDeleted        Boolean   @default(false) @map("is_deleted")
+  lastLoggedInAt   DateTime? @map("last_logged_in_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
 
-  region             Region?              @relation(fields: [regionId], references: [regionId])
-  uploaderProfile    UploaderProfile?
-  adminProfile       AdminProfile?
-  vibeAssignments    EventVibeAssignment[]
-  approvalLogs       ApprovalLog[]
-  bookmarks          Bookmark[]
-  reviews            Review[]
-  notifications      Notification[]
-  subscriptions      EventSubscription[]
-  searchLogs         SearchLog[]
-  chatSessions       ChatSession[]
-  photoAlbums        PhotoAlbum[]
-  tasteProfiles      UserTasteProfile[]
-  authSessions       AuthSession[]
-  adminAuditLogs     AdminAuditLog[]
+  region          Region?               @relation(fields: [regionId], references: [regionId])
+  uploaderProfile UploaderProfile?
+  adminProfile    AdminProfile?
+  vibeAssignments EventVibeAssignment[]
+  approvalLogs    ApprovalLog[]
+  bookmarks       Bookmark[]
+  reviews         Review[]
+  notifications   Notification[]
+  subscriptions   EventSubscription[]
+  searchLogs      SearchLog[]
+  chatSessions    ChatSession[]
+  photoAlbums     PhotoAlbum[]
+  tasteProfiles   UserTasteProfile[]
+  authSessions    AuthSession[]
+  adminAuditLogs  AdminAuditLog[]
+  posts           Post[]
+  comments        Comment[]
+  postLikes       PostLike[]
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -90,24 +93,24 @@ model User {
 // 3. UPLOADER_PROFILES  (ADR 0001 #1: revision_requested 추가)
 // =============================================================
 model UploaderProfile {
-  uploaderId       BigInt    @id @default(autoincrement()) @map("uploader_id")
-  userId           BigInt    @unique @map("user_id")
-  organizationName String    @map("organization_name") @db.VarChar(100)
-  contactPhone     String    @map("contact_phone")     @db.VarChar(20)
-  contactEmail     String    @map("contact_email")     @db.VarChar(255)
+  uploaderId                 BigInt    @id @default(autoincrement()) @map("uploader_id")
+  userId                     BigInt    @unique @map("user_id")
+  organizationName           String    @map("organization_name") @db.VarChar(100)
+  contactPhone               String    @map("contact_phone") @db.VarChar(20)
+  contactEmail               String    @map("contact_email") @db.VarChar(255)
   /// 실명 (ADR 0003). 기존 dev 행은 ''. 신규 apply 부터 필수 (서버 검증).
-  realName         String    @default("") @map("real_name") @db.VarChar(50)
+  realName                   String    @default("") @map("real_name") @db.VarChar(50)
   /// 기관 업로더 사업자등록번호 10자리 (숫자만). ci_hash 와 XOR.
-  businessRegistrationNumber String? @map("business_registration_number") @db.Char(10)
+  businessRegistrationNumber String?   @map("business_registration_number") @db.Char(10)
   /// 개인 업로더 본인인증 CI (88자 Base64). businessRegistrationNumber 와 XOR.
-  ciHash           String?   @map("ci_hash") @db.Char(88)
-  approvalStatus   String    @default("pending") @map("approval_status") @db.VarChar(20)
+  ciHash                     String?   @map("ci_hash") @db.Char(88)
+  approvalStatus             String    @default("pending") @map("approval_status") @db.VarChar(20)
   // pending | approved | revision_requested | rejected  (ADR 0001 #1 대칭 적용)
-  approvedAt       DateTime? @map("approved_at") @db.Timestamptz
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  approvedAt                 DateTime? @map("approved_at") @db.Timestamptz
+  createdAt                  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user      User                @relation(fields: [userId], references: [userId])
+  user      User               @relation(fields: [userId], references: [userId])
   events    Event[]
   documents UploaderDocument[]
 
@@ -119,9 +122,9 @@ model UploaderProfile {
 model UploaderDocument {
   documentId       BigInt   @id @default(autoincrement()) @map("document_id")
   uploaderId       BigInt   @map("uploader_id")
-  filePath         String   @map("file_path")         @db.VarChar(500)
+  filePath         String   @map("file_path") @db.VarChar(500)
   originalFilename String   @map("original_filename") @db.VarChar(255)
-  mimeType         String   @map("mime_type")         @db.VarChar(30)
+  mimeType         String   @map("mime_type") @db.VarChar(30)
   fileSizeBytes    Int      @map("file_size_bytes")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -155,7 +158,7 @@ model AdminProfile {
 model EventCategory {
   categoryId   BigInt   @id @default(autoincrement()) @map("category_id")
   categoryCode String   @unique @map("category_code") @db.VarChar(30) // festival | expo | symposium | conference
-  displayName  String   @map("display_name")   @db.VarChar(50)
+  displayName  String   @map("display_name") @db.VarChar(50)
   sortOrder    Int      @default(0) @map("sort_order") @db.SmallInt
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -169,59 +172,59 @@ model EventCategory {
 // 5. EVENTS  (ADR 0001 #1/#4: approval_status rename + expected_companion rename)
 // =============================================================
 model Event {
-  eventId                     BigInt    @id @default(autoincrement()) @map("event_id")
-  uploaderId                  BigInt?   @map("uploader_id")
-  categoryId                  BigInt    @map("category_id")
-  regionId                    BigInt    @map("region_id")
-  sourceType                  String    @map("source_type")          @db.VarChar(20)  // crawled | uploaded
-  crawlOrigin                 String?   @map("crawl_origin")         @db.VarChar(50)
-  externalSourceId            String?   @map("external_source_id")   @db.VarChar(100)
-  title                       String    @db.VarChar(200)
-  description                 String?   @db.Text
+  eventId                    BigInt                                @id @default(autoincrement()) @map("event_id")
+  uploaderId                 BigInt?                               @map("uploader_id")
+  categoryId                 BigInt                                @map("category_id")
+  regionId                   BigInt                                @map("region_id")
+  sourceType                 String                                @map("source_type") @db.VarChar(20) // crawled | uploaded
+  crawlOrigin                String?                               @map("crawl_origin") @db.VarChar(50)
+  externalSourceId           String?                               @map("external_source_id") @db.VarChar(100)
+  title                      String                                @db.VarChar(200)
+  description                String?                               @db.Text
   /// LLM 2~3문장 요약 (gpt-4o-mini 생성). description + title + category + vibes 기반.
   /// ingest 시점 또는 backfill 스크립트로 채움. 실시간 조회 시 캐시 역할.
-  aiSummary                   String?   @map("ai_summary") @db.Text
-  aiSummaryAt                 DateTime? @map("ai_summary_at") @db.Timestamptz
+  aiSummary                  String?                               @map("ai_summary") @db.Text
+  aiSummaryAt                DateTime?                             @map("ai_summary_at") @db.Timestamptz
   /// ai_summary 생성 시점의 description 원문 MD5. description 변경 시 트리거가 자동 NULL 화
   /// (fn_invalidate_ai_summary_on_description_change). 감사/eval 목적.
-  descriptionHash             String?   @map("description_hash") @db.Char(32)
-  addressDetail               String?   @map("address_detail")       @db.VarChar(255)
+  descriptionHash            String?                               @map("description_hash") @db.Char(32)
+  addressDetail              String?                               @map("address_detail") @db.VarChar(255)
   /// v4.3 — PostGIS geometry(Point, 4326) WGS84. v4.10 (stage 4b) — lat/lng 컬럼 DROP 후
   /// 단일 source of truth. Prisma client 생성에서 제외 (raw query 로만 접근).
   /// 응답의 lat/lng 는 ST_X/ST_Y 로 derive — Web 측 변경 0.
-  locationGeom                Unsupported("geometry(Point, 4326)")? @map("location_geom")
-  startDate                   DateTime  @map("start_date")           @db.Date
-  endDate                     DateTime  @map("end_date")             @db.Date
-  operatingHours              String?   @map("operating_hours")      @db.VarChar(100)
-  targetAudience              String?   @map("target_audience")      @db.VarChar(100)
-  admissionFee                String?   @map("admission_fee")        @db.VarChar(100)
-  expectedCompanionPrimary    String?   @map("expected_companion_primary")   @db.VarChar(20)
-  expectedCompanionSecondary  String?   @map("expected_companion_secondary") @db.VarChar(20)
-  posterImageUrl              String?   @map("poster_image_url")     @db.VarChar(500)
-  approvalStatus              String    @default("pending") @map("approval_status") @db.VarChar(20)
+  locationGeom               Unsupported("geometry(Point, 4326)")? @map("location_geom")
+  startDate                  DateTime                              @map("start_date") @db.Date
+  endDate                    DateTime                              @map("end_date") @db.Date
+  operatingHours             String?                               @map("operating_hours") @db.VarChar(100)
+  targetAudience             String?                               @map("target_audience") @db.VarChar(100)
+  admissionFee               String?                               @map("admission_fee") @db.VarChar(100)
+  expectedCompanionPrimary   String?                               @map("expected_companion_primary") @db.VarChar(20)
+  expectedCompanionSecondary String?                               @map("expected_companion_secondary") @db.VarChar(20)
+  posterImageUrl             String?                               @map("poster_image_url") @db.VarChar(500)
+  approvalStatus             String                                @default("pending") @map("approval_status") @db.VarChar(20)
   // pending | approved | revision_requested | rejected  (ADR 0001 #1)
-  phase                       String    @default("upcoming") @map("phase") @db.VarChar(20)
+  phase                      String                                @default("upcoming") @map("phase") @db.VarChar(20)
   // upcoming | ongoing | ended
-  bookmarkCount               Int       @default(0) @map("bookmark_count")
-  avgRating                   Decimal   @default(0) @map("avg_rating") @db.Decimal(3, 2)
-  reviewCount                 Int       @default(0) @map("review_count")
-  isDeleted                   Boolean   @default(false) @map("is_deleted")
-  approvedAt                  DateTime? @map("approved_at")         @db.Timestamptz
-  createdAt                   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt                   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt                   DateTime? @map("deleted_at")          @db.Timestamptz
+  bookmarkCount              Int                                   @default(0) @map("bookmark_count")
+  avgRating                  Decimal                               @default(0) @map("avg_rating") @db.Decimal(3, 2)
+  reviewCount                Int                                   @default(0) @map("review_count")
+  isDeleted                  Boolean                               @default(false) @map("is_deleted")
+  approvedAt                 DateTime?                             @map("approved_at") @db.Timestamptz
+  createdAt                  DateTime                              @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                  DateTime                              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt                  DateTime?                             @map("deleted_at") @db.Timestamptz
 
-  uploader           UploaderProfile?       @relation(fields: [uploaderId], references: [uploaderId])
-  category           EventCategory          @relation(fields: [categoryId], references: [categoryId])
-  region             Region                 @relation(fields: [regionId], references: [regionId])
-  vibeAssignments    EventVibeAssignment[]
-  approvalDocuments  ApprovalDocument[]
-  approvalLogs       ApprovalLog[]
-  bookmarks          Bookmark[]
-  reviews            Review[]
-  notifications      Notification[]
-  articleMappings    EventArticleMapping[]
-  photoAlbums        PhotoAlbum[]
+  uploader          UploaderProfile?      @relation(fields: [uploaderId], references: [uploaderId])
+  category          EventCategory         @relation(fields: [categoryId], references: [categoryId])
+  region            Region                @relation(fields: [regionId], references: [regionId])
+  vibeAssignments   EventVibeAssignment[]
+  approvalDocuments ApprovalDocument[]
+  approvalLogs      ApprovalLog[]
+  bookmarks         Bookmark[]
+  reviews           Review[]
+  notifications     Notification[]
+  articleMappings   EventArticleMapping[]
+  photoAlbums       PhotoAlbum[]
 
   @@unique([crawlOrigin, externalSourceId], map: "uq_events_external")
   @@index([regionId, categoryId, startDate, phase], map: "idx_events_filter")
@@ -236,11 +239,11 @@ model Event {
 // 6. EVENT_VIBES  (ADR 0001 #5: rename from event_tendency_labels)
 // =============================================================
 model EventVibe {
-  vibeId     BigInt   @id @default(autoincrement()) @map("vibe_id")
-  vibeName   String   @unique @map("vibe_name")   @db.VarChar(50)
-  vibeGroup  String   @map("vibe_group")  @db.VarChar(30) // mood | activity | theme
-  isActive   Boolean  @default(true) @map("is_active")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  vibeId    BigInt   @id @default(autoincrement()) @map("vibe_id")
+  vibeName  String   @unique @map("vibe_name") @db.VarChar(50)
+  vibeGroup String   @map("vibe_group") @db.VarChar(30) // mood | activity | theme
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   assignments EventVibeAssignment[]
 
@@ -257,9 +260,9 @@ model EventVibeAssignment {
   assignedBy   BigInt   @map("assigned_by") // 관리자 user_id
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  event      Event     @relation(fields: [eventId], references: [eventId])
-  vibe       EventVibe @relation(fields: [vibeId], references: [vibeId])
-  assignedByUser User  @relation(fields: [assignedBy], references: [userId])
+  event          Event     @relation(fields: [eventId], references: [eventId])
+  vibe           EventVibe @relation(fields: [vibeId], references: [vibeId])
+  assignedByUser User      @relation(fields: [assignedBy], references: [userId])
 
   @@unique([eventId, vibeId], map: "uq_event_vibe")
   @@index([eventId], map: "idx_vibe_assign_event")
@@ -273,9 +276,9 @@ model EventVibeAssignment {
 model ApprovalDocument {
   documentId       BigInt   @id @default(autoincrement()) @map("document_id")
   eventId          BigInt   @map("event_id")
-  filePath         String   @map("file_path")         @db.VarChar(500)
+  filePath         String   @map("file_path") @db.VarChar(500)
   originalFilename String   @map("original_filename") @db.VarChar(255)
-  mimeType         String   @map("mime_type")         @db.VarChar(30) // image/jpeg | image/png
+  mimeType         String   @map("mime_type") @db.VarChar(30) // image/jpeg | image/png
   fileSizeBytes    Int      @map("file_size_bytes")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -326,16 +329,16 @@ model Bookmark {
 // 11. REVIEWS
 // =============================================================
 model Review {
-  reviewId   BigInt    @id @default(autoincrement()) @map("review_id")
-  userId     BigInt    @map("user_id")
-  eventId    BigInt    @map("event_id")
-  body       String    @db.Text
-  rating     Int       @db.SmallInt
-  sentiment  String?   @db.VarChar(10) // positive | negative | neutral
-  isDeleted  Boolean   @default(false) @map("is_deleted")
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+  reviewId  BigInt    @id @default(autoincrement()) @map("review_id")
+  userId    BigInt    @map("user_id")
+  eventId   BigInt    @map("event_id")
+  body      String    @db.Text
+  rating    Int       @db.SmallInt
+  sentiment String?   @db.VarChar(10) // positive | negative | neutral
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
 
   user   User          @relation(fields: [userId], references: [userId])
   event  Event         @relation(fields: [eventId], references: [eventId])
@@ -354,9 +357,9 @@ model Review {
 model ReviewPhoto {
   reviewPhotoId    BigInt   @id @default(autoincrement()) @map("review_photo_id")
   reviewId         BigInt   @map("review_id")
-  filePath         String   @map("file_path")         @db.VarChar(500)
+  filePath         String   @map("file_path") @db.VarChar(500)
   originalFilename String   @map("original_filename") @db.VarChar(255)
-  mimeType         String   @map("mime_type")         @db.VarChar(30)
+  mimeType         String   @map("mime_type") @db.VarChar(30)
   fileSizeBytes    Int      @map("file_size_bytes")
   sortOrder        Int      @default(0) @map("sort_order") @db.SmallInt
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -470,7 +473,7 @@ model ChatMessage {
 model NewsArticle {
   articleId       BigInt    @id @default(autoincrement()) @map("article_id")
   sourceName      String    @default("donga") @map("source_name") @db.VarChar(30)
-  authorName      String?   @map("author_name")      @db.VarChar(50)
+  authorName      String?   @map("author_name") @db.VarChar(50)
   articleCategory String?   @map("article_category") @db.VarChar(50)
   title           String    @db.VarChar(300)
   originalUrl     String    @unique @map("original_url") @db.VarChar(500)
@@ -533,7 +536,7 @@ model PhotoAlbum {
 model Photo {
   photoId          BigInt    @id @default(autoincrement()) @map("photo_id")
   albumId          BigInt    @map("album_id")
-  filePath         String    @map("file_path")         @db.VarChar(500)
+  filePath         String    @map("file_path") @db.VarChar(500)
   originalFilename String    @map("original_filename") @db.VarChar(255)
   aiTags           Json      @default("{}") @map("ai_tags") @db.JsonB
   takenAt          DateTime? @map("taken_at") @db.Timestamptz
@@ -553,13 +556,13 @@ model AuthSession {
   // PK 로 그대로 사용 — lookup key 도 이것. cookie 에는 이 값을 담는다.
   sessionId  String   @id @map("session_id") @db.VarChar(128)
   userId     BigInt   @map("user_id")
-  expiresAt  DateTime @map("expires_at")  @db.Timestamptz
-  createdAt  DateTime @default(now()) @map("created_at")   @db.Timestamptz
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
-  @@index([userId],    map: "idx_auth_sessions_user")
+  @@index([userId], map: "idx_auth_sessions_user")
   @@index([expiresAt], map: "idx_auth_sessions_expires")
   @@map("auth_sessions")
 }
@@ -572,16 +575,16 @@ model AuthSession {
 model AdminAuditLog {
   auditId   BigInt   @id @default(autoincrement()) @map("audit_id")
   adminId   BigInt   @map("admin_id") // user_id (admin 자격은 admin_profiles 별도 검증)
-  action    String   @db.VarChar(50)  // 'revoke_sessions' (현재). enum CHECK 없음 — 확장 자유.
+  action    String   @db.VarChar(50) // 'revoke_sessions' (현재). enum CHECK 없음 — 확장 자유.
   targetId  BigInt?  @map("target_id") // action 마다 의미 다름. revoke_sessions → user_id.
-  payload   Json     @default("{}")    // { count, reason, ... }
+  payload   Json     @default("{}") // { count, reason, ... }
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   admin User @relation(fields: [adminId], references: [userId])
 
-  @@index([action, createdAt(sort: Desc)],  map: "idx_admin_audit_action_created")
+  @@index([action, createdAt(sort: Desc)], map: "idx_admin_audit_action_created")
   @@index([adminId, createdAt(sort: Desc)], map: "idx_admin_audit_admin_created")
-  @@index([targetId],                        map: "idx_admin_audit_target")
+  @@index([targetId], map: "idx_admin_audit_target")
   @@map("admin_audit_logs")
 }
 
@@ -592,7 +595,7 @@ model UserTasteProfile {
   profileId      BigInt   @id @default(autoincrement()) @map("profile_id")
   userId         BigInt   @map("user_id")
   tasteDimension String   @map("taste_dimension") @db.VarChar(30)
-  tasteValue     String   @map("taste_value")     @db.VarChar(30)
+  tasteValue     String   @map("taste_value") @db.VarChar(30)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -601,4 +604,75 @@ model UserTasteProfile {
   @@unique([userId, tasteDimension], map: "uq_user_taste")
   @@index([userId], map: "idx_taste_user")
   @@map("user_taste_profiles")
+}
+
+// =============================================================
+// POSTS  (Phase 2 / ADR 0007 결정 12 — A_802 게시판)
+// =============================================================
+model Post {
+  postId       BigInt    @id @default(autoincrement()) @map("post_id")
+  userId       BigInt    @map("user_id")
+  // festival_story | mate_finder | free  (고정 3종, 마스터 테이블 없음. CHECK 는 마이그레이션 SQL 에)
+  category     String    @map("category") @db.VarChar(20)
+  title        String    @db.VarChar(200)
+  body         String    @db.Text
+  likeCount    Int       @default(0) @map("like_count")
+  commentCount Int       @default(0) @map("comment_count")
+  // 작성 후 7일 (GG-POST-010). 조회 시 expiresAt > now() 필터 — 비노출이지 삭제 아님(GG-POST-012).
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  user     User       @relation(fields: [userId], references: [userId])
+  comments Comment[]
+  likes    PostLike[]
+
+  @@index([category, expiresAt, createdAt(sort: Desc)], map: "idx_posts_category_active")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_posts_user")
+  @@map("posts")
+}
+
+// =============================================================
+// COMMENTS  (자기참조 — 대댓글 1단계만, 대댓글에 답글 불가 GG-POST-003)
+// =============================================================
+model Comment {
+  commentId       BigInt    @id @default(autoincrement()) @map("comment_id")
+  postId          BigInt    @map("post_id")
+  userId          BigInt    @map("user_id")
+  // NULL = 최상위 댓글, 값 있으면 대댓글. depth 1 강제는 라우트에서 검증(GG-POST-003).
+  parentCommentId BigInt?   @map("parent_comment_id")
+  body            String    @db.Text
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  post    Post      @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [userId])
+  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [commentId], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  @@index([postId, createdAt], map: "idx_comments_post")
+  @@index([parentCommentId], map: "idx_comments_parent")
+  @@index([userId], map: "idx_comments_user")
+  @@map("comments")
+}
+
+// =============================================================
+// POST_LIKES  (좋아요/하트 토글)
+// =============================================================
+model PostLike {
+  postLikeId BigInt   @id @default(autoincrement()) @map("post_like_id")
+  postId     BigInt   @map("post_id")
+  userId     BigInt   @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  post Post @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [userId])
+
+  @@unique([postId, userId], map: "uq_post_like")
+  @@index([postId], map: "idx_post_likes_post")
+  @@map("post_likes")
 }
