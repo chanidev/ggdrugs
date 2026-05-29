@@ -139,6 +139,113 @@ export async function getPostDetail(req: Request, res: Response) {
   });
 }
 
+/** POST /community/posts/:id/comments — 댓글/대댓글 (requireAuth). 대댓글 depth 1 강제(GG-POST-003). */
+export async function createComment(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) { res.status(401).json({ error: 'unauthenticated' }); return; }
+  const postId = parseBigId(req.params.id);
+  if (!postId) { res.status(400).json({ error: 'invalid id' }); return; }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const text = typeof body.body === 'string' ? body.body.trim() : '';
+  if (text.length < 1 || text.length > 1000) { res.status(400).json({ error: 'body 는 1~1000자' }); return; }
+
+  const parentRaw = body.parentCommentId;
+  let parentCommentId: bigint | null = null;
+  if (parentRaw !== undefined && parentRaw !== null && parentRaw !== '') {
+    parentCommentId = parseBigId(parentRaw);
+    if (!parentCommentId) { res.status(400).json({ error: 'invalid parentCommentId' }); return; }
+  }
+
+  const post = await prisma.post.findFirst({
+    where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
+    select: { postId: true },
+  });
+  if (!post) { res.status(404).json({ error: 'post not found' }); return; }
+
+  if (parentCommentId !== null) {
+    // postId 동봉 — 부모가 같은 게시글 소속이 아니면 404 (cross-post parent 방어).
+    const parent = await prisma.comment.findFirst({
+      where: { commentId: parentCommentId, postId, isDeleted: false },
+      select: { parentCommentId: true },
+    });
+    if (!parent) { res.status(404).json({ error: 'parent comment not found' }); return; }
+    // depth 1 강제 — 대댓글에 답글 불가 (GG-POST-003). 요청 형식은 유효하나 도메인 규칙 위반 → 422.
+    if (parent.parentCommentId !== null) {
+      res.status(422).json({ error: 'reply_to_reply_not_allowed' });
+      return;
+    }
+  }
+
+  const created = await prisma.$transaction(async (tx) => {
+    const c = await tx.comment.create({
+      data: { postId, userId: auth.userId, parentCommentId, body: text },
+      select: { commentId: true, parentCommentId: true, body: true, createdAt: true },
+    });
+    const count = await tx.comment.count({ where: { postId, isDeleted: false } });
+    await tx.post.update({ where: { postId }, data: { commentCount: count } });
+    return c;
+  });
+
+  res.status(201).json({
+    commentId: created.commentId.toString(),
+    parentCommentId: created.parentCommentId ? created.parentCommentId.toString() : null,
+    authorUserId: auth.userId.toString(),
+    authorNickname: auth.nickname,
+    body: created.body,
+    createdAt: created.createdAt.toISOString(),
+    isMine: true,
+    replies: [],
+  });
+}
+
+/** PATCH /community/comments/:id — 본인 댓글 수정 (GG-POST-006). */
+export async function updateComment(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) { res.status(401).json({ error: 'unauthenticated' }); return; }
+  const commentId = parseBigId(req.params.id);
+  if (!commentId) { res.status(400).json({ error: 'invalid id' }); return; }
+
+  const text = typeof (req.body ?? {}).body === 'string' ? String((req.body as Record<string, unknown>).body).trim() : '';
+  if (text.length < 1 || text.length > 1000) { res.status(400).json({ error: 'body 는 1~1000자' }); return; }
+
+  const existing = await prisma.comment.findUnique({
+    where: { commentId },
+    select: { commentId: true, userId: true, isDeleted: true },
+  });
+  if (!existing || existing.isDeleted) { res.status(404).json({ error: 'comment not found' }); return; }
+  if (existing.userId !== auth.userId) { res.status(403).json({ error: 'forbidden' }); return; }
+
+  const updated = await prisma.comment.update({
+    where: { commentId },
+    data: { body: text },
+    select: { commentId: true, body: true, updatedAt: true },
+  });
+  res.json({ commentId: updated.commentId.toString(), body: updated.body, updatedAt: updated.updatedAt.toISOString() });
+}
+
+/** DELETE /community/comments/:id — 본인 댓글 soft-delete (GG-POST-007). commentCount 재계산. */
+export async function deleteComment(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) { res.status(401).json({ error: 'unauthenticated' }); return; }
+  const commentId = parseBigId(req.params.id);
+  if (!commentId) { res.status(400).json({ error: 'invalid id' }); return; }
+
+  const existing = await prisma.comment.findUnique({
+    where: { commentId },
+    select: { commentId: true, userId: true, postId: true, isDeleted: true },
+  });
+  if (!existing || existing.isDeleted) { res.status(404).json({ error: 'comment not found' }); return; }
+  if (existing.userId !== auth.userId) { res.status(403).json({ error: 'forbidden' }); return; }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.comment.update({ where: { commentId }, data: { isDeleted: true, deletedAt: new Date() } });
+    const count = await tx.comment.count({ where: { postId: existing.postId, isDeleted: false } });
+    await tx.post.update({ where: { postId: existing.postId }, data: { commentCount: count } });
+  });
+  res.json({ ok: true });
+}
+
 /** POST /community/posts — 글쓰기 (requireAuth). expiresAt = now + 7d. */
 export async function createPost(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;

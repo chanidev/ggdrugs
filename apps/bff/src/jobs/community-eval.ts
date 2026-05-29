@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
-import { listPosts, getPostDetail, createPost, POST_TTL_MS } from '../routes/posts.js';
+import { listPosts, getPostDetail, createPost, createComment, updateComment, deleteComment, POST_TTL_MS } from '../routes/posts.js';
 
 interface MockReq { params?: Record<string, string>; query?: Record<string, string>; body?: unknown; auth?: { userId: bigint; nickname: string; activeRole: string }; }
 interface Captured { status: number; json: unknown; }
@@ -101,6 +101,50 @@ async function main() {
         where: { postId: BigInt(createdPostId) },
         data: { expiresAt: new Date(Date.now() + POST_TTL_MS) },
       });
+      return f;
+    });
+    // CASE comment: 작성 → 201, root parent null, commentCount 반영
+    let rootCommentId = '';
+    await check('comment.create.ok', async () => {
+      const res = mockRes();
+      await createComment(mockReq({ params: { id: createdPostId }, auth, body: { body: '댓글 본문' } }), res);
+      const b = res._c.json as { commentId?: string; parentCommentId?: string | null };
+      const f: string[] = [];
+      if (res._c.status !== 201) f.push(`status ${res._c.status}`);
+      if (!b?.commentId) f.push('no commentId'); else rootCommentId = b.commentId;
+      if (b?.parentCommentId !== null) f.push('root parent must be null');
+      return f;
+    });
+
+    // CASE reply: 대댓글 1단계 OK
+    let replyId = '';
+    await check('comment.reply.ok', async () => {
+      const res = mockRes();
+      await createComment(mockReq({ params: { id: createdPostId }, auth, body: { body: '대댓글', parentCommentId: rootCommentId } }), res);
+      const b = res._c.json as { commentId?: string; parentCommentId?: string | null };
+      if (b?.commentId) replyId = b.commentId;
+      return b?.parentCommentId === rootCommentId ? [] : ['reply parent mismatch'];
+    });
+
+    // CASE reply-to-reply: depth 2 금지 → 422 (GG-POST-003)
+    await check('comment.reply.depth2_blocked', async () => {
+      const res = mockRes();
+      await createComment(mockReq({ params: { id: createdPostId }, auth, body: { body: 'x', parentCommentId: replyId } }), res);
+      return res._c.status === 422 ? [] : [`status ${res._c.status} != 422`];
+    });
+
+    // CASE comment delete: 본인 → soft-delete 성공(200) + 상세 트리에서 제외
+    await check('comment.delete.excluded', async () => {
+      const rd = mockRes();
+      await deleteComment(mockReq({ params: { id: replyId }, auth }), rd);
+      const f: string[] = [];
+      if (rd._c.status !== 200) f.push(`delete status ${rd._c.status}`);
+      // 게시글은 soft-delete 자식이 있어도 생존 → detail 200, 단 삭제된 대댓글은 트리에서 빠짐.
+      const rg = mockRes();
+      await getPostDetail(mockReq({ params: { id: createdPostId }, auth }), rg);
+      const gb = rg._c.json as { comments?: Array<{ commentId: string; replies: Array<{ commentId: string }> }> };
+      const stillThere = gb?.comments?.some((c) => c.replies.some((r) => r.commentId === replyId));
+      if (stillThere) f.push('deleted reply still in tree');
       return f;
     });
   } finally {
