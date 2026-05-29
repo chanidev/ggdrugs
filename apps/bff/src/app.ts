@@ -86,6 +86,7 @@ import {
   getMateIndex,
   getRecommendations,
 } from './routes/mate.js';
+import { updateMyProfile } from './routes/me.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -503,6 +504,12 @@ export function createApp(): Express {
     '/me/notifications/read-all',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => markAllNotificationsRead(req, res).catch(next),
+  );
+  // A_807 프로필 수정 — 닉네임 (GG-PROFILE-005)
+  app.patch(
+    '/me/profile',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => updateMyProfile(req, res).catch(next),
   );
   app.put(
     '/me/active-role',

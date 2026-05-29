@@ -71,6 +71,13 @@ export function MyPage() {
           >
             커뮤니티
           </Link>
+          {/* GG-MY-007 마이페이지 → 프로필 보기 (A_807) */}
+          <Link
+            to="/me/profile"
+            className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] font-medium hover:border-(--color-border-hover)"
+          >
+            프로필
+          </Link>
           <RoleToggleButton />
         </div>
       </header>

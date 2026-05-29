@@ -11,6 +11,8 @@ import { NotificationsPage } from './pages/NotificationsPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { MateFormPage } from './pages/MateFormPage';
+import { MateRecommendationsPage } from './pages/MateRecommendationsPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { AuthProvider } from './lib/auth-context';
 import '@seed-design/css/all.css';
 import './styles/index.css';
@@ -39,6 +41,8 @@ createRoot(rootEl).render(
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/community/posts/:id" element={<PostDetailPage />} />
         <Route path="/mate/form" element={<MateFormPage />} />
+        <Route path="/mate/recommendations" element={<MateRecommendationsPage />} />
+        <Route path="/me/profile" element={<ProfilePage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,
