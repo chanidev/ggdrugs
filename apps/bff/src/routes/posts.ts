@@ -4,7 +4,7 @@ import { prisma } from '../prisma.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
 const CATEGORIES = new Set(['festival_story', 'mate_finder', 'free']);
-const POST_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7d (GG-POST-010)
+export const POST_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7d (GG-POST-010)
 
 // 댓글 트리 노드 — 명시 interface 로 self-referential 추론(ts7022) 회피.
 export interface CommentNodeOut {
@@ -81,7 +81,7 @@ export async function getPostDetail(req: Request, res: Response) {
     where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
     select: {
       postId: true, category: true, title: true, body: true, likeCount: true,
-      createdAt: true, userId: true,
+      commentCount: true, createdAt: true, userId: true,
       user: { select: { nickname: true } },
       comments: {
         where: { isDeleted: false },
@@ -131,6 +131,7 @@ export async function getPostDetail(req: Request, res: Response) {
     authorUserId: post.userId.toString(),
     authorNickname: post.user.nickname,
     likeCount: post.likeCount,
+    commentCount: post.commentCount,
     liked,
     isMine: auth ? post.userId === auth.userId : false,
     createdAt: post.createdAt.toISOString(),
