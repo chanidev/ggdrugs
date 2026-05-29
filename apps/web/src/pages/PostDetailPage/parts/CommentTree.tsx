@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Avatar } from 'seed-design/ui/avatar';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { TextField, TextFieldInput } from 'seed-design/ui/text-field';
@@ -22,6 +22,12 @@ function CommentItem({
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(node.body);
+
+  // [review fix] 서버 확정 본문이 변경됐을 때(onChanged → 부모 reload) editText 를
+  // 최신 node.body 로 동기화. editing 중엔 사용자 입력을 유지하고, editing 이 false 일 때만 적용.
+  useEffect(() => {
+    if (!editing) setEditText(node.body);
+  }, [node.body, editing]);
 
   const saveEdit = async () => {
     const t = editText.trim();

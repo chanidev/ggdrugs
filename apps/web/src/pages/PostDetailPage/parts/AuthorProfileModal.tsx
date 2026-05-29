@@ -52,7 +52,7 @@ export function AuthorProfileModal({
               variant="brandSolid"
               size="medium"
               disabled
-              title="준비 중"
+              aria-label="채팅 신청하기 (준비 중)"
             >
               채팅 신청하기
             </ActionButton>
