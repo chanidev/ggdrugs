@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { Icon } from '../../components/Icon';
 import { useCurrentUser } from '../../lib/auth-context';
 import { loginUrl } from '../../lib/auth-redirect';
@@ -62,7 +63,16 @@ export function MyPage() {
             <span className="text-(--color-accent)">•</span> {user.nickname} 님
           </h1>
         </div>
-        <RoleToggleButton />
+        <div className="flex items-center gap-2">
+          {/* GG-MY-006 마이페이지 → 커뮤니티 진입 */}
+          <Link
+            to="/community"
+            className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] font-medium hover:border-(--color-border-hover)"
+          >
+            커뮤니티
+          </Link>
+          <RoleToggleButton />
+        </div>
       </header>
 
       <div
