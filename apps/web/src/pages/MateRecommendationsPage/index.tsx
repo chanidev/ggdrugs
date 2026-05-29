@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Header } from '../../layout/Header';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { Avatar } from 'seed-design/ui/avatar';
-import { getRecommendations, type RecommendationsResponse } from '../../lib/api/mate.js';
+import { getRecommendations, type RecommendationsResponse, type RecommendationItem } from '../../lib/api/mate.js';
 
 /**
  * MateRecommendationsPage — A_801 메이트 추천 목록 (GG-COMM-007/008).
@@ -21,21 +21,23 @@ export function MateRecommendationsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const ctrl = new AbortController();
+    let mounted = true;
     setLoading(true);
     setError(null);
     getRecommendations()
       .then((r) => {
-        setData(r);
-        setLoading(false);
+        if (mounted) {
+          setData(r);
+          setLoading(false);
+        }
       })
-      .catch((e: unknown) => {
-        if ((e as Error).name !== 'AbortError') {
+      .catch(() => {
+        if (mounted) {
           setError('추천 목록을 불러오지 못했어요.');
           setLoading(false);
         }
       });
-    return () => ctrl.abort();
+    return () => { mounted = false; };
   }, []);
 
   return (
@@ -110,14 +112,7 @@ function BlindState() {
 
 // ── 추천 카드 목록 ──
 
-interface RecoItem {
-  userId: string;
-  nickname: string;
-  score: number;
-  mateIndex: number;
-}
-
-function RecoList({ items }: { items: RecoItem[] }) {
+function RecoList({ items }: { items: RecommendationItem[] }) {
   if (items.length === 0) {
     return (
       <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
@@ -144,7 +139,7 @@ function RecoList({ items }: { items: RecoItem[] }) {
   );
 }
 
-function RecoCard({ item }: { item: RecoItem }) {
+function RecoCard({ item }: { item: RecommendationItem }) {
   return (
     <div className="flex items-center gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-4 py-3">
       {/* 아바타 */}
