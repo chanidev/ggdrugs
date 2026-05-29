@@ -10,6 +10,7 @@ import { UploaderEventEditPage } from './pages/UploaderEventEditPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { PostDetailPage } from './pages/PostDetailPage';
+import { MateFormPage } from './pages/MateFormPage';
 import { AuthProvider } from './lib/auth-context';
 import '@seed-design/css/all.css';
 import './styles/index.css';
@@ -37,6 +38,7 @@ createRoot(rootEl).render(
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/community/posts/:id" element={<PostDetailPage />} />
+        <Route path="/mate/form" element={<MateFormPage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,
