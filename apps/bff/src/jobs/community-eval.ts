@@ -188,6 +188,22 @@ async function main() {
       return f;
     });
 
+    // CASE post update forbidden: 다른 userId → 403 (GG-POST-004)
+    await check('post.update.forbidden', async () => {
+      const otherAuth = { userId: auth.userId + 1n, nickname: 'other', activeRole: 'user' };
+      const res = mockRes();
+      await updatePost(mockReq({ params: { id: createdPostId }, auth: otherAuth, body: { title: '수정된 제목', body: '수정된 본문' } }), res);
+      return res._c.status === 403 ? [] : [`status ${res._c.status} != 403`];
+    });
+
+    // CASE post delete forbidden: 다른 userId → 403 (GG-POST-005)
+    await check('post.delete.forbidden', async () => {
+      const otherAuth = { userId: auth.userId + 1n, nickname: 'other', activeRole: 'user' };
+      const res = mockRes();
+      await deletePost(mockReq({ params: { id: createdPostId }, auth: otherAuth }), res);
+      return res._c.status === 403 ? [] : [`status ${res._c.status} != 403`];
+    });
+
     // CASE like toggle: on(liked true, count 1) → off(liked false, count 0)
     await check('post.like.toggle', async () => {
       const r1 = mockRes();
