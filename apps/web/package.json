@@ -12,12 +12,15 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@seed-design/css": "^1.2.12",
+    "@seed-design/react": "^1.2.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-kakao-maps-sdk": "^1.2.1",
     "react-router": "^7.1.1"
   },
   "devDependencies": {
+    "@seed-design/vite-plugin": "^1.1.1",
     "@tailwindcss/vite": "^4.1.14",
     "@types/node": "^24",
     "@types/react": "^19.0.2",
@@ -29,6 +32,7 @@
     "tailwindcss": "^4.1.14",
     "typescript": "^5.6.3",
     "vite": "^6.0.7",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "^4.1.7"
   }
 }

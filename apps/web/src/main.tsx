@@ -9,7 +9,9 @@ import { UploaderNewEventPage } from './pages/UploaderNewEventPage';
 import { UploaderEventEditPage } from './pages/UploaderEventEditPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { AuthProvider } from './lib/auth-context';
+import '@seed-design/css/base.css';
 import './styles/index.css';
+import './styles/seed-overrides.css';
 
 // NOTE: StrictMode 제거 — react-kakao-maps-sdk 의 MarkerClusterer 가 dev 의
 // double-invoke 에서 내부 marker 참조를 null 로 덮어 "Cannot set properties of
