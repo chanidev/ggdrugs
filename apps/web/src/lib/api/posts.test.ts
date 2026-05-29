@@ -8,6 +8,9 @@
  *  - fetchPostDetail: 정상 응답 commentCount 포함 / 404 → NOT_FOUND 에러 매핑
  *  - createPost: 401 → UNAUTHENTICATED 에러 매핑
  *  - createComment: 422 → REPLY_TO_REPLY_NOT_ALLOWED 에러 매핑
+ *  - updatePost: 401 → UNAUTHENTICATED, 403 → FORBIDDEN 에러 매핑
+ *  - deletePost: 403 → FORBIDDEN 에러 매핑
+ *  - togglePostLike: { liked, likeCount } 응답 shape 검증
  *  - signal threading: AbortSignal 전달 시 정상 동작
  */
 import { describe, it, expect, beforeAll, afterEach, afterAll } from 'vitest';
@@ -18,6 +21,9 @@ import {
   fetchPostDetail,
   createPost,
   createComment,
+  updatePost,
+  deletePost,
+  togglePostLike,
   type PostListResponse,
   type PostDetail,
 } from './posts.js';
@@ -84,6 +90,26 @@ const server = setupServer(
   http.post(`${BASE}/community/posts/post-ok/comments`, () => {
     return new HttpResponse(null, { status: 422 });
   }),
+
+  // PATCH /community/posts/post-401 — 401
+  http.patch(`${BASE}/community/posts/post-401`, () => {
+    return new HttpResponse(null, { status: 401 });
+  }),
+
+  // PATCH /community/posts/post-403 — 403
+  http.patch(`${BASE}/community/posts/post-403`, () => {
+    return new HttpResponse(null, { status: 403 });
+  }),
+
+  // DELETE /community/posts/post-403 — 403
+  http.delete(`${BASE}/community/posts/post-403`, () => {
+    return new HttpResponse(null, { status: 403 });
+  }),
+
+  // POST /community/posts/post-ok/like — 정상 응답 { liked, likeCount }
+  http.post(`${BASE}/community/posts/post-ok/like`, () => {
+    return HttpResponse.json({ liked: true, likeCount: 1 });
+  }),
 );
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -148,5 +174,37 @@ describe('createComment', () => {
     await expect(
       createComment('post-ok', { body: '대댓글', parentCommentId: 'some-reply' }),
     ).rejects.toThrow('REPLY_TO_REPLY_NOT_ALLOWED');
+  });
+});
+
+describe('updatePost', () => {
+  it('401 응답 → UNAUTHENTICATED 에러를 던진다', async () => {
+    await expect(
+      updatePost('post-401', { title: '수정제목', body: '수정본문' }),
+    ).rejects.toThrow('UNAUTHENTICATED');
+  });
+
+  it('403 응답 → FORBIDDEN 에러를 던진다', async () => {
+    await expect(
+      updatePost('post-403', { title: '수정제목', body: '수정본문' }),
+    ).rejects.toThrow('FORBIDDEN');
+  });
+});
+
+describe('deletePost', () => {
+  it('403 응답 → FORBIDDEN 에러를 던진다', async () => {
+    await expect(deletePost('post-403')).rejects.toThrow('FORBIDDEN');
+  });
+});
+
+describe('togglePostLike', () => {
+  it('정상 응답 shape { liked: boolean, likeCount: number } 를 반환한다', async () => {
+    const result = await togglePostLike('post-ok');
+    expect(result).toHaveProperty('liked');
+    expect(result).toHaveProperty('likeCount');
+    expect(typeof result.liked).toBe('boolean');
+    expect(typeof result.likeCount).toBe('number');
+    expect(result.liked).toBe(true);
+    expect(result.likeCount).toBe(1);
   });
 });

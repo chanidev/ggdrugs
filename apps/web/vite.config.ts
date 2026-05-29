@@ -6,8 +6,6 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
     environment: 'node',
-    globals: true,
-    setupFiles: [],
     env: {
       VITE_BFF_URL: 'http://localhost',
     },

@@ -63,8 +63,8 @@ export async function fetchPosts(
 ): Promise<PostListResponse> {
   const sp = new URLSearchParams();
   if (query.category) sp.set('category', query.category);
-  if (query.page) sp.set('page', String(query.page));
-  if (query.limit) sp.set('limit', String(query.limit));
+  if (query.page != null) sp.set('page', String(query.page));
+  if (query.limit != null) sp.set('limit', String(query.limit));
   const qs = sp.toString();
   const res = await fetch(
     `${BFF_URL}/community/posts${qs ? `?${qs}` : ''}`,
