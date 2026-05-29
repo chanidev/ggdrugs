@@ -321,6 +321,7 @@ async function main() {
     // ── CASE 15: reco.autoRecommend_false_excluded — autoRecommend=false 후보 미포함 ──
     // GG-COMM-007/008 프라이버시 의미: autoRecommend=false 설정 사용자는
     // 매칭 동의(consentedAt)가 있어도 타인 추천 목록에 노출되면 안 됨.
+    // (후보풀 쪽 타인 보호)
     await check('reco.autoRecommend_false_excluded', async () => {
       const f: string[] = [];
       const u3 = await prisma.user.findFirst({
@@ -368,6 +369,37 @@ async function main() {
         await prisma.mateIndex.deleteMany({ where: { userId: auth3.userId } });
         await prisma.mateProfile.deleteMany({ where: { userId: auth3.userId } });
       }
+      return f;
+    });
+
+    // ── CASE 16: requester.autoRecommend_false_returns_blind ─────────────────
+    // [critical] 리뷰 지적: 요청자 본인의 autoRecommend=false(opt-out)를
+    // 확인하지 않아 opt-out 사용자도 추천 목록을 받을 수 있었음.
+    // GG-COMM-007/008 프라이버시 의미: 요청자가 autoRecommend=false 이면
+    // 매칭 기능을 사용하지 않겠다는 의사 표시 → blind 반환해야 함.
+    await check('requester.autoRecommend_false_returns_blind', async () => {
+      const f: string[] = [];
+
+      // u1 프로필을 autoRecommend=false 로 저장 (요청자 opt-out 시나리오)
+      const optOutBody = { ...BASE_PROFILE, autoRecommend: false };
+      const saveRes = mockRes();
+      await saveMateProfile(mockReq({ auth, body: optOutBody }), saveRes);
+      if (saveRes._c.status !== 200) { f.push(`save failed: ${saveRes._c.status}`); return f; }
+
+      // u1 기준 추천 목록 조회 — opt-out 이므로 blind 상태여야 함
+      const recoRes = mockRes();
+      await getRecommendations(mockReq({ auth }), recoRes);
+      if (recoRes._c.status !== 200) {
+        f.push(`reco status ${recoRes._c.status} != 200`);
+        return f;
+      }
+      const rb = recoRes._c.json as { state?: string };
+      if (rb?.state !== 'blind') {
+        f.push(`requester with autoRecommend=false must get state:"blind", got "${rb?.state}"`);
+      }
+
+      // 복원 — 이후 케이스에 영향 없도록 autoRecommend=true 로 되돌림
+      await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true } }), mockRes());
       return f;
     });
 

@@ -56,6 +56,7 @@ export function scoreOneWay(prefs: MatePrefs, attrs: MateAttrs): number | null {
   }
 
   // 지역: 선호 있고 불일치 → 제외 (슬라이스2 경계: 지역 기반. 슬라이스3에서 이벤트 연결)
+  // Prisma BigInt primitive — === 비교 안전 (같은 값이면 동일 원시값)
   if (prefs.prefRegionId !== null && prefs.prefRegionId !== attrs.regionId) {
     return null;
   }

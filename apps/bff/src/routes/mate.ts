@@ -332,7 +332,7 @@ export async function getRecommendations(req: Request, res: Response) {
     return;
   }
 
-  // 본인 프로필 조회 — 없거나 동의 없으면 blind
+  // 본인 프로필 조회 — 없거나 동의 없거나 opt-out 이면 blind
   const myProfile = await prisma.mateProfile.findUnique({
     where: { userId: auth.userId },
     select: {
@@ -348,12 +348,14 @@ export async function getRecommendations(req: Request, res: Response) {
       prefHasCar: true,
       prefNationality: true,
       prefKoreanOk: true,
+      autoRecommend: true, // 요청자 opt-out 게이트 (GG-COMM-007/008)
       consentedAt: true,
       isDeleted: true,
     },
   });
 
-  if (!myProfile || myProfile.isDeleted || !myProfile.consentedAt) {
+  // 요청자 opt-out(autoRecommend=false) 도 blind — 매칭 기능 사용 의사 없음
+  if (!myProfile || myProfile.isDeleted || !myProfile.consentedAt || !myProfile.autoRecommend) {
     res.json({ state: 'blind' });
     return;
   }
