@@ -195,6 +195,19 @@ async function main() {
       return res._c.status === 401 ? [] : [`status ${res._c.status} != 401`];
     });
 
+    // ── CASE 10: consentedAt=true (boolean) bypass → 422 (GG-MATCH-009/010) ──
+    // !true === false 이므로 기존 !consentedAtRaw 검사를 통과하고,
+    // new Date(true) = epoch+1ms (유효한 Date) 라 저장될 수 있었던 버그.
+    await check('profile.save.consent_boolean_bypass', async () => {
+      const res = mockRes();
+      await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, consentedAt: true } }), res);
+      const f: string[] = [];
+      if (res._c.status !== 422) f.push(`status ${res._c.status} != 422 (boolean true should be rejected)`);
+      const b = res._c.json as { error?: string };
+      if (b?.error !== 'consent_required') f.push(`error "${b?.error}" != "consent_required"`);
+      return f;
+    });
+
   } finally {
     // 픽스처 정리 — 반복 실행 시 DB 오염 방지
     await prisma.mateIndex.deleteMany({ where: { userId: auth.userId } });

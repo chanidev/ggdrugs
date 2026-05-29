@@ -81,13 +81,14 @@ export async function saveMateProfile(req: Request, res: Response) {
   const hasCar = body.hasCar as boolean;
 
   // ── 약관 동의 게이트 (GG-MATCH-009/010) ──
-  // consentedAt 이 body 에 없거나 falsy → 422
+  // consentedAt 은 반드시 non-empty string 이어야 함.
+  // boolean true 같은 falsy-하지-않은 비문자열 값도 422 처리 (new Date(true) = epoch+1ms 우회 방지).
   const consentedAtRaw = body.consentedAt;
-  if (!consentedAtRaw) {
+  if (typeof consentedAtRaw !== 'string' || !consentedAtRaw) {
     res.status(422).json({ error: 'consent_required' });
     return;
   }
-  const consentedAt = new Date(consentedAtRaw as string);
+  const consentedAt = new Date(consentedAtRaw);
   if (Number.isNaN(consentedAt.getTime())) {
     res.status(422).json({ error: 'consent_required' });
     return;
