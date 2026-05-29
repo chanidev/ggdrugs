@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Icon } from '../../components/Icon';
 import { useCurrentUser } from '../../lib/auth-context';
 import { loginUrl } from '../../lib/auth-redirect';
+import { ActionButton } from 'seed-design/ui/action-button';
 import { PageShell } from './parts/PageShell.js';
 import { RoleToggleButton } from './parts/RoleToggleButton.js';
 import { SessionFooter } from './parts/SessionFooter.js';
@@ -40,12 +41,11 @@ export function MyPage() {
           <p className="m-0 mb-6 text-[14px] text-(--color-text-muted)">
             북마크와 리뷰는 로그인 후에 확인할 수 있어요.
           </p>
-          <a
-            href={loginUrl('google', '/me')}
-            className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-4 text-[14px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
-          >
-            Google 로그인 <Icon name="arrow" size={14} />
-          </a>
+          <ActionButton variant="brandSolid" size="medium" asChild>
+            <a href={loginUrl('google', '/me')}>
+              Google 로그인 <Icon name="arrow" size={14} />
+            </a>
+          </ActionButton>
         </section>
       </PageShell>
     );

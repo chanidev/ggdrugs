@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useCurrentUser } from '../../../lib/auth-context';
+import { ActionButton } from 'seed-design/ui/action-button';
 
 /**
  * ADR 0004 D-3 — 세션 관리. 로그아웃 두 옵션 노출.
@@ -45,22 +46,24 @@ export function SessionFooter() {
         세션 관리
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          type="button"
+        <ActionButton
+          variant="neutralOutline"
+          size="small"
           onClick={() => void onLogout()}
+          loading={pending === 'one'}
           disabled={pending !== null}
-          className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
         >
           {pending === 'one' ? '로그아웃 중…' : '이 디바이스 로그아웃'}
-        </button>
-        <button
-          type="button"
+        </ActionButton>
+        <ActionButton
+          variant="neutralOutline"
+          size="small"
           onClick={() => void onLogoutAll()}
+          loading={pending === 'all'}
           disabled={pending !== null}
-          className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-error) hover:text-(--color-error) disabled:opacity-40"
         >
           {pending === 'all' ? '전체 로그아웃 중…' : '모든 디바이스 로그아웃'}
-        </button>
+        </ActionButton>
       </div>
       <p className="m-0 mt-2 text-[11.5px] text-(--color-text-subtle)">
         분실·탈취가 의심되면 모든 디바이스 로그아웃을 사용하세요.

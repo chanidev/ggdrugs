@@ -53,21 +53,24 @@ export function CommunityPage() {
       <CategoryGrid active={cat} onSelect={setCat} />
       <div className="mb-3 flex justify-end">
         {/* GG-COMM-002 글쓰기 — 비로그인은 disabled + 로그인 유도 (숨김 대신 노출).
-            <span title>로 감싸 시각적 tooltip 보장(disabled 시 브라우저 title 억제).
-            aria-label은 disabled에서도 스크린리더에 노출되므로 로그인 유도 문구 유지. */}
-        <span title={user ? undefined : '로그인이 필요해요'}>
-          <ActionButton
-            variant="brandSolid"
-            size="medium"
-            onClick={() => {
-              if (user) setComposeOpen(true);
-            }}
-            disabled={!user}
-            aria-label={user ? undefined : '로그인이 필요해요'}
-          >
-            글쓰기
-          </ActionButton>
-        </span>
+            [접근성] aria-describedby로 로그인 유도 문구를 별도 연결:
+              - accessible name '글쓰기'는 보존됨
+              - 스크린리더는 description '로그인이 필요해요'도 추가 안내함
+            disabled 시 브라우저 title이 억제되므로 visually-hidden span으로 보완. */}
+        {!user && (
+          <span id="write-btn-hint" className="sr-only">로그인이 필요해요</span>
+        )}
+        <ActionButton
+          variant="brandSolid"
+          size="medium"
+          onClick={() => {
+            if (user) setComposeOpen(true);
+          }}
+          disabled={!user}
+          aria-describedby={user ? undefined : 'write-btn-hint'}
+        >
+          글쓰기
+        </ActionButton>
       </div>
       <PostList items={items} loading={loading} error={error} />
       {composeOpen && (

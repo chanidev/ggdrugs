@@ -7,6 +7,7 @@ import {
   setActiveRole,
   type MyUploaderProfile,
 } from '../../../lib/api';
+import { ActionButton } from 'seed-design/ui/action-button';
 
 /**
  * GG-ROLE-001 우측 상단 역할 전환 버튼.
@@ -125,21 +126,14 @@ export function RoleToggleButton() {
     }
   };
   return (
-    <button
-      type="button"
+    <ActionButton
+      variant={isUploaderMode ? 'neutralOutline' : 'brandSolid'}
+      size="small"
       onClick={() => void onToggle()}
+      loading={pending}
       disabled={pending}
-      className={
-        isUploaderMode
-          ? 'inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40'
-          : 'inline-flex h-9 items-center rounded-(--radius-md) bg-(--color-accent) px-4 text-[13px] font-medium text-white hover:bg-(--color-accent-hover) disabled:opacity-40'
-      }
     >
-      {pending
-        ? '전환 중…'
-        : isUploaderMode
-          ? '사용자로 돌아가기'
-          : '업로더로 전환'}
-    </button>
+      {isUploaderMode ? '사용자로 돌아가기' : '업로더로 전환'}
+    </ActionButton>
   );
 }
