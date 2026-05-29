@@ -1,9 +1,17 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  test: {
+    environment: 'node',
+    globals: true,
+    setupFiles: [],
+    env: {
+      VITE_BFF_URL: 'http://localhost',
+    },
+  },
   // 모노레포 루트 .env 사용 (apps/web/.env 를 따로 두지 않음)
   envDir: '../..',
   server: {
