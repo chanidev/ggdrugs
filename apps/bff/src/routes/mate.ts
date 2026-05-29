@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
 import { logger } from '../logger.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
+import { bidirectionalScore } from '../lib/mate-score.js';
 
 // ============================================================
 // 유틸
@@ -316,6 +317,140 @@ export async function getMyMateProfileWithIndex(req: Request, res: Response) {
     updatedAt: profile.updatedAt.toISOString(),
     mateIndex: mateIndex ? mateIndex.indexValue : 50,
   });
+}
+
+// ============================================================
+// GET /community/mate/recommendations  — 추천 목록 (requireAuth)
+// ============================================================
+/** 추천 상위 N 명 반환. 프로필 없거나 동의 없으면 `{ state:'blind' }` (GG-COMM-007/008). */
+const RECO_LIMIT = 20;
+
+export async function getRecommendations(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) {
+    res.status(401).json({ error: 'unauthenticated' });
+    return;
+  }
+
+  // 본인 프로필 조회 — 없거나 동의 없으면 blind
+  const myProfile = await prisma.mateProfile.findUnique({
+    where: { userId: auth.userId },
+    select: {
+      gender: true,
+      ageRangeLower: true,
+      regionId: true,
+      hasCar: true,
+      nationality: true,
+      koreanOk: true,
+      prefGender: true,
+      prefAgeLower: true,
+      prefRegionId: true,
+      prefHasCar: true,
+      prefNationality: true,
+      prefKoreanOk: true,
+      consentedAt: true,
+      isDeleted: true,
+    },
+  });
+
+  if (!myProfile || myProfile.isDeleted || !myProfile.consentedAt) {
+    res.json({ state: 'blind' });
+    return;
+  }
+
+  const myAttrs = {
+    gender: myProfile.gender,
+    ageRangeLower: myProfile.ageRangeLower,
+    regionId: myProfile.regionId,
+    hasCar: myProfile.hasCar,
+    nationality: myProfile.nationality,
+    koreanOk: myProfile.koreanOk,
+  };
+  const myPrefs = {
+    prefGender: myProfile.prefGender,
+    prefAgeLower: myProfile.prefAgeLower,
+    prefRegionId: myProfile.prefRegionId,
+    prefHasCar: myProfile.prefHasCar,
+    prefNationality: myProfile.prefNationality,
+    prefKoreanOk: myProfile.prefKoreanOk,
+  };
+
+  // 후보풀: consent 있고 본인 제외 + 같은 지역(슬라이스2 경계)
+  // NOTE: 슬라이스3 에서 이벤트 연결(같은 축제 2주내) 추가 예정.
+  // NOTE: 차단 사용자 제외 훅 — 슬라이스8 GG-REPORT-009 에서 구현.
+  const candidates = await prisma.mateProfile.findMany({
+    where: {
+      consentedAt: { not: null },
+      isDeleted: false,
+      userId: { not: auth.userId },
+      // 슬라이스2 지역 경계: 본인 regionId 와 동일한 후보만 (null 이면 null 끼리)
+      regionId: myProfile.regionId,
+    },
+    select: {
+      userId: true,
+      gender: true,
+      ageRangeLower: true,
+      regionId: true,
+      hasCar: true,
+      nationality: true,
+      koreanOk: true,
+      prefGender: true,
+      prefAgeLower: true,
+      prefRegionId: true,
+      prefHasCar: true,
+      prefNationality: true,
+      prefKoreanOk: true,
+      user: {
+        select: {
+          nickname: true,
+          mateIndex: { select: { indexValue: true } },
+        },
+      },
+    },
+  });
+
+  // 양방향 점수 계산 → null 제외 → 점수 desc, 동점 mateIndex desc 정렬
+  const scored: Array<{ userId: bigint; nickname: string; score: number; mateIndex: number }> = [];
+  for (const c of candidates) {
+    const cAttrs = {
+      gender: c.gender,
+      ageRangeLower: c.ageRangeLower,
+      regionId: c.regionId,
+      hasCar: c.hasCar,
+      nationality: c.nationality,
+      koreanOk: c.koreanOk,
+    };
+    const cPrefs = {
+      prefGender: c.prefGender,
+      prefAgeLower: c.prefAgeLower,
+      prefRegionId: c.prefRegionId,
+      prefHasCar: c.prefHasCar,
+      prefNationality: c.prefNationality,
+      prefKoreanOk: c.prefKoreanOk,
+    };
+    const s = bidirectionalScore({ attrs: myAttrs, prefs: myPrefs }, { attrs: cAttrs, prefs: cPrefs });
+    if (s === null) continue;
+    scored.push({
+      userId: c.userId,
+      nickname: c.user.nickname,
+      score: s,
+      mateIndex: c.user.mateIndex ? c.user.mateIndex.indexValue : 50,
+    });
+  }
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return b.mateIndex - a.mateIndex;
+  });
+
+  const items = scored.slice(0, RECO_LIMIT).map((r) => ({
+    userId: r.userId.toString(),
+    nickname: r.nickname,
+    score: r.score,
+    mateIndex: r.mateIndex,
+  }));
+
+  res.json({ state: 'list', items });
 }
 
 // ============================================================

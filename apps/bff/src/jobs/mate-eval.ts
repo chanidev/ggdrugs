@@ -10,7 +10,9 @@ import {
   getMyMateProfile,
   getMyMateProfileWithIndex,
   getMateIndex,
+  getRecommendations,
 } from '../routes/mate.js';
+import { scoreOneWay, bidirectionalScore } from '../lib/mate-score.js';
 
 interface MockReq {
   params?: Record<string, string>;
@@ -205,6 +207,114 @@ async function main() {
       if (res._c.status !== 422) f.push(`status ${res._c.status} != 422 (boolean true should be rejected)`);
       const b = res._c.json as { error?: string };
       if (b?.error !== 'consent_required') f.push(`error "${b?.error}" != "consent_required"`);
+      return f;
+    });
+
+    // ================================================================
+    // Task 3 — 매칭 엔진 + 추천 목록
+    // ================================================================
+
+    // ── CASE 11: score.dontcare_skips — 선호 null 이면 하드필터 제외 안 함 ──
+    await check('score.dontcare_skips', async () => {
+      const attrs = { gender: 'F', ageRangeLower: 30, regionId: 1n, hasCar: false, nationality: 'KR', koreanOk: true };
+      const prefsAllNull = { prefGender: null, prefAgeLower: null, prefRegionId: null, prefHasCar: null, prefNationality: null, prefKoreanOk: null };
+      const score = scoreOneWay(prefsAllNull, attrs);
+      const f: string[] = [];
+      // null 선호는 아무것도 거르지 않으므로 null 반환 금지
+      if (score === null) f.push('scoreOneWay with all-null prefs should not return null (dont-care = pass)');
+      return f;
+    });
+
+    // ── CASE 12: reco.hardfilter_excludes — 하드필터 불일치 시 null ─────────
+    await check('reco.hardfilter_excludes', async () => {
+      const attrs = { gender: 'M', ageRangeLower: 25, regionId: 1n, hasCar: false, nationality: 'KR', koreanOk: true };
+      // pref gender F 이지만 상대는 M → 제외
+      const prefsGenderMismatch = { prefGender: 'F', prefAgeLower: null, prefRegionId: null, prefHasCar: null, prefNationality: null, prefKoreanOk: null };
+      const f: string[] = [];
+      const s1 = scoreOneWay(prefsGenderMismatch, attrs);
+      if (s1 !== null) f.push(`gender mismatch should return null, got ${s1}`);
+      // pref hasCar true 이지만 상대 hasCar false → 제외
+      const prefsCarMismatch = { prefGender: null, prefAgeLower: null, prefRegionId: null, prefHasCar: true, prefNationality: null, prefKoreanOk: null };
+      const s2 = scoreOneWay(prefsCarMismatch, attrs);
+      if (s2 !== null) f.push(`hasCar mismatch should return null, got ${s2}`);
+      return f;
+    });
+
+    // ── CASE 13: reco.sorted_by_score_then_index — 점수↓ 동점→ mateIndex↓ ──
+    // 두 번째 유저 생성 + 프로필 저장 후 추천 목록 정렬 검증.
+    await check('reco.sorted_by_score_then_index', async () => {
+      const f: string[] = [];
+      // 두 번째 유저 (기존 DB 에서 다른 유저 pick)
+      const u2 = await prisma.user.findFirst({
+        where: { isDeleted: false, userId: { not: auth.userId } },
+        select: { userId: true, nickname: true, activeRole: true },
+      });
+      if (!u2) { f.push('need 2+ users in DB for sort test — skipped'); return f; }
+      const auth2 = { userId: u2.userId, nickname: u2.nickname, activeRole: u2.activeRole };
+
+      // 클린업
+      await prisma.mateIndex.deleteMany({ where: { userId: auth2.userId } });
+      await prisma.mateProfile.deleteMany({ where: { userId: auth2.userId } });
+
+      try {
+        // 테스트 환경: 둘 다 같은 지역(regionId 없음 = null → 지역 필터 통과 조건 확인).
+        // u1 → 선호 없음, u2 → 선호 없음. 양방향 모두 pass.
+        const profile2Body = {
+          gender: 'F',
+          ageRangeLower: 25,
+          nationality: 'KR',
+          koreanOk: true,
+          hasCar: false,
+          consentedAt: new Date().toISOString(),
+          autoRecommend: true,
+          groupApply: false,
+        };
+        const saveRes = mockRes();
+        await saveMateProfile(mockReq({ auth: auth2, body: profile2Body }), saveRes);
+        if (saveRes._c.status !== 200) { f.push(`u2 profile save failed: ${saveRes._c.status}`); return f; }
+
+        // u1 프로필도 autoRecommend 확인용 재저장
+        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true } }), mockRes());
+
+        // u1 기준 추천 목록 조회
+        const recoRes = mockRes();
+        await getRecommendations(mockReq({ auth }), recoRes);
+        if (recoRes._c.status !== 200) {
+          f.push(`reco status ${recoRes._c.status} != 200`);
+          return f;
+        }
+        const rb = recoRes._c.json as { items?: Array<{ userId: string; score: number; mateIndex: number }> };
+        if (!Array.isArray(rb?.items)) { f.push('items not array'); return f; }
+        // u2 가 목록에 있어야 함 (동의+매칭 가능)
+        const hasU2 = rb.items.some((i) => i.userId === auth2.userId.toString());
+        if (!hasU2) f.push('u2 not in reco list');
+        // 정렬: score desc, 동점 시 mateIndex desc
+        for (let i = 0; i < rb.items.length - 1; i++) {
+          const cur = rb.items[i];
+          const nxt = rb.items[i + 1];
+          if (cur && nxt) {
+            if (cur.score < nxt.score) f.push(`items[${i}].score ${cur.score} < items[${i + 1}].score ${nxt.score} (not desc)`);
+            if (cur.score === nxt.score && cur.mateIndex < nxt.mateIndex)
+              f.push(`same score but mateIndex not desc at [${i}]`);
+          }
+        }
+      } finally {
+        await prisma.mateIndex.deleteMany({ where: { userId: auth2.userId } });
+        await prisma.mateProfile.deleteMany({ where: { userId: auth2.userId } });
+      }
+      return f;
+    });
+
+    // ── CASE 14: reco.blind_when_no_profile — 프로필 없으면 blind 상태 ───────
+    await check('reco.blind_when_no_profile', async () => {
+      // 프로필 없는 새 유저처럼 — 존재하지 않는 userId
+      const ghostAuth = { userId: 999999999999n, nickname: 'ghost', activeRole: 'user' };
+      const res = mockRes();
+      await getRecommendations(mockReq({ auth: ghostAuth }), res);
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+      const b = res._c.json as { state?: string };
+      if (b?.state !== 'blind') f.push(`state "${b?.state}" != "blind"`);
       return f;
     });
 

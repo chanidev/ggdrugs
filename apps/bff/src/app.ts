@@ -84,6 +84,7 @@ import {
   getMyMateProfile,
   getMyMateProfileWithIndex,
   getMateIndex,
+  getRecommendations,
 } from './routes/mate.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
@@ -289,6 +290,12 @@ export function createApp(): Express {
     '/community/mate/profile',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => getMyMateProfile(req, res).catch(next),
+  );
+  // A_801 메이트 추천 목록 (Task 3 / ADR 0007)
+  app.get(
+    '/community/mate/recommendations',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getRecommendations(req, res).catch(next),
   );
   // 경량 메이트지수 조회 (작성자 프로필 모달 — Task 6 연결 예정)
   app.get('/community/mate/index/:userId', (req, res, next) => getMateIndex(req, res).catch(next));
