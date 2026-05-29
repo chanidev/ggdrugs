@@ -22,6 +22,7 @@ import {
 } from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
+import { listPosts, getPostDetail, createPost } from './routes/posts.js';
 import { listMyRecommendations } from './routes/me-recommendations.js';
 import { postChat, postChatStream } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
@@ -222,6 +223,19 @@ export function createApp(): Express {
   app.get('/places/search', (req: Request, res: Response, next: NextFunction) => {
     searchPlaces(req, res).catch(next);
   });
+
+  // A_802 커뮤니티 게시판 (GG-COMM-004/005, GG-POST-001/010/011/012)
+  app.get('/community/posts', (req, res, next) => listPosts(req, res).catch(next));
+  app.get(
+    '/community/posts/:id',
+    (req, res, next) => resolveAuth(req, res, next).catch(next),
+    (req, res, next) => getPostDetail(req, res).catch(next),
+  );
+  app.post(
+    '/community/posts',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => createPost(req, res).catch(next),
+  );
 
   app.post(
     '/chat',
