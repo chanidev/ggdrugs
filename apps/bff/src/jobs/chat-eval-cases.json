@@ -281,6 +281,90 @@
         "specificDateRelative": "this-week-sunday",
         "referencesLast": false
       }
+    },
+    {
+      "id": "intent-shift-category",
+      "messages": [
+        { "role": "user", "text": "이번 주말 축제 추천해줘" },
+        { "role": "assistant", "text": "이번 주말 축제 추천해드릴게요." },
+        { "role": "user", "text": "축제 말고 전시" }
+      ],
+      "expect": {
+        "filters": { "eventTypes": ["exhibition"], "periodKey": "weekend" },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "intent-shift-region-gu",
+      "messages": [
+        { "role": "user", "text": "강남구 데이트 좋은 곳" },
+        { "role": "assistant", "text": "강남구 연인 동행 기준으로 추천드릴게요." },
+        { "role": "user", "text": "강남구 말고 마포구" }
+      ],
+      "expect": {
+        "filters": { "regionHints": ["마포구"], "companions": ["couple"] },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "intent-shift-sido",
+      "messages": [
+        { "role": "user", "text": "부산 가족 축제" },
+        { "role": "assistant", "text": "부산 · 가족 · 축제 기준으로 찾아봤어요." },
+        { "role": "user", "text": "부산 말고 서울로" }
+      ],
+      "expect": {
+        "filters": { "regionHints": ["서울"], "companions": ["family"], "eventTypes": ["festival"] },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "intent-shift-full-reset",
+      "messages": [
+        { "role": "user", "text": "강남 연인 잔잔한 전시" },
+        { "role": "assistant", "text": "강남 · 연인 · 정적 전시 기준으로 찾아봤어요." },
+        { "role": "user", "text": "다 빼고 다시 보여줘" }
+      ],
+      "expect": {
+        "filters": {},
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "references-last-new-axis",
+      "messages": [
+        { "role": "user", "text": "이번 주말 전시 추천해줘" },
+        { "role": "assistant", "text": "이번 주말 전시 다섯 건 보여드릴게요." },
+        { "role": "user", "text": "아까 본 거 중에 가족도 OK 인 거" }
+      ],
+      "expect": {
+        "filters": { "companions": ["family"] },
+        "referencesLast": true
+      },
+      "lastSuggestions": [
+        { "eventId": "1001", "title": "전시 A", "category": "exhibition" },
+        { "eventId": "1002", "title": "전시 B", "category": "exhibition" },
+        { "eventId": "1003", "title": "전시 C", "category": "exhibition" },
+        { "eventId": "1004", "title": "전시 D", "category": "exhibition" },
+        { "eventId": "1005", "title": "전시 E", "category": "exhibition" }
+      ]
+    },
+    {
+      "id": "references-last-where",
+      "messages": [
+        { "role": "user", "text": "한강 전시" },
+        { "role": "assistant", "text": "한강 근처 전시 세 건 찾아왔어요." },
+        { "role": "user", "text": "방금 그 전시 어디서 해?" }
+      ],
+      "expect": {
+        "filters": {},
+        "referencesLast": true
+      },
+      "lastSuggestions": [
+        { "eventId": "2001", "title": "한강 전시 A", "category": "exhibition" },
+        { "eventId": "2002", "title": "한강 전시 B", "category": "exhibition" },
+        { "eventId": "2003", "title": "한강 전시 C", "category": "exhibition" }
+      ]
     }
   ]
 }
