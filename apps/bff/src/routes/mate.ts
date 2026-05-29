@@ -375,13 +375,14 @@ export async function getRecommendations(req: Request, res: Response) {
     prefKoreanOk: myProfile.prefKoreanOk,
   };
 
-  // 후보풀: consent 있고 본인 제외 + 같은 지역(슬라이스2 경계)
+  // 후보풀: consent 있고 본인 제외 + 같은 지역(슬라이스2 경계) + 자동추천 동의
   // NOTE: 슬라이스3 에서 이벤트 연결(같은 축제 2주내) 추가 예정.
   // NOTE: 차단 사용자 제외 훅 — 슬라이스8 GG-REPORT-009 에서 구현.
   const candidates = await prisma.mateProfile.findMany({
     where: {
       consentedAt: { not: null },
       isDeleted: false,
+      autoRecommend: true, // opt-out 사용자 제외 (GG-COMM-007/008)
       userId: { not: auth.userId },
       // 슬라이스2 지역 경계: 본인 regionId 와 동일한 후보만 (null 이면 null 끼리)
       regionId: myProfile.regionId,

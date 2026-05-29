@@ -12,7 +12,7 @@ import {
   getMateIndex,
   getRecommendations,
 } from '../routes/mate.js';
-import { scoreOneWay, bidirectionalScore } from '../lib/mate-score.js';
+import { scoreOneWay } from '../lib/mate-score.js';
 
 interface MockReq {
   params?: Record<string, string>;
@@ -315,6 +315,59 @@ async function main() {
       if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
       const b = res._c.json as { state?: string };
       if (b?.state !== 'blind') f.push(`state "${b?.state}" != "blind"`);
+      return f;
+    });
+
+    // ── CASE 15: reco.autoRecommend_false_excluded — autoRecommend=false 후보 미포함 ──
+    // GG-COMM-007/008 프라이버시 의미: autoRecommend=false 설정 사용자는
+    // 매칭 동의(consentedAt)가 있어도 타인 추천 목록에 노출되면 안 됨.
+    await check('reco.autoRecommend_false_excluded', async () => {
+      const f: string[] = [];
+      const u3 = await prisma.user.findFirst({
+        where: { isDeleted: false, userId: { not: auth.userId } },
+        select: { userId: true, nickname: true, activeRole: true },
+      });
+      if (!u3) { f.push('need 2+ users in DB — skipped'); return f; }
+      const auth3 = { userId: u3.userId, nickname: u3.nickname, activeRole: u3.activeRole };
+
+      // 클린업
+      await prisma.mateIndex.deleteMany({ where: { userId: auth3.userId } });
+      await prisma.mateProfile.deleteMany({ where: { userId: auth3.userId } });
+
+      try {
+        // u3: consent 있지만 autoRecommend=false (opt-out)
+        const optOutBody = {
+          gender: 'F',
+          ageRangeLower: 25,
+          nationality: 'KR',
+          koreanOk: true,
+          hasCar: false,
+          consentedAt: new Date().toISOString(),
+          autoRecommend: false, // ← opt-out
+          groupApply: false,
+        };
+        const saveRes3 = mockRes();
+        await saveMateProfile(mockReq({ auth: auth3, body: optOutBody }), saveRes3);
+        if (saveRes3._c.status !== 200) { f.push(`u3 save failed: ${saveRes3._c.status}`); return f; }
+
+        // u1 자신도 최신 프로필(autoRecommend=true)로 재저장
+        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true } }), mockRes());
+
+        // u1 기준 추천 목록 — u3 는 opt-out 이므로 미포함이어야 함
+        const recoRes = mockRes();
+        await getRecommendations(mockReq({ auth }), recoRes);
+        if (recoRes._c.status !== 200) {
+          f.push(`reco status ${recoRes._c.status} != 200`);
+          return f;
+        }
+        const rb = recoRes._c.json as { items?: Array<{ userId: string }> };
+        if (!Array.isArray(rb?.items)) { f.push('items not array'); return f; }
+        const hasU3 = rb.items.some((i) => i.userId === auth3.userId.toString());
+        if (hasU3) f.push('u3 (autoRecommend=false) must NOT appear in recommendations');
+      } finally {
+        await prisma.mateIndex.deleteMany({ where: { userId: auth3.userId } });
+        await prisma.mateProfile.deleteMany({ where: { userId: auth3.userId } });
+      }
       return f;
     });
 
