@@ -285,6 +285,25 @@ _FEWSHOT = """예시:
     reply: "이전 조건은 다 비우고 다시 시작할게요. 종류·동행·지역 중 좁히고 싶은 게 있으면 알려주세요.",
     followups: ["이번 주말 행사", "가족이랑", "전시 위주"]
   }
+
+- (직전 제안 5건 후) "아까 본 거 중에 가족도 OK 인 거":
+  {
+    filters: {companions:["family"]},
+    specificDate: null,
+    referencesLast: true,
+    reply: "방금 본 다섯 건 중 가족 동행 가능한 일정으로 다시 추려봤어요.",
+    followups: ["주말만", "전시도 함께", "다시 보여줘"]
+  }
+
+- (직전 제안 3건 후) "방금 그 전시 어디서 해?":
+  {
+    filters: {},
+    specificDate: null,
+    referencesLast: true,
+    reply: "말씀하신 전시의 위치 정보는 상세 카드에서 확인하실 수 있어요. 여기에 같은 목록 다시 고정해둘게요.",
+    followups: ["야간 운영만", "주말로", "다른 전시"]
+  }
+
 """
 
 
