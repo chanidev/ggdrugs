@@ -196,6 +196,15 @@ intent shift (의도 변경) + referencesLast (직전 제안 지칭) 다양화.
 
 `lastSuggestions` 가짜 데이터는 chat-eval 의 기존 `Case.lastSuggestions` 필드로 직접 주입 (신규 stub 필드 불필요).
 
+## 자연어 파싱 의미 매핑 확장 (2026-05-29, Slice C)
+
+vibes·eventTypes·companions 의 trigger 어휘 사전 확장 + SYSTEM_PROMPT 매핑 룰 multi-line 화.
+
+- `VIBE_TABLE` / `EVENT_TYPE_TABLE` / `COMPANION_TABLE` 각 4-8 → 11-15 trigger. 신규: "야외"(활동적), "조용히"(정적), "야시장"(festival), "엄마/아빠"(family), "와이프/남편"(couple) 등.
+- SYSTEM_PROMPT `[추출 규칙 — filters]` 의 1줄 vibes 매핑 + 1줄 팝업 룰 → 3 매핑 블록 multi-line (vibes 6 · eventTypes 8 · companions 4). "강연" → education 우선 결정 명시. 다중 매칭 명시 ("조용히 배우는" → 정적·교육형).
+- `filters.py` 사전 + SYSTEM_PROMPT 동기화 — dev/CI fallback (LLM 무) 도 일관 결과.
+- chat-eval 신규 6건 회귀 (36 → 42). vibes 2 + eventTypes 2 + companions 2. Slice A 잔존 `specific-date-this-saturday-short` ("야외" → "활동적") 동시 해소.
+
 ## References
 
 - `services/llm/openai_chain.py` — `extract_via_openai`, `summarize_event`,
