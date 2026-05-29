@@ -365,6 +365,54 @@
         { "eventId": "2002", "title": "한강 전시 B", "category": "exhibition" },
         { "eventId": "2003", "title": "한강 전시 C", "category": "exhibition" }
       ]
+    },
+    {
+      "id": "vibes-outdoor-active",
+      "messages": [{ "role": "user", "text": "야외 활동 좋은 거 있어?" }],
+      "expect": {
+        "filters": { "vibes": ["활동적"] },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "vibes-quiet-relaxing",
+      "messages": [{ "role": "user", "text": "조용히 쉬기 좋은 곳" }],
+      "expect": {
+        "filters": { "vibes": ["정적"] },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "event-lecture-to-education",
+      "messages": [{ "role": "user", "text": "이번 주말 강연 들으러 가고 싶어" }],
+      "expect": {
+        "filters": { "eventTypes": ["education"], "periodKey": "weekend" },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "event-yashijang-festival",
+      "messages": [{ "role": "user", "text": "한강 야시장 있어?" }],
+      "expect": {
+        "filters": { "eventTypes": ["festival"] },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "companion-mom-family",
+      "messages": [{ "role": "user", "text": "엄마랑 갈 만한 전시" }],
+      "expect": {
+        "filters": { "companions": ["family"], "eventTypes": ["exhibition"] },
+        "referencesLast": false
+      }
+    },
+    {
+      "id": "companion-wife-couple",
+      "messages": [{ "role": "user", "text": "와이프랑 데이트로 가기 좋은 곳" }],
+      "expect": {
+        "filters": { "companions": ["couple"] },
+        "referencesLast": false
+      }
     }
   ]
 }
