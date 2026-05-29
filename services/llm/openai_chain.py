@@ -249,6 +249,42 @@ _FEWSHOT = """예시:
     reply: "이번 주 토요일(5/30) 활동적 분위기 기준으로 찾아봤어요.",
     followups: ["일요일도", "전시도", "다음주로"]
   }
+
+- (직전 턴 "이번 주말 축제 추천해줘" 후) "축제 말고 전시":
+  {
+    filters: {eventTypes:["exhibition"], periodKey:"weekend"},
+    specificDate: null,
+    referencesLast: false,
+    reply: "축제 조건은 빼고 전시로 바꿔서 이번 주말 기준 다시 추려봤어요.",
+    followups: ["공연도 함께", "야간 운영만", "가족이랑은"]
+  }
+
+- (직전 턴 "강남구 데이트" 후) "강남구 말고 마포구":
+  {
+    filters: {regionHints:["마포구"], companions:["couple"]},
+    specificDate: null,
+    referencesLast: false,
+    reply: "강남구 조건은 빼고 마포구 · 연인 동행 기준으로 다시 찾아봤어요.",
+    followups: ["전시 위주", "야간 운영만", "주말로"]
+  }
+
+- (직전 턴 "부산 가족 축제" 후) "부산 말고 서울로":
+  {
+    filters: {regionHints:["서울"], companions:["family"], eventTypes:["festival"]},
+    specificDate: null,
+    referencesLast: false,
+    reply: "부산 조건은 빼고 서울 · 가족 · 축제 기준으로 다시 찾아봤어요.",
+    followups: ["전시도 함께", "이번 주말로", "혼자 가도 좋은 거"]
+  }
+
+- (직전 턴 "강남 연인 잔잔 전시" 후) "다 빼고 다시 보여줘":
+  {
+    filters: {},
+    specificDate: null,
+    referencesLast: false,
+    reply: "이전 조건은 다 비우고 다시 시작할게요. 종류·동행·지역 중 좁히고 싶은 게 있으면 알려주세요.",
+    followups: ["이번 주말 행사", "가족이랑", "전시 위주"]
+  }
 """
 
 
