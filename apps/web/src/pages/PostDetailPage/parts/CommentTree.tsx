@@ -26,15 +26,25 @@ function CommentItem({
   const saveEdit = async () => {
     const t = editText.trim();
     if (t.length < 1) return;
-    await updateComment(node.commentId, { body: t });
-    setEditing(false);
-    onChanged();
+    try {
+      await updateComment(node.commentId, { body: t });
+      setEditing(false);
+      onChanged();
+    } catch (e) {
+      if ((e as Error).message === 'FORBIDDEN') alert('본인 댓글이 아니에요.');
+      else alert('수정하지 못했어요.');
+    }
   };
 
   const remove = async () => {
     if (!confirm('삭제할까요?')) return;
-    await deleteComment(node.commentId);
-    onChanged();
+    try {
+      await deleteComment(node.commentId);
+      onChanged();
+    } catch (e) {
+      if ((e as Error).message === 'FORBIDDEN') alert('본인 댓글이 아니에요.');
+      else alert('삭제하지 못했어요.');
+    }
   };
 
   return (

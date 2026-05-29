@@ -72,8 +72,13 @@ export function PostDetailPage() {
   /** GG-POST-005: 게시글 삭제 */
   const onDeletePost = async () => {
     if (!detail || !confirm('게시글을 삭제할까요?')) return;
-    await deletePost(detail.postId);
-    navigate('/community');
+    try {
+      await deletePost(detail.postId);
+      navigate('/community');
+    } catch (e) {
+      if ((e as Error).message === 'FORBIDDEN') alert('본인 글이 아니에요.');
+      else alert('삭제하지 못했어요.');
+    }
   };
 
   return (
