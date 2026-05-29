@@ -103,7 +103,7 @@ async function main() {
       });
       return f;
     });
-    // CASE comment: 작성 → 201, root parent null, commentCount 1로 갱신
+    // CASE comment: 작성 → 201, root parent null
     let rootCommentId = '';
     await check('comment.create.ok', async () => {
       const res = mockRes();
@@ -113,12 +113,15 @@ async function main() {
       if (res._c.status !== 201) f.push(`status ${res._c.status}`);
       if (!b?.commentId) f.push('no commentId'); else rootCommentId = b.commentId;
       if (b?.parentCommentId !== null) f.push('root parent must be null');
-      // commentCount 반영 검증 — 상세 조회로 실제 카운트 확인.
+      return f;
+    });
+
+    // CASE commentCount: 댓글 작성 후 게시글 상세의 commentCount 가 1로 갱신됐는지 별도 확인.
+    await check('comment.create.commentCount', async () => {
       const rg = mockRes();
       await getPostDetail(mockReq({ params: { id: createdPostId }, auth }), rg);
       const gb = rg._c.json as { commentCount?: number };
-      if (gb?.commentCount !== 1) f.push(`commentCount ${gb?.commentCount} != 1`);
-      return f;
+      return gb?.commentCount === 1 ? [] : [`commentCount ${gb?.commentCount} != 1`];
     });
 
     // CASE comment update: 본인 댓글 수정 → 200 + 수정된 body/updatedAt 반환 (GG-POST-006)
