@@ -58,7 +58,7 @@ export interface RecommendationsBlind {
 }
 
 export interface RecommendationsList {
-  state?: undefined;
+  state: 'list';
   items: RecommendationItem[];
 }
 

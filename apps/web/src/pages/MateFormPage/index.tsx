@@ -225,8 +225,9 @@ export function MateFormPage() {
                 </FieldRow>
 
                 {/* 지역 (시/도) — GG-MATCH-004 */}
-                <FieldRow label="지역 (시/도)">
+                <FieldRow label="지역 (시/도)" htmlFor="field-region-id">
                   <select
+                    id="field-region-id"
                     aria-label="본인 지역 선택"
                     value={form.regionId ?? ''}
                     onChange={(e) => upd('regionId', e.target.value || null)}
@@ -254,8 +255,9 @@ export function MateFormPage() {
                 </FieldRow>
 
                 {/* 국적 */}
-                <FieldRow label="국적" required>
+                <FieldRow label="국적" required htmlFor="field-nationality-id">
                   <select
+                    id="field-nationality-id"
                     aria-label="국적 선택"
                     value={form.nationality}
                     onChange={(e) => upd('nationality', e.target.value)}
@@ -336,8 +338,10 @@ export function MateFormPage() {
                   label="선호 지역"
                   dontCare={form.prefRegionDontCare}
                   onDontCareChange={(v) => upd('prefRegionDontCare', v)}
+                  htmlFor="field-pref-region-id"
                 >
                   <select
+                    id="field-pref-region-id"
                     aria-label="선호 지역 선택"
                     value={form.prefRegionId ?? ''}
                     onChange={(e) => upd('prefRegionId', e.target.value || null)}
@@ -374,8 +378,10 @@ export function MateFormPage() {
                   label="선호 국적"
                   dontCare={form.prefNationalityDontCare}
                   onDontCareChange={(v) => upd('prefNationalityDontCare', v)}
+                  htmlFor="field-pref-nationality-id"
                 >
                   <select
+                    id="field-pref-nationality-id"
                     aria-label="선호 국적 선택"
                     value={form.prefNationality}
                     onChange={(e) => upd('prefNationality', e.target.value)}
@@ -520,15 +526,20 @@ export function MateFormPage() {
 function FieldRow({
   label,
   required,
+  htmlFor,
   children,
 }: {
   label: string;
   required?: boolean;
+  /** Pass the id of the associated control (e.g. a native <select>) so the <label> is
+   *  programmatically linked. SegmentedControl controls already carry their own aria-label
+   *  and do not need this. */
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[13px] font-medium text-(--color-text)">
+      <label htmlFor={htmlFor} className="text-[13px] font-medium text-(--color-text)">
         {label}
         {required && <span className="ml-0.5 text-(--color-error)" aria-hidden>*</span>}
       </label>
@@ -541,17 +552,30 @@ function PrefRow({
   label,
   dontCare,
   onDontCareChange,
+  htmlFor,
   children,
 }: {
   label: string;
   dontCare: boolean;
   onDontCareChange: (v: boolean) => void;
+  /** Pass the id of an associated native control (e.g. <select>) to link the visible label
+   *  text via htmlFor. Not needed for SegmentedControl, which carries its own aria-label. */
+  htmlFor?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-[13px] font-medium text-(--color-text)">{label}</span>
+        {htmlFor ? (
+          <label
+            htmlFor={htmlFor}
+            className="text-[13px] font-medium text-(--color-text)"
+          >
+            {label}
+          </label>
+        ) : (
+          <span className="text-[13px] font-medium text-(--color-text)">{label}</span>
+        )}
         <Checkbox
           checked={dontCare}
           onCheckedChange={onDontCareChange}
