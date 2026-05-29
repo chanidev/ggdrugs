@@ -2,13 +2,7 @@ import { useState } from 'react';
 import { createPost, updatePost, type PostCategory, type PostDetail } from '../../../lib/api/posts.js';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { SegmentedControl, SegmentedControlItem } from 'seed-design/ui/segmented-control';
-
-// GG-POST-004: 카테고리 레이블 — CommunityShell 에서도 참조할 공유 상수
-export const CATEGORY_LABELS: Record<PostCategory, string> = {
-  festival_story: '축제 이야기',
-  mate_finder: '메이트 구해요',
-  free: '자유 게시판',
-};
+import { CATEGORY_LABELS } from './CommunityShell.js';
 
 const CATS: PostCategory[] = ['festival_story', 'mate_finder', 'free'];
 
@@ -109,7 +103,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
 
         {/* 에러 메시지 */}
         {err && (
-          <p role="alert" className="text-[13px] text-(--color-error)">
+          <p role="alert" className="text-[13px] text-(--color-accent)">
             {err}
           </p>
         )}
