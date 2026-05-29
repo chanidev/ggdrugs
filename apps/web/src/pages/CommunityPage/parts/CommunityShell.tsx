@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Header } from '../../../layout/Header';
 import type { PostCategory } from '../../../lib/api/posts.js';
+import { ActionButton } from 'seed-design/ui/action-button';
 
 /** GG-POST-004: 카테고리 레이블 — ComposeModal, PostListPage, CategoryGrid 등에서 참조 */
 export const CATEGORY_LABELS: Record<PostCategory, string> = {
@@ -40,23 +41,23 @@ export function CommunityShell({
                   크레딧 0개
                 </span>
                 {/* GG-COMM-013 언어토글 placeholder — 실 i18n 미도입(슬라이스 7) */}
-                <button
-                  type="button"
+                <ActionButton
+                  variant="neutralOutline"
+                  size="small"
                   disabled
-                  className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] text-(--color-text-muted) opacity-60"
                   title="언어 변경 (준비 중)"
                 >
                   한국어
-                </button>
+                </ActionButton>
                 {/* GG-COMM-014/015 채팅방 이동 placeholder — 슬라이스 5에서 실구현 */}
-                <button
-                  type="button"
+                <ActionButton
+                  variant="neutralOutline"
+                  size="small"
                   disabled
-                  className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] text-(--color-text-muted) opacity-60"
                   title="채팅방 (준비 중)"
                 >
                   채팅방
-                </button>
+                </ActionButton>
                 {/* GG-COMM-016 알림 — 실연결 */}
                 <Link
                   to="/notifications"
