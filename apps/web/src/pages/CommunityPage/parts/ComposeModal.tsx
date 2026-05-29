@@ -24,6 +24,9 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  const titleInvalid = err !== null && title.trim().length < 2;
+  const bodyInvalid = err !== null && body.trim().length < 2;
+
   const submit = async () => {
     const t = title.trim();
     const b = body.trim();
@@ -61,7 +64,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
             <Dialog.Title>{editPost ? '게시글 수정' : '글쓰기'}</Dialog.Title>
           </Dialog.Header>
 
-          <div className="flex flex-col gap-4 px-5 pb-5">
+          <div className="flex flex-col gap-4 px-5 pb-2">
             {/* 카테고리 선택 — 수정 시 숨김 */}
             {!editPost && (
               <SegmentedControl
@@ -77,61 +80,70 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
               </SegmentedControl>
             )}
 
-            {/* 제목 — SEED TextField (single-line) */}
+            {/* 제목 — SEED TextField (single-line)
+                [접근성] label prop → SeedField가 <label>+aria-labelledby 자동 배선
+                [접근성] invalid+errorMessage 동시 전달 → SeedField.ErrorMessage가
+                         aria-describedby로 input에 연결됨 */}
             <TextField
-              aria-label="제목"
+              label="제목"
               value={title}
               onValueChange={(v) => setTitle(v.value)}
-              invalid={err !== null && title.trim().length < 2}
+              invalid={titleInvalid}
+              errorMessage={titleInvalid ? '제목을 2자 이상 입력하세요.' : undefined}
             >
               <TextFieldInput
-                placeholder="제목"
+                placeholder="제목을 입력하세요"
                 maxLength={200}
               />
             </TextField>
 
-            {/* 본문 — SEED TextField (multiline via TextFieldTextarea) */}
+            {/* 본문 — SEED TextField (multiline via TextFieldTextarea)
+                [접근성] label prop → SeedField가 <label>+aria-labelledby 자동 배선
+                [접근성] invalid+errorMessage 동시 전달 → SeedField.ErrorMessage가
+                         aria-describedby로 textarea에 연결됨 */}
             <TextField
-              aria-label="본문"
+              label="내용"
               value={body}
               onValueChange={(v) => setBody(v.value)}
-              invalid={err !== null && body.trim().length < 2}
+              invalid={bodyInvalid}
+              errorMessage={bodyInvalid ? '내용을 2자 이상 입력하세요.' : undefined}
             >
               <TextFieldTextarea
-                placeholder="내용"
+                placeholder="내용을 입력하세요"
                 maxLength={5000}
                 autoresize={false}
               />
             </TextField>
 
-            {/* 에러 메시지 — --color-error 토큰 사용 (accent/버밀리언은 CTA 전용) */}
-            {err && (
+            {/* 에러 요약 메시지 — 두 필드 모두 유효하지 않을 때 혹은 서버 오류 시 표시.
+                per-field errorMessage 로 처리되지 않는 케이스(서버 오류 등) 커버. */}
+            {err && !titleInvalid && !bodyInvalid && (
               <p role="alert" className="text-[13px] text-(--color-error)">
                 {err}
               </p>
             )}
-
-            {/* 액션 버튼 행 */}
-            <div className="flex justify-end gap-2">
-              <ActionButton
-                variant="neutralOutline"
-                size="medium"
-                onClick={onClose}
-                disabled={pending}
-              >
-                취소
-              </ActionButton>
-              <ActionButton
-                variant="brandSolid"
-                size="medium"
-                onClick={submit}
-                loading={pending}
-                disabled={pending}
-              >
-                {editPost ? '수정' : '등록'}
-              </ActionButton>
-            </div>
           </div>
+
+          {/* SEED Dialog.Footer — dialog CTA 슬롯. 내부 패딩은 Dialog.Footer가 담당. */}
+          <Dialog.Footer>
+            <ActionButton
+              variant="neutralOutline"
+              size="medium"
+              onClick={onClose}
+              disabled={pending}
+            >
+              취소
+            </ActionButton>
+            <ActionButton
+              variant="brandSolid"
+              size="medium"
+              onClick={submit}
+              loading={pending}
+              disabled={pending}
+            >
+              {editPost ? '수정' : '등록'}
+            </ActionButton>
+          </Dialog.Footer>
         </Dialog.Content>
       </Dialog.Positioner>
     </Dialog.Root>
