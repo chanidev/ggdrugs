@@ -1,6 +1,7 @@
 /**
  * SEED Design ↔ Alle 테마 브리지 (ADR 0008, Option B)
- * @seed-design/css/base.css 이후에 로드되어야 한다 (main.tsx import 순서 참고).
+ * @seed-design/css/all.css 이후에 로드되어야 한다 (main.tsx import 순서 참고).
+ * 주의: base.css(토큰 전용) 아닌 all.css(토큰+컴포넌트 스타일)를 import 해야 SEED 컴포넌트가 스타일을 받는다.
  * SEED 브랜드 시맨틱 토큰(carrot)을 Alle 버밀리언으로 재정의한다.
  * base.css 의 light/dark 셀렉터와 동일 구조로 맞춰 specificity 우위 + 후행 로드로 승리.
  */

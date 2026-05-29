@@ -10,7 +10,7 @@
 
 ### 세부
 
-1. **SEED 가 제공**: `@seed-design/react` 컴포넌트, `@seed-design/css` 토큰, light/dark 색모드(`data-seed-color-mode` / `data-seed-user-color-scheme`). 설치는 Vite 플러그인(`@seed-design/vite-plugin`) + (Vite 6 이므로) `vite-tsconfig-paths`, 엔트리에 `@seed-design/css/base.css` import, `seed-design.json`(`npx @seed-design/cli init`), 스니펫은 `seed-design/` 디렉터리에 vendoring(`npx @seed-design/cli add ui:<component>`).
+1. **SEED 가 제공**: `@seed-design/react` 컴포넌트, `@seed-design/css` 토큰, light/dark 색모드(`data-seed-color-mode` / `data-seed-user-color-scheme`). 설치는 Vite 플러그인(`@seed-design/vite-plugin`) + (Vite 6 이므로) `vite-tsconfig-paths`, 엔트리에 **`@seed-design/css/all.css`** import(⚠️ base.css 는 토큰 전용 — 컴포넌트 스타일이 없어 모달/입력 등이 깨진다. all.css = 토큰+컴포넌트 스타일), `seed-design.json`(`npx @seed-design/cli init`), 스니펫은 `seed-design/` 디렉터리에 vendoring(`npx @seed-design/cli add ui:<component>`).
 2. **Alle 가 유지**: Pretendard 단일 패밀리, 버밀리언 accent(`#E8562D` light / `#F27147` dark), light/dark 의도, anti-bubbly 라운드 정책, 에디토리얼 간격, **로고·워드마크·브랜드는 불변**.
 3. **테마 브리지(핵심)**: `@seed-design/css/base.css` **이후**에 Alle 오버라이드 CSS 를 얹어
    - SEED 브랜드 시맨틱 토큰(`fg.brand` / `bg.brand-solid` / `bg.brand-weak` / `stroke.brand-*`)의 `--seed-*` CSS 변수를 **버밀리언으로 재정의**,

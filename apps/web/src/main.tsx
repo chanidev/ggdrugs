@@ -11,7 +11,7 @@ import { NotificationsPage } from './pages/NotificationsPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { PostDetailPage } from './pages/PostDetailPage';
 import { AuthProvider } from './lib/auth-context';
-import '@seed-design/css/base.css';
+import '@seed-design/css/all.css';
 import './styles/index.css';
 import './styles/seed-overrides.css';
 

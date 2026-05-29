@@ -345,7 +345,7 @@
 - 두 영역은 공유 브리지 토큰(accent·폰트·색모드)으로 시각적 연속성 확보.
 
 ### SEED ↔ Alle 토큰 매핑 (오버라이드)
-`@seed-design/css/base.css` **이후**에 Alle 오버라이드 CSS 를 얹는다.
+`@seed-design/css/all.css` **이후**에 Alle 오버라이드 CSS 를 얹는다. (⚠️ base.css 는 토큰 전용이라 컴포넌트가 무스타일로 깨짐 — 반드시 all.css 사용.)
 
 | 목적 | SEED 시맨틱 토큰 | Alle 오버라이드 |
 |---|---|---|
