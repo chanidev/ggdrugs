@@ -18,7 +18,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-kakao-maps-sdk": "^1.2.1",
-    "react-router": "^7.1.1"
+    "react-router": "^7.1.1",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@seed-design/vite-plugin": "^1.1.1",

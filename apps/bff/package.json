@@ -45,9 +45,12 @@
     "@aws-sdk/s3-request-presigner": "^3.1033.0",
     "@ggdrugs/config": "workspace:*",
     "@prisma/client": "^5.22.0",
+    "@socket.io/redis-adapter": "^8.3.0",
     "express": "^5.2.1",
+    "ioredis": "^5.11.0",
     "pino": "^10.3.1",
-    "pino-http": "^11.0.0"
+    "pino-http": "^11.0.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
