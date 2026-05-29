@@ -115,6 +115,7 @@ export function MateFormPage() {
       .catch((e: unknown) => {
         if ((e as Error).name !== 'AbortError') {
           // 지역 로드 실패는 UI 비차단 — select 비어 있음으로 graceful degrade.
+          console.warn('[MateFormPage] 지역 목록 로드 실패', e);
         }
       });
     return () => ctrl.abort();
@@ -557,7 +558,12 @@ function PrefRow({
           label="상관없음"
         />
       </div>
-      <div className={dontCare ? 'pointer-events-none opacity-40' : undefined}>{children}</div>
+      <div
+        className={dontCare ? 'pointer-events-none opacity-40' : undefined}
+        {...(dontCare ? { inert: true } : {})}
+      >
+        {children}
+      </div>
     </div>
   );
 }
