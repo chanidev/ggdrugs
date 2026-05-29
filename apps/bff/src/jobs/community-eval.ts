@@ -175,11 +175,17 @@ async function main() {
       if (stillThere) f.push('deleted reply still in tree');
       return f;
     });
-    // CASE post update: 본인 → 200
+    // CASE post update: 본인 → 200 + 응답 바디(title/body/updatedAt) 검증 (GG-POST-004)
     await check('post.update.ok', async () => {
       const res = mockRes();
       await updatePost(mockReq({ params: { id: createdPostId }, auth, body: { title: '수정된 제목', body: '수정된 본문' } }), res);
-      return res._c.status === 200 ? [] : [`status ${res._c.status}`];
+      const b = res._c.json as { title?: string; body?: string; updatedAt?: string };
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status}`);
+      if (b?.title !== '수정된 제목') f.push(`title "${b?.title}" != "수정된 제목"`);
+      if (b?.body !== '수정된 본문') f.push(`body "${b?.body}" != "수정된 본문"`);
+      if (!b?.updatedAt) f.push('no updatedAt');
+      return f;
     });
 
     // CASE like toggle: on(liked true, count 1) → off(liked false, count 0)

@@ -300,34 +300,49 @@ export async function toggleLike(req: Request, res: Response) {
   const postId = parseBigId(req.params.id);
   if (!postId) { res.status(400).json({ error: 'invalid id' }); return; }
 
-  const post = await prisma.post.findFirst({
-    where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
-    select: { postId: true },
-  });
-  if (!post) { res.status(404).json({ error: 'post not found' }); return; }
-
-  let liked = false;
-  let likeCount = 0;
-  await prisma.$transaction(async (tx) => {
-    const del = await tx.postLike.deleteMany({ where: { postId, userId: auth.userId } });
-    if (del.count === 0) {
-      // 없었음 → 좋아요 추가. 동시 POST 경합(둘 다 del.count=0)에서 한쪽이 P2002 →
-      // 멱등 안전망으로 liked=true 유지(이미 타 요청이 생성). 최종 count 는 아래서 in-tx 재집계.
-      try {
-        await tx.postLike.create({ data: { postId, userId: auth.userId } });
-      } catch (err) {
-        if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) throw err;
+  // post 존재 확인을 트랜잭션 내부에서 수행 — 트랜잭션 외부 findFirst 후 삭제 경합 창 제거.
+  // 트랜잭션 콜백 반환값으로 liked/likeCount 를 전달 — Prisma 인터랙티브 트랜잭션 재실행 시
+  // 클로저 오염 없이 항상 마지막 실행 결과만 응답에 노출됨(P2034 등 직렬화 실패 재시도 안전).
+  let result: { liked: boolean; likeCount: number } | null = null;
+  try {
+    result = await prisma.$transaction(async (tx) => {
+      const post = await tx.post.findFirst({
+        where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
+        select: { postId: true },
+      });
+      if (!post) {
+        const e = new Error('post not found');
+        (e as NodeJS.ErrnoException).code = 'NOT_FOUND';
+        throw e;
       }
-      liked = true;
-    } else {
-      liked = false;
-    }
-    // 트랜잭션 내부에서 계산 → 응답에 그대로 사용(트랜잭션 밖 재count 없음 → DB-응답 정합).
-    likeCount = await tx.postLike.count({ where: { postId } });
-    await tx.post.update({ where: { postId }, data: { likeCount } });
-  });
 
-  res.json({ liked, likeCount });
+      const del = await tx.postLike.deleteMany({ where: { postId, userId: auth.userId } });
+      let liked: boolean;
+      if (del.count === 0) {
+        // 없었음 → 좋아요 추가. 동시 POST 경합(둘 다 del.count=0)에서 한쪽이 P2002 →
+        // 멱등 안전망으로 liked=true 유지(이미 타 요청이 생성). 최종 count 는 아래서 in-tx 재집계.
+        try {
+          await tx.postLike.create({ data: { postId, userId: auth.userId } });
+        } catch (err) {
+          if (!(err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002')) throw err;
+        }
+        liked = true;
+      } else {
+        liked = false;
+      }
+      // 트랜잭션 내부에서 계산 → 반환값으로 노출(트랜잭션 밖 재count 없음 → DB-응답 정합).
+      const likeCount = await tx.postLike.count({ where: { postId } });
+      await tx.post.update({ where: { postId }, data: { likeCount } });
+      return { liked, likeCount };
+    });
+  } catch (err) {
+    if (err instanceof Error && (err as NodeJS.ErrnoException).code === 'NOT_FOUND') {
+      res.status(404).json({ error: 'post not found' }); return;
+    }
+    throw err;
+  }
+
+  res.json(result);
 }
 
 /** POST /community/posts — 글쓰기 (requireAuth). expiresAt = now + 7d. */
