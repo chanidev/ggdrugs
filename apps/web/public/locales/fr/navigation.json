@@ -176,7 +176,9 @@
     },
     "scriptLoadFail": "Échec du chargement du script",
     "mapLoadFail": "Échec du chargement de la carte",
-    "allowedDomainHint": "Vérifiez que http://localhost:5173 est dans les domaines autorisés"
+    "allowedDomainHint": "Vérifiez que http://localhost:5173 est dans les domaines autorisés",
+    "kakaoConsoleHint": "Vérifiez que l'application dans la console développeur Kakao est une clé JavaScript (pas de clé REST API)",
+    "networkTabHint": "Vérifiez le statut de la requête sdk.js dans l'onglet Réseau du navigateur F12"
   },
   "eventList": {
     "emptyHint": "Essayez une autre catégorie.",

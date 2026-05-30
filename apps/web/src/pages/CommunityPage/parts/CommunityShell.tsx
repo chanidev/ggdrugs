@@ -6,7 +6,7 @@ import type { PostCategory } from '../../../lib/api/posts.js';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { getMyCredits } from '../../../lib/api/credits.js';
 import { useCurrentUser } from '../../../lib/auth-context.js';
-import { SUPPORTED_LANGUAGES } from '../../../lib/i18n.js';
+import { LanguageToggle } from '../../../components/LanguageToggle.js';
 
 /** GG-POST-004: 카테고리 레이블 — 하드코딩 기본값 (i18n 미적용 fallback 용) */
 export const CATEGORY_LABELS: Record<PostCategory, string> = {
@@ -34,7 +34,7 @@ export function CommunityShell({
   children: ReactNode;
   rightRail: ReactNode;
 }) {
-  const { t, i18n } = useTranslation('community');
+  const { t } = useTranslation('community');
   const { user } = useCurrentUser();
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
 
@@ -69,15 +69,8 @@ export function CommunityShell({
                     {t('shell.creditsPlaceholder')}
                   </span>
                 )}
-                {/* GG-COMM-013 언어토글 placeholder — 슬라이스 7 */}
-                <ActionButton
-                  variant="neutralOutline"
-                  size="small"
-                  disabled
-                  title={t('shell.languageToggle')}
-                >
-                  {SUPPORTED_LANGUAGES.find((l) => l.code === i18n.resolvedLanguage)?.nativeLabel ?? '한국어'}
-                </ActionButton>
+                {/* GG-COMM-013 언어 토글 — LanguageToggle 실연결 */}
+                <LanguageToggle />
                 {/* GG-COMM-014/015 채팅방 이동 placeholder */}
                 <ActionButton
                   variant="neutralOutline"

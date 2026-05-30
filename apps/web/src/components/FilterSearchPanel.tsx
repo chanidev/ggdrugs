@@ -336,7 +336,8 @@ export function FilterSearchPanel({
               <>
                 {t('filter.action.hintPrefix')}{' '}
                 <strong className="font-semibold text-(--color-text)">{t('filter.action.hintApply')}</strong>
-                {t('filter.action.hintSuffix')}
+                {/* hintSuffix: ko="할 수 있어요" 등 문법 조사, 영어·기타 언어는 의도적 빈 문자열 */}
+                {t('filter.action.hintSuffix') && <>{' '}{t('filter.action.hintSuffix')}</>}
               </>
             ) : (
               <>

@@ -17,20 +17,20 @@ import {
 
 const WINDOWS = [7, 30, 90] as const;
 
-function relativeTime(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
-  if (ms < 60_000) return '방금';
-  const minutes = Math.floor(ms / 60_000);
-  if (minutes < 60) return `${minutes}분 전`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}시간 전`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}일 전`;
-  return iso.slice(0, 10);
-}
-
 export function AuditDashboard() {
   const { t } = useTranslation('admin');
+
+  function relativeTime(iso: string): string {
+    const ms = Date.now() - new Date(iso).getTime();
+    if (ms < 60_000) return t('audit.time.justNow');
+    const minutes = Math.floor(ms / 60_000);
+    if (minutes < 60) return t('audit.time.minutesAgo', { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t('audit.time.hoursAgo', { count: hours });
+    const days = Math.floor(hours / 24);
+    if (days < 7) return t('audit.time.daysAgo', { count: days });
+    return iso.slice(0, 10);
+  }
   const [windowDays, setWindowDays] = useState<number>(7);
   const [data, setData] = useState<AdminAuditSummary | null>(null);
   const [loading, setLoading] = useState(true);

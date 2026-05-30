@@ -283,6 +283,16 @@
       "demotion": "Phạm vi trước={{scope}} → không hoạt động",
       "softDelete": "{{count}} phiên cũng bị thu hồi",
       "decision": "Quyết định: {{value}}"
+    },
+    "time": {
+      "justNow": "Vừa xong",
+      "minutesAgo": "{{count}} phút trước",
+      "hoursAgo": "{{count}} giờ trước",
+      "daysAgo": "{{count}} ngày trước"
     }
+  },
+  "document": {
+    "openOriginal": "Mở {{filename}} ở kích thước gốc",
+    "originalLabel": "{{filename}} gốc"
   }
 }

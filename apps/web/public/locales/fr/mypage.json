@@ -149,7 +149,8 @@
     "cancel": "Annuler",
     "mateScore": "Score partenaire",
     "mateScoreHint": "Votre score sera généré une fois les informations de jumelage saisies.",
-    "mateScoreNote": "Le score partenaire évolue automatiquement en fonction de votre historique d'activité."
+    "mateScoreNote": "Le score partenaire évolue automatiquement en fonction de votre historique d'activité.",
+    "changeAvatarPlaceholder": "Préparation du changement de photo"
   },
   "notification": {
     "title": "Notifications",
@@ -184,7 +185,8 @@
     "accept": "Accepter",
     "reject": "Refuser",
     "eventPrivate": "(Événement privé ou supprimé)",
-    "viewEvent": "Voir l'événement"
+    "viewEvent": "Voir l'événement",
+    "processing": "Traitement en cours…"
   },
   "evaluation": {
     "title": "Évaluation",

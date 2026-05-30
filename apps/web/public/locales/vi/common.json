@@ -116,5 +116,8 @@
     "prev": "Trước",
     "next": "Tiếp",
     "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(không có)"
   }
 }

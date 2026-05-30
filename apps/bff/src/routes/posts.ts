@@ -374,14 +374,17 @@ export async function createPost(req: Request, res: Response) {
 
 /**
  * POST /community/posts/:id/translate
- * 게시글 본문을 지정 언어로 번역 (LLM + Redis 24h 캐시).
+ * 게시글 본문을 지정 언어로 번역 (LLM + Redis 7d 캐시).
  * GG-COMM-013 "번역하기" 기능 — 인증 불필요, 게시글 공개 조건과 동일.
  *
  * body: { lang: 'en' | 'vi' | 'zh' | 'ja' | 'fr' }
  * response: { translatedTitle: string, translatedBody: string, lang: string }
+ *
+ * 캐시 키: post:translation:{postId}:{lang}  TTL: 7d (604800s)
+ * — translation-cache.ts 분리 모듈과 동일 키 prefix 사용.
  */
 const SUPPORTED_LANGS = new Set(['en', 'vi', 'zh', 'ja', 'fr']);
-const TRANSLATE_CACHE_TTL = 60 * 60 * 24; // 24h
+const TRANSLATE_CACHE_TTL = 7 * 24 * 60 * 60; // 7d = 604800s
 
 export async function translatePost(req: Request, res: Response) {
   const postId = parseBigId(req.params.id);
@@ -400,7 +403,7 @@ export async function translatePost(req: Request, res: Response) {
   });
   if (!post) { res.status(404).json({ error: 'post not found' }); return; }
 
-  const cacheKey = `post-translate:${postId}:${lang}`;
+  const cacheKey = `post:translation:${postId}:${lang}`;
   const redis = getRedisClient();
 
   // 캐시 히트 — LLM 호출 없이 즉시 반환.

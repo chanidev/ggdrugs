@@ -70,6 +70,7 @@ export function UserDetailPanel({
   onChanged: () => void;
 }) {
   const { t } = useTranslation('admin');
+  const { t: tc } = useTranslation('common');
   const [data, setData] = useState<AdminUserDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -188,7 +189,7 @@ export function UserDetailPanel({
           <h3 className="m-0 mb-2 text-[13px] font-semibold">{t('member.uploaderProfile')}</h3>
           <dl className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[12px]">
             <dt className="text-(--color-text-subtle)">{t('member.orgName')}</dt>
-            <dd className="m-0 text-(--color-text)">{uploader.organizationName || '(없음)'}</dd>
+            <dd className="m-0 text-(--color-text)">{uploader.organizationName || tc('fallback.none')}</dd>
             <dt className="text-(--color-text-subtle)">{t('member.statusLabel')}</dt>
             <dd className="m-0 text-(--color-text-muted)">{t(`member.uploaderStatus.${uploader.approvalStatus}`)}</dd>
             {uploader.approvedAt && (

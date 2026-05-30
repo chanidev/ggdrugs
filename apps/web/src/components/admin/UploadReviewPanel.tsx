@@ -116,7 +116,7 @@ export function UploadReviewPanel({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block"
-                  aria-label={`${d.originalFilename} 원본 크기로 열기`}
+                  aria-label={t('document.openOriginal', { filename: d.originalFilename })}
                 >
                   <img
                     src={d.previewUrl}

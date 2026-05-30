@@ -283,6 +283,16 @@
       "demotion": "以前の scope={{scope}} → 無効",
       "softDelete": "セッション {{count}} 件も廃棄",
       "decision": "決定: {{value}}"
+    },
+    "time": {
+      "justNow": "たった今",
+      "minutesAgo": "{{count}}分前",
+      "hoursAgo": "{{count}}時間前",
+      "daysAgo": "{{count}}日前"
     }
+  },
+  "document": {
+    "openOriginal": "{{filename}} を元のサイズで開く",
+    "originalLabel": "{{filename}} 原本"
   }
 }

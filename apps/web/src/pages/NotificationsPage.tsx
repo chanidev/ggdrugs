@@ -239,7 +239,7 @@ export function NotificationsPage() {
           disabled={markAllBusy || items.every((i) => i.readAt)}
           className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
         >
-          {markAllBusy ? '처리 중…' : t('notification.markAllRead')}
+          {markAllBusy ? t('notification.processing') : t('notification.markAllRead')}
         </button>
       </header>
 

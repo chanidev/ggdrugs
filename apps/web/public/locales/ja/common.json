@@ -116,5 +116,8 @@
     "prev": "前へ",
     "next": "次へ",
     "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(なし)"
   }
 }

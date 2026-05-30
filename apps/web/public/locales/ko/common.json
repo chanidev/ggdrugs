@@ -116,5 +116,8 @@
     "prev": "이전",
     "next": "다음",
     "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(없음)"
   }
 }

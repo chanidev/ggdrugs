@@ -149,7 +149,8 @@
     "cancel": "キャンセル",
     "mateScore": "メイトスコア",
     "mateScoreHint": "メイトマッチング情報を入力するとスコアが生成されます。",
-    "mateScoreNote": "メイトスコアは活動履歴に基づいて自動で変動します。"
+    "mateScoreNote": "メイトスコアは活動履歴に基づいて自動で変動します。",
+    "changeAvatarPlaceholder": "写真を変更中"
   },
   "notification": {
     "title": "通知",
@@ -184,7 +185,8 @@
     "accept": "承諾",
     "reject": "拒否",
     "eventPrivate": "（イベントが非公開または削除済み）",
-    "viewEvent": "イベントを見る"
+    "viewEvent": "イベントを見る",
+    "processing": "処理中…"
   },
   "evaluation": {
     "title": "評価",

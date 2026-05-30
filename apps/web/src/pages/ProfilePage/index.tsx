@@ -118,7 +118,7 @@ export function ProfilePage() {
               <div
                 className="absolute inset-0 flex cursor-not-allowed items-end justify-center rounded-full"
                 title={t('profile.changeAvatarTitle')}
-                aria-label="사진 변경 준비 중"
+                aria-label={t('profile.changeAvatarPlaceholder')}
               />
             </div>
           </div>

@@ -241,7 +241,17 @@
     "noActiveSession": "활성 세션 없음",
     "uploaderHint": "업로더 승급 심사·반려는 Uploaders 탭에서 처리."
   },
+  "document": {
+    "openOriginal": "{{filename}} 원본 크기로 열기",
+    "originalLabel": "{{filename}} 원본"
+  },
   "audit": {
+    "time": {
+      "justNow": "방금",
+      "minutesAgo": "{{count}}분 전",
+      "hoursAgo": "{{count}}시간 전",
+      "daysAgo": "{{count}}일 전"
+    },
     "overview": "개요",
     "eventSource": "이벤트 심사",
     "adminSource": "admin 액션",

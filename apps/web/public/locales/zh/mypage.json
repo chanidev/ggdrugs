@@ -149,7 +149,8 @@
     "cancel": "取消",
     "mateScore": "伙伴评分",
     "mateScoreHint": "输入伙伴匹配信息后将生成评分。",
-    "mateScoreNote": "伙伴评分会根据活动记录自动变化。"
+    "mateScoreNote": "伙伴评分会根据活动记录自动变化。",
+    "changeAvatarPlaceholder": "更换头像中"
   },
   "notification": {
     "title": "通知",
@@ -184,7 +185,8 @@
     "accept": "接受",
     "reject": "拒绝",
     "eventPrivate": "（活动已私密或已删除）",
-    "viewEvent": "查看活动"
+    "viewEvent": "查看活动",
+    "processing": "处理中…"
   },
   "evaluation": {
     "title": "评价",

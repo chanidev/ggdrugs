@@ -176,7 +176,9 @@
     },
     "scriptLoadFail": "스크립트 로드 실패",
     "mapLoadFail": "지도 로드 실패",
-    "allowedDomainHint": "허용 도메인에 http://localhost:5173 등록 확인"
+    "allowedDomainHint": "허용 도메인에 http://localhost:5173 등록 확인",
+    "kakaoConsoleHint": "Kakao 개발자 콘솔의 앱이 JavaScript 키인지 확인 (REST API 키 X)",
+    "networkTabHint": "브라우저 F12 → Network 탭에서 sdk.js 요청 status 확인"
   },
   "eventList": {
     "emptyHint": "다른 카테고리를 선택해보세요.",

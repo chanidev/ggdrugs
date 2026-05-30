@@ -434,9 +434,9 @@ function LoaderErrorNotice({ error }: { error: unknown }) {
       <p className="font-semibold">{t('map.mapLoadFail')}</p>
       <p className="text-body-sm text-(--color-text-muted)">{msg}</p>
       <ul className="ml-4 list-disc space-y-1 text-body-sm text-(--color-text-muted)">
-        <li>Kakao 개발자 콘솔의 앱이 <b>JavaScript 키</b>인지 확인 (REST API 키 X)</li>
+        <li>{t('map.kakaoConsoleHint')}</li>
         <li>{t('map.allowedDomainHint')}</li>
-        <li>브라우저 F12 → Network 탭에서 sdk.js 요청 status 확인</li>
+        <li>{t('map.networkTabHint')}</li>
       </ul>
     </NoticeBox>
   );

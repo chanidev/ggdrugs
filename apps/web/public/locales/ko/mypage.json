@@ -144,6 +144,7 @@
     "loginRequired": "로그인이 필요해요.",
     "back": "← 마이페이지",
     "avatarAria": "프로필 사진",
+    "changeAvatarPlaceholder": "사진 변경 준비 중",
     "changeAvatarTitle": "사진 변경 — 추후 지원 예정",
     "edit": "수정",
     "cancel": "취소",
@@ -156,6 +157,7 @@
     "empty": "알림이 없어요.",
     "loadError": "불러오지 못했어요.",
     "markAllRead": "모두 읽음",
+    "processing": "처리 중…",
     "markRead": "읽음",
     "notiTypes": {
       "match_request": "메이트신청",

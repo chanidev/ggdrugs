@@ -149,7 +149,8 @@
     "cancel": "Hủy",
     "mateScore": "Điểm bạn đồng hành",
     "mateScoreHint": "Điểm của bạn sẽ được tạo khi nhập thông tin ghép đôi.",
-    "mateScoreNote": "Điểm bạn đồng hành thay đổi tự động dựa trên lịch sử hoạt động."
+    "mateScoreNote": "Điểm bạn đồng hành thay đổi tự động dựa trên lịch sử hoạt động.",
+    "changeAvatarPlaceholder": "Đang chuẩn bị thay đổi ảnh"
   },
   "notification": {
     "title": "Thông báo",
@@ -184,7 +185,8 @@
     "accept": "Chấp nhận",
     "reject": "Từ chối",
     "eventPrivate": "(Sự kiện riêng tư hoặc đã xóa)",
-    "viewEvent": "Xem sự kiện"
+    "viewEvent": "Xem sự kiện",
+    "processing": "Đang xử lý…"
   },
   "evaluation": {
     "title": "Đánh giá",

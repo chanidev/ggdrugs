@@ -149,7 +149,8 @@
     "cancel": "Cancel",
     "mateScore": "Mate score",
     "mateScoreHint": "Your score will be generated once mate matching info is entered.",
-    "mateScoreNote": "The mate score changes automatically based on your activity history."
+    "mateScoreNote": "The mate score changes automatically based on your activity history.",
+    "changeAvatarPlaceholder": "Preparing to change photo"
   },
   "notification": {
     "title": "Notifications",
@@ -184,7 +185,8 @@
     "accept": "Accept",
     "reject": "Decline",
     "eventPrivate": "(Event private or deleted)",
-    "viewEvent": "View event"
+    "viewEvent": "View event",
+    "processing": "Processing…"
   },
   "evaluation": {
     "title": "Evaluation",

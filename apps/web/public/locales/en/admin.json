@@ -283,6 +283,16 @@
       "demotion": "Previous scope={{scope}} → inactive",
       "softDelete": "{{count}} sessions also revoked",
       "decision": "Decision: {{value}}"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{{count}} minutes ago",
+      "hoursAgo": "{{count}} hours ago",
+      "daysAgo": "{{count}} days ago"
     }
+  },
+  "document": {
+    "openOriginal": "Open {{filename}} in original size",
+    "originalLabel": "{{filename}} Original"
   }
 }

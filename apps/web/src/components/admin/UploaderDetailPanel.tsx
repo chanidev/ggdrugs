@@ -190,7 +190,7 @@ export function UploaderDetailPanel({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="block"
-                    aria-label={`${d.originalFilename} 원본`}
+                    aria-label={t('document.originalLabel', { filename: d.originalFilename })}
                   >
                     <img
                       src={d.previewUrl}

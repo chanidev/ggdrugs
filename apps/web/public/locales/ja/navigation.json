@@ -176,7 +176,9 @@
     },
     "scriptLoadFail": "スクリプトの読み込み失敗",
     "mapLoadFail": "マップの読み込み失敗",
-    "allowedDomainHint": "http://localhost:5173 が許可ドメインに登録されているか確認"
+    "allowedDomainHint": "http://localhost:5173 が許可ドメインに登録されているか確認",
+    "kakaoConsoleHint": "Kakao開発者コンソールのアプリがJavaScriptキーであることを確認（REST APIキーではありません）",
+    "networkTabHint": "ブラウザのF12 -> Networkタブでsdk.jsのリクエストステータスを確認"
   },
   "eventList": {
     "emptyHint": "別のカテゴリーを試してください。",

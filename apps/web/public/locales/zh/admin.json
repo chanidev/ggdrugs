@@ -283,6 +283,16 @@
       "demotion": "原 scope={{scope}} → 已停用",
       "softDelete": "同时吊销 {{count}} 个会话",
       "decision": "决定：{{value}}"
+    },
+    "time": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}}分钟前",
+      "hoursAgo": "{{count}}小时前",
+      "daysAgo": "{{count}}天前"
     }
+  },
+  "document": {
+    "openOriginal": "以原始大小打开{{filename}}",
+    "originalLabel": "{{filename}} 原件"
   }
 }

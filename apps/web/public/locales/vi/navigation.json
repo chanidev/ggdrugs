@@ -176,7 +176,9 @@
     },
     "scriptLoadFail": "Tải script thất bại",
     "mapLoadFail": "Tải bản đồ thất bại",
-    "allowedDomainHint": "Đảm bảo http://localhost:5173 có trong danh sách domain được phép"
+    "allowedDomainHint": "Đảm bảo http://localhost:5173 có trong danh sách domain được phép",
+    "kakaoConsoleHint": "Kiểm tra xem ứng dụng trong bảng điều khiển Kakao có phải là khóa JavaScript không (không phải khóa REST API)",
+    "networkTabHint": "Nhấn F12 trên trình duyệt -> Kiểm tra trạng thái yêu cầu sdk.js trong tab Network"
   },
   "eventList": {
     "emptyHint": "Hãy thử danh mục khác.",

@@ -116,5 +116,8 @@
     "prev": "上一页",
     "next": "下一页",
     "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(无)"
   }
 }
