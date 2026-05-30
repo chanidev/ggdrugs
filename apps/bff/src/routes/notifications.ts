@@ -83,8 +83,11 @@ export async function listMyNotifications(req: Request, res: Response) {
 
 export async function unreadCount(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;
+  // kick_vote 알림은 readAt 을 투표 완료 마커로 사용하지 않아 readAt 이 영구적으로 null 상태.
+  // 배지 카운터가 과대계상 되지 않도록 kick_vote 를 제외한다.
+  // (markAllNotificationsRead 와 동일한 exclusion 정책)
   const count = await prisma.notification.count({
-    where: { userId: auth.userId, readAt: null },
+    where: { userId: auth.userId, readAt: null, NOT: { notificationType: 'kick_vote' } },
   });
   res.json({ count });
 }

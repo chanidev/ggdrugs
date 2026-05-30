@@ -1072,31 +1072,30 @@ export async function startKickVote(req: Request, res: Response) {
     return;
   }
 
-  // [low-fix] 중복 투표 방지: 해당 대상에 대해 이미 진행 중인 kick_vote 가 있으면 409
-  // "진행 중" = voteResult 가 아직 기록되지 않은 알림이 1건 이상 존재
-  const existingActiveVote = await prisma.notification.findFirst({
+  // 중복 투표 방지: 해당 대상에 대해 이미 진행 중인 kick_vote 가 있으면 409
+  // "진행 중" = 해당 대상을 가리키는 알림 중 voteResult 가 아직 기록되지 않은 것이 1건이라도 존재
+  // findFirst 는 임의의 1건만 반환하므로 부분 완료 상태(일부만 투표)에서 오탐 가능 → findMany 로 전체 조회
+  const allTargetVoteNotifs = await prisma.notification.findMany({
     where: {
       notificationType: 'kick_vote',
       relatedEntityId: chatRoomId,
       relatedEntityType: 'kick_vote',
       message: { contains: `"targetUserId":"${targetUserId.toString()}"` },
-      // voteResult 가 없는 = 아직 응답 전인 알림이 있으면 active round
     },
-    select: { notificationId: true, message: true },
+    select: { message: true },
   });
-  if (existingActiveVote) {
-    // message 에 voteResult 가 없으면 해당 라운드가 아직 진행 중
-    let hasVoteResult = false;
+  // 1건이라도 voteResult 없으면 해당 라운드가 아직 진행 중 → 신규 라운드 차단
+  const roundIsActive = allTargetVoteNotifs.some((n) => {
     try {
-      const m = JSON.parse(existingActiveVote.message) as { voteResult?: string };
-      hasVoteResult = m.voteResult !== undefined;
+      return (JSON.parse(n.message) as { voteResult?: string }).voteResult === undefined;
     } catch {
       // corrupt JSON — 안전하게 active 로 간주
+      return true;
     }
-    if (!hasVoteResult) {
-      res.status(409).json({ error: 'kick_vote_already_active' });
-      return;
-    }
+  });
+  if (roundIsActive) {
+    res.status(409).json({ error: 'kick_vote_already_active' });
+    return;
   }
 
   // active 멤버 조회 (대상 제외)
