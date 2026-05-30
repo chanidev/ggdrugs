@@ -396,6 +396,15 @@ async function main() {
       });
       if (creditCount !== 2) f.push(`creditLedger mate_eval_complete count ${creditCount} != 2`);
 
+      // review_complete 크레딧 dedup 검증:
+      // u1→u2 (1차 POST) 에서 FestivalReview 신규 생성 → review_complete 1행 적립.
+      // u1→u3 (2차 POST) 에서 FestivalReview 이미 존재 → review_complete 건너뜀.
+      // uq_credit_review_complete_user partial unique index가 TOCTOU 경합도 막는지 확인.
+      const reviewCreditCount = await prisma.creditLedger.count({
+        where: { appointmentId: groupAppt3.appointmentId, userId: u1.userId, action: 'review_complete' },
+      });
+      if (reviewCreditCount !== 1) f.push('creditLedger review_complete count ' + reviewCreditCount + ' != 1 (dedup broken in group N-1)');
+
       // 클린업
       await prisma.creditLedger.deleteMany({ where: { appointmentId: groupAppt3.appointmentId } });
       await prisma.festivalReview.deleteMany({ where: { appointmentId: groupAppt3.appointmentId } });

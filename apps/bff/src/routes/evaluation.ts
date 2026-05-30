@@ -193,7 +193,12 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
       // festivalReview.upsert 전 존재 여부 확인 — review_complete 크레딧 1회성 적립에 사용.
       // 그룹 N-1 시나리오: u1이 u2·u3를 각각 평가하는 2번째 POST에서 FestivalReview가 이미
       // 존재하므로 upsert는 no-op. review_complete 크레딧은 최초 생성 시 1회만 적립한다.
-      // dedup 방어선: existingReview 조회(1차) + uq_mate_eval_pair(P2002 최종). 트랜잭션 내 검사.
+      // dedup 방어선(1차): existingReview 조회 (READ COMMITTED 하에서 선행 트랜잭션이 커밋된 행 감지).
+      // dedup 최종 방어선: uq_credit_review_complete_user partial unique index
+      //   (migration.sql 20260530140000_phase2_eval_credit 에 정의).
+      //   TOCTOU 경합(동시 rapid-retry / client double-tap) 시에도 DB가 중복 삽입을 P2002로 거부.
+      //   uq_festival_review_pair 는 FestivalReview 행의 중복 삽입을 막는 인덱스이며
+      //   credit_ledgers review_complete dedup 과는 무관하다.
       const existingReview = await tx.festivalReview.findUnique({
         where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
         select: { reviewId: true },
@@ -212,19 +217,28 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
         update: {}, // no-op: 이미 존재하면 변경 없음
       });
 
-      // [리뷰 medium] review_complete 크레딧 적립 +10 (최초 후기 제출 시 1회).
-      // FestivalReview가 신규 생성(existingReview=null)인 경우에만 적립.
+      // review_complete 크레딧 적립 +10 (최초 후기 제출 시 1회).
+      // FestivalReview가 신규 생성(existingReview=null)인 경우에만 시도.
       // 그룹 N-1에서 2번째 이후 평가 POST는 FestivalReview가 이미 존재(existingReview!=null)
-      // → 이 블록을 건너뜀으로써 review_complete 중복 적립 방지.
+      // → 이 블록을 건너뜀으로써 review_complete 중복 적립 방지 (1차 방어).
+      // TOCTOU 경합(동시 rapid-retry / client double-tap)에 대한 최종 방어선은
+      // uq_credit_review_complete_user partial unique index — P2002 throw 시 무시(idempotent).
       if (!existingReview) {
-        await tx.creditLedger.create({
-          data: {
-            userId: auth.userId,
-            action: 'review_complete',
-            pointsAmount: CREDIT_REVIEW,
-            appointmentId,
-          },
-        });
+        try {
+          await tx.creditLedger.create({
+            data: {
+              userId: auth.userId,
+              action: 'review_complete',
+              pointsAmount: CREDIT_REVIEW,
+              appointmentId,
+            },
+          });
+        } catch (creditErr) {
+          // uq_credit_review_complete_user 위반: 동시 rapid-retry 등으로 이미 적립됨 → 무시(idempotent).
+          if (!(creditErr instanceof Prisma.PrismaClientKnownRequestError && creditErr.code === 'P2002')) {
+            throw creditErr;
+          }
+        }
       }
 
       // [오버라이드] 크레딧 적립: mate_eval_complete +10

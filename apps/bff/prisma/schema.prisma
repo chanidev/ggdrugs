@@ -983,7 +983,7 @@ model FestivalReview {
 // append-only 거래 로그. 잔액 = SUM(pointsAmount) WHERE userId.
 // action 도메인:
 //   'mate_eval_complete'  — 메이트 평가 작성 +10 (Slice 5 구현)
-//   'review_complete'     — 후기 작성 (Slice 7+ placeholder, Slice 5 미구현)
+//   'review_complete'     — 후기 최초 제출 +10 (Slice 5 구현, evaluation.ts 트랜잭션 내)
 //   'appointment_complete'— 약속 완료 (스케줄러 notifyMateEval에서 적립, Slice 5 구현)
 // 크레딧 적립 +10 상수: ADR 0007 결정5에서 "액수 Open items"로 미정.
 //   이 플랜에서 10으로 가정 고정 — ADR 0007 보강 필요 (에이전트 작업 아님).

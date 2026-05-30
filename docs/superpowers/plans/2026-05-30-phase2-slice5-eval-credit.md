@@ -4,7 +4,14 @@
 >
 > 이 플랜은 **focused**형: 스키마/마이그레이션은 전체, BFF/UI는 스코프드 스펙 + 핵심 시그니처. 세부 구현은 슬라이스2·3 패턴을 템플릿으로 따른다.
 
-**Goal.** 약속 확정(Appointment.status='confirmed') 이후 메이트 평가(A_900)·축제 설문+후기(A_901)·크레딧 적립(CreditLedger)을 end-to-end로 구현한다.
+**Goal.** 약속을 **다녀온 후** 메이트 평가(A_900)·축제 설문+후기(A_901)·크레딧 적립(CreditLedger)을 end-to-end로 구현한다.
+
+> ## ⚠️ 전체 구현 오버라이드 (이 블록이 아래 본문의 모든 "컷/한정/미구현/placeholder"를 **무효화**한다. 미구현 없음 — 전부 실제 구현.)
+> 1. **그룹 평가 전체 구현** — "1:1 한정"·`group_not_supported` 409 게이트 **삭제**. 그룹 약속이면 **참가자 N-1명 전원**을 평가 대상으로 처리(메이트 평가는 대상별 1행). 축제 설문/후기는 참가자별 1회. `evaluatedUserId`는 동일 `chatRoomId` 멤버 검증.
+> 2. **"다녀온 후" 완료 게이트** — confirmed 직후 게이트 **삭제**. 평가/설문/후기는 `appointment.status='confirmed' AND appointedAt <= now()`(약속일 경과)일 때만 허용. 아니면 409 `not_attended_yet`.
+> 3. **mate_eval 평가 알림 진입 전체 구현(GG-REVIEW-001)** — "버튼 한정" **삭제**. `chat-scheduler.ts`에 신규 잡: `confirmed` 약속의 `appointedAt` 경과 시 참가자 전원에게 `notificationType='mate_eval'` 알림 생성(중복 방지는 동일 약속·사용자의 기존 mate_eval Notification 존재로 dedup). 알림 클릭 → 평가 화면 진입.
+> 4. **크레딧 적립 2종 전체 구현** — `appointment_complete` "미구현/placeholder" **삭제**. 약속 완료(appointedAt 경과, 스케줄러) 시 참가자에게 `appointment_complete` 적립 **+** 평가 작성 시 `mate_eval_complete` 적립. 둘 다 `credit_ledger.appointment_id`로 dedup.
+> 5. 그 외 본문의 "Slice 7+ placeholder", "미구현", "범위 밖" 표현은 전부 이 슬라이스에서 실제 구현(스키마 변경 없이 기존 컬럼 appointedAt/Notification/credit_ledger.appointment_id 로 가능).
 
 **Architecture.**
 
