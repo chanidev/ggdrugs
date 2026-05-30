@@ -53,6 +53,9 @@ export async function listMyNotifications(req: Request, res: Response) {
         message: true,
         readAt: true,
         createdAt: true,
+        notificationType: true,
+        relatedEntityId: true,
+        relatedEntityType: true,
         event: {
           select: {
             eventId: true,
@@ -64,6 +67,29 @@ export async function listMyNotifications(req: Request, res: Response) {
       },
     }),
   ]);
+
+  // appointment / appointment_update / mate_eval 알림은 relatedEntityId = appointmentId.
+  // 채팅방 이동(GG-NOTI-012)을 위해 Appointment→chatRoomId를 조인한다.
+  const appointmentEntityTypes = new Set(['appointment', 'mate_eval', 'appointment_update']);
+  const appointmentRelatedIds = rows
+    .filter(
+      (r) =>
+        r.relatedEntityType != null &&
+        appointmentEntityTypes.has(r.relatedEntityType) &&
+        r.relatedEntityId != null,
+    )
+    .map((r) => r.relatedEntityId!);
+
+  const appointmentChatRoomMap = new Map<string, string>();
+  if (appointmentRelatedIds.length > 0) {
+    const appts = await prisma.appointment.findMany({
+      where: { appointmentId: { in: appointmentRelatedIds } },
+      select: { appointmentId: true, chatRoomId: true },
+    });
+    for (const a of appts) {
+      appointmentChatRoomMap.set(a.appointmentId.toString(), a.chatRoomId.toString());
+    }
+  }
 
   res.json({
     page,
@@ -79,6 +105,16 @@ export async function listMyNotifications(req: Request, res: Response) {
       // 이벤트가 소프트 삭제/취소됐으면 링크 비활성화.
       eventAvailable:
         r.event != null && !r.event.isDeleted && r.event.approvalStatus === 'approved',
+      notificationType: r.notificationType ?? null,
+      relatedEntityId: r.relatedEntityId?.toString() ?? null,
+      relatedEntityType: r.relatedEntityType ?? null,
+      // appointment/appointment_update/mate_eval 타입에만 chatRoomId 조인값 노출
+      relatedChatRoomId:
+        r.relatedEntityId != null &&
+        r.relatedEntityType != null &&
+        appointmentEntityTypes.has(r.relatedEntityType)
+          ? (appointmentChatRoomMap.get(r.relatedEntityId.toString()) ?? null)
+          : null,
     })),
   });
 }
