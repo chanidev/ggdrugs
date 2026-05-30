@@ -134,6 +134,8 @@ export async function listEvents(req: Request, res: Response) {
   const page = parseIntClamp(req.query.page, 1, 1, 1_000_000);
   // limit 상한 500 — map 뷰 용도. 목록 페이지는 100 이하 사용 권장.
   const limit = parseIntClamp(req.query.limit, 20, 1, 500);
+  // search — 제목 부분 매칭 (pg_trgm GIN index 활용). 빈 문자열이면 무시.
+  const search = typeof req.query.search === 'string' ? req.query.search.trim() : '';
 
   const periodResult = parsePeriod(req.query);
   if (periodResult.error) {
@@ -192,6 +194,11 @@ export async function listEvents(req: Request, res: Response) {
   }
   if (phases.length > 0) {
     where.phase = { in: phases };
+  }
+  if (search) {
+    // 제목 대소문자 무시 포함 검색 — Prisma mode:'insensitive' 는 pg 에서 ilike 변환.
+    // pg_trgm GIN index(title) 가 있으면 ILIKE 도 index scan 가능 (적용됐으면 활용).
+    where.title = { contains: search, mode: 'insensitive' };
   }
 
   // v4.5 — sort=distance 는 PostGIS KNN 정렬 + 거리값 계산이 raw 연산이라 일반 흐름과 분리.

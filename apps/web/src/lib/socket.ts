@@ -49,12 +49,18 @@ export function disconnectSocket(): void {
 /**
  * 특정 채팅방에서 명시적 퇴장 emit.
  * useChatRoom cleanup 에서 자동 호출됨.
+ *
+ * Spec 7-1 계약 이름: leaveRoom(chatRoomId). emitLeaveRoom 은 내부 구현명으로 유지하고
+ * 스펙 인터페이스 이름 leaveRoom 을 re-export 로 노출한다.
  */
 export function emitLeaveRoom(chatRoomId: string): void {
   if (_socket?.connected) {
     _socket.emit('room:leave', { chatRoomId });
   }
 }
+
+/** Spec 7-1 interface alias — emitLeaveRoom 과 동일. */
+export const leaveRoom = emitLeaveRoom;
 
 // ── useChatRoom 훅 ───────────────────────────────────────────
 

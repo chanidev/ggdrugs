@@ -20,7 +20,7 @@ import {
   type ChatRoomMessageOut,
   type AppointmentOut,
 } from '../../lib/api/match.js';
-import { fetchEvents, type BffEventItem } from '../../lib/api/events.js';
+import { fetchEvents, fetchEventDetail, type BffEventItem, type BffEventDetail } from '../../lib/api/events.js';
 
 /**
  * ChatRoomPage — 실시간 채팅방 (와이어 9-4/9-5/9-17/9-19, A_805).
@@ -221,6 +221,18 @@ export function ChatRoomPage() {
             </div>
           )}
 
+          {/* 메이트 추천 위젯 (GG-ROOM-021: 약속 확정 시 blind) */}
+          {!appointmentConfirmed && (
+            <div
+              className="flex items-center gap-2 border-b border-(--color-border) bg-(--color-surface-alt) px-4 py-2 text-[12px] text-(--color-text-muted)"
+              aria-label="메이트 추천"
+            >
+              <span aria-hidden>&#9733;</span>
+              <span>이 채팅방에 어울리는 메이트를 추천해 드려요.</span>
+              {/* Slice 4 에서 실제 추천 목록 연결 예정 (A_802 메이트 추천 API) */}
+            </div>
+          )}
+
           {/* 메시지 목록 */}
           <div
             ref={scrollRef}
@@ -264,20 +276,27 @@ export function ChatRoomPage() {
               </button>
             </div>
             <div className="flex gap-2">
-              {/* 이미지 업로드 placeholder (GG-ROOM-008) */}
+              {/*
+               * GG-ROOM-008: 이미지 업로드 + 스티커 팔레트.
+               * Slice 4 (A_808) 에서 구현 예정:
+               *   - 이미지: uploads.ts uploadFile() → S3 URL → socket.emit('room:message', { type:'image', attachmentUrl })
+               *   - 스티커: SEED BottomSheet 기반 팔레트 UI → socket.emit('room:message', { type:'sticker', stickerId })
+               * 현재는 disabled placeholder 유지 (기획서 v5.0 범위 외).
+               */}
+              {/* 이미지 업로드 placeholder (GG-ROOM-008 — Slice 4 예정) */}
               <button
                 type="button"
-                title="이미지 첨부 (준비 중)"
+                title="이미지 첨부 (Slice 4 예정)"
                 disabled
                 aria-label="이미지 첨부 (준비 중)"
                 className="flex h-9 w-9 shrink-0 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-(--color-border) text-(--color-text-subtle) opacity-50"
               >
                 &#128247;
               </button>
-              {/* 스티커 placeholder (GG-ROOM-008) */}
+              {/* 스티커 팔레트 placeholder (GG-ROOM-008 — Slice 4 예정) */}
               <button
                 type="button"
-                title="스티커 (준비 중)"
+                title="스티커 (Slice 4 예정)"
                 disabled
                 aria-label="스티커 팔레트 (준비 중)"
                 className="flex h-9 w-9 shrink-0 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-(--color-border) text-(--color-text-subtle) opacity-50"
@@ -595,27 +614,44 @@ function EventSelectDialog({
   const [searchResults, setSearchResults] = useState<BffEventItem[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<BffEventItem | null>(null);
+  // GG-ROOM-003: 요약 팝업에서 표시할 이벤트 상세 (organizer 포함)
+  const [selectedDetail, setSelectedDetail] = useState<BffEventDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
+  // GG-ROOM-004: BFF에 search 파라미터 전달 — 서버 사이드 제목 필터 (4111건 대응)
   const handleSearch = async () => {
     const q = query.trim();
     if (!q) return;
     setSearching(true);
     setErr(null);
     try {
-      const resp = await fetchEvents({ page: 1, limit: 10 });
-      // 클라이언트 사이드 이름 필터 (BFF 텍스트 검색 엔드포인트가 별도 없으므로 제목 포함 검색)
-      const filtered = resp.items.filter((ev) =>
-        ev.title.toLowerCase().includes(q.toLowerCase()),
-      );
-      setSearchResults(filtered);
-      if (filtered.length === 0) setErr('검색 결과가 없어요. 다른 키워드를 시도해 보세요.');
+      const resp = await fetchEvents({ page: 1, limit: 20, search: q });
+      setSearchResults(resp.items);
+      if (resp.items.length === 0) setErr('검색 결과가 없어요. 다른 키워드를 시도해 보세요.');
     } catch {
       setErr('이벤트 목록을 불러오지 못했어요.');
     } finally {
       setSearching(false);
+    }
+  };
+
+  // GG-ROOM-003: 이벤트 선택 시 상세 정보(organizer) 함께 로드
+  const handleOpenSummary = async (ev: BffEventItem) => {
+    setSelectedEvent(ev);
+    setDetailLoading(true);
+    setSummaryOpen(true);
+    setErr(null);
+    try {
+      const detail = await fetchEventDetail(ev.eventId);
+      setSelectedDetail(detail);
+    } catch {
+      // detail 로드 실패해도 기본 정보로 팝업 유지
+      setSelectedDetail(null);
+    } finally {
+      setDetailLoading(false);
     }
   };
 
@@ -632,8 +668,9 @@ function EventSelectDialog({
     }
   };
 
-  // 선택된 이벤트 요약 팝업 (GG-ROOM-005/006)
+  // 선택된 이벤트 요약 팝업 (GG-ROOM-005/006/GG-ROOM-003)
   if (summaryOpen && selectedEvent) {
+    const organizer = selectedDetail?.organizer ?? null;
     return (
       <Dialog.Root open onOpenChange={(open) => { if (!open) setSummaryOpen(false); }}>
         <Dialog.Backdrop />
@@ -648,10 +685,22 @@ function EventSelectDialog({
               </Dialog.Description>
             </Dialog.Header>
             <div className="flex flex-col gap-2 px-5 pb-3">
-              {/* 주관처 연락처 placeholder (GG-ROOM-003: 슬라이스4에서 실구현) */}
-              <p className="text-[12px] text-(--color-text-muted)">
-                주관처 연락처: 준비 중
-              </p>
+              {/* GG-ROOM-003: 주관처 정보 — 업로더 이벤트는 organizer 표시, 크롤 이벤트는 없음 안내 */}
+              {detailLoading ? (
+                <p className="text-[12px] text-(--color-text-muted)">주관처 정보 불러오는 중...</p>
+              ) : organizer ? (
+                <div className="rounded-(--radius-md) bg-(--color-surface-alt) p-2.5 text-[12px]">
+                  <p className="font-medium text-(--color-text)">{organizer.name}</p>
+                  {organizer.phone && (
+                    <p className="mt-0.5 text-(--color-text-muted)">연락처: {organizer.phone}</p>
+                  )}
+                  {organizer.email && (
+                    <p className="mt-0.5 text-(--color-text-muted)">이메일: {organizer.email}</p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[12px] text-(--color-text-muted)">주관처 정보 없음 (크롤 이벤트)</p>
+              )}
               {err && <p role="alert" className="text-[13px] text-(--color-error)">{err}</p>}
             </div>
             <Dialog.Footer>
@@ -740,10 +789,7 @@ function EventSelectDialog({
                   <button
                     key={ev.eventId}
                     type="button"
-                    onClick={() => {
-                      setSelectedEvent(ev);
-                      setSummaryOpen(true);
-                    }}
+                    onClick={() => { void handleOpenSummary(ev); }}
                     className="flex w-full flex-col gap-0.5 border-b border-(--color-border) px-3 py-2 text-left last:border-b-0 hover:bg-(--color-surface-alt)"
                   >
                     <span className="text-[14px] font-medium text-(--color-text)">{ev.title}</span>
