@@ -8,7 +8,7 @@
  *   - listMyNotifications: appointment 타입에 relatedChatRoomId 필드 존재
  *   - markNotificationRead: 정상 200; kick_vote 타입은 readAt 미변경
  *   - listMyAppointments: confirmed 약속만 반환
- *   - listMyAppointments: from/to 필터 — 과거 날짜 to 지정 시 빈 목록 반환
+ *   - listMyAppointments: from+to 모두 공급 시 유효 범위 필터 동작 — 과거 범위 지정 시 빈 목록 반환
  */
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
@@ -193,19 +193,20 @@ async function main() {
     return f;
   });
 
-  // ── CASE 10: listMyAppointments 과거 날짜 to 필터 → 빈 목록 ──
-  // to='2000-01-01' 이전에 약속이 존재할 수 없으므로 items=[] 를 기대.
-  // from/to 필터 및 parseDate 로직의 회귀를 방지한다.
-  await check('appointments.list.past_to_filter_empty', async () => {
+  // ── CASE 10: listMyAppointments 과거 날짜 범위 필터 → 빈 목록 ──
+  // from='2000-01-01'&to='2000-12-31': 유효한 범위이며 실제 약속이 존재할 수 없는 과거.
+  // items=[]를 기대. from+to 모두 공급하므로 effectiveFrom>effectiveTo 역전 없이
+  // hasDateFilter 경로가 정확히 동작함을 검증한다.
+  await check('appointments.list.past_range_filter_empty', async () => {
     const res = mockRes();
-    await listMyAppointments(mockReq({ auth, query: { to: '2000-01-01' } }), res);
+    await listMyAppointments(mockReq({ auth, query: { from: '2000-01-01', to: '2000-12-31' } }), res);
     const f: string[] = [];
     if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
     const b = res._c.json as { items?: unknown[] };
     if (!Array.isArray(b.items)) {
       f.push('items not array');
     } else if (b.items.length > 0) {
-      f.push(`expected 0 items for to=2000-01-01, got ${b.items.length}`);
+      f.push(`expected 0 items for 2000-01-01~2000-12-31, got ${b.items.length}`);
     }
     return f;
   });

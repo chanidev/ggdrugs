@@ -10,8 +10,9 @@
  * ChatRoom에는 Prisma event 관계가 없으므로 eventId를 직접 수집해 Event 별도 조회한다.
  *
  * 응답 필드 노트:
- *  - event.price: DB 컬럼 admissionFee(String|null) 를 price 이름으로 노출.
- *    DB 컬럼명은 변경하지 않는다.
+ *  - event.price: DB 컬럼 admissionFee(String|null)를 price 이름으로 그대로 노출(string | null).
+ *    Web 클라이언트는 string으로 수신해야 한다 — Number() 강제 변환 금지.
+ *    DB 컬럼명(admissionFee)은 변경하지 않는다.
  *  - event.operatingHours / event.targetAudience: GG-MY-002 AppointmentCard 6항목 충족.
  *  - appointedAt null 처리: 날짜 필터가 없으면 appointedAt IS NULL인 confirmed 약속도 포함.
  */
@@ -44,10 +45,10 @@ export async function listMyAppointments(req: Request, res: Response) {
   }
 
   // appointedAt 필터:
-  //  - from/to가 모두 없으면 기본 범위(과거 90일~미래 180일)를 사용하되,
-  //    appointedAt IS NULL인 confirmed 약속도 포함한다(일시 미정 케이스).
-  //  - from 또는 to가 있으면 해당 날짜 범위를 적용.
-  //    단, appointedAt IS NULL인 경우는 날짜 비교 불가이므로 범위 내에서 제외한다.
+  //  - from/to가 모두 없으면 appointedAt 제약 없이 해당 사용자의 모든 confirmed 약속을
+  //    반환한다 (appointedAt IS NULL 포함). 캘린더는 전체 약속 목록이 필요하기 때문이다.
+  //  - from 또는 to가 있으면 gte/lte 범위를 적용한다.
+  //    단, Prisma의 날짜 비교 동작상 appointedAt IS NULL인 행은 범위 내에서 자동 제외된다.
   const hasDateFilter = from !== null || to !== null;
   const effectiveFrom = from ?? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
   const effectiveTo = to ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
