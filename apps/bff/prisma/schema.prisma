@@ -36,8 +36,8 @@ model Region {
   centerLng   Decimal? @map("center_lng") @db.Decimal(10, 7)
   createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  users  User[]
-  events Event[]
+  users           User[]
+  events          Event[]
   mateRegions     MateProfile[] @relation("MateRegion")
   matePrefRegions MateProfile[] @relation("MatePrefRegion")
 
@@ -65,26 +65,31 @@ model User {
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
 
-  region          Region?               @relation(fields: [regionId], references: [regionId])
-  uploaderProfile UploaderProfile?
-  adminProfile    AdminProfile?
-  vibeAssignments EventVibeAssignment[]
-  approvalLogs    ApprovalLog[]
-  bookmarks       Bookmark[]
-  reviews         Review[]
-  notifications   Notification[]
-  subscriptions   EventSubscription[]
-  searchLogs      SearchLog[]
-  chatSessions    ChatSession[]
-  photoAlbums     PhotoAlbum[]
-  tasteProfiles   UserTasteProfile[]
-  authSessions    AuthSession[]
-  adminAuditLogs  AdminAuditLog[]
-  posts           Post[]
-  comments        Comment[]
-  postLikes       PostLike[]
-  mateProfile     MateProfile?
-  mateIndex       MateIndex?
+  region                Region?               @relation(fields: [regionId], references: [regionId])
+  uploaderProfile       UploaderProfile?
+  adminProfile          AdminProfile?
+  vibeAssignments       EventVibeAssignment[]
+  approvalLogs          ApprovalLog[]
+  bookmarks             Bookmark[]
+  reviews               Review[]
+  notifications         Notification[]
+  subscriptions         EventSubscription[]
+  searchLogs            SearchLog[]
+  chatSessions          ChatSession[]
+  photoAlbums           PhotoAlbum[]
+  tasteProfiles         UserTasteProfile[]
+  authSessions          AuthSession[]
+  adminAuditLogs        AdminAuditLog[]
+  posts                 Post[]
+  comments              Comment[]
+  postLikes             PostLike[]
+  mateProfile           MateProfile?
+  mateIndex             MateIndex?
+  sentMatchRequests     MatchRequest[]        @relation("Requester")
+  receivedMatchRequests MatchRequest[]        @relation("Receiver")
+  chatRoomMemberships   GroupMembership[]
+  blocksGiven           Block[]               @relation("BlockSender")
+  blocksReceived        Block[]               @relation("BlockReceiver")
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -378,17 +383,22 @@ model ReviewPhoto {
 // 12. NOTIFICATIONS
 // =============================================================
 model Notification {
-  notificationId BigInt    @id @default(autoincrement()) @map("notification_id")
-  userId         BigInt    @map("user_id")
-  eventId        BigInt?   @map("event_id")
-  title          String    @db.VarChar(100)
-  message        String    @db.Text
-  scheduledAt    DateTime  @map("scheduled_at") @db.Timestamptz
-  isSent         Boolean   @default(false) @map("is_sent")
-  sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  notificationId    BigInt    @id @default(autoincrement()) @map("notification_id")
+  userId            BigInt    @map("user_id")
+  eventId           BigInt?   @map("event_id")
+  title             String    @db.VarChar(100)
+  message           String    @db.Text
+  scheduledAt       DateTime  @map("scheduled_at") @db.Timestamptz
+  isSent            Boolean   @default(false) @map("is_sent")
+  sentAt            DateTime? @map("sent_at") @db.Timestamptz
   /// 사용자가 알림 읽은 시각. NULL 이면 미읽음 (A_500 알림 센터 unread 뱃지).
-  readAt         DateTime? @map("read_at") @db.Timestamptz
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  readAt            DateTime? @map("read_at") @db.Timestamptz
+  notificationType  String?   @map("notification_type") @db.VarChar(30)
+  // 'match_request'|'group_invite'|'appointment'|'kick_vote'|'mate_eval'|'chat_message'
+  relatedEntityId   BigInt?   @map("related_entity_id")
+  relatedEntityType String?   @map("related_entity_type") @db.VarChar(30)
+  // 'match_request'|'chat_room'|'appointment'|'kick_vote' — 알림 클릭 라우팅 (GG-NOTI-007)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   user  User   @relation(fields: [userId], references: [userId])
   event Event? @relation(fields: [eventId], references: [eventId])
@@ -729,4 +739,153 @@ model MateIndex {
   user User @relation(fields: [userId], references: [userId])
 
   @@map("mate_indexes")
+}
+
+// ============ MATCH_REQUEST (ADR 0007 결정6 — A_803/A_804) ============
+// 1:1 신청 24h, 그룹 초대 6h 만료. ChatRoom 생성은 수락 시점.
+// WARNING: ChatSession(LLM 검색)과 완전 별개 — JOIN 금지.
+model MatchRequest {
+  matchRequestId BigInt   @id @default(autoincrement()) @map("match_request_id")
+  requesterId    BigInt   @map("requester_id")
+  receiverId     BigInt   @map("receiver_id")
+  requestType    String   @map("request_type") @db.VarChar(10) // '1:1' | 'group'
+  status         String   @default("pending") @db.VarChar(20)
+  // pending | accepted | rejected | expired | cancelled
+  chatRoomId     BigInt?  @map("chat_room_id") // nullable — 수락 후 생성된 채팅방
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz // 1:1=+24h, group=+6h
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  requester User      @relation("Requester", fields: [requesterId], references: [userId])
+  receiver  User      @relation("Receiver", fields: [receiverId], references: [userId])
+  chatRoom  ChatRoom? @relation(fields: [chatRoomId], references: [chatRoomId])
+
+  @@index([receiverId, status], map: "idx_match_req_receiver_status")
+  @@index([expiresAt, status], map: "idx_match_req_expires")
+  @@map("match_requests")
+}
+
+// ============ CHAT_ROOM (ADR 0007 결정6 — A_805) ============
+// 1:1/그룹(최대4인) 실시간 채팅방. Postgres 영속, Socket.IO 실시간.
+// WARNING: ChatSession(LLM 이벤트 검색)과 완전 별개 — JOIN 금지.
+model ChatRoom {
+  chatRoomId  BigInt    @id @default(autoincrement()) @map("chat_room_id")
+  roomType    String    @map("room_type") @db.VarChar(10) // '1:1' | 'group'
+  status      String    @default("active") @db.VarChar(20) // 'active' | 'ended'
+  maxMembers  Int       @default(2) @map("max_members") // 1:1=2, group=4
+  eventId     BigInt?   @map("event_id") // 축제 선택 (GG-ROOM-004)
+  ownerUserId BigInt?   @map("owner_user_id") // 그룹 방장만 (1:1=NULL, GG-MATE-014)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  endedAt     DateTime? @map("ended_at") @db.Timestamptz
+
+  matchRequests MatchRequest[]
+  messages      ChatRoomMessage[]
+  memberships   GroupMembership[]
+  appointments  Appointment[]
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_chat_rooms_active")
+  @@map("chat_rooms")
+}
+
+// ============ CHAT_ROOM_MESSAGE (ADR 0007 결정6) ============
+// 텍스트(≤1000자) + 이미지(S3 URL) + 스티커 + 시스템.
+// WARNING: ChatMessage(LLM 검색)과 완전 별개.
+model ChatRoomMessage {
+  messageId     BigInt   @id @default(autoincrement()) @map("message_id")
+  chatRoomId    BigInt   @map("chat_room_id")
+  senderUserId  BigInt?  @map("sender_user_id") // null = 시스템 메시지
+  messageType   String   @map("message_type") @db.VarChar(10)
+  // 'text' | 'image' | 'sticker' | 'system'
+  body          String?  @db.VarChar(1000)
+  attachmentUrl String?  @map("attachment_url") @db.VarChar(500)
+  stickerId     String?  @map("sticker_id") @db.VarChar(50)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+
+  @@index([chatRoomId, createdAt], map: "idx_chat_room_msg_room")
+  @@map("chat_room_messages")
+}
+
+// ============ GROUP_MEMBERSHIP (ADR 0007 결정11) ============
+// 그룹/1:1 채팅방 멤버십. 1:1=role:'member' 양쪽. 그룹=방장:'owner'/일반:'member'.
+// instantKickUsed: 방장(role='owner') 행에만 의미있음 — 방 전체 1회 소진 카운터.
+model GroupMembership {
+  membershipId    BigInt    @id @default(autoincrement()) @map("membership_id")
+  chatRoomId      BigInt    @map("chat_room_id")
+  userId          BigInt    @map("user_id")
+  role            String    @default("member") @db.VarChar(10) // 'owner' | 'member'
+  memberStatus    String    @default("active") @map("member_status") @db.VarChar(20)
+  // 'active' | 'left' | 'kicked' | 'blocked'
+  instantKickUsed Boolean   @default(false) @map("instant_kick_used") // 방장 행에서만 유효
+  lastSeenAt      DateTime? @map("last_seen_at") @db.Timestamptz // 48h 미접속 체크
+  joinedAt        DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  leftAt          DateTime? @map("left_at") @db.Timestamptz
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+  user     User     @relation(fields: [userId], references: [userId])
+
+  @@unique([chatRoomId, userId], map: "uq_group_membership_room_user")
+  @@index([chatRoomId, memberStatus], map: "idx_group_membership_room_active")
+  @@index([lastSeenAt], map: "idx_group_membership_last_seen")
+  @@map("group_memberships")
+}
+
+// ============ APPOINTMENT (ADR 0007 결정14 — GG-ROOM-013~020) ============
+// 약속 제안/동의/역제안/캘린더. 시스템메시지만으론 상태 영속 불가.
+// 강퇴투표와 달리 AppointmentVote가 별도로 동의 현황 추적.
+model Appointment {
+  appointmentId  BigInt    @id @default(autoincrement()) @map("appointment_id")
+  chatRoomId     BigInt    @map("chat_room_id")
+  proposerUserId BigInt    @map("proposer_user_id")
+  eventName      String?   @map("event_name") @db.VarChar(200)
+  eventId        BigInt?   @map("event_id") // 연결된 이벤트 (선택)
+  appointedAt    DateTime? @map("appointed_at") @db.Timestamptz // 제안 일시
+  status         String    @default("proposed") @db.VarChar(20)
+  // 'proposed' | 'confirmed' | 'rejected' | 'cancelled' | 'counter_proposed'
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz // +36h
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  chatRoom ChatRoom          @relation(fields: [chatRoomId], references: [chatRoomId])
+  votes    AppointmentVote[]
+
+  @@index([chatRoomId, status], map: "idx_appointment_room_status")
+  @@index([expiresAt, status], map: "idx_appointment_expires")
+  @@map("appointments")
+}
+
+// ============ APPOINTMENT_VOTE (GG-ROOM-016~018 동의/거절/역제안) ============
+model AppointmentVote {
+  voteId        BigInt    @id @default(autoincrement()) @map("vote_id")
+  appointmentId BigInt    @map("appointment_id")
+  userId        BigInt    @map("user_id")
+  vote          String    @db.VarChar(20) // 'agree' | 'reject' | 'counter' | 'pending'
+  counterAt     DateTime? @map("counter_at") @db.Timestamptz // 역제안 일시
+  counterTime   DateTime? @map("counter_time") @db.Timestamptz // 역제안 제안 시각
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  appointment Appointment @relation(fields: [appointmentId], references: [appointmentId])
+
+  @@unique([appointmentId, userId], map: "uq_appointment_vote_user")
+  @@map("appointment_votes")
+}
+
+// ============ BLOCK (ADR 0007 결정14 — GG-REPORT-009) ============
+// 차단 레코드. 차단된 사용자는 추천/신청/채팅에서 제외.
+model Block {
+  blockId       BigInt   @id @default(autoincrement()) @map("block_id")
+  blockerId     BigInt   @map("blocker_id")
+  blockedUserId BigInt   @map("blocked_user_id")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blocker     User @relation("BlockSender", fields: [blockerId], references: [userId])
+  blockedUser User @relation("BlockReceiver", fields: [blockedUserId], references: [userId])
+
+  @@unique([blockerId, blockedUserId], map: "uq_block_pair")
+  @@index([blockerId], map: "idx_block_blocker")
+  @@index([blockedUserId], map: "idx_block_blocked_user")
+  @@map("blocks")
 }
