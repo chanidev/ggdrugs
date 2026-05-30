@@ -65,31 +65,36 @@ model User {
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
 
-  region                Region?               @relation(fields: [regionId], references: [regionId])
-  uploaderProfile       UploaderProfile?
-  adminProfile          AdminProfile?
-  vibeAssignments       EventVibeAssignment[]
-  approvalLogs          ApprovalLog[]
-  bookmarks             Bookmark[]
-  reviews               Review[]
-  notifications         Notification[]
-  subscriptions         EventSubscription[]
-  searchLogs            SearchLog[]
-  chatSessions          ChatSession[]
-  photoAlbums           PhotoAlbum[]
-  tasteProfiles         UserTasteProfile[]
-  authSessions          AuthSession[]
-  adminAuditLogs        AdminAuditLog[]
-  posts                 Post[]
-  comments              Comment[]
-  postLikes             PostLike[]
-  mateProfile           MateProfile?
-  mateIndex             MateIndex?
-  sentMatchRequests     MatchRequest[]        @relation("Requester")
-  receivedMatchRequests MatchRequest[]        @relation("Receiver")
-  chatRoomMemberships   GroupMembership[]
-  blocksGiven           Block[]               @relation("BlockSender")
-  blocksReceived        Block[]               @relation("BlockReceiver")
+  region                  Region?               @relation(fields: [regionId], references: [regionId])
+  uploaderProfile         UploaderProfile?
+  adminProfile            AdminProfile?
+  vibeAssignments         EventVibeAssignment[]
+  approvalLogs            ApprovalLog[]
+  bookmarks               Bookmark[]
+  reviews                 Review[]
+  notifications           Notification[]
+  subscriptions           EventSubscription[]
+  searchLogs              SearchLog[]
+  chatSessions            ChatSession[]
+  photoAlbums             PhotoAlbum[]
+  tasteProfiles           UserTasteProfile[]
+  authSessions            AuthSession[]
+  adminAuditLogs          AdminAuditLog[]
+  posts                   Post[]
+  comments                Comment[]
+  postLikes               PostLike[]
+  mateProfile             MateProfile?
+  mateIndex               MateIndex?
+  sentMatchRequests       MatchRequest[]        @relation("Requester")
+  receivedMatchRequests   MatchRequest[]        @relation("Receiver")
+  chatRoomMemberships     GroupMembership[]
+  blocksGiven             Block[]               @relation("BlockSender")
+  blocksReceived          Block[]               @relation("BlockReceiver")
+  mateEvaluationsGiven    MateEvaluation[]      @relation("EvalGiver")
+  mateEvaluationsReceived MateEvaluation[]      @relation("EvalReceiver")
+  festivalSurveys         FestivalSurvey[]
+  festivalReviews         FestivalReview[]
+  creditLedgers           CreditLedger[]
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -888,4 +893,107 @@ model Block {
   @@index([blockerId], map: "idx_block_blocker")
   @@index([blockedUserId], map: "idx_block_blocked_user")
   @@map("blocks")
+}
+
+// ============================================================
+// MATE_EVALUATION (A_900 — GG-REVIEW-001,002,004~010, 와이어 9-15)
+// GG-REVIEW-003은 요구사항 원문(_p2_req_text.txt)에서 결번(002→004 점프).
+// reportedFor: null=신고없음 | 'inappropriate'|'harassing'|'no_show'|'etc'
+// 1 evaluator → 1 evaluation per (appointment, evaluated) — uq_mate_eval_pair
+// [이슈3] 1:1 약속 한정 (ChatRoom.roomType='1:1' 게이트는 BFF 라우트에서 확인).
+// [이슈13] 신고 별도 Report 모델 없음 — Slice 8 범위. 관리자는 reported_for IS NOT NULL 직접 조회.
+// ============================================================
+model MateEvaluation {
+  evalId          BigInt   @id @default(autoincrement()) @map("eval_id")
+  appointmentId   BigInt   @map("appointment_id")
+  evaluatorUserId BigInt   @map("evaluator_user_id")
+  evaluatedUserId BigInt   @map("evaluated_user_id")
+  ratingStars     Int      @map("rating_stars") @db.SmallInt // 1~5
+  q1              Int      @db.SmallInt // 시간약속 1~5
+  q2              Int      @db.SmallInt // 의사소통 1~5
+  q3              Int      @db.SmallInt // 분위기/유쾌함 1~5
+  q4              Int      @db.SmallInt // 재방문의향 1~5
+  comment         String?  @db.VarChar(30) // ≤30 UTF-8 byte (GG-REVIEW-005)
+  reportedFor     String?  @map("reported_for") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  evaluator     User @relation("EvalGiver", fields: [evaluatorUserId], references: [userId])
+  evaluatedUser User @relation("EvalReceiver", fields: [evaluatedUserId], references: [userId])
+
+  @@unique([appointmentId, evaluatorUserId, evaluatedUserId], map: "uq_mate_eval_pair")
+  @@index([evaluatedUserId, createdAt(sort: Desc)], map: "idx_mate_eval_evaluated")
+  @@map("mate_evaluations")
+}
+
+// ============================================================
+// FESTIVAL_SURVEY (A_901 — GG-FEST-REVIEW-001~007, 비공개)
+// 5범주 Likert 1~5: atmosphere, program, food, safety, transport
+// [이슈3] UNIQUE = (appointmentId, userId) — appointmentId 단독 UNIQUE 아님.
+//         그룹(최대 4인) 확장 시 각 멤버가 독립 제출 가능.
+// ============================================================
+model FestivalSurvey {
+  surveyId      BigInt   @id @default(autoincrement()) @map("survey_id")
+  appointmentId BigInt   @map("appointment_id")
+  userId        BigInt   @map("user_id")
+  atmosphere    Int      @db.SmallInt
+  program       Int      @db.SmallInt
+  food          Int      @db.SmallInt
+  safety        Int      @db.SmallInt
+  transport     Int      @db.SmallInt
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@unique([appointmentId, userId], map: "uq_festival_survey_pair")
+  @@map("festival_surveys")
+}
+
+// ============================================================
+// FESTIVAL_REVIEW (A_901 — GG-FEST-REVIEW-008, 공개)
+// [이슈3] UNIQUE = (appointmentId, userId).
+// [이슈4] eventId 추가 — 이벤트 상세 연동 전제 (GG-FEST-REVIEW-008 공개 surfacing).
+//         eventId=null인 약속은 평가 제출 차단(400 event_required).
+//         후기 공개 surfacing(events/:id) 자체는 후속 태스크.
+// ============================================================
+model FestivalReview {
+  reviewId      BigInt   @id @default(autoincrement()) @map("review_id")
+  appointmentId BigInt   @map("appointment_id")
+  userId        BigInt   @map("user_id")
+  eventId       BigInt?  @map("event_id") // Appointment.eventId에서 복사 (null 불가 — 라우트에서 검증)
+  ratingStars   Int      @map("rating_stars") @db.SmallInt // 1~5
+  body          String   @db.VarChar(5000)
+  photoUrls     String[] @map("photo_urls") // TEXT[], max 10 URLs (S3 publicUrl)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@unique([appointmentId, userId], map: "uq_festival_review_pair")
+  @@index([eventId, createdAt(sort: Desc)], map: "idx_festival_review_event")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_festival_review_user")
+  @@map("festival_reviews")
+}
+
+// ============================================================
+// CREDIT_LEDGER (ADR 0007 결정5 옵션C — GG-MY-008, GG-COMM-017)
+// append-only 거래 로그. 잔액 = SUM(pointsAmount) WHERE userId.
+// action 도메인:
+//   'mate_eval_complete'  — 메이트 평가 작성 +10 (Slice 5 구현)
+//   'review_complete'     — 후기 작성 (Slice 5 구현 — 동일 트랜잭션)
+//   'appointment_complete'— 약속 완료 (Slice 7+ placeholder, Slice 5 미구현)
+// 크레딧 적립 +10 상수: ADR 0007 결정5에서 "액수 Open items"로 미정.
+//   이 플랜에서 10으로 가정 고정 — ADR 0007 보강 필요 (에이전트 작업 아님).
+// ============================================================
+model CreditLedger {
+  ledgerId      BigInt   @id @default(autoincrement()) @map("ledger_id")
+  userId        BigInt   @map("user_id")
+  action        String   @db.VarChar(30)
+  pointsAmount  Int      @map("points_amount") // 양수 = 적립
+  appointmentId BigInt?  @map("appointment_id") // 출처 추적
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_credit_ledger_user")
+  @@map("credit_ledgers")
 }
