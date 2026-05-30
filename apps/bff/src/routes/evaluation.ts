@@ -274,23 +274,33 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
   // ── Step E2: review_complete 크레딧 (트랜잭션 밖 bare prisma.*) ──────
   // [리뷰 critical 수정] 트랜잭션이 커밋된 후에 별도 적립.
   // isNewReview=true 이고 FestivalReview 신규 생성인 경우에만 시도.
-  // TOCTOU 최종 방어선: uq_credit_review_complete_user partial unique index
-  //   (20260530150000_add_review_complete_dedup_index/migration.sql).
-  //   P2002 → catch → 무시 (idempotent, 동시 rapid-retry / client double-tap 내성).
+  //
+  // TOCTOU 2-layer dedup:
+  //   1차 방어선: findFirst 사전 확인 — 이미 행이 존재하면 create 건너뜀 (app-layer).
+  //      이유: uq_credit_review_complete_user partial unique index(DB-layer)가
+  //            DB에 아직 적용되지 않은 환경에서도 중복 삽입을 막는다.
+  //   2차 방어선(최종): P2002 catch → 무시 (동시 경합 내성).
+  //      DB index가 적용된 환경에서 초당 수 요청 동시 경합 시 P2002 유발.
   if (isNewReview) {
-    try {
-      await prisma.creditLedger.create({
-        data: {
-          userId: auth.userId,
-          action: 'review_complete',
-          pointsAmount: CREDIT_REVIEW,
-          appointmentId,
-        },
-      });
-    } catch (creditErr) {
-      // uq_credit_review_complete_user 위반: 동시 경합으로 이미 적립됨 → 무시(idempotent).
-      if (!(creditErr instanceof Prisma.PrismaClientKnownRequestError && creditErr.code === 'P2002')) {
-        throw creditErr;
+    const existingReviewCredit = await prisma.creditLedger.findFirst({
+      where: { userId: auth.userId, action: 'review_complete', appointmentId },
+      select: { ledgerId: true },
+    });
+    if (!existingReviewCredit) {
+      try {
+        await prisma.creditLedger.create({
+          data: {
+            userId: auth.userId,
+            action: 'review_complete',
+            pointsAmount: CREDIT_REVIEW,
+            appointmentId,
+          },
+        });
+      } catch (creditErr) {
+        // uq_credit_review_complete_user 위반: 동시 경합으로 이미 적립됨 → 무시(idempotent).
+        if (!(creditErr instanceof Prisma.PrismaClientKnownRequestError && creditErr.code === 'P2002')) {
+          throw creditErr;
+        }
       }
     }
   }
