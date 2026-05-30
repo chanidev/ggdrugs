@@ -94,6 +94,15 @@ import {
   rejectMatchRequest,
   listIncomingRequests,
 } from './routes/match-request.js';
+import {
+  listMyChatRooms,
+  listMessages,
+  selectEvent,
+  proposeAppointment,
+  voteAppointment,
+  leaveRoom,
+  blockMember,
+} from './routes/chat-room.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -334,6 +343,44 @@ export function createApp(): Express {
     '/community/match/request/:matchRequestId/reject',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => rejectMatchRequest(req, res).catch(next),
+  );
+
+  // A_805 채팅방 REST (Task 4 — GG-ROOM-001~025)
+  // NOTE: /mine 을 /:chatRoomId/* 보다 먼저 등록해야 충돌 없음.
+  app.get(
+    '/community/chat-rooms/mine',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyChatRooms(req, res).catch(next),
+  );
+  app.get(
+    '/community/chat-rooms/:chatRoomId/messages',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMessages(req, res).catch(next),
+  );
+  app.patch(
+    '/community/chat-rooms/:chatRoomId/event',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => selectEvent(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/appointment',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => proposeAppointment(req, res).catch(next),
+  );
+  app.patch(
+    '/community/chat-rooms/:chatRoomId/appointment/:appointmentId/vote',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => voteAppointment(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/leave',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => leaveRoom(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/block/:targetUserId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => blockMember(req, res).catch(next),
   );
 
   app.post(

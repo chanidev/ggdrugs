@@ -1,6 +1,7 @@
 /**
  * chat-room-eval.ts — in-process 검증 하니스 (PASS/FAIL)
  * Task 3: 신청 REST (1:1 A_803 / 그룹 A_804 / 수락·거절·목록)
+ * Task 4: 채팅방 REST (메시지이력/약속/이벤트선택/나가기/차단 A_805)
  * 실행: npm run chatroom:eval (apps/bff 에서)
  *
  * WARNING: ChatSession / prisma.chatMessage 를 절대 사용하지 않는다.
@@ -16,6 +17,15 @@ import {
   rejectMatchRequest,
   listIncomingRequests,
 } from '../routes/match-request.js';
+import {
+  listMyChatRooms,
+  listMessages,
+  selectEvent,
+  proposeAppointment,
+  voteAppointment,
+  leaveRoom,
+  blockMember,
+} from '../routes/chat-room.js';
 
 interface MockReq {
   params?: Record<string, string>;
@@ -479,6 +489,335 @@ async function main() {
 
       return f;
     });
+
+    // ─────────────────────────────────────────────────────────────────
+    // TASK 4 — 채팅방 REST (A_805)
+    // 별도 1:1 채팅방 생성 (u1↔u2) 후 모든 케이스 실행
+    // ─────────────────────────────────────────────────────────────────
+
+    // Task 4 전용 채팅방 생성
+    const t4Room = await prisma.chatRoom.create({
+      data: { roomType: '1:1', maxMembers: 2, status: 'active', ownerUserId: null },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t4Room.chatRoomId, userId: u1.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: t4Room.chatRoomId, userId: u2.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+    // 메시지 3건 미리 삽입
+    await prisma.chatRoomMessage.createMany({
+      data: [
+        { chatRoomId: t4Room.chatRoomId, senderUserId: u1.userId, messageType: 'text', body: 'hello' },
+        { chatRoomId: t4Room.chatRoomId, senderUserId: u2.userId, messageType: 'text', body: 'world' },
+        { chatRoomId: t4Room.chatRoomId, senderUserId: null,      messageType: 'system', body: '채팅방이 시작되었습니다' },
+      ],
+    });
+
+    // ── CASE T4-1: room.messages.paginated ─────────────────────────────
+    await check('room.messages.paginated', async () => {
+      const res = mockRes();
+      await listMessages(
+        mockReq({ auth: auth1, params: { chatRoomId: t4Room.chatRoomId.toString() }, query: { limit: '2' } }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+      const b = res._c.json as { messages?: unknown[]; nextCursor?: string | null };
+      if (!Array.isArray(b?.messages)) f.push('messages not array');
+      if ((b?.messages?.length ?? 0) !== 2) f.push(`messages.length ${b?.messages?.length} != 2`);
+      // limit=2, 총 3건이므로 nextCursor가 있어야 함
+      if (!b?.nextCursor) f.push('nextCursor should be set (more pages)');
+      return f;
+    });
+
+    // ── CASE T4-2: room.event.selected ─────────────────────────────────
+    // approved event 가 DB 에 있는지 먼저 확인
+    const approvedEvent = await prisma.event.findFirst({
+      where: { approvalStatus: 'approved', isDeleted: false },
+      select: { eventId: true },
+    });
+    await check('room.event.selected', async () => {
+      const f: string[] = [];
+      if (!approvedEvent) { f.push('no approved event in DB for test'); return f; }
+      const res = mockRes();
+      await selectEvent(
+        mockReq({ auth: auth1, params: { chatRoomId: t4Room.chatRoomId.toString() }, body: { eventId: approvedEvent.eventId.toString() } }),
+        res,
+      );
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+      const b = res._c.json as { eventId?: string };
+      if (b?.eventId !== approvedEvent.eventId.toString()) f.push(`eventId ${b?.eventId} != ${approvedEvent.eventId}`);
+      // DB 검증
+      const room = await prisma.chatRoom.findUnique({ where: { chatRoomId: t4Room.chatRoomId }, select: { eventId: true } });
+      if (room?.eventId?.toString() !== approvedEvent.eventId.toString()) f.push('ChatRoom.eventId not updated in DB');
+      return f;
+    });
+
+    // ── CASE T4-3: room.appointment.propose.ok ─────────────────────────
+    let proposedAppointmentId = '';
+    await check('room.appointment.propose.ok', async () => {
+      const res = mockRes();
+      const futureAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(); // +7days
+      await proposeAppointment(
+        mockReq({
+          auth: auth1,
+          params: { chatRoomId: t4Room.chatRoomId.toString() },
+          body: { appointedAt: futureAt, eventName: '한강 불꽃축제' },
+        }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 201) f.push(`status ${res._c.status} != 201`);
+      const b = res._c.json as { appointmentId?: string; status?: string; expiresAt?: string };
+      if (!b?.appointmentId) f.push('no appointmentId');
+      if (b?.status !== 'proposed') f.push(`status '${b?.status}' != 'proposed'`);
+      if (!b?.expiresAt) f.push('no expiresAt');
+      if (b?.appointmentId) proposedAppointmentId = b.appointmentId;
+
+      // DB 검증: AppointmentVote 2건(pending)
+      if (proposedAppointmentId) {
+        const votes = await prisma.appointmentVote.findMany({
+          where: { appointmentId: BigInt(proposedAppointmentId) },
+          select: { vote: true },
+        });
+        if (votes.length !== 2) f.push(`${votes.length} votes != 2`);
+        if (votes.some((v) => v.vote !== 'pending')) f.push('some vote != pending');
+      }
+      return f;
+    });
+
+    // ── CASE T4-4: room.appointment.all_agree ──────────────────────────
+    await check('room.appointment.all_agree', async () => {
+      const f: string[] = [];
+      if (!proposedAppointmentId) { f.push('proposedAppointmentId not set'); return f; }
+
+      // u1 동의
+      const res1 = mockRes();
+      await voteAppointment(
+        mockReq({
+          auth: auth1,
+          params: { chatRoomId: t4Room.chatRoomId.toString(), appointmentId: proposedAppointmentId },
+          body: { vote: 'agree' },
+        }),
+        res1,
+      );
+      if (res1._c.status !== 200) f.push(`u1 vote status ${res1._c.status} != 200`);
+
+      // u2 동의 → 전원 동의 → confirmed
+      const res2 = mockRes();
+      await voteAppointment(
+        mockReq({
+          auth: auth2,
+          params: { chatRoomId: t4Room.chatRoomId.toString(), appointmentId: proposedAppointmentId },
+          body: { vote: 'agree' },
+        }),
+        res2,
+      );
+      if (res2._c.status !== 200) f.push(`u2 vote status ${res2._c.status} != 200`);
+      const b = res2._c.json as { status?: string };
+      if (b?.status !== 'confirmed') f.push(`status '${b?.status}' != 'confirmed'`);
+
+      // DB 검증
+      const appt = await prisma.appointment.findUnique({
+        where: { appointmentId: BigInt(proposedAppointmentId) },
+        select: { status: true },
+      });
+      if (appt?.status !== 'confirmed') f.push(`DB status '${appt?.status}' != 'confirmed'`);
+      return f;
+    });
+
+    // ── CASE T4-5: room.appointment.counter — 역제안 ──────────────────
+    // 새 약속 제안 후 역제안
+    let counterApptId = '';
+    await check('room.appointment.counter', async () => {
+      const f: string[] = [];
+      // 새 약속 제안
+      const propRes = mockRes();
+      await proposeAppointment(
+        mockReq({
+          auth: auth1,
+          params: { chatRoomId: t4Room.chatRoomId.toString() },
+          body: { appointedAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString() },
+        }),
+        propRes,
+      );
+      if (propRes._c.status !== 201) { f.push(`propose status ${propRes._c.status} != 201`); return f; }
+      const pb = propRes._c.json as { appointmentId?: string };
+      if (!pb?.appointmentId) { f.push('no appointmentId'); return f; }
+      counterApptId = pb.appointmentId;
+
+      // u2 역제안
+      const voteRes = mockRes();
+      await voteAppointment(
+        mockReq({
+          auth: auth2,
+          params: { chatRoomId: t4Room.chatRoomId.toString(), appointmentId: counterApptId },
+          body: {
+            vote: 'counter',
+            counterAt: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+        }),
+        voteRes,
+      );
+      if (voteRes._c.status !== 200) f.push(`counter vote status ${voteRes._c.status} != 200`);
+      const vb = voteRes._c.json as { status?: string };
+      if (vb?.status !== 'counter_proposed') f.push(`status '${vb?.status}' != 'counter_proposed'`);
+
+      // DB 검증
+      const appt = await prisma.appointment.findUnique({
+        where: { appointmentId: BigInt(counterApptId) },
+        select: { status: true },
+      });
+      if (appt?.status !== 'counter_proposed') f.push(`DB status '${appt?.status}' != 'counter_proposed'`);
+      return f;
+    });
+
+    // ── CASE T4-6: room.block.creates_block_record ─────────────────────
+    // 그룹방 만들어서 u1이 u2를 차단
+    const t4GroupRoom = await prisma.chatRoom.create({
+      data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: u1.userId },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t4GroupRoom.chatRoomId, userId: u1.userId, role: 'owner', memberStatus: 'active' },
+        { chatRoomId: t4GroupRoom.chatRoomId, userId: u2.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+    await check('room.block.creates_block_record', async () => {
+      const res = mockRes();
+      await blockMember(
+        mockReq({
+          auth: auth1,
+          params: { chatRoomId: t4GroupRoom.chatRoomId.toString(), targetUserId: u2.userId.toString() },
+        }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+
+      // DB 검증: Block 레코드 존재
+      const blk = await prisma.block.findUnique({
+        where: { blockerId_blockedUserId: { blockerId: u1.userId, blockedUserId: u2.userId } },
+        select: { blockId: true },
+      });
+      if (!blk) f.push('Block record not created in DB');
+
+      // 대상 멤버십 'blocked' 상태
+      const targetMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t4GroupRoom.chatRoomId, userId: u2.userId },
+        select: { memberStatus: true },
+      });
+      if (targetMem?.memberStatus !== 'blocked') f.push(`memberStatus '${targetMem?.memberStatus}' != 'blocked'`);
+
+      // 시스템 메시지 생성 확인
+      const sysMsg = await prisma.chatRoomMessage.findFirst({
+        where: { chatRoomId: t4GroupRoom.chatRoomId, messageType: 'system', body: '멤버가 차단되었습니다' },
+        select: { messageId: true },
+      });
+      if (!sysMsg) f.push('system message "멤버가 차단되었습니다" not found');
+
+      // 클린업
+      await prisma.block.deleteMany({ where: { blockerId: u1.userId, blockedUserId: u2.userId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t4GroupRoom.chatRoomId } });
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t4GroupRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t4GroupRoom.chatRoomId } });
+      return f;
+    });
+
+    // ── CASE T4-7: room.leave.1to1_ends ─────────────────────────────────
+    // 1:1 방에서 나가기 → status='ended'
+    // t4Room은 이미 eventId 업데이트+약속 등이 추가됐지만 멤버십은 여전히 active 상태
+    await check('room.leave.1to1_ends', async () => {
+      const res = mockRes();
+      await leaveRoom(
+        mockReq({ auth: auth1, params: { chatRoomId: t4Room.chatRoomId.toString() } }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+
+      // DB 검증: 채팅방 status='ended'
+      const room = await prisma.chatRoom.findUnique({
+        where: { chatRoomId: t4Room.chatRoomId },
+        select: { status: true, endedAt: true },
+      });
+      if (room?.status !== 'ended') f.push(`room status '${room?.status}' != 'ended'`);
+      if (!room?.endedAt) f.push('endedAt not set');
+
+      // u1 멤버십 'left'
+      const mem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t4Room.chatRoomId, userId: u1.userId },
+        select: { memberStatus: true },
+      });
+      if (mem?.memberStatus !== 'left') f.push(`memberStatus '${mem?.memberStatus}' != 'left'`);
+      return f;
+    });
+
+    // ── CASE T4-8: room.leave.group_owner_transfer ─────────────────────
+    // 그룹 방장이 나가기 → 다음 멤버로 ownerUserId 이전
+    const suffix2 = Date.now();
+    const synU3 = await prisma.user.create({
+      data: { socialUid: `leave_test_${suffix2}`, authProvider: 'dev', nickname: `LeaveTest${suffix2}`, activeRole: 'user' },
+    });
+    const t4GroupRoom2 = await prisma.chatRoom.create({
+      data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: u1.userId },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t4GroupRoom2.chatRoomId, userId: u1.userId, role: 'owner', memberStatus: 'active' },
+        { chatRoomId: t4GroupRoom2.chatRoomId, userId: synU3.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+    await check('room.leave.group_owner_transfer', async () => {
+      const res = mockRes();
+      await leaveRoom(
+        mockReq({ auth: auth1, params: { chatRoomId: t4GroupRoom2.chatRoomId.toString() } }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+
+      // DB 검증: ownerUserId → synU3
+      const room = await prisma.chatRoom.findUnique({
+        where: { chatRoomId: t4GroupRoom2.chatRoomId },
+        select: { ownerUserId: true, status: true },
+      });
+      if (room?.ownerUserId?.toString() !== synU3.userId.toString()) {
+        f.push(`ownerUserId ${room?.ownerUserId} != synU3 ${synU3.userId}`);
+      }
+      if (room?.status !== 'active') f.push(`room status '${room?.status}' should still be 'active'`);
+
+      // synU3 멤버십 role='owner'
+      const newOwnerMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t4GroupRoom2.chatRoomId, userId: synU3.userId },
+        select: { role: true },
+      });
+      if (newOwnerMem?.role !== 'owner') f.push(`synU3 role '${newOwnerMem?.role}' != 'owner'`);
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { userId: synU3.userId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t4GroupRoom2.chatRoomId } });
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t4GroupRoom2.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t4GroupRoom2.chatRoomId } });
+      await prisma.user.delete({ where: { userId: synU3.userId } });
+      return f;
+    });
+
+    // TASK 4 클린업 — t4Room (leave 이후 ended)
+    await prisma.notification.deleteMany({
+      where: { relatedEntityId: { in: (await prisma.appointment.findMany({ where: { chatRoomId: t4Room.chatRoomId }, select: { appointmentId: true } })).map((a) => a.appointmentId) } },
+    });
+    await prisma.appointmentVote.deleteMany({
+      where: { appointment: { chatRoomId: t4Room.chatRoomId } },
+    });
+    await prisma.appointment.deleteMany({ where: { chatRoomId: t4Room.chatRoomId } });
+    await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t4Room.chatRoomId } });
+    await prisma.groupMembership.deleteMany({ where: { chatRoomId: t4Room.chatRoomId } });
+    await prisma.chatRoom.delete({ where: { chatRoomId: t4Room.chatRoomId } });
 
   } finally {
     // 클린업
