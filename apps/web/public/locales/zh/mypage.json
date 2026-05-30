@@ -50,6 +50,13 @@
     "starsAria": "评分 {{star}} / 5",
     "totalCount": "共 {{count}} 条评价"
   },
+  "dimension": {
+    "category": "感兴趣的类别",
+    "region": "感兴趣的地区",
+    "vibe": "感兴趣的氛围",
+    "semantic": "AI推荐",
+    "matchLabel": "{{label}}匹配"
+  },
   "reco": {
     "empty": "没有推荐活动。",
     "loadError": "加载失败。",
@@ -125,6 +132,7 @@
     "reviewEdit": "编辑评价",
     "reviewAfterEnd": "结束后评价",
     "reviewAfterEndShort": "结束后写",
+    "reviewAfterEndTooltip": "活动结束日期后可写评价 (GG-REVIEW-001)",
     "today": "今天",
     "prevMonth": "上个月",
     "nextMonth": "下个月",

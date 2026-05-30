@@ -8,11 +8,11 @@ import { getMyCredits } from '../../../lib/api/credits.js';
 import { useCurrentUser } from '../../../lib/auth-context.js';
 import { LanguageToggle } from '../../../components/LanguageToggle.js';
 
-/** GG-POST-004: 카테고리 레이블 — 하드코딩 기본값 (i18n 미적용 fallback 용) */
+/** GG-POST-004: 카테고리 레이블 — i18n 번들 로드 실패 시 영어 fallback (한국어 고정 제거). */
 export const CATEGORY_LABELS: Record<PostCategory, string> = {
-  festival_story: '축제 이야기',
-  mate_finder: '메이트 찾기',
-  free: '자유게시판',
+  festival_story: 'Festival Story',
+  mate_finder: 'Mate Finder',
+  free: 'Free Board',
 };
 
 /** i18n 적용 카테고리 레이블 훅 */

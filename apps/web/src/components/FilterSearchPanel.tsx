@@ -159,8 +159,19 @@ export function FilterSearchPanel({
     return Array.from(map.entries()).map(([sido, items]) => ({ sido, items }));
   }, [regions]);
 
-  /** 어떤 sido 섹션이 펼쳐져 있는지. 기본은 서울만 펼침 (기존 UX 유지). */
-  const [expandedSido, setExpandedSido] = useState<Set<string>>(new Set(['서울']));
+  /** 어떤 sido 섹션이 펼쳐져 있는지. 기본은 첫 번째 sido 섹션 펼침 (한국어 고정 제거). */
+  const [expandedSido, setExpandedSido] = useState<Set<string>>(new Set());
+
+  /** regionsBySido 첫 로드 시 첫 번째 sido 자동 펼침 (한국어 '서울' 하드코딩 대신). */
+  useEffect(() => {
+    if (regionsBySido.length > 0) {
+      setExpandedSido((prev) => {
+        if (prev.size > 0) return prev; // 사용자가 이미 조작했으면 덮어쓰지 않음
+        return new Set([regionsBySido[0]!.sido]);
+      });
+    }
+  }, [regionsBySido]);
+
   const toggleSido = (sido: string) => {
     setExpandedSido((prev) => {
       const next = new Set(prev);
@@ -275,7 +286,7 @@ export function FilterSearchPanel({
                       onClick={() => toggleSido(sido)}
                       className="flex w-full items-center justify-between px-3 py-2 text-[13px] font-medium text-(--color-text)"
                     >
-                      <span>{sido}{selectedCount > 0 ? ` (${selectedCount})` : ''}</span>
+                      <span>{t(`region.sido.${sido}`, { defaultValue: sido })}{selectedCount > 0 ? ` (${selectedCount})` : ''}</span>
                       <span className="text-(--color-text-subtle)">{expanded ? '−' : '+'}</span>
                     </button>
                     {expanded && (

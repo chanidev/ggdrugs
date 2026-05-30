@@ -1,5 +1,11 @@
 {
   "dock": {
+    "suggestions": [
+      "Đi cùng gia đình cuối tuần này",
+      "Hội nghị AI ở Gangnam",
+      "Phù hợp đi một mình",
+      "Lễ hội ban đêm"
+    ],
     "placeholder": "Tìm kiếm sự kiện bằng ngôn ngữ tự nhiên…",
     "inputAriaLabel": "Tìm kiếm sự kiện bằng ngôn ngữ tự nhiên",
     "submit": "Tìm kiếm",

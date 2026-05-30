@@ -13,7 +13,6 @@ import { BottomSheet, type SheetSnap } from '../components/mobile/BottomSheet';
 import { FilterSearchPanel } from '../components/FilterSearchPanel';
 import { FullListPanel } from '../components/FullListPanel';
 import { EventSummaryContent } from '../components/EventSummaryPanel';
-import { SUGGESTIONS } from '../data/mock';
 import { PhaseBadge } from '../components/PhaseBadge';
 import {
   ErrorRetryButton,
@@ -356,7 +355,9 @@ function MobileChatTab({
   /** v4-A — error 풍선의 "다시 시도" 클릭 콜백. */
   onRetry?: ((retryUserText: string) => void) | undefined;
 }) {
-  const { t } = useTranslation('navigation');
+  const { t: tNav } = useTranslation('navigation');
+  const { t: tChat } = useTranslation('chat');
+  const suggestions = tChat('dock.suggestions', { returnObjects: true, defaultValue: [] }) as string[];
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lastMsg = messages[messages.length - 1];
   useEffect(() => {
@@ -369,8 +370,8 @@ function MobileChatTab({
       className="flex min-h-0 flex-1 flex-col"
       onSubmit={(e) => {
         e.preventDefault();
-        const t = value.trim();
-        if (t) onSubmit(t);
+        const txt = value.trim();
+        if (txt) onSubmit(txt);
       }}
     >
       <div
@@ -380,10 +381,10 @@ function MobileChatTab({
         {messages.length === 0 ? (
           <div className="flex flex-col gap-3">
             <p className="m-0 text-[12px] leading-[1.5] text-(--color-text-muted)">
-              {t('mobile.chatHint')}
+              {tNav('mobile.chatHint')}
             </p>
             <ul className="flex flex-col gap-1.5">
-              {SUGGESTIONS.map((s) => (
+              {suggestions.map((s) => (
                 <li key={s}>
                   <button
                     type="button"
@@ -454,15 +455,15 @@ function MobileChatTab({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={t('mobile.chatPlaceholder')}
-            aria-label={t('mobile.chatAriaInput')}
+            placeholder={tNav('mobile.chatPlaceholder')}
+            aria-label={tNav('mobile.chatAriaInput')}
             className="h-11 w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) pl-9 pr-3 text-[14.5px] text-(--color-text) placeholder:text-(--color-text-subtle) transition-[border-color,box-shadow] duration-[180ms] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)] focus:outline-none"
           />
         </div>
         <button
           type="submit"
           disabled={!value.trim()}
-          aria-label={t('mobile.chatAriaSend')}
+          aria-label={tNav('mobile.chatAriaSend')}
           className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-accent) text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Icon name="send" size={15} />

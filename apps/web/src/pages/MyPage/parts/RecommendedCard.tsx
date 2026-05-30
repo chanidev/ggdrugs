@@ -1,15 +1,10 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { PhaseBadge } from '../../../components/PhaseBadge';
 import { type RecommendedEventItem } from '../../../lib/api';
 
-const DIM_LABEL: Record<string, string> = {
-  category: '관심 종류',
-  region: '관심 지역',
-  vibe: '관심 성향',
-  semantic: 'AI 추천', // Qdrant personalized — mean vector kNN
-};
-
 export function RecommendedCard({ item }: { item: RecommendedEventItem }) {
+  const { t } = useTranslation('mypage');
   const date =
     item.startDate === item.endDate ? item.startDate : `${item.startDate} — ${item.endDate}`;
   const region = item.region.sigunguName
@@ -50,9 +45,9 @@ export function RecommendedCard({ item }: { item: RecommendedEventItem }) {
               <span
                 key={d}
                 className="inline-flex items-center rounded-(--radius-sm) bg-(--color-accent)/10 px-1.5 py-[1px] text-[10px] font-medium text-(--color-accent)"
-                title={`${DIM_LABEL[d] ?? d} 매칭`}
+                title={t('dimension.matchLabel', { label: t(`dimension.${d}`, { defaultValue: d }) })}
               >
-                ✦ {DIM_LABEL[d] ?? d}
+                ✦ {t(`dimension.${d}`, { defaultValue: d })}
               </span>
             ))}
           </div>

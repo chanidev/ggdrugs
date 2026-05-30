@@ -50,6 +50,13 @@
     "starsAria": "Đánh giá {{star}} / 5",
     "totalCount": "{{count}} đánh giá"
   },
+  "dimension": {
+    "category": "Danh mục quan tâm",
+    "region": "Khu vực quan tâm",
+    "vibe": "Phong cách quan tâm",
+    "semantic": "Gợi ý AI",
+    "matchLabel": "Khớp {{label}}"
+  },
   "reco": {
     "empty": "Không có sự kiện gợi ý nào.",
     "loadError": "Không tải được.",
@@ -125,6 +132,7 @@
     "reviewEdit": "Chỉnh sửa đánh giá",
     "reviewAfterEnd": "Đánh giá sau khi kết thúc",
     "reviewAfterEndShort": "Viết sau khi kết thúc",
+    "reviewAfterEndTooltip": "Có thể viết đánh giá sau ngày kết thúc sự kiện (GG-REVIEW-001)",
     "today": "Hôm nay",
     "prevMonth": "Tháng trước",
     "nextMonth": "Tháng sau",

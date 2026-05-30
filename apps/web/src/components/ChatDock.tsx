@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { SUGGESTIONS } from '../data/mock';
 import { Icon } from './Icon';
 import { PhaseBadge } from './PhaseBadge';
 import type { ChatSuggestion } from '../lib/api';
@@ -57,6 +56,7 @@ export function ChatDock({
   onToggleCollapsed: () => void;
 }) {
   const { t } = useTranslation('chat');
+  const suggestions = t('dock.suggestions', { returnObjects: true, defaultValue: [] }) as string[];
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lastMsg = messages[messages.length - 1];
   useEffect(() => {
@@ -154,7 +154,7 @@ export function ChatDock({
             <span>{t('dock.eyebrow')}</span>
           </div>
           <div className="mb-2.5 flex flex-wrap gap-1.5">
-            {SUGGESTIONS.map((s) => (
+            {suggestions.map((s) => (
               <button
                 key={s}
                 type="button"

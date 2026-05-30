@@ -1,5 +1,11 @@
 {
   "dock": {
+    "suggestions": [
+      "这个周末和家人一起",
+      "江南AI会议",
+      "适合独自参加",
+      "夜间举办的节日"
+    ],
     "placeholder": "用自然语言搜索活动…",
     "inputAriaLabel": "用自然语言搜索活动",
     "submit": "搜索",

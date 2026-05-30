@@ -1,5 +1,11 @@
 {
   "dock": {
+    "suggestions": [
+      "Sortie en famille ce week-end",
+      "Conférence IA à Gangnam",
+      "Idéal en solo",
+      "Festival nocturne"
+    ],
     "placeholder": "Rechercher des événements en langage naturel…",
     "inputAriaLabel": "Rechercher des événements en langage naturel",
     "submit": "Rechercher",

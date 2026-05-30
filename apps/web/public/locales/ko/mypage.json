@@ -50,6 +50,13 @@
     "starsAria": "별점 {{star}} / 5",
     "totalCount": "{{count}}개"
   },
+  "dimension": {
+    "category": "관심 종류",
+    "region": "관심 지역",
+    "vibe": "관심 성향",
+    "semantic": "AI 추천",
+    "matchLabel": "{{label}} 매칭"
+  },
   "reco": {
     "empty": "추천 이벤트가 없어요.",
     "loadError": "불러오지 못했어요.",
@@ -129,6 +136,7 @@
     "reviewEdit": "리뷰 수정",
     "reviewAfterEnd": "리뷰는 종료 후",
     "reviewAfterEndShort": "종료 후 작성",
+    "reviewAfterEndTooltip": "이벤트 종료일 이후에 작성 가능 (GG-REVIEW-001)",
     "legend": {
       "upcoming": "예정",
       "ongoing": "진행중",

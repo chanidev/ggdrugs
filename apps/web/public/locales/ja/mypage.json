@@ -50,6 +50,13 @@
     "starsAria": "評価 {{star}} / 5",
     "totalCount": "{{count}}件"
   },
+  "dimension": {
+    "category": "興味のあるカテゴリ",
+    "region": "興味のある地域",
+    "vibe": "興味のある雰囲気",
+    "semantic": "AIおすすめ",
+    "matchLabel": "{{label}}マッチ"
+  },
   "reco": {
     "empty": "おすすめイベントがありません。",
     "loadError": "読み込みに失敗しました。",
@@ -125,6 +132,7 @@
     "reviewEdit": "レビューを編集",
     "reviewAfterEnd": "終了後にレビュー",
     "reviewAfterEndShort": "終了後に書く",
+    "reviewAfterEndTooltip": "イベント終了日後に作成可能 (GG-REVIEW-001)",
     "today": "今日",
     "prevMonth": "前の月",
     "nextMonth": "次の月",

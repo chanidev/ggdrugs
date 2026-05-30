@@ -116,7 +116,7 @@ export function CalendarSummaryCard({
           <span
             aria-disabled="true"
             className="inline-flex h-8 flex-1 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-dashed border-(--color-border) text-[11.5px] text-(--color-text-subtle)"
-            title="이벤트 종료일 이후에 작성 가능 (GG-REVIEW-001)"
+            title={t('calendar.reviewAfterEndTooltip')}
           >
             {phase === 'upcoming' ? t('calendar.reviewAfterEnd') : t('calendar.reviewAfterEndShort')}
           </span>

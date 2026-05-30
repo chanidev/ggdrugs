@@ -50,6 +50,13 @@
     "starsAria": "Évaluation {{star}} / 5",
     "totalCount": "{{count}} avis"
   },
+  "dimension": {
+    "category": "Catégorie d'intérêt",
+    "region": "Région d'intérêt",
+    "vibe": "Ambiance d'intérêt",
+    "semantic": "Recommandation IA",
+    "matchLabel": "Correspondance {{label}}"
+  },
   "reco": {
     "empty": "Aucun événement recommandé.",
     "loadError": "Chargement échoué.",
@@ -125,6 +132,7 @@
     "reviewEdit": "Modifier l'avis",
     "reviewAfterEnd": "Avis après fin",
     "reviewAfterEndShort": "Écrire après fin",
+    "reviewAfterEndTooltip": "Disponible après la date de fin de l'événement (GG-REVIEW-001)",
     "today": "Aujourd'hui",
     "prevMonth": "Mois précédent",
     "nextMonth": "Mois suivant",

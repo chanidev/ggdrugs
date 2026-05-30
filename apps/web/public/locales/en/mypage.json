@@ -50,6 +50,13 @@
     "starsAria": "Rating {{star}} / 5",
     "totalCount": "{{count}} reviews"
   },
+  "dimension": {
+    "category": "Interest Category",
+    "region": "Interest Region",
+    "vibe": "Interest Vibe",
+    "semantic": "AI Recommendation",
+    "matchLabel": "{{label}} Match"
+  },
   "reco": {
     "empty": "No recommended events.",
     "loadError": "Failed to load.",
@@ -125,6 +132,7 @@
     "reviewEdit": "Edit review",
     "reviewAfterEnd": "Review after end",
     "reviewAfterEndShort": "Write after end",
+    "reviewAfterEndTooltip": "Review available after event end date (GG-REVIEW-001)",
     "today": "Today",
     "prevMonth": "Previous Month",
     "nextMonth": "Next Month",
