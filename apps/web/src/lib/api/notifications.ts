@@ -1,7 +1,7 @@
 import { BFF_URL, withCredentials } from './client.js';
 
 // =============================================================
-// A_500 알림 센터
+// A_806 / A_500 알림 센터 — Slice 6 확장
 // =============================================================
 
 export interface MyNotification {
@@ -12,6 +12,16 @@ export interface MyNotification {
   readAt: string | null;
   createdAt: string;
   eventAvailable: boolean;
+  // Slice 6 추가
+  notificationType: string | null;
+  // match_request/group_invite: matchRequestId (relatedEntityType='match_request')
+  //                            또는 chatRoomId (relatedEntityType='chat_room', 수락됨 알림)
+  // appointment/appointment_update/mate_eval: appointmentId (relatedEntityType='appointment')
+  // chat_message/kick_vote/vacancy_notification: chatRoomId
+  relatedEntityId: string | null;
+  relatedEntityType: string | null;
+  // appointment/appointment_update/mate_eval 타입에만 값이 있음 (BFF Appointment 조인)
+  relatedChatRoomId: string | null;
 }
 
 export interface MyNotificationsResponse {
@@ -40,7 +50,7 @@ export async function fetchMyNotifications(
 export async function fetchUnreadNotificationCount(signal?: AbortSignal): Promise<number> {
   const init = withCredentials(signal ? { signal } : {});
   const res = await fetch(`${BFF_URL}/me/notifications/unread-count`, init);
-  if (res.status === 401) return 0; // 비로그인은 0 으로 취급
+  if (res.status === 401) return 0;
   if (!res.ok) throw new Error(`GET /me/notifications/unread-count ${res.status}`);
   const data = (await res.json()) as { count: number };
   return data.count;
@@ -64,4 +74,21 @@ export async function markAllNotificationsRead(): Promise<number> {
   if (!res.ok) throw new Error(`POST /me/notifications/read-all ${res.status}`);
   const data = (await res.json()) as { updated: number };
   return data.updated;
+}
+
+/**
+ * GG-NOTI-008/009/010/011: match_request / group_invite 수락/거절
+ * 대상: relatedEntityType === 'match_request' (relatedEntityId = matchRequestId)인 알림만 호출
+ * 기존 `PATCH /community/match/request/:id/accept|reject` 엔드포인트 재사용.
+ */
+export async function respondMatchRequest(
+  matchRequestId: string,
+  action: 'accept' | 'reject',
+): Promise<void> {
+  const res = await fetch(
+    `${BFF_URL}/community/match/request/${encodeURIComponent(matchRequestId)}/${action}`,
+    withCredentials({ method: 'PATCH' }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) throw new Error(`PATCH match request ${action} ${res.status}`);
 }
