@@ -775,3 +775,54 @@ def events_delete(req: EventDeleteRequest) -> EventDeleteResponse:
         raise HTTPException(status_code=400, detail="max 256 ids per call")
     delete_events(list(req.ids))
     return EventDeleteResponse(requested=len(req.ids), collection="alle-events")
+
+
+# ── Slice 7: 번역 엔드포인트 ────────────────────────────────────────────────
+from pydantic import BaseModel as _BaseModel, Field as PydField
+
+
+class TranslateBundleRequest(_BaseModel):
+    namespace: str = PydField(max_length=50)
+    lang: str = PydField(pattern="^(en|vi|zh|ja|fr)$")
+    keys: dict
+
+
+class TranslateBundleResponse(_BaseModel):
+    namespace: str
+    lang: str
+    translated: dict
+
+
+class TranslatePostRequest(_BaseModel):
+    content: str = PydField(min_length=1, max_length=10000)
+    target_lang: str = PydField(pattern="^(en|vi|zh|ja|fr)$")
+
+
+class TranslatePostResponse(_BaseModel):
+    translated: str
+
+
+@app.post("/translate-bundle", response_model=TranslateBundleResponse)
+def translate_bundle_endpoint(req: TranslateBundleRequest):
+    from fastapi import HTTPException
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="translation unavailable")
+    try:
+        from translate import translate_bundle
+        result = translate_bundle(req.namespace, req.lang, req.keys)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"translation failed: {type(e).__name__}: {e}")
+    return TranslateBundleResponse(namespace=req.namespace, lang=req.lang, translated=result)
+
+
+@app.post("/translate-post", response_model=TranslatePostResponse)
+def translate_post_endpoint(req: TranslatePostRequest):
+    from fastapi import HTTPException
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="translation unavailable")
+    try:
+        from translate import translate_post_content
+        result = translate_post_content(req.content, req.target_lang)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"translation failed: {type(e).__name__}: {e}")
+    return TranslatePostResponse(translated=result)

@@ -42,7 +42,8 @@
     "chatroom:eval": "dotenv -e ../../.env -- tsx src/jobs/chat-room-eval.ts",
     "slice5:eval": "dotenv -e ../../.env -- tsx src/jobs/slice5-eval.ts",
     "notif:eval": "dotenv -e ../../.env -- tsx src/jobs/notif-eval.ts",
-    "report:eval": "dotenv -e ../../.env -- tsx src/jobs/report-eval.ts"
+    "report:eval": "dotenv -e ../../.env -- tsx src/jobs/report-eval.ts",
+    "i18n:generate": "dotenv -e ../../.env -- tsx src/jobs/generate-i18n-bundles.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1033.0",
