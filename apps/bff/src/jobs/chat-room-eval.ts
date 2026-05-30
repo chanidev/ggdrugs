@@ -1003,6 +1003,13 @@ async function main() {
       });
       if (!sysMsg) f.push('system message "멤버가 강퇴되었습니다" not found');
 
+      // [low-fix] vacancy_notification 생성 검증 (스펙 L675: instantKick 시 결원 충원 알림 필수)
+      const vacancyNotif = await prisma.notification.findFirst({
+        where: { relatedEntityId: t5Room.chatRoomId, notificationType: 'vacancy_notification' },
+        select: { notificationId: true },
+      });
+      if (!vacancyNotif) f.push('vacancy_notification for instantKick not found');
+
       return f;
     });
 

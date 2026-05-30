@@ -1072,6 +1072,33 @@ export async function startKickVote(req: Request, res: Response) {
     return;
   }
 
+  // [low-fix] 중복 투표 방지: 해당 대상에 대해 이미 진행 중인 kick_vote 가 있으면 409
+  // "진행 중" = voteResult 가 아직 기록되지 않은 알림이 1건 이상 존재
+  const existingActiveVote = await prisma.notification.findFirst({
+    where: {
+      notificationType: 'kick_vote',
+      relatedEntityId: chatRoomId,
+      relatedEntityType: 'kick_vote',
+      message: { contains: `"targetUserId":"${targetUserId.toString()}"` },
+      // voteResult 가 없는 = 아직 응답 전인 알림이 있으면 active round
+    },
+    select: { notificationId: true, message: true },
+  });
+  if (existingActiveVote) {
+    // message 에 voteResult 가 없으면 해당 라운드가 아직 진행 중
+    let hasVoteResult = false;
+    try {
+      const m = JSON.parse(existingActiveVote.message) as { voteResult?: string };
+      hasVoteResult = m.voteResult !== undefined;
+    } catch {
+      // corrupt JSON — 안전하게 active 로 간주
+    }
+    if (!hasVoteResult) {
+      res.status(409).json({ error: 'kick_vote_already_active' });
+      return;
+    }
+  }
+
   // active 멤버 조회 (대상 제외)
   const activeMembers = await prisma.groupMembership.findMany({
     where: { chatRoomId, memberStatus: 'active', userId: { not: targetUserId } },
@@ -1163,8 +1190,15 @@ export async function castKickVote(req: Request, res: Response) {
     return;
   }
 
-  // 이미 응답했는지 확인 (readAt 재활용: 응답 시 readAt 기록)
-  if (notif.readAt) {
+  // [critical-fix] already_voted 판정: readAt 대신 message.voteResult 존재 여부로 판단.
+  // readAt 은 알림센터 markAllRead 로 덮어쓰일 수 있으므로 투표 완료 마커로 쓰지 않는다.
+  let notifMeta: Record<string, unknown> = {};
+  try {
+    notifMeta = JSON.parse(notif.message) as Record<string, unknown>;
+  } catch {
+    // corrupt JSON — 빈 객체로 진행
+  }
+  if (notifMeta.voteResult !== undefined) {
     res.status(409).json({ error: 'already_voted' });
     return;
   }
@@ -1194,19 +1228,12 @@ export async function castKickVote(req: Request, res: Response) {
 
   const now = new Date();
 
-  // 내 응답 기록: readAt = 응답 시각, voteResult = vote 값을 message JSON 에 병합
-  // 기존 message JSON 에 voteResult 필드를 추가해 agree/reject 구분을 영속화
-  let existingMeta: Record<string, unknown> = {};
-  try {
-    existingMeta = JSON.parse(notif.message) as Record<string, unknown>;
-  } catch {
-    // corrupt JSON — 빈 객체로 진행 (targetUserId 파싱은 이미 위에서 완료)
-  }
+  // [critical-fix] 내 응답 기록: voteResult 만 message JSON 에 병합. readAt 은 건드리지 않는다.
+  // readAt 은 알림센터 전용(읽음 표시)이며 투표 완료 마커로 dual-use 하지 않는다.
   await prisma.notification.update({
     where: { notificationId: voteNotifId },
     data: {
-      readAt: now,
-      message: JSON.stringify({ ...existingMeta, voteResult: vote }),
+      message: JSON.stringify({ ...notifMeta, voteResult: vote }),
     },
   });
 
@@ -1226,8 +1253,16 @@ export async function castKickVote(req: Request, res: Response) {
       select: { notificationId: true, readAt: true, message: true },
     });
 
-    // 전원 응답 여부: readAt IS NOT NULL
-    const allResponded = allVoteNotifs.length > 0 && allVoteNotifs.every((n) => n.readAt !== null);
+    // [critical-fix] 전원 응답 여부: readAt 대신 voteResult 존재 여부로 판정.
+    // readAt 은 알림센터 markAllRead 로 덮어쓰일 수 있으므로 사용하지 않는다.
+    const allResponded = allVoteNotifs.length > 0 && allVoteNotifs.every((n) => {
+      try {
+        const m = JSON.parse(n.message) as { voteResult?: string };
+        return m.voteResult !== undefined;
+      } catch {
+        return false;
+      }
+    });
     // 전원 agree 여부: message 의 voteResult 필드를 파싱
     const allAgree = allResponded && allVoteNotifs.every((n) => {
       try {
@@ -1239,19 +1274,23 @@ export async function castKickVote(req: Request, res: Response) {
     });
 
     if (allAgree) {
-      // 전원 동의 처리
+      // [medium-fix] 전원 동의 처리: SERIALIZABLE 트랜잭션으로 동시 요청 중복 처리 방지.
+      // 트랜잭션 내에서 target 상태를 재확인해 이미 kicked 라면 chatRoomMessage/notification 생성 skip.
       await prisma.$transaction(async (tx) => {
-        // 대상 멤버십 kicked
+        // 대상 멤버십 재확인 (SERIALIZABLE 격리로 동시 트랜잭션과 직렬화)
         const target = await tx.groupMembership.findFirst({
           where: { chatRoomId, userId: targetUserId!, memberStatus: 'active' },
           select: { membershipId: true },
         });
-        if (target) {
-          await tx.groupMembership.update({
-            where: { membershipId: target.membershipId },
-            data: { memberStatus: 'kicked', leftAt: now },
-          });
+        if (!target) {
+          // 이미 다른 트랜잭션이 처리함 → 중복 시스템 메시지/알림 생성 방지
+          return;
         }
+
+        await tx.groupMembership.update({
+          where: { membershipId: target.membershipId },
+          data: { memberStatus: 'kicked', leftAt: now },
+        });
 
         await tx.chatRoomMessage.create({
           data: {
@@ -1282,8 +1321,26 @@ export async function castKickVote(req: Request, res: Response) {
             })),
           });
         }
-      });
+      }, { isolationLevel: 'Serializable' });
       kicked = true;
+
+      // [medium-fix] 투표강퇴 완료 시 실시간 멤버 목록 갱신 (instantKick 과 동일한 패턴)
+      try {
+        const io = getSocketServer();
+        const updatedMembers = await prisma.groupMembership.findMany({
+          where: { chatRoomId, memberStatus: 'active' },
+          select: { userId: true, role: true, user: { select: { nickname: true } } },
+        });
+        io.to(`room:${chatRoomId.toString()}`).emit('room:member_update', {
+          members: updatedMembers.map((m) => ({
+            userId: m.userId.toString(),
+            nickname: m.user.nickname,
+            role: m.role,
+          })),
+        });
+      } catch {
+        // Socket.IO 미초기화 — 무시
+      }
     }
   }
 

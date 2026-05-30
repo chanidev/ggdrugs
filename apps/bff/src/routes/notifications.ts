@@ -98,10 +98,17 @@ export async function markNotificationRead(req: Request, res: Response) {
   }
   const existing = await prisma.notification.findUnique({
     where: { notificationId: id },
-    select: { userId: true, readAt: true },
+    select: { userId: true, readAt: true, notificationType: true },
   });
   if (!existing || existing.userId !== auth.userId) {
     res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  // [critical-fix] kick_vote 알림은 readAt 을 '투표 완료' 마커로 쓰지 않으므로
+  // 알림센터 read 엔드포인트에서 readAt 세트를 건너뛴다.
+  // 투표 완료는 castKickVote 에서 message.voteResult 로만 기록한다.
+  if (existing.notificationType === 'kick_vote') {
+    res.json({ ok: true });
     return;
   }
   if (!existing.readAt) {
@@ -115,8 +122,10 @@ export async function markNotificationRead(req: Request, res: Response) {
 
 export async function markAllNotificationsRead(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;
+  // [critical-fix] kick_vote 알림은 readAt 이 투표 완료 마커로 dual-use 되지 않도록 제외.
+  // 투표 완료 마커는 message.voteResult 필드이며 castKickVote 에서만 기록한다.
   const result = await prisma.notification.updateMany({
-    where: { userId: auth.userId, readAt: null },
+    where: { userId: auth.userId, readAt: null, NOT: { notificationType: 'kick_vote' } },
     data: { readAt: new Date() },
   });
   res.json({ ok: true, updated: result.count });
