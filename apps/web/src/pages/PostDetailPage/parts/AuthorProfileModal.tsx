@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router';
 import { Avatar } from 'seed-design/ui/avatar';
 import * as Dialog from 'seed-design/ui/dialog';
 import { ActionButton } from 'seed-design/ui/action-button';
@@ -20,6 +21,7 @@ export function AuthorProfileModal({
   authorUserId: string;
   onClose: () => void;
 }) {
+  const navigate = useNavigate();
   // null = 아직 로딩 중, number = 조회된 지수, 'none' = 프로필 미등록
   const [mateIndex, setMateIndex] = useState<number | 'none' | null>(null);
 
@@ -88,12 +90,17 @@ export function AuthorProfileModal({
             >
               닫기
             </ActionButton>
-            {/* GG-POST-008: 채팅신청 — 슬라이스 5에서 실구현 */}
+            {/* GG-POST-008: 채팅신청 — 슬라이스3 실구현 */}
             <ActionButton
               variant="brandSolid"
               size="medium"
-              disabled
-              aria-label="채팅 신청하기 (준비 중)"
+              onClick={() => {
+                onClose();
+                void navigate(
+                  `/chat/request?to=${encodeURIComponent(authorUserId)}&nickname=${encodeURIComponent(nickname)}`,
+                );
+              }}
+              aria-label={`${nickname}에게 채팅 신청하기`}
             >
               채팅 신청하기
             </ActionButton>

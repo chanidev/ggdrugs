@@ -13,6 +13,8 @@ import { PostDetailPage } from './pages/PostDetailPage';
 import { MateFormPage } from './pages/MateFormPage';
 import { MateRecommendationsPage } from './pages/MateRecommendationsPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { ChatRequestPage } from './pages/ChatRequestPage';
+import { ChatRoomPage } from './pages/ChatRoomPage';
 import { AuthProvider } from './lib/auth-context';
 import '@seed-design/css/all.css';
 import './styles/index.css';
@@ -43,6 +45,9 @@ createRoot(rootEl).render(
         <Route path="/mate/form" element={<MateFormPage />} />
         <Route path="/mate/recommendations" element={<MateRecommendationsPage />} />
         <Route path="/me/profile" element={<ProfilePage />} />
+        {/* 슬라이스3: 채팅 신청 + 채팅방 (A_803/A_804/A_805) */}
+        <Route path="/chat/request" element={<ChatRequestPage />} />
+        <Route path="/chat/rooms/:chatRoomId" element={<ChatRoomPage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,

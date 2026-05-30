@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Header } from '../../layout/Header';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { Avatar } from 'seed-design/ui/avatar';
@@ -140,6 +140,7 @@ function RecoList({ items }: { items: RecommendationItem[] }) {
 }
 
 function RecoCard({ item }: { item: RecommendationItem }) {
+  const navigate = useNavigate();
   return (
     <div className="flex items-center gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-4 py-3">
       {/* 아바타 */}
@@ -158,13 +159,16 @@ function RecoCard({ item }: { item: RecommendationItem }) {
           <span className="font-semibold text-(--color-accent)">{item.mateIndex}</span>
         </p>
       </div>
-      {/* 채팅 신청 — 슬라이스3 placeholder */}
+      {/* 채팅 신청 — 슬라이스3 실구현 (GG-POST-008) */}
       <ActionButton
         variant="neutralOutline"
         size="small"
-        disabled
-        title="채팅 신청 — 슬라이스3에서 구현 예정"
-        aria-label={`${item.nickname}에게 채팅 신청 (준비 중)`}
+        onClick={() => {
+          void navigate(
+            `/chat/request?to=${encodeURIComponent(item.userId)}&nickname=${encodeURIComponent(item.nickname)}`,
+          );
+        }}
+        aria-label={`${item.nickname}에게 채팅 신청`}
       >
         채팅 신청
       </ActionButton>
