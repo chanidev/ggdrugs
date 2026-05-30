@@ -91,15 +91,36 @@ async function main() {
   });
 
   // ── CASE 3: unreadOnly=true kick_vote 제외 ─────────────────
+  // 리뷰 지적 반영: 환경에 kick_vote 픽스처가 없으면 exclusion 로직이 전혀 검증되지 않음.
+  // → 픽스처를 직접 INSERT해 검증하고 테스트 후 삭제한다.
   await check('notif.list.unreadOnly_excludes_kick_vote', async () => {
-    const res = mockRes();
-    await listMyNotifications(mockReq({ auth, query: { unreadOnly: 'true', limit: '100' } }), res);
-    const b = res._c.json as { items?: Array<{ notificationType?: string | null }> };
-    const f: string[] = [];
-    if (b.items?.some((i) => i.notificationType === 'kick_vote')) {
-      f.push('kick_vote found in unreadOnly list');
+    // kick_vote 알림 픽스처 INSERT (readAt=null 상태)
+    const kickNotif = await prisma.notification.create({
+      data: {
+        userId: u.userId,
+        title: '[eval] kick_vote test',
+        message: 'eval fixture — will be deleted',
+        scheduledAt: new Date(),
+        notificationType: 'kick_vote',
+        relatedEntityType: 'kick_vote',
+        relatedEntityId: BigInt(999999999),
+        readAt: null,
+      },
+      select: { notificationId: true },
+    });
+    try {
+      const res = mockRes();
+      await listMyNotifications(mockReq({ auth, query: { unreadOnly: 'true', limit: '100' } }), res);
+      const b = res._c.json as { items?: Array<{ notificationType?: string | null }> };
+      const f: string[] = [];
+      if (b.items?.some((i) => i.notificationType === 'kick_vote')) {
+        f.push('kick_vote found in unreadOnly list — exclusion logic broken');
+      }
+      return f;
+    } finally {
+      // 픽스처 정리 — 테스트 격리
+      await prisma.notification.delete({ where: { notificationId: kickNotif.notificationId } });
     }
-    return f;
   });
 
   // ── CASE 4: appointment/appointment_update/mate_eval 타입 알림에 relatedChatRoomId 조인 ──
