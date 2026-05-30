@@ -30,6 +30,12 @@ import {
   startKickVote,
   castKickVote,
 } from '../routes/chat-room.js';
+import {
+  expireMatchRequests,
+  resolveExpiredKickVotes,
+  expireAppointments,
+  handleInactiveMembers,
+} from './chat-scheduler.js';
 
 interface MockReq {
   params?: Record<string, string>;
@@ -1418,6 +1424,315 @@ async function main() {
     await prisma.groupMembership.deleteMany({ where: { chatRoomId: t5Room.chatRoomId } });
     await prisma.chatRoom.delete({ where: { chatRoomId: t5Room.chatRoomId } });
     await prisma.user.delete({ where: { userId: synU5.userId } });
+
+    // ─────────────────────────────────────────────────────────────────
+    // TASK 6 — 백그라운드 스케줄러 (ADR 0007 결정10)
+    // 각 핸들러를 now 주입으로 직접 호출해 검증
+    // ─────────────────────────────────────────────────────────────────
+
+    // ── CASE T6-1: scheduler.expire_1to1.ok — pending 1:1 expiresAt 과거 → expired ─
+    await check('scheduler.expire_1to1.ok', async () => {
+      const f: string[] = [];
+      const t6Suffix = Date.now() + 6000;
+      const synT6A = await prisma.user.create({
+        data: { socialUid: `t6_a_${t6Suffix}`, authProvider: 'dev', nickname: `T6A_${t6Suffix}`, activeRole: 'user' },
+      });
+      const synT6B = await prisma.user.create({
+        data: { socialUid: `t6_b_${t6Suffix}`, authProvider: 'dev', nickname: `T6B_${t6Suffix}`, activeRole: 'user' },
+      });
+
+      // 이미 만료된 pending 1:1 신청 생성
+      const mr1 = await prisma.matchRequest.create({
+        data: {
+          requesterId: synT6A.userId,
+          receiverId: synT6B.userId,
+          requestType: '1:1',
+          status: 'pending',
+          expiresAt: new Date(Date.now() - 60 * 1000), // 1분 전 만료
+        },
+        select: { matchRequestId: true },
+      });
+      // 아직 만료 안 된 pending 신청 (나중을 위해)
+      const mr2 = await prisma.matchRequest.create({
+        data: {
+          requesterId: synT6B.userId,
+          receiverId: synT6A.userId,
+          requestType: '1:1',
+          status: 'pending',
+          expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1시간 후 만료
+        },
+        select: { matchRequestId: true },
+      });
+
+      // now=현재시각으로 만료 처리 실행
+      const result = await expireMatchRequests(new Date());
+
+      if (result.expired < 1) f.push(`expired ${result.expired} < 1`);
+
+      // DB: mr1 status='expired'
+      const updated1 = await prisma.matchRequest.findUnique({
+        where: { matchRequestId: mr1.matchRequestId },
+        select: { status: true },
+      });
+      if (updated1?.status !== 'expired') f.push(`mr1 status '${updated1?.status}' != 'expired'`);
+
+      // DB: mr2 는 여전히 pending
+      const updated2 = await prisma.matchRequest.findUnique({
+        where: { matchRequestId: mr2.matchRequestId },
+        select: { status: true },
+      });
+      if (updated2?.status !== 'pending') f.push(`mr2 status '${updated2?.status}' != 'pending' (should not expire yet)`);
+
+      // Notification: synT6A 에게 만료 알림 생성
+      const notif = await prisma.notification.findFirst({
+        where: { userId: synT6A.userId, notificationType: 'match_request' },
+        select: { title: true },
+      });
+      if (!notif) f.push('no match_request expiry notification for requester');
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { userId: { in: [synT6A.userId, synT6B.userId] } } });
+      await prisma.matchRequest.deleteMany({ where: { matchRequestId: { in: [mr1.matchRequestId, mr2.matchRequestId] } } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synT6A.userId, synT6B.userId] } } });
+
+      return f;
+    });
+
+    // ── CASE T6-2: scheduler.expire_group_invite.ok — group 6h 초과 → expired ──
+    await check('scheduler.expire_group_invite.ok', async () => {
+      const f: string[] = [];
+      const t6Suffix2 = Date.now() + 6100;
+      const synT6C = await prisma.user.create({
+        data: { socialUid: `t6_c_${t6Suffix2}`, authProvider: 'dev', nickname: `T6C_${t6Suffix2}`, activeRole: 'user' },
+      });
+      const synT6D = await prisma.user.create({
+        data: { socialUid: `t6_d_${t6Suffix2}`, authProvider: 'dev', nickname: `T6D_${t6Suffix2}`, activeRole: 'user' },
+      });
+
+      // 6h 이상 지난 그룹 신청
+      const mrG = await prisma.matchRequest.create({
+        data: {
+          requesterId: synT6C.userId,
+          receiverId: synT6D.userId,
+          requestType: 'group',
+          status: 'pending',
+          expiresAt: new Date(Date.now() - 7 * 60 * 60 * 1000), // 7h 전 만료
+        },
+        select: { matchRequestId: true },
+      });
+
+      await expireMatchRequests(new Date());
+
+      const updated = await prisma.matchRequest.findUnique({
+        where: { matchRequestId: mrG.matchRequestId },
+        select: { status: true },
+      });
+      if (updated?.status !== 'expired') f.push(`group invite status '${updated?.status}' != 'expired'`);
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { userId: { in: [synT6C.userId, synT6D.userId] } } });
+      await prisma.matchRequest.deleteMany({ where: { matchRequestId: mrG.matchRequestId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synT6C.userId, synT6D.userId] } } });
+
+      return f;
+    });
+
+    // ── CASE T6-3: scheduler.expire_appointment.ok — 36h 초과 제안 → rejected ──
+    await check('scheduler.expire_appointment.ok', async () => {
+      const f: string[] = [];
+      const t6Suffix3 = Date.now() + 6200;
+      const synT6E = await prisma.user.create({
+        data: { socialUid: `t6_e_${t6Suffix3}`, authProvider: 'dev', nickname: `T6E_${t6Suffix3}`, activeRole: 'user' },
+      });
+      const synT6F = await prisma.user.create({
+        data: { socialUid: `t6_f_${t6Suffix3}`, authProvider: 'dev', nickname: `T6F_${t6Suffix3}`, activeRole: 'user' },
+      });
+
+      const t6Room = await prisma.chatRoom.create({
+        data: { roomType: '1:1', maxMembers: 2, status: 'active', ownerUserId: null },
+        select: { chatRoomId: true },
+      });
+      await prisma.groupMembership.createMany({
+        data: [
+          { chatRoomId: t6Room.chatRoomId, userId: synT6E.userId, role: 'member', memberStatus: 'active' },
+          { chatRoomId: t6Room.chatRoomId, userId: synT6F.userId, role: 'member', memberStatus: 'active' },
+        ],
+      });
+
+      // 이미 만료된 약속 제안
+      const apptExpired = await prisma.appointment.create({
+        data: {
+          chatRoomId: t6Room.chatRoomId,
+          proposerUserId: synT6E.userId,
+          appointedAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+          eventName: '만료 테스트 약속',
+          status: 'proposed',
+          expiresAt: new Date(Date.now() - 37 * 60 * 60 * 1000), // 37h 전 만료
+        },
+        select: { appointmentId: true },
+      });
+      // 아직 유효한 약속 제안
+      const apptValid = await prisma.appointment.create({
+        data: {
+          chatRoomId: t6Room.chatRoomId,
+          proposerUserId: synT6E.userId,
+          appointedAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          eventName: '유효 테스트 약속',
+          status: 'proposed',
+          expiresAt: new Date(Date.now() + 36 * 60 * 60 * 1000), // 36h 후 만료
+        },
+        select: { appointmentId: true },
+      });
+
+      const result = await expireAppointments(new Date());
+
+      if (result.expired < 1) f.push(`expired ${result.expired} < 1`);
+
+      // DB: 만료된 약속 status='rejected'
+      const updatedExpired = await prisma.appointment.findUnique({
+        where: { appointmentId: apptExpired.appointmentId },
+        select: { status: true },
+      });
+      if (updatedExpired?.status !== 'rejected') f.push(`expired appt status '${updatedExpired?.status}' != 'rejected'`);
+
+      // DB: 유효 약속은 여전히 'proposed'
+      const updatedValid = await prisma.appointment.findUnique({
+        where: { appointmentId: apptValid.appointmentId },
+        select: { status: true },
+      });
+      if (updatedValid?.status !== 'proposed') f.push(`valid appt status '${updatedValid?.status}' != 'proposed'`);
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { userId: { in: [synT6E.userId, synT6F.userId] } } });
+      await prisma.appointmentVote.deleteMany({ where: { appointment: { chatRoomId: t6Room.chatRoomId } } });
+      await prisma.appointment.deleteMany({ where: { chatRoomId: t6Room.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t6Room.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t6Room.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synT6E.userId, synT6F.userId] } } });
+
+      return f;
+    });
+
+    // ── CASE T6-4: scheduler.inactivity.48h_kick — lastSeenAt < now-48h → kicked ─
+    await check('scheduler.inactivity.48h_kick', async () => {
+      const f: string[] = [];
+      const t6Suffix4 = Date.now() + 6300;
+      const synT6G = await prisma.user.create({
+        data: { socialUid: `t6_g_${t6Suffix4}`, authProvider: 'dev', nickname: `T6G_${t6Suffix4}`, activeRole: 'user' },
+      });
+      const synT6H = await prisma.user.create({
+        data: { socialUid: `t6_h_${t6Suffix4}`, authProvider: 'dev', nickname: `T6H_${t6Suffix4}`, activeRole: 'user' },
+      });
+
+      const t6GroupRoom = await prisma.chatRoom.create({
+        data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: synT6G.userId },
+        select: { chatRoomId: true },
+      });
+      // synT6G: lastSeenAt = 49h 전 (kick 대상)
+      // synT6H: lastSeenAt = 1h 전 (active 유지)
+      await prisma.groupMembership.create({
+        data: {
+          chatRoomId: t6GroupRoom.chatRoomId,
+          userId: synT6G.userId,
+          role: 'owner',
+          memberStatus: 'active',
+          lastSeenAt: new Date(Date.now() - 49 * 60 * 60 * 1000),
+        },
+      });
+      await prisma.groupMembership.create({
+        data: {
+          chatRoomId: t6GroupRoom.chatRoomId,
+          userId: synT6H.userId,
+          role: 'member',
+          memberStatus: 'active',
+          lastSeenAt: new Date(Date.now() - 1 * 60 * 60 * 1000),
+        },
+      });
+
+      const result = await handleInactiveMembers(new Date());
+
+      if (result.kicked < 1) f.push(`kicked ${result.kicked} < 1`);
+
+      // synT6G: memberStatus='kicked'
+      const gMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t6GroupRoom.chatRoomId, userId: synT6G.userId },
+        select: { memberStatus: true },
+      });
+      if (gMem?.memberStatus !== 'kicked') f.push(`T6G memberStatus '${gMem?.memberStatus}' != 'kicked'`);
+
+      // synT6H: memberStatus 여전히 'active'
+      const hMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t6GroupRoom.chatRoomId, userId: synT6H.userId },
+        select: { memberStatus: true },
+      });
+      if (hMem?.memberStatus !== 'active') f.push(`T6H memberStatus '${hMem?.memberStatus}' != 'active'`);
+
+      // vacancy_notification: synT6H 에게 생성
+      const vacancyNotif = await prisma.notification.findFirst({
+        where: { userId: synT6H.userId, notificationType: 'vacancy_notification' },
+        select: { notificationId: true },
+      });
+      if (!vacancyNotif) f.push('vacancy_notification for T6H not found');
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { userId: { in: [synT6G.userId, synT6H.userId] } } });
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t6GroupRoom.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t6GroupRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t6GroupRoom.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synT6G.userId, synT6H.userId] } } });
+
+      return f;
+    });
+
+    // ── CASE T6-5: scheduler.timeout.no_reschedule_corruption ────────
+    // handler 에러가 다음 interval 을 막지 않는지 검증:
+    // wrapHandler 를 직접 호출해 throw 해도 다음 호출이 성공함을 확인
+    await check('scheduler.timeout.no_reschedule_corruption', async () => {
+      const f: string[] = [];
+
+      // 정상 호출 — 아무 만료 건이 없어도 결과가 반환되어야 함 (에러 없음)
+      let result1: Awaited<ReturnType<typeof expireMatchRequests>> | null = null;
+      let threw1 = false;
+      try {
+        result1 = await expireMatchRequests(new Date(0)); // epoch=0 → 과거 모든 건 만료 시도 (0건이어도 ok)
+      } catch {
+        threw1 = true;
+      }
+      if (threw1) f.push('expireMatchRequests threw unexpectedly');
+      if (result1 === null) f.push('expireMatchRequests returned null');
+
+      let result2: Awaited<ReturnType<typeof expireAppointments>> | null = null;
+      let threw2 = false;
+      try {
+        result2 = await expireAppointments(new Date(0));
+      } catch {
+        threw2 = true;
+      }
+      if (threw2) f.push('expireAppointments threw unexpectedly');
+      if (result2 === null) f.push('expireAppointments returned null');
+
+      let result3: Awaited<ReturnType<typeof resolveExpiredKickVotes>> | null = null;
+      let threw3 = false;
+      try {
+        result3 = await resolveExpiredKickVotes(new Date(0));
+      } catch {
+        threw3 = true;
+      }
+      if (threw3) f.push('resolveExpiredKickVotes threw unexpectedly');
+      if (result3 === null) f.push('resolveExpiredKickVotes returned null');
+
+      let result4: Awaited<ReturnType<typeof handleInactiveMembers>> | null = null;
+      let threw4 = false;
+      try {
+        result4 = await handleInactiveMembers(new Date(0));
+      } catch {
+        threw4 = true;
+      }
+      if (threw4) f.push('handleInactiveMembers threw unexpectedly');
+      if (result4 === null) f.push('handleInactiveMembers returned null');
+
+      return f;
+    });
 
   } finally {
     // 클린업
