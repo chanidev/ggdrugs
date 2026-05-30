@@ -423,7 +423,7 @@ function LoaderErrorNotice({ error }: { error: unknown }) {
   if (error instanceof Event) {
     const target = error.target as HTMLScriptElement | null;
     scriptSrc = target?.src ?? null;
-    msg = scriptSrc ? `${t('map.scriptLoadFail')}: ${scriptSrc}` : `${t('map.scriptLoadFail')} (event target 없음)`;
+    msg = scriptSrc ? `${t('map.scriptLoadFail')}: ${scriptSrc}` : t('map.scriptLoadFailNoTarget');
   } else if (error instanceof Error) {
     msg = error.message;
   } else {

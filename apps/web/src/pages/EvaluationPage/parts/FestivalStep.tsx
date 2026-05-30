@@ -120,7 +120,7 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
 
       <section>
         <label className="mb-1 block text-[13px] font-medium" htmlFor="reviewBody">
-          {t('evaluation.reviewLabel')} <span className="text-(--color-text-muted)">({reviewBody.length}/5000자)</span>
+          {t('evaluation.reviewLabel')} <span className="text-(--color-text-muted)">({t('evaluation.charCount', { count: reviewBody.length })})</span>
         </label>
         <textarea
           id="reviewBody"
@@ -134,7 +134,7 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
 
       <section>
         <p className="mb-2 text-[13px] font-medium">
-          {t('evaluation.photoLabel')} <span className="text-(--color-text-muted)">({photoUrls.length}/10, jpeg/png/webp, 각 최대 5MB)</span>
+          {t('evaluation.photoLabel')} <span className="text-(--color-text-muted)">({t('evaluation.photoHint', { count: photoUrls.length })})</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {photoUrls.map((url, idx) => (

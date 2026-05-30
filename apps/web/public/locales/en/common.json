@@ -54,7 +54,8 @@
     "notifications": "Notifications",
     "notificationsPlus": "Notifications 9+",
     "notificationsCount": "Notifications {{count}}",
-    "languageSelect": "Language selection"
+    "languageSelect": "Language selection",
+    "logoLockup": "Alle, Seoul event map"
   },
   "search": {
     "placeholder": "Search events & places"
@@ -95,7 +96,8 @@
     "openOriginal": "Open original ↗",
     "prev": "Previous",
     "next": "Next",
-    "ariaLabel": "Related articles page"
+    "ariaLabel": "Related articles page",
+    "autoMatch": "Auto-matched"
   },
   "overview": {
     "title": "Summary",
@@ -126,5 +128,9 @@
   },
   "fallback": {
     "none": "(None)"
+  },
+  "errorBoundary": {
+    "message": "Unable to display this section",
+    "retry": "Try again"
   }
 }

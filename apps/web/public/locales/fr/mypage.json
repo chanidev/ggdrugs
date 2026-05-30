@@ -18,7 +18,8 @@
   "bookmark": {
     "empty": "Aucun événement en favori.",
     "loadError": "Chargement échoué.",
-    "hint": "Ajoutez vos événements préférés en favoris sur la carte."
+    "hint": "Ajoutez vos événements préférés en favoris sur la carte.",
+    "totalCount": "{{count}} éléments"
   },
   "review": {
     "empty": "Aucun avis rédigé.",
@@ -46,7 +47,8 @@
     "firstReview": "Soyez le premier à donner votre avis !",
     "photoViewAria": "Voir la photo de la critique en haute résolution",
     "aiVibeTitle": "Classification de l'émotion AI : {{label}}",
-    "starsAria": "Évaluation {{star}} / 5"
+    "starsAria": "Évaluation {{star}} / 5",
+    "totalCount": "{{count}} avis"
   },
   "reco": {
     "empty": "Aucun événement recommandé.",
@@ -131,7 +133,17 @@
       "upcoming": "À venir",
       "ongoing": "En cours",
       "ended": "Terminé"
-    }
+    },
+    "weekday": {
+      "sun": "Dim",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Jeu",
+      "fri": "Ven",
+      "sat": "Sam"
+    },
+    "summaryLabel": "Résumé du calendrier"
   },
   "credit": {
     "title": "Historique des crédits",
@@ -260,7 +272,9 @@
       "no_show": "Absence",
       "etc": "Autre"
     },
-    "photoAlt": "Photo jointe {{index}}"
+    "photoAlt": "Photo jointe {{index}}",
+    "charCount": "{{count}}/5000 caractères",
+    "photoHint": "{{count}}/10, jpeg/png/webp, 5Mo max chacun"
   },
   "block": {
     "loginRequired": "Connexion requise.",

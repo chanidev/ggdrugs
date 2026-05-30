@@ -54,7 +54,8 @@
     "notifications": "Notifications",
     "notificationsPlus": "Notifications 9+",
     "notificationsCount": "Notifications {{count}}",
-    "languageSelect": "Sélection de langue"
+    "languageSelect": "Sélection de langue",
+    "logoLockup": "Alle, carte des événements de Séoul"
   },
   "search": {
     "placeholder": "Rechercher des événements et lieux"
@@ -95,7 +96,8 @@
     "openOriginal": "Ouvrir l'original ↗",
     "prev": "Précédent",
     "next": "Suivant",
-    "ariaLabel": "Page des articles connexes"
+    "ariaLabel": "Page des articles connexes",
+    "autoMatch": "Correspondance automatique"
   },
   "overview": {
     "title": "Résumé",
@@ -126,5 +128,9 @@
   },
   "fallback": {
     "none": "(aucun)"
+  },
+  "errorBoundary": {
+    "message": "Impossible d'afficher cette section",
+    "retry": "Réessayer"
   }
 }

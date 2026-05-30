@@ -26,7 +26,7 @@ export interface CalendarEvent {
   phase: 'upcoming' | 'ongoing' | 'ended';
 }
 
-const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
 function ymd(d: Date): string {
   const y = d.getFullYear();
@@ -70,6 +70,10 @@ export function MonthCalendar({
 }) {
   const { t, i18n } = useTranslation('mypage');
   const today = ymd(new Date());
+  const weekdayLabels = useMemo(
+    () => WEEKDAY_KEYS.map((k) => t(`calendar.weekday.${k}`)),
+    [t],
+  );
 
   // 6주 grid (42 cells) — 항상 고정 크기, 빈 셀은 전/다음달 dim.
   const gridStart = useMemo(() => firstCellOfMonthGrid(year, month0), [year, month0]);
@@ -153,9 +157,9 @@ export function MonthCalendar({
         aria-label={t('calendar.calendarAriaLabel', { label })}
         className="grid grid-cols-7 gap-px bg-(--color-border) overflow-hidden rounded-(--radius-md)"
       >
-        {WEEKDAY_LABELS.map((w, i) => (
+        {weekdayLabels.map((w, i) => (
           <div
-            key={w}
+            key={WEEKDAY_KEYS[i]}
             role="columnheader"
             className={`bg-(--color-surface) py-1.5 text-center text-[11px] font-semibold tracking-[0.05em] ${
               i === 0

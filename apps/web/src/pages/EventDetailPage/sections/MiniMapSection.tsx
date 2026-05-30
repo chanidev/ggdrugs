@@ -1,7 +1,9 @@
 import { Map, MapMarker, useKakaoLoader } from 'react-kakao-maps-sdk';
+import { useTranslation } from 'react-i18next';
 import type { BffEventDetail } from '../../../lib/api';
 
 export function MiniMapSection({ detail }: { detail: BffEventDetail }) {
+  const { t } = useTranslation('navigation');
   const appkey = import.meta.env.VITE_KAKAO_MAP_JS_KEY as string | undefined;
   const [loading, error] = useKakaoLoader({ appkey: appkey ?? '', libraries: ['services'] });
 
@@ -16,7 +18,7 @@ export function MiniMapSection({ detail }: { detail: BffEventDetail }) {
   const pos = { lat: detail.latitude, lng: detail.longitude };
   return (
     <section className="overflow-hidden rounded-(--radius-lg) border border-(--color-border)">
-      <Map center={pos} level={4} style={{ width: '100%', height: '320px' }} aria-label="이벤트 위치 지도">
+      <Map center={pos} level={4} style={{ width: '100%', height: '320px' }} aria-label={t('map.eventMapAriaLabel')}>
         <MapMarker position={pos} title={detail.title} />
       </Map>
     </section>

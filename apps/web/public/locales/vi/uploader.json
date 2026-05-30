@@ -149,7 +149,12 @@
     "docsReplace": "Thay thế tài liệu",
     "docsReplaceCancel": "Hủy thay thế (giữ hiện tại)",
     "docsNone": "Không có tài liệu hiện tại.",
-    "docPreview": "Xem trước"
+    "docPreview": "Xem trước",
+    "kycProvider": {
+      "pass": "Xác minh danh tính PASS",
+      "nice": "Xác minh danh tính NICE",
+      "kakao": "Xác minh danh tính Kakao"
+    }
   },
   "category": {
     "festival": "Lễ hội",

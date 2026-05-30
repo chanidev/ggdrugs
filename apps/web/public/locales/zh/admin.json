@@ -238,7 +238,8 @@
     "activeAdmin": "管理员处于活跃状态 — 请先撤销",
     "alreadyDeleted": "已删除",
     "noActiveSession": "没有活跃会话",
-    "uploaderHint": "上传者的提升/拒绝在上传者标签页中处理。"
+    "uploaderHint": "上传者的提升/拒绝在上传者标签页中处理。",
+    "sessionCount": "{{count}} 个会话"
   },
   "audit": {
     "overview": "概览",

@@ -149,7 +149,12 @@
     "docsReplace": "서류 교체",
     "docsReplaceCancel": "교체 취소 (기존 유지)",
     "docsNone": "기존 서류 없음.",
-    "docPreview": "미리보기"
+    "docPreview": "미리보기",
+    "kycProvider": {
+      "pass": "PASS 본인인증",
+      "nice": "NICE 본인인증",
+      "kakao": "카카오 본인인증"
+    }
   },
   "category": {
     "festival": "축제",

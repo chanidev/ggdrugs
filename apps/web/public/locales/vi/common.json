@@ -54,7 +54,8 @@
     "notifications": "Thông báo",
     "notificationsPlus": "Thông báo 9+",
     "notificationsCount": "Thông báo {{count}}",
-    "languageSelect": "Chọn ngôn ngữ"
+    "languageSelect": "Chọn ngôn ngữ",
+    "logoLockup": "Alle, bản đồ sự kiện Seoul"
   },
   "search": {
     "placeholder": "Tìm sự kiện & địa điểm"
@@ -95,7 +96,8 @@
     "openOriginal": "Mở bản gốc ↗",
     "prev": "Trước",
     "next": "Tiếp",
-    "ariaLabel": "Trang bài viết liên quan"
+    "ariaLabel": "Trang bài viết liên quan",
+    "autoMatch": "Tự động khớp"
   },
   "overview": {
     "title": "Tóm tắt",
@@ -126,5 +128,9 @@
   },
   "fallback": {
     "none": "(không có)"
+  },
+  "errorBoundary": {
+    "message": "Không thể hiển thị khu vực này",
+    "retry": "Thử lại"
   }
 }

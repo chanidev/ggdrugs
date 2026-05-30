@@ -100,7 +100,7 @@ export function CalendarTab() {
       const isPast = dateStr < ymd(now);
       map.set(apptEventId, {
         eventId: apptEventId,
-        title: a.eventName ?? a.event?.title ?? '약속',
+        title: a.eventName ?? a.event?.title ?? t('calendar.appointmentFallback'),
         startDate: dateStr,
         endDate: dateStr,
         phase: isPast ? 'ended' : 'upcoming',
@@ -170,7 +170,7 @@ export function CalendarTab() {
       <aside className="flex flex-col gap-3 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-5">
         <header>
           <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            A_500 · 캘린더 요약
+            {t('calendar.summaryLabel')}
           </p>
           <h3 className="tabular m-0 mt-0.5 text-[15px] font-bold tracking-[-0.01em]">
             {selectedDate ?? t('calendar.selectDate')}

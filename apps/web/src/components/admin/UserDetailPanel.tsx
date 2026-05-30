@@ -170,7 +170,7 @@ export function UserDetailPanel({
           </dd>
           <dt className="text-(--color-text-subtle)">{t('member.activeSession')}</dt>
           <dd className="tabular m-0 text-(--color-text)">
-            {activeSessionCount.toLocaleString()}건
+            {t('member.sessionCount', { count: activeSessionCount.toLocaleString() })}
           </dd>
           {user.deletedAt && (
             <>

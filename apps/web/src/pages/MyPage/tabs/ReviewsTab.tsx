@@ -57,7 +57,7 @@ export function ReviewsList() {
   return (
     <div className="flex flex-col gap-2">
       <p className="tabular m-0 mb-1 text-[12px] text-(--color-text-subtle)">
-        {state.total.toLocaleString()}개
+        {t('review.totalCount', { count: state.total.toLocaleString() })}
       </p>
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {state.items.map((r) => (

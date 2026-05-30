@@ -18,7 +18,8 @@
   "bookmark": {
     "empty": "No bookmarked events.",
     "loadError": "Failed to load.",
-    "hint": "Bookmark your favorite events on the map."
+    "hint": "Bookmark your favorite events on the map.",
+    "totalCount": "{{count}} items"
   },
   "review": {
     "empty": "No reviews written.",
@@ -46,7 +47,8 @@
     "firstReview": "Be the first to review!",
     "photoViewAria": "View original review photo",
     "aiVibeTitle": "AI Emotion Classification: {{label}}",
-    "starsAria": "Rating {{star}} / 5"
+    "starsAria": "Rating {{star}} / 5",
+    "totalCount": "{{count}} reviews"
   },
   "reco": {
     "empty": "No recommended events.",
@@ -131,7 +133,17 @@
       "upcoming": "Upcoming",
       "ongoing": "Ongoing",
       "ended": "Ended"
-    }
+    },
+    "weekday": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "summaryLabel": "Calendar Summary"
   },
   "credit": {
     "title": "Credit History",
@@ -260,7 +272,9 @@
       "no_show": "No-show",
       "etc": "Other"
     },
-    "photoAlt": "Attached photo {{index}}"
+    "photoAlt": "Attached photo {{index}}",
+    "charCount": "{{count}}/5000 chars",
+    "photoHint": "{{count}}/10, jpeg/png/webp, max 5MB each"
   },
   "block": {
     "loginRequired": "Login is required.",

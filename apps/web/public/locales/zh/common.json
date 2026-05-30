@@ -54,7 +54,8 @@
     "notifications": "通知",
     "notificationsPlus": "通知 9+",
     "notificationsCount": "通知 {{count}}",
-    "languageSelect": "选择语言"
+    "languageSelect": "选择语言",
+    "logoLockup": "Alle，首尔活动地图"
   },
   "search": {
     "placeholder": "搜索活动和地点"
@@ -95,7 +96,8 @@
     "openOriginal": "打开原文 ↗",
     "prev": "上一页",
     "next": "下一页",
-    "ariaLabel": "相关文章页"
+    "ariaLabel": "相关文章页",
+    "autoMatch": "自动匹配"
   },
   "overview": {
     "title": "摘要",
@@ -126,5 +128,9 @@
   },
   "fallback": {
     "none": "(无)"
+  },
+  "errorBoundary": {
+    "message": "无法显示此区域",
+    "retry": "重试"
   }
 }

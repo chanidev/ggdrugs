@@ -52,10 +52,10 @@ export function ArticlesSection({ eventId }: { eventId: string }) {
               </span>
               <span> / </span>
               <span className="tabular">{total}</span>
-              <span> · A_400 자동 매칭</span>
+              <span> · {t('articles.autoMatch')}</span>
             </>
           ) : (
-            'A_400 · 자동 매칭'
+            t('articles.autoMatch')
           )}
         </span>
       </header>

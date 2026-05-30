@@ -149,7 +149,12 @@
     "docsReplace": "書類を交換",
     "docsReplaceCancel": "交換キャンセル（既存を維持）",
     "docsNone": "既存の書類がありません。",
-    "docPreview": "プレビュー"
+    "docPreview": "プレビュー",
+    "kycProvider": {
+      "pass": "PASS 本人認証",
+      "nice": "NICE 本人認証",
+      "kakao": "Kakao 本人認証"
+    }
   },
   "category": {
     "festival": "フェスティバル",

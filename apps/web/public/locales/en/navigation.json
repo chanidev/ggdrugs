@@ -179,7 +179,9 @@
     "mapLoadFail": "Map load failed",
     "allowedDomainHint": "Make sure http://localhost:5173 is in allowed domains",
     "kakaoConsoleHint": "Check if the app in the Kakao Developer Console is a JavaScript key (not REST API key)",
-    "networkTabHint": "Check the sdk.js request status in the Network tab (F12 in browser)"
+    "networkTabHint": "Check the sdk.js request status in the Network tab (F12 in browser)",
+    "eventMapAriaLabel": "Event location map",
+    "scriptLoadFailNoTarget": "Map script failed to load (no event target)"
   },
   "eventList": {
     "emptyHint": "Try a different category.",

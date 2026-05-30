@@ -238,7 +238,8 @@
     "activeAdmin": "admin が有効 — 先に剥奪してください",
     "alreadyDeleted": "すでに削除済み",
     "noActiveSession": "アクティブセッションなし",
-    "uploaderHint": "アップロード者の昇格・却下は Uploaders タブで処理します。"
+    "uploaderHint": "アップロード者の昇格・却下は Uploaders タブで処理します。",
+    "sessionCount": "{{count}} セッション"
   },
   "audit": {
     "overview": "概要",

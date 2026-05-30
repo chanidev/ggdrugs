@@ -238,7 +238,8 @@
     "activeAdmin": "Admin is active — demote first",
     "alreadyDeleted": "Already deleted",
     "noActiveSession": "No active sessions",
-    "uploaderHint": "Uploader promotion/rejection is handled in the Uploaders tab."
+    "uploaderHint": "Uploader promotion/rejection is handled in the Uploaders tab.",
+    "sessionCount": "{{count}} sessions"
   },
   "audit": {
     "overview": "Overview",

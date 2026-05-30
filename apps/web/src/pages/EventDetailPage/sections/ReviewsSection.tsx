@@ -93,7 +93,7 @@ export function ReviewsSection({
           <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">{t('review.title')}</h2>
           {total > 0 && (
             <p className="tabular m-0 mt-1 text-[12px] text-(--color-text-muted)">
-              ★ <span className="text-(--color-text)">{avg.toFixed(1)}</span> · {total.toLocaleString()}개
+              {t('review.avg', { avg: avg.toFixed(1), count: total.toLocaleString() })}
             </p>
           )}
         </div>

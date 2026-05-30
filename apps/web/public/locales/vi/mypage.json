@@ -18,7 +18,8 @@
   "bookmark": {
     "empty": "Không có sự kiện yêu thích nào.",
     "loadError": "Không tải được.",
-    "hint": "Đánh dấu sự kiện yêu thích trên bản đồ."
+    "hint": "Đánh dấu sự kiện yêu thích trên bản đồ.",
+    "totalCount": "{{count}} mục"
   },
   "review": {
     "empty": "Chưa có đánh giá nào.",
@@ -46,7 +47,8 @@
     "firstReview": "Hãy là người đầu tiên đánh giá!",
     "photoViewAria": "Xem ảnh đánh giá gốc",
     "aiVibeTitle": "Phân loại cảm xúc AI: {{label}}",
-    "starsAria": "Đánh giá {{star}} / 5"
+    "starsAria": "Đánh giá {{star}} / 5",
+    "totalCount": "{{count}} đánh giá"
   },
   "reco": {
     "empty": "Không có sự kiện gợi ý nào.",
@@ -131,7 +133,17 @@
       "upcoming": "Sắp diễn ra",
       "ongoing": "Đang diễn ra",
       "ended": "Đã kết thúc"
-    }
+    },
+    "weekday": {
+      "sun": "CN",
+      "mon": "T2",
+      "tue": "T3",
+      "wed": "T4",
+      "thu": "T5",
+      "fri": "T6",
+      "sat": "T7"
+    },
+    "summaryLabel": "Tóm tắt lịch"
   },
   "credit": {
     "title": "Lịch sử tín dụng",
@@ -260,7 +272,9 @@
       "no_show": "Vắng mặt",
       "etc": "Khác"
     },
-    "photoAlt": "Ảnh đính kèm {{index}}"
+    "photoAlt": "Ảnh đính kèm {{index}}",
+    "charCount": "{{count}}/5000 ký tự",
+    "photoHint": "{{count}}/10, jpeg/png/webp, tối đa 5MB mỗi ảnh"
   },
   "block": {
     "loginRequired": "Cần đăng nhập.",

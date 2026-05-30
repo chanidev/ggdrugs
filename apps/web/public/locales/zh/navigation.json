@@ -179,7 +179,9 @@
     "mapLoadFail": "地图加载失败",
     "allowedDomainHint": "确保 http://localhost:5173 在允许的域名列表中",
     "kakaoConsoleHint": "请确认 Kakao 开发者控制台的应用是 JavaScript 密钥（不是 REST API 密钥）",
-    "networkTabHint": "浏览器 F12 -> 在 Network 标签中检查 sdk.js 请求状态"
+    "networkTabHint": "浏览器 F12 -> 在 Network 标签中检查 sdk.js 请求状态",
+    "eventMapAriaLabel": "活动位置地图",
+    "scriptLoadFailNoTarget": "地图脚本加载失败（无事件目标）"
   },
   "eventList": {
     "emptyHint": "请尝试其他分类。",

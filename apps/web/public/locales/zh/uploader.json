@@ -149,7 +149,12 @@
     "docsReplace": "替换文件",
     "docsReplaceCancel": "取消替换（保留现有）",
     "docsNone": "无现有文件。",
-    "docPreview": "预览"
+    "docPreview": "预览",
+    "kycProvider": {
+      "pass": "PASS 实名认证",
+      "nice": "NICE 实名认证",
+      "kakao": "Kakao 实名认证"
+    }
   },
   "category": {
     "festival": "节日",

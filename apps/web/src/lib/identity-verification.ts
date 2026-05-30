@@ -13,10 +13,10 @@
 
 export type KycProvider = 'pass' | 'nice' | 'kakao';
 
-export const KYC_PROVIDERS: { id: KycProvider; label: string }[] = [
-  { id: 'pass', label: 'PASS' },
-  { id: 'nice', label: 'NICE' },
-  { id: 'kakao', label: '카카오 본인인증' },
+export const KYC_PROVIDERS: { id: KycProvider }[] = [
+  { id: 'pass' },
+  { id: 'nice' },
+  { id: 'kakao' },
 ];
 
 /**

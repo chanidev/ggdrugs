@@ -232,14 +232,14 @@
     "recentAudits": "최근 처리 내역",
     "noAudits": "기록 없음.",
     "handledAdmin": "처리 admin",
-    "charCount": "{{count}} / 500 (최소 10자)",
     "executing": "처리 중…",
     "execute": "실행",
     "cancel": "취소",
     "activeAdmin": "admin 활성 상태 — 먼저 박탈",
     "alreadyDeleted": "이미 삭제됨",
     "noActiveSession": "활성 세션 없음",
-    "uploaderHint": "업로더 승급 심사·반려는 Uploaders 탭에서 처리."
+    "uploaderHint": "업로더 승급 심사·반려는 Uploaders 탭에서 처리.",
+    "sessionCount": "{{count}}건"
   },
   "document": {
     "openOriginal": "{{filename}} 원본 크기로 열기",

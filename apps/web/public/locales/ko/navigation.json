@@ -23,21 +23,6 @@
     "ongoing": "진행중",
     "upcoming": "예정"
   },
-  "mobile": {
-    "tabs": {
-      "list": "목록",
-      "filter": "필터",
-      "chat": "채팅"
-    },
-    "backToList": "목록으로",
-    "eventSummary": "이벤트 요약",
-    "chatHint": "자연어로 질문하면 5개 필터 + AI 의미 검색 후보를 함께 드려요.",
-    "chatPlaceholder": "\"이번 주말 가족이랑 볼만한 축제\"",
-    "chatAriaInput": "자연어로 이벤트 검색",
-    "chatAriaSend": "검색 전송",
-    "aiCandidates": "AI 후보 {{count}}건 · 의미 기반",
-    "sheetTabsLabel": "시트 탭"
-  },
   "filter": {
     "region": {
       "label": "지역",
@@ -178,7 +163,9 @@
     "mapLoadFail": "지도 로드 실패",
     "allowedDomainHint": "허용 도메인에 http://localhost:5173 등록 확인",
     "kakaoConsoleHint": "Kakao 개발자 콘솔의 앱이 JavaScript 키인지 확인 (REST API 키 X)",
-    "networkTabHint": "브라우저 F12 → Network 탭에서 sdk.js 요청 status 확인"
+    "networkTabHint": "브라우저 F12 → Network 탭에서 sdk.js 요청 status 확인",
+    "eventMapAriaLabel": "이벤트 위치 지도",
+    "scriptLoadFailNoTarget": "지도 스크립트 로드 실패 (event target 없음)"
   },
   "eventList": {
     "emptyHint": "다른 카테고리를 선택해보세요.",

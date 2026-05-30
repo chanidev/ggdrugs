@@ -18,7 +18,8 @@
   "bookmark": {
     "empty": "북마크한 이벤트가 없어요.",
     "loadError": "불러오지 못했어요.",
-    "hint": "지도에서 마음에 드는 이벤트를 북마크해 보세요."
+    "hint": "지도에서 마음에 드는 이벤트를 북마크해 보세요.",
+    "totalCount": "{{count}}개"
   },
   "review": {
     "empty": "작성한 리뷰가 없어요.",
@@ -46,7 +47,8 @@
     "firstReview": "첫 리뷰의 주인공이 되어 주세요.",
     "photoViewAria": "리뷰 사진 원본 보기",
     "aiVibeTitle": "AI 감성 분류: {{label}}",
-    "starsAria": "별점 {{star}} / 5"
+    "starsAria": "별점 {{star}} / 5",
+    "totalCount": "{{count}}개"
   },
   "reco": {
     "empty": "추천 이벤트가 없어요.",
@@ -131,7 +133,17 @@
       "upcoming": "예정",
       "ongoing": "진행중",
       "ended": "종료"
-    }
+    },
+    "weekday": {
+      "sun": "일",
+      "mon": "월",
+      "tue": "화",
+      "wed": "수",
+      "thu": "목",
+      "fri": "금",
+      "sat": "토"
+    },
+    "summaryLabel": "캘린더 요약"
   },
   "credit": {
     "title": "크레딧 내역",
@@ -260,7 +272,9 @@
       "harassing": "괴롭힘/폭력",
       "no_show": "노쇼",
       "etc": "기타"
-    }
+    },
+    "charCount": "{{count}}/5000자",
+    "photoHint": "{{count}}/10, jpeg/png/webp, 각 최대 5MB"
   },
   "block": {
     "loginRequired": "로그인이 필요합니다.",

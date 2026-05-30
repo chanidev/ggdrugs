@@ -149,7 +149,12 @@
     "docsReplace": "Replace Documents",
     "docsReplaceCancel": "Cancel replace (keep existing)",
     "docsNone": "No existing documents.",
-    "docPreview": "Preview"
+    "docPreview": "Preview",
+    "kycProvider": {
+      "pass": "PASS Identity Verification",
+      "nice": "NICE Identity Verification",
+      "kakao": "Kakao Identity Verification"
+    }
   },
   "category": {
     "festival": "Festival",

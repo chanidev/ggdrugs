@@ -54,7 +54,8 @@
     "notifications": "通知",
     "notificationsPlus": "通知 9+",
     "notificationsCount": "通知 {{count}}",
-    "languageSelect": "言語選択"
+    "languageSelect": "言語選択",
+    "logoLockup": "Alle、ソウルイベントマップ"
   },
   "search": {
     "placeholder": "イベント・場所を検索"
@@ -95,7 +96,8 @@
     "openOriginal": "原文を開く ↗",
     "prev": "前へ",
     "next": "次へ",
-    "ariaLabel": "関連記事ページ"
+    "ariaLabel": "関連記事ページ",
+    "autoMatch": "自動マッチング"
   },
   "overview": {
     "title": "概要",
@@ -126,5 +128,9 @@
   },
   "fallback": {
     "none": "(なし)"
+  },
+  "errorBoundary": {
+    "message": "このエリアを表示できませんでした",
+    "retry": "再試行"
   }
 }

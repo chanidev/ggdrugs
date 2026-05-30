@@ -357,7 +357,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
               {ciHash ? (
                 <div className="flex items-center justify-between gap-2 rounded-(--radius-md) border border-(--color-success)/40 bg-(--color-success)/5 px-3 py-2 text-[12px]">
                   <span className="text-(--color-success)">
-                    {t('form.kycSuccess', { provider: KYC_PROVIDERS.find((p) => p.id === ciProvider)?.label ?? ciProvider })}
+                    {t('form.kycSuccess', { provider: t(`form.kycProvider.${ciProvider}`) })}
                     {IS_KYC_DEV_MOCK && (
                       <span className="ml-1.5 text-(--color-text-subtle)">{t('form.kycDevStub')}</span>
                     )}
@@ -393,7 +393,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                             onChange={() => setCiProvider(p.id)}
                             className="sr-only"
                           />
-                          {p.label}
+                          {t(`form.kycProvider.${p.id}`)}
                         </label>
                       );
                     })}
@@ -406,7 +406,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                   >
                     {verifying
                       ? t('form.kycVerifying')
-                      : t('form.kycVerify', { provider: KYC_PROVIDERS.find((p) => p.id === ciProvider)?.label ?? ciProvider })}
+                      : t('form.kycVerify', { provider: t(`form.kycProvider.${ciProvider}`) })}
                   </button>
                   {verifyError && (
                     <p className="m-0 rounded-(--radius-sm) bg-(--color-error)/5 p-2 text-[11.5px] text-(--color-error)">

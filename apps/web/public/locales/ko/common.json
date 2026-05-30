@@ -54,7 +54,8 @@
     "notifications": "알림",
     "notificationsPlus": "알림 9+",
     "notificationsCount": "알림 {{count}}",
-    "languageSelect": "언어 선택"
+    "languageSelect": "언어 선택",
+    "logoLockup": "Alle, 서울 이벤트 지도"
   },
   "search": {
     "placeholder": "이벤트·장소 검색"
@@ -95,7 +96,8 @@
     "openOriginal": "원문 열기 ↗",
     "prev": "이전",
     "next": "다음",
-    "ariaLabel": "관련 기사 페이지"
+    "ariaLabel": "관련 기사 페이지",
+    "autoMatch": "자동 매칭"
   },
   "overview": {
     "title": "요약",
@@ -126,5 +128,9 @@
   },
   "fallback": {
     "none": "(없음)"
+  },
+  "errorBoundary": {
+    "message": "이 영역을 표시하지 못했어요",
+    "retry": "다시 시도"
   }
 }

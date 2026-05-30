@@ -18,7 +18,8 @@
   "bookmark": {
     "empty": "没有收藏的活动。",
     "loadError": "加载失败。",
-    "hint": "在地图上收藏您喜欢的活动。"
+    "hint": "在地图上收藏您喜欢的活动。",
+    "totalCount": "共 {{count}} 条"
   },
   "review": {
     "empty": "还没有写过评价。",
@@ -46,7 +47,8 @@
     "firstReview": "成为第一个评价者！",
     "photoViewAria": "查看评论照片原图",
     "aiVibeTitle": "AI情感分类: {{label}}",
-    "starsAria": "评分 {{star}} / 5"
+    "starsAria": "评分 {{star}} / 5",
+    "totalCount": "共 {{count}} 条评价"
   },
   "reco": {
     "empty": "没有推荐活动。",
@@ -131,7 +133,17 @@
       "upcoming": "即将开始",
       "ongoing": "进行中",
       "ended": "已结束"
-    }
+    },
+    "weekday": {
+      "sun": "日",
+      "mon": "一",
+      "tue": "二",
+      "wed": "三",
+      "thu": "四",
+      "fri": "五",
+      "sat": "六"
+    },
+    "summaryLabel": "日历摘要"
   },
   "credit": {
     "title": "积分历史",
@@ -260,7 +272,9 @@
       "no_show": "失约",
       "etc": "其他"
     },
-    "photoAlt": "附加照片 {{index}}"
+    "photoAlt": "附加照片 {{index}}",
+    "charCount": "{{count}}/5000字",
+    "photoHint": "{{count}}/10, jpeg/png/webp, 每张最大5MB"
   },
   "block": {
     "loginRequired": "需要登录。",

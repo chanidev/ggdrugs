@@ -238,7 +238,8 @@
     "activeAdmin": "L'admin est actif — rétrograder d'abord",
     "alreadyDeleted": "Déjà supprimé",
     "noActiveSession": "Aucune session active",
-    "uploaderHint": "La promotion/rejection du téléverseur est gérée dans l'onglet Téléverseurs."
+    "uploaderHint": "La promotion/rejection du téléverseur est gérée dans l'onglet Téléverseurs.",
+    "sessionCount": "{{count}} sessions"
   },
   "audit": {
     "overview": "Vue d'ensemble",

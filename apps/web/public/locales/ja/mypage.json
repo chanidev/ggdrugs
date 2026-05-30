@@ -18,7 +18,8 @@
   "bookmark": {
     "empty": "ブックマークしたイベントがありません。",
     "loadError": "読み込みに失敗しました。",
-    "hint": "地図でお気に入りのイベントをブックマークしましょう。"
+    "hint": "地図でお気に入りのイベントをブックマークしましょう。",
+    "totalCount": "{{count}}件"
   },
   "review": {
     "empty": "書いたレビューがありません。",
@@ -46,7 +47,8 @@
     "firstReview": "最初のレビュアーになりましょう！",
     "photoViewAria": "レビュー写真の原本を見る",
     "aiVibeTitle": "AI感情分類: {{label}}",
-    "starsAria": "評価 {{star}} / 5"
+    "starsAria": "評価 {{star}} / 5",
+    "totalCount": "{{count}}件"
   },
   "reco": {
     "empty": "おすすめイベントがありません。",
@@ -131,7 +133,17 @@
       "upcoming": "予定",
       "ongoing": "進行中",
       "ended": "終了"
-    }
+    },
+    "weekday": {
+      "sun": "日",
+      "mon": "月",
+      "tue": "火",
+      "wed": "水",
+      "thu": "木",
+      "fri": "金",
+      "sat": "土"
+    },
+    "summaryLabel": "カレンダー概要"
   },
   "credit": {
     "title": "クレジット履歴",
@@ -260,7 +272,9 @@
       "no_show": "無断欠席",
       "etc": "その他"
     },
-    "photoAlt": "添付写真 {{index}}"
+    "photoAlt": "添付写真 {{index}}",
+    "charCount": "{{count}}/5000文字",
+    "photoHint": "{{count}}/10, jpeg/png/webp, 各最大5MB"
   },
   "block": {
     "loginRequired": "ログインが必要です。",

@@ -238,7 +238,8 @@
     "activeAdmin": "Admin đang hoạt động — hạ cấp trước",
     "alreadyDeleted": "Đã xóa",
     "noActiveSession": "Không có phiên hoạt động",
-    "uploaderHint": "Nâng cấp/từ chối người tải lên được xử lý trong tab Người tải lên."
+    "uploaderHint": "Nâng cấp/từ chối người tải lên được xử lý trong tab Người tải lên.",
+    "sessionCount": "{{count}} phiên"
   },
   "audit": {
     "overview": "Tổng quan",
