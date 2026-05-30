@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { useCurrentUser } from '../lib/auth-context';
@@ -7,36 +7,139 @@ import {
   fetchMyNotifications,
   markAllNotificationsRead,
   markNotificationRead,
+  respondMatchRequest,
   type MyNotification,
 } from '../lib/api';
 import { loginUrl } from '../lib/auth-redirect';
 
 /**
- * /notifications — A_500 알림 센터.
+ * /notifications — A_806 알림 페이지 (Slice 6).
  *
- * 목록 + 읽음 표시. 이벤트가 연결된 알림이고 eventAvailable=true 면 상세 링크.
- * 필터: 전체 / 미읽음 토글. "모두 읽음" 일괄 처리 버튼.
+ * GG-NOTI-001: 알림 목록 표시
+ * GG-NOTI-002~006: 유형별 뱃지 표시 (match_request/group_invite/appointment/appointment_update/mate_eval/chat_message)
+ * GG-NOTI-007: 클릭 → 연결 화면 이동 (relatedEntityType 기반 분기)
+ * GG-NOTI-008/009: match_request 수락/거절 인라인 (relatedEntityType==='match_request'만)
+ * GG-NOTI-010/011: group_invite 수락/거절 인라인 (relatedEntityType==='match_request'만)
+ * GG-NOTI-012: appointment 알림 → /chat/rooms/:relatedChatRoomId
+ * GG-NOTI-013: mate_eval → /evaluate/:appointmentId
+ * GG-NOTI-014: appointment_update → /me?tab=calendar
+ *
+ * 중요: 인라인 수락/거절은 relatedEntityType==='match_request'인 경우에만 표시.
+ * match_request/group_invite '수락됨' 후속 알림은 relatedEntityType='chat_room'이므로
+ * 버튼이 표시되지 않고 채팅방으로 이동한다.
  */
 
 type Filter = 'all' | 'unread';
 
+// ─── 유형별 메타 ────────────────────────────────────────────
+const NOTIF_TYPE_META: Record<
+  string,
+  { label: string; badgeCls: string }
+> = {
+  match_request: {
+    label: '메이트신청',
+    badgeCls: 'bg-(--color-accent)/10 text-(--color-accent)',
+  },
+  group_invite: {
+    label: '그룹초대',
+    badgeCls: 'bg-(--color-info)/10 text-(--color-info)',
+  },
+  appointment: {
+    label: '약속',
+    badgeCls: 'bg-emerald-50 text-emerald-700',
+  },
+  appointment_update: {
+    label: '약속만료',
+    badgeCls: 'bg-amber-50 text-amber-700',
+  },
+  mate_eval: {
+    label: '평가요청',
+    badgeCls: 'bg-amber-50 text-amber-700',
+  },
+  kick_vote: {
+    label: '퇴출투표',
+    badgeCls: 'bg-(--color-error)/10 text-(--color-error)',
+  },
+  chat_message: {
+    label: '메시지',
+    badgeCls: 'bg-(--color-surface-alt) text-(--color-text-muted)',
+  },
+  vacancy_notification: {
+    label: '공석',
+    badgeCls: 'bg-(--color-surface-alt) text-(--color-text-muted)',
+  },
+};
+
+function typeMeta(t: string | null) {
+  if (!t) return null;
+  return NOTIF_TYPE_META[t] ?? null;
+}
+
+// ─── 라우팅 헬퍼 — relatedEntityType 우선 분기 ─────────────
+// GG-NOTI-007/012/013/014 실제 라우트만 사용
+function resolveHref(n: MyNotification): string | null {
+  const { notificationType: nt, relatedEntityType: ret, relatedEntityId: rid, relatedChatRoomId: rcrid } = n;
+
+  // chat_room 타입: match_request 수락됨, group_invite 수락됨, chat_message 모두
+  if (ret === 'chat_room') {
+    return rid ? `/chat/rooms/${rid}` : null;
+  }
+
+  // match_request 타입: 인라인 수락/거절로 처리 — 별도 이동 없음
+  if (ret === 'match_request') {
+    return null;
+  }
+
+  // appointment 타입: notificationType으로 세분화
+  if (ret === 'appointment') {
+    if (nt === 'mate_eval') {
+      // GG-NOTI-013: 평가화면 이동 — relatedEntityId가 appointmentId
+      return rid ? `/evaluate/${rid}` : null;
+    }
+    if (nt === 'appointment_update') {
+      // GG-NOTI-014: 약속만료 → 캘린더
+      return '/me?tab=calendar';
+    }
+    // GG-NOTI-012: 약속 제안/확정 → 해당 채팅방 (BFF 조인값 사용)
+    return rcrid ? `/chat/rooms/${rcrid}` : null;
+  }
+
+  // kick_vote: 별도 이동 없음 (읽음 처리만)
+  if (ret === 'kick_vote') {
+    return null;
+  }
+
+  // notificationType 없는 일반 이벤트 알림 폴백
+  if (!nt) {
+    return n.eventAvailable && n.eventId ? `/events/${n.eventId}` : null;
+  }
+
+  return null;
+}
+
+// 인라인 수락/거절: relatedEntityType==='match_request'인 경우에만
+// (match_request 신청됨 + group_invite 초대됨 모두 해당)
+function hasInlineAction(n: MyNotification): boolean {
+  return n.relatedEntityType === 'match_request';
+}
+
 export function NotificationsPage() {
   const { user, loading: authLoading } = useCurrentUser();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
   const [items, setItems] = useState<MyNotification[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [markAllBusy, setMarkAllBusy] = useState(false);
+  // 수락/거절 진행 중인 notificationId set
+  const [respondingIds, setRespondingIds] = useState<Set<string>>(new Set());
 
   const reload = useCallback(() => {
     const ctrl = new AbortController();
     setLoading(true);
     setError(null);
-    fetchMyNotifications(
-      { limit: 50, unreadOnly: filter === 'unread' },
-      ctrl.signal,
-    )
+    fetchMyNotifications({ limit: 50, unreadOnly: filter === 'unread' }, ctrl.signal)
       .then((r) => {
         setItems(r.items);
         setTotal(r.total);
@@ -54,21 +157,18 @@ export function NotificationsPage() {
     return reload();
   }, [authLoading, user, reload]);
 
+  // 읽음 처리 + 이동 (readAt 여부와 무관하게 resolveHref로 이동)
   const onItemClick = async (n: MyNotification) => {
-    if (n.readAt) return;
-    // 옵티미스틱 업데이트 — 실패해도 상세 링크 이동은 계속.
-    setItems((prev) =>
-      prev.map((x) =>
-        x.notificationId === n.notificationId
-          ? { ...x, readAt: new Date().toISOString() }
-          : x,
-      ),
-    );
-    try {
-      await markNotificationRead(n.notificationId);
-    } catch {
-      /* silent — 다음 reload 에서 바로잡힘 */
+    if (!n.readAt) {
+      setItems((prev) =>
+        prev.map((x) =>
+          x.notificationId === n.notificationId ? { ...x, readAt: new Date().toISOString() } : x,
+        ),
+      );
+      try { await markNotificationRead(n.notificationId); } catch { /* silent */ }
     }
+    const href = resolveHref(n);
+    if (href) void navigate(href);
   };
 
   const onMarkAll = async () => {
@@ -83,7 +183,31 @@ export function NotificationsPage() {
     }
   };
 
+  // 인라인 수락/거절 — relatedEntityType==='match_request'인 알림에만 호출
+  // relatedEntityId는 matchRequestId
+  const onRespond = async (
+    n: MyNotification,
+    action: 'accept' | 'reject',
+  ) => {
+    if (!n.relatedEntityId || n.relatedEntityType !== 'match_request') return;
+    setRespondingIds((s) => new Set(s).add(n.notificationId));
+    try {
+      await respondMatchRequest(n.relatedEntityId, action);
+      try { await markNotificationRead(n.notificationId); } catch { /* silent */ }
+      reload();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : `${action} failed`);
+    } finally {
+      setRespondingIds((s) => {
+        const next = new Set(s);
+        next.delete(n.notificationId);
+        return next;
+      });
+    }
+  };
+
   if (authLoading) return <Shell>{null}</Shell>;
+
   if (!user) {
     return (
       <Shell>
@@ -108,7 +232,7 @@ export function NotificationsPage() {
       <header className="mb-6 flex items-end justify-between gap-2">
         <div>
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            알림 센터 · A_203 / A_500
+            알림 센터 · A_806
           </p>
           <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">알림</h1>
         </div>
@@ -122,34 +246,32 @@ export function NotificationsPage() {
         </button>
       </header>
 
-      <div className="mb-4 inline-flex rounded-(--radius-md) border border-(--color-border) p-0.5">
-        {(
-          [
-            { key: 'all', label: '전체' },
-            { key: 'unread', label: '미읽음' },
-          ] as const
-        ).map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            onClick={() => setFilter(f.key)}
-            className={`h-8 rounded-[6px] px-3 text-[13px] font-medium transition-colors ${
-              filter === f.key
-                ? 'bg-(--color-accent) text-white'
-                : 'text-(--color-text-muted) hover:text-(--color-text)'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-        <span className="ml-auto self-center px-2 text-[12px] text-(--color-text-subtle)">
+      {/* 필터 탭 */}
+      <div className="mb-4 flex items-center gap-2">
+        <div className="inline-flex rounded-(--radius-md) border border-(--color-border) p-0.5">
+          {(['all', 'unread'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              className={`h-8 rounded-[6px] px-3 text-[13px] font-medium transition-colors ${
+                filter === f
+                  ? 'bg-(--color-accent) text-white'
+                  : 'text-(--color-text-muted) hover:text-(--color-text)'
+              }`}
+            >
+              {f === 'all' ? '전체' : '미읽음'}
+            </button>
+          ))}
+        </div>
+        <span className="ml-auto text-[12px] text-(--color-text-subtle)">
           {total.toLocaleString()}건
         </span>
       </div>
 
       {error && (
         <div className="mb-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-          불러오기 실패: {error}
+          오류: {error}
         </div>
       )}
 
@@ -162,60 +284,119 @@ export function NotificationsPage() {
           </div>
         ) : (
           <ul className="divide-y divide-(--color-border)">
-            {items.map((n) => {
-              const unread = !n.readAt;
-              const hasEventLink = n.eventAvailable && n.eventId;
-              const content = (
-                <div className="flex items-start gap-3 p-4">
-                  {unread ? (
-                    <span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-(--color-accent)" />
-                  ) : (
-                    <span aria-hidden className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-(--color-border)" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <h3
-                      className={`m-0 text-[14px] ${
-                        unread ? 'font-semibold text-(--color-text)' : 'text-(--color-text-muted)'
-                      }`}
-                    >
-                      {n.title}
-                    </h3>
-                    <p className="m-0 mt-0.5 text-[13px] text-(--color-text)">{n.message}</p>
-                    <p className="tabular m-0 mt-1 text-[11px] text-(--color-text-subtle)">
-                      {n.createdAt.slice(0, 19).replace('T', ' ')}
-                      {!n.eventAvailable && n.eventId && (
-                        <span className="ml-2 text-(--color-text-subtle)">(이벤트 비공개 또는 삭제됨)</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              );
-              return (
-                <li key={n.notificationId}>
-                  {hasEventLink ? (
-                    <Link
-                      to={`/events/${n.eventId}`}
-                      onClick={() => void onItemClick(n)}
-                      className="block transition-colors hover:bg-(--color-surface-alt)"
-                    >
-                      {content}
-                    </Link>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => void onItemClick(n)}
-                      className="block w-full text-left transition-colors hover:bg-(--color-surface-alt)"
-                    >
-                      {content}
-                    </button>
-                  )}
-                </li>
-              );
-            })}
+            {items.map((n) => (
+              <NotifItem
+                key={n.notificationId}
+                n={n}
+                responding={respondingIds.has(n.notificationId)}
+                onItemClick={onItemClick}
+                onRespond={onRespond}
+              />
+            ))}
           </ul>
         )}
       </div>
     </Shell>
+  );
+}
+
+// ─── 개별 알림 항목 ─────────────────────────────────────────
+
+function NotifItem({
+  n,
+  responding,
+  onItemClick,
+  onRespond,
+}: {
+  n: MyNotification;
+  responding: boolean;
+  onItemClick: (n: MyNotification) => void;
+  onRespond: (n: MyNotification, action: 'accept' | 'reject') => void;
+}) {
+  const unread = !n.readAt;
+  const meta = typeMeta(n.notificationType);
+  const showInline = hasInlineAction(n);
+
+  return (
+    <li>
+      <div
+        className={`flex items-start gap-3 p-4 transition-colors ${unread ? '' : 'opacity-75'}`}
+      >
+        {/* 읽음 인디케이터 */}
+        <span
+          aria-hidden
+          className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+            unread ? 'bg-(--color-accent)' : 'bg-(--color-border)'
+          }`}
+        />
+
+        <div className="min-w-0 flex-1">
+          {/* 유형 뱃지 */}
+          {meta && (
+            <span
+              className={`mb-1 inline-flex items-center gap-1 rounded-(--radius-sm) px-1.5 py-0.5 text-[10px] font-semibold ${meta.badgeCls}`}
+            >
+              {meta.label}
+            </span>
+          )}
+
+          {/* 제목/내용 — 클릭 가능 영역 */}
+          <button
+            type="button"
+            onClick={() => onItemClick(n)}
+            className="block w-full text-left"
+          >
+            <h3
+              className={`m-0 text-[14px] ${
+                unread ? 'font-semibold text-(--color-text)' : 'text-(--color-text-muted)'
+              }`}
+            >
+              {n.title}
+            </h3>
+            <p className="m-0 mt-0.5 text-[13px] text-(--color-text)">{n.message}</p>
+            <p className="tabular m-0 mt-1 text-[11px] text-(--color-text-subtle)">
+              {n.createdAt.slice(0, 19).replace('T', ' ')}
+              {!n.eventAvailable && n.eventId && (
+                <span className="ml-2 text-(--color-text-subtle)">(이벤트 비공개 또는 삭제됨)</span>
+              )}
+            </p>
+          </button>
+
+          {/* 인라인 수락/거절 (relatedEntityType==='match_request'만) — GG-NOTI-008/009/010/011 */}
+          {showInline && (
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                disabled={responding}
+                onClick={() => onRespond(n, 'accept')}
+                className="inline-flex h-7 items-center rounded-(--radius-md) bg-(--color-accent) px-3 text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:opacity-40"
+              >
+                {responding ? '처리 중…' : '수락'}
+              </button>
+              <button
+                type="button"
+                disabled={responding}
+                onClick={() => onRespond(n, 'reject')}
+                className="inline-flex h-7 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
+              >
+                거절
+              </button>
+            </div>
+          )}
+
+          {/* 이벤트 링크 (notificationType 없는 이벤트 알림 폴백) */}
+          {!n.notificationType && n.eventAvailable && n.eventId && (
+            <Link
+              to={`/events/${n.eventId}`}
+              onClick={() => onItemClick(n)}
+              className="mt-1 inline-flex items-center gap-1 text-[12px] text-(--color-accent) hover:underline"
+            >
+              이벤트 보기 <Icon name="arrow" size={12} />
+            </Link>
+          )}
+        </div>
+      </div>
+    </li>
   );
 }
 
