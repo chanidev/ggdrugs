@@ -205,17 +205,6 @@ export async function resolveExpiredKickVotes(now: Date = new Date()): Promise<R
     // 아직 만료되지 않은 라운드는 skip
     if (!expiresAt || expiresAt > now) continue;
 
-    // 이미 전원 응답 완료된 라운드는 skip (스케줄러가 재처리할 필요 없음)
-    const allAlreadyVoted = notifs.every((n) => {
-      try {
-        const m = JSON.parse(n.message) as { voteResult?: string };
-        return m.voteResult !== undefined;
-      } catch {
-        return false;
-      }
-    });
-    if (allAlreadyVoted) continue;
-
     processed++;
 
     // 미응답 알림에 agree 를 기록
@@ -304,7 +293,7 @@ export async function resolveExpiredKickVotes(now: Date = new Date()): Promise<R
             })),
           });
         }
-      });
+      }, { isolationLevel: 'Serializable' });
       kicked++;
     } catch (err) {
       logger.warn({ err, chatRoomId: chatRoomId.toString(), targetUserId: targetUserId.toString() }, 'kick vote resolve error');
