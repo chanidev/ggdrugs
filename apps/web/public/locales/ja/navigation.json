@@ -2,9 +2,18 @@
   "sidebar": {
     "eyebrow": "ソウルで\nイベントを探す方法",
     "description": "地図のピン、チャット、フィルターでフェスティバル・博覧会・シンポジウム・カンファレンスを探索しましょう。",
-    "filter": { "title": "フィルター検索", "description": "5つの軸で絞り込む" },
-    "list":   { "title": "一覧を見る", "description": "カテゴリー別に閲覧" },
-    "chat":   { "title": "チャット検索", "description": "自然言語で質問" },
+    "filter": {
+      "title": "フィルター検索",
+      "description": "5つの軸で絞り込む"
+    },
+    "list": {
+      "title": "一覧を見る",
+      "description": "カテゴリー別に閲覧"
+    },
+    "chat": {
+      "title": "チャット検索",
+      "description": "自然言語で質問"
+    },
     "ariaLabel": "イベントナビゲーションメニュー",
     "navLabel": "ナビゲーションセクション"
   },
@@ -16,9 +25,9 @@
   },
   "mobile": {
     "tabs": {
-      "list":   "リスト",
+      "list": "リスト",
       "filter": "フィルター",
-      "chat":   "チャット"
+      "chat": "チャット"
     },
     "backToList": "リストへ戻る",
     "eventSummary": "イベント概要",
@@ -154,7 +163,8 @@
     },
     "aiSummaryLabel": "AI要約",
     "descSummaryLabel": "内容要約",
-    "relatedArticlesCount": "関連記事"
+    "relatedArticlesCount": "関連記事",
+    "relatedArticlesCountTitle": "関連記事 {{count}}件 — 下位3件を表示、全件は詳細ページで"
   },
   "map": {
     "ariaLabel": "イベントマップ",

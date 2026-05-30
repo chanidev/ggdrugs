@@ -2,9 +2,18 @@
   "sidebar": {
     "eyebrow": "La façon de trouver\ndes événements à Séoul",
     "description": "Explorez festivals, expositions, symposiums et conférences grâce aux épingles sur la carte, au chat et aux filtres.",
-    "filter": { "title": "Recherche par filtre", "description": "Affinez selon 5 axes" },
-    "list":   { "title": "Liste complète", "description": "Parcourir par catégorie" },
-    "chat":   { "title": "Recherche par chat", "description": "Posez vos questions en langage naturel" },
+    "filter": {
+      "title": "Recherche par filtre",
+      "description": "Affinez selon 5 axes"
+    },
+    "list": {
+      "title": "Liste complète",
+      "description": "Parcourir par catégorie"
+    },
+    "chat": {
+      "title": "Recherche par chat",
+      "description": "Posez vos questions en langage naturel"
+    },
     "ariaLabel": "Menu de navigation des événements",
     "navLabel": "Section de navigation"
   },
@@ -16,9 +25,9 @@
   },
   "mobile": {
     "tabs": {
-      "list":   "Liste",
+      "list": "Liste",
       "filter": "Filtre",
-      "chat":   "Chat"
+      "chat": "Chat"
     },
     "backToList": "Retour à la liste",
     "eventSummary": "Résumé de l'événement",
@@ -154,7 +163,8 @@
     },
     "aiSummaryLabel": "Résumé IA",
     "descSummaryLabel": "Résumé du contenu",
-    "relatedArticlesCount": "Articles liés"
+    "relatedArticlesCount": "Articles liés",
+    "relatedArticlesCountTitle": "{{count}} articles liés — 3 en dessous, tous sur la page de détail"
   },
   "map": {
     "ariaLabel": "Carte des événements",

@@ -2,9 +2,18 @@
   "sidebar": {
     "eyebrow": "Cách tìm sự kiện\nở Seoul",
     "description": "Khám phá lễ hội, triển lãm, hội thảo và hội nghị bằng ghim bản đồ, chat và bộ lọc.",
-    "filter": { "title": "Tìm kiếm bộ lọc", "description": "Thu hẹp theo 5 tiêu chí" },
-    "list":   { "title": "Xem danh sách", "description": "Duyệt theo danh mục" },
-    "chat":   { "title": "Tìm kiếm chat", "description": "Hỏi bằng ngôn ngữ tự nhiên" },
+    "filter": {
+      "title": "Tìm kiếm bộ lọc",
+      "description": "Thu hẹp theo 5 tiêu chí"
+    },
+    "list": {
+      "title": "Xem danh sách",
+      "description": "Duyệt theo danh mục"
+    },
+    "chat": {
+      "title": "Tìm kiếm chat",
+      "description": "Hỏi bằng ngôn ngữ tự nhiên"
+    },
     "ariaLabel": "Menu điều hướng sự kiện",
     "navLabel": "Phần điều hướng"
   },
@@ -16,9 +25,9 @@
   },
   "mobile": {
     "tabs": {
-      "list":   "Danh sách",
+      "list": "Danh sách",
       "filter": "Bộ lọc",
-      "chat":   "Chat"
+      "chat": "Chat"
     },
     "backToList": "Về danh sách",
     "eventSummary": "Tóm tắt sự kiện",
@@ -154,7 +163,8 @@
     },
     "aiSummaryLabel": "Tóm tắt AI",
     "descSummaryLabel": "Tóm tắt nội dung",
-    "relatedArticlesCount": "Bài liên quan"
+    "relatedArticlesCount": "Bài liên quan",
+    "relatedArticlesCountTitle": "{{count}} bài liên quan — 3 bài dưới đây, tất cả ở trang chi tiết"
   },
   "map": {
     "ariaLabel": "Bản đồ sự kiện",

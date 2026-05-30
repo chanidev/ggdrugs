@@ -192,7 +192,7 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
             {detail.articleCount > 0 && (
               <span
                 className="ml-auto inline-flex items-center gap-1 rounded-full bg-(--color-accent-bg) px-2 py-0.5 text-[11px] font-medium text-(--color-accent)"
-                title={`${t('eventSummary.relatedArticlesCount')} ${detail.articleCount}건 — 아래 상위 3건, 전체는 상세 페이지`}
+                title={t('eventSummary.relatedArticlesCountTitle', { count: detail.articleCount })}
               >
                 <span className="tabular">{detail.articleCount}</span>
                 <span>{t('eventSummary.relatedArticlesCount')}</span>

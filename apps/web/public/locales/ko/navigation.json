@@ -2,9 +2,18 @@
   "sidebar": {
     "eyebrow": "이벤트를 찾는\n서울의 방법",
     "description": "지도 위 핀과 채팅, 필터로 축제·박람회·심포지움·컨퍼런스를 탐색하세요.",
-    "filter": { "title": "필터 검색", "description": "5개 축으로 좁히기" },
-    "list":   { "title": "전체목록 조회", "description": "카테고리별 인덱스" },
-    "chat":   { "title": "채팅방 검색", "description": "자연어로 묻기" },
+    "filter": {
+      "title": "필터 검색",
+      "description": "5개 축으로 좁히기"
+    },
+    "list": {
+      "title": "전체목록 조회",
+      "description": "카테고리별 인덱스"
+    },
+    "chat": {
+      "title": "채팅방 검색",
+      "description": "자연어로 묻기"
+    },
     "ariaLabel": "이벤트 탐색 메뉴",
     "navLabel": "탐색 섹션"
   },
@@ -16,9 +25,9 @@
   },
   "mobile": {
     "tabs": {
-      "list":   "목록",
+      "list": "목록",
       "filter": "필터",
-      "chat":   "채팅"
+      "chat": "채팅"
     },
     "backToList": "목록으로",
     "eventSummary": "이벤트 요약",
@@ -154,7 +163,8 @@
     },
     "aiSummaryLabel": "AI 요약",
     "descSummaryLabel": "내용 요약",
-    "relatedArticlesCount": "관련 기사"
+    "relatedArticlesCount": "관련 기사",
+    "relatedArticlesCountTitle": "관련 기사 {{count}}건 — 아래 상위 3건, 전체는 상세 페이지"
   },
   "map": {
     "ariaLabel": "이벤트 지도",

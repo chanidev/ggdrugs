@@ -2,9 +2,18 @@
   "sidebar": {
     "eyebrow": "在首尔\n寻找活动的方式",
     "description": "通过地图图钉、聊天和筛选探索节日、博览会、研讨会和会议。",
-    "filter": { "title": "筛选搜索", "description": "按 5 个维度缩小范围" },
-    "list":   { "title": "全部列表", "description": "按分类浏览" },
-    "chat":   { "title": "聊天搜索", "description": "用自然语言提问" },
+    "filter": {
+      "title": "筛选搜索",
+      "description": "按 5 个维度缩小范围"
+    },
+    "list": {
+      "title": "全部列表",
+      "description": "按分类浏览"
+    },
+    "chat": {
+      "title": "聊天搜索",
+      "description": "用自然语言提问"
+    },
     "ariaLabel": "活动导航菜单",
     "navLabel": "导航区域"
   },
@@ -16,9 +25,9 @@
   },
   "mobile": {
     "tabs": {
-      "list":   "列表",
+      "list": "列表",
       "filter": "筛选",
-      "chat":   "聊天"
+      "chat": "聊天"
     },
     "backToList": "返回列表",
     "eventSummary": "活动摘要",
@@ -154,7 +163,8 @@
     },
     "aiSummaryLabel": "AI 摘要",
     "descSummaryLabel": "内容摘要",
-    "relatedArticlesCount": "相关文章"
+    "relatedArticlesCount": "相关文章",
+    "relatedArticlesCountTitle": "相关文章 {{count}} 篇 — 下方显示前3篇，全部见详情页"
   },
   "map": {
     "ariaLabel": "活动地图",

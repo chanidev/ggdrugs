@@ -2,9 +2,18 @@
   "sidebar": {
     "eyebrow": "Seoul's way\nto find events",
     "description": "Explore festivals, expos, symposiums and conferences with map pins, chat, and filters.",
-    "filter": { "title": "Filter Search", "description": "Narrow by 5 axes" },
-    "list":   { "title": "Full List View", "description": "Browse by category" },
-    "chat":   { "title": "Chat Search", "description": "Ask in natural language" },
+    "filter": {
+      "title": "Filter Search",
+      "description": "Narrow by 5 axes"
+    },
+    "list": {
+      "title": "Full List View",
+      "description": "Browse by category"
+    },
+    "chat": {
+      "title": "Chat Search",
+      "description": "Ask in natural language"
+    },
     "ariaLabel": "Event navigation menu",
     "navLabel": "Navigation section"
   },
@@ -16,9 +25,9 @@
   },
   "mobile": {
     "tabs": {
-      "list":   "List",
+      "list": "List",
       "filter": "Filter",
-      "chat":   "Chat"
+      "chat": "Chat"
     },
     "backToList": "Back to list",
     "eventSummary": "Event summary",
@@ -154,7 +163,8 @@
     },
     "aiSummaryLabel": "AI Summary",
     "descSummaryLabel": "Content Summary",
-    "relatedArticlesCount": "Related articles"
+    "relatedArticlesCount": "Related articles",
+    "relatedArticlesCountTitle": "{{count}} related articles — top 3 below, all on detail page"
   },
   "map": {
     "ariaLabel": "Event map",
