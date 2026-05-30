@@ -86,7 +86,7 @@ CREATE UNIQUE INDEX uq_credit_appt_complete_user
 -- [리뷰 medium] mate_eval 알림 DB-level dedup:
 -- TOCTOU(findFirst+create) 경합 방지를 위한 partial unique index.
 -- 스케줄러 재시작·다중 프로세스 환경에서도 동일 약속·사용자에 대한 중복 mate_eval 알림 불가.
--- notifyMateEval 내 upsert({create:..., update:{}}) 패턴이 이 인덱스를 최종 방어선으로 사용.
+-- notifyMateEval 내 findFirst(1차 방어) + try/catch(P2002)(최종 방어) 패턴이 이 인덱스를 최종 방어선으로 사용.
 CREATE UNIQUE INDEX uq_notif_mate_eval_per_user_appt
   ON notifications (user_id, related_entity_id)
   WHERE notification_type = 'mate_eval' AND related_entity_type = 'appointment';

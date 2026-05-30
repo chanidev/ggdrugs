@@ -487,9 +487,8 @@ export interface NotifyMateEvalResult {
  * 스캔 범위 최적화:
  *   - 모든 active 멤버의 appointment_complete 크레딧이 이미 존재하는 약속(= 완전 처리됨)은
  *     candidates 쿼리에서 NOT EXISTS 서브쿼리로 제외 → 시간이 지날수록 O(1)에 수렴.
- *   - Prisma raw query가 필요 없도록 Prisma의 `none` relation filter 활용:
- *     "active 멤버 중 appointment_complete 크레딧이 없는 멤버가 한 명도 없는 약속" 제외.
- *     즉 "아직 처리 안 된 멤버가 한 명이라도 있는 약속"만 조회.
+ *   - $queryRaw 태그드 템플릿으로 구현: NOT EXISTS 서브쿼리가 appointment_complete 크레딧이 없는
+ *     active 멤버가 한 명이라도 있는 약속만 반환.
  */
 export async function notifyMateEval(
   now: Date = new Date(),
