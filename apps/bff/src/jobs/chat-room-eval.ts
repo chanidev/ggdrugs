@@ -1328,6 +1328,90 @@ async function main() {
       return f;
     });
 
+    // ── CASE T5-6: kick.vote.concurrent.race_prevented ─────────────
+    // 동시 startKickVote 2건 → SERIALIZABLE 트랜잭션으로 중복 라운드 생성 차단
+    // 1건만 201, 나머지 409(kick_vote_already_active 또는 concurrent_conflict)
+    const t5Suffix5 = Date.now() + 500;
+    const synVoteRaceOwner = await prisma.user.create({
+      data: { socialUid: `t5_vr_owner_${t5Suffix5}`, authProvider: 'dev', nickname: `VROwner${t5Suffix5}`, activeRole: 'user' },
+    });
+    const synVoteRaceMember = await prisma.user.create({
+      data: { socialUid: `t5_vr_member_${t5Suffix5}`, authProvider: 'dev', nickname: `VRMember${t5Suffix5}`, activeRole: 'user' },
+    });
+    const synVoteRaceTarget = await prisma.user.create({
+      data: { socialUid: `t5_vr_target_${t5Suffix5}`, authProvider: 'dev', nickname: `VRTarget${t5Suffix5}`, activeRole: 'user' },
+    });
+
+    const t5VoteRaceRoom = await prisma.chatRoom.create({
+      data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: synVoteRaceOwner.userId },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t5VoteRaceRoom.chatRoomId, userId: synVoteRaceOwner.userId, role: 'owner', memberStatus: 'active' },
+        { chatRoomId: t5VoteRaceRoom.chatRoomId, userId: synVoteRaceMember.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: t5VoteRaceRoom.chatRoomId, userId: synVoteRaceTarget.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+
+    await check('kick.vote.concurrent.race_prevented', async () => {
+      const f: string[] = [];
+
+      const vrAuth = { userId: synVoteRaceOwner.userId, nickname: synVoteRaceOwner.nickname, activeRole: synVoteRaceOwner.activeRole };
+      // 동일 대상에 대해 두 startKickVote 를 동시 실행 → 1건만 201, 나머지 409
+      const [raceRes1, raceRes2] = await Promise.all([
+        (async () => {
+          const r = mockRes();
+          await startKickVote(
+            mockReq({
+              auth: vrAuth,
+              params: { chatRoomId: t5VoteRaceRoom.chatRoomId.toString() },
+              body: { targetUserId: synVoteRaceTarget.userId.toString() },
+            }),
+            r,
+          );
+          return r;
+        })(),
+        (async () => {
+          const r = mockRes();
+          await startKickVote(
+            mockReq({
+              auth: vrAuth,
+              params: { chatRoomId: t5VoteRaceRoom.chatRoomId.toString() },
+              body: { targetUserId: synVoteRaceTarget.userId.toString() },
+            }),
+            r,
+          );
+          return r;
+        })(),
+      ]);
+
+      const raceStatuses = [raceRes1._c.status, raceRes2._c.status].sort();
+      // 1건 201, 1건 409
+      if (!raceStatuses.includes(201)) f.push(`no successful startKickVote (statuses: ${raceStatuses.join(',')})`);
+      if (!raceStatuses.includes(409)) f.push(`no conflict response (statuses: ${raceStatuses.join(',')})`);
+
+      // DB: kick_vote 알림이 정확히 1라운드(2건: owner+member) — 중복 라운드 없어야 함
+      const voteNotifCount = await prisma.notification.count({
+        where: {
+          notificationType: 'kick_vote',
+          relatedEntityId: t5VoteRaceRoom.chatRoomId,
+          message: { contains: `"targetUserId":"${synVoteRaceTarget.userId.toString()}"` },
+        },
+      });
+      // 멤버 2명(owner+member)에게 1라운드 → 2건이어야 함 (4건이면 중복 라운드)
+      if (voteNotifCount !== 2) f.push(`kick_vote notif count ${voteNotifCount} != 2 (duplicate round created!)`);
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { relatedEntityId: t5VoteRaceRoom.chatRoomId } });
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t5VoteRaceRoom.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t5VoteRaceRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t5VoteRaceRoom.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synVoteRaceOwner.userId, synVoteRaceMember.userId, synVoteRaceTarget.userId] } } });
+
+      return f;
+    });
+
     // Task 5 클린업 (t5Room)
     await prisma.notification.deleteMany({ where: { relatedEntityId: t5Room.chatRoomId, relatedEntityType: 'chat_room' } });
     await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t5Room.chatRoomId } });

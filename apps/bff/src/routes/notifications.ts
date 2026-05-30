@@ -33,8 +33,10 @@ export async function listMyNotifications(req: Request, res: Response) {
   const page = parseIntClamp(req.query.page, 1, 1, 1_000_000);
   const unreadOnly = req.query.unreadOnly === 'true';
 
+  // kick_vote 알림은 readAt 이 영구적으로 null 이라 unreadOnly 목록에서도 제외해야
+  // 배지 카운터(unreadCount)와 의미적으로 일관성을 유지할 수 있다.
   const where = unreadOnly
-    ? { userId: auth.userId, readAt: null }
+    ? { userId: auth.userId, readAt: null, NOT: { notificationType: 'kick_vote' } }
     : { userId: auth.userId };
 
   const [total, rows] = await Promise.all([

@@ -1052,7 +1052,7 @@ export async function startKickVote(req: Request, res: Response) {
     return;
   }
 
-  // 방장 검증
+  // 방장 검증 (트랜잭션 외부에서 빠른 실패)
   const ownerMembership = await prisma.groupMembership.findFirst({
     where: { chatRoomId, userId: auth.userId, role: 'owner', memberStatus: 'active' },
     select: { membershipId: true },
@@ -1062,7 +1062,7 @@ export async function startKickVote(req: Request, res: Response) {
     return;
   }
 
-  // 대상 검증
+  // 대상 검증 (트랜잭션 외부에서 빠른 실패)
   const targetMembership = await prisma.groupMembership.findFirst({
     where: { chatRoomId, userId: targetUserId, memberStatus: 'active' },
     select: { membershipId: true },
@@ -1072,55 +1072,88 @@ export async function startKickVote(req: Request, res: Response) {
     return;
   }
 
-  // 중복 투표 방지: 해당 대상에 대해 이미 진행 중인 kick_vote 가 있으면 409
-  // "진행 중" = 해당 대상을 가리키는 알림 중 voteResult 가 아직 기록되지 않은 것이 1건이라도 존재
-  // findFirst 는 임의의 1건만 반환하므로 부분 완료 상태(일부만 투표)에서 오탐 가능 → findMany 로 전체 조회
-  const allTargetVoteNotifs = await prisma.notification.findMany({
-    where: {
-      notificationType: 'kick_vote',
-      relatedEntityId: chatRoomId,
-      relatedEntityType: 'kick_vote',
-      message: { contains: `"targetUserId":"${targetUserId.toString()}"` },
-    },
-    select: { message: true },
-  });
-  // 1건이라도 voteResult 없으면 해당 라운드가 아직 진행 중 → 신규 라운드 차단
-  const roundIsActive = allTargetVoteNotifs.some((n) => {
-    try {
-      return (JSON.parse(n.message) as { voteResult?: string }).voteResult === undefined;
-    } catch {
-      // corrupt JSON — 안전하게 active 로 간주
-      return true;
+  // TOCTOU 방지: 중복 라운드 체크 + createMany 를 SERIALIZABLE 트랜잭션으로 묶는다.
+  // 두 동시 요청이 동시에 guard 를 통과해 알림 중복 생성하는 경쟁 조건을 차단.
+  let activeMembers: { userId: bigint }[] = [];
+  let now: Date;
+  let expiresAt: Date;
+
+  try {
+    const result = await prisma.$transaction(
+      async (tx) => {
+        // 중복 투표 방지: 해당 대상에 대해 이미 진행 중인 kick_vote 가 있으면 409
+        // "진행 중" = 해당 대상을 가리키는 알림 중 voteResult 가 아직 기록되지 않은 것이 1건이라도 존재
+        // findFirst 는 임의의 1건만 반환하므로 부분 완료 상태(일부만 투표)에서 오탐 가능 → findMany 로 전체 조회
+        const allTargetVoteNotifs = await tx.notification.findMany({
+          where: {
+            notificationType: 'kick_vote',
+            relatedEntityId: chatRoomId,
+            relatedEntityType: 'kick_vote',
+            message: { contains: `"targetUserId":"${targetUserId.toString()}"` },
+          },
+          select: { message: true },
+        });
+        // 1건이라도 voteResult 없으면 해당 라운드가 아직 진행 중 → 신규 라운드 차단
+        const roundIsActive = allTargetVoteNotifs.some((n) => {
+          try {
+            return (JSON.parse(n.message) as { voteResult?: string }).voteResult === undefined;
+          } catch {
+            // corrupt JSON — 안전하게 active 로 간주
+            return true;
+          }
+        });
+        if (roundIsActive) {
+          const err = new Error('kick_vote_already_active');
+          (err as Error & { code?: string }).code = 'VOTE_ACTIVE';
+          throw err;
+        }
+
+        // active 멤버 조회 (대상 제외)
+        const members = await tx.groupMembership.findMany({
+          where: { chatRoomId, memberStatus: 'active', userId: { not: targetUserId } },
+          select: { userId: true },
+        });
+
+        const txNow = new Date();
+        const txExpiresAt = new Date(txNow.getTime() + 36 * 60 * 60 * 1000); // +36h
+
+        const notifData = members.map((m) => ({
+          userId: m.userId,
+          title: '강퇴 투표가 시작되었습니다',
+          message: JSON.stringify({ chatRoomId: chatRoomId.toString(), targetUserId: targetUserId.toString(), expiresAt: txExpiresAt.toISOString() }),
+          scheduledAt: txNow,
+          isSent: true,
+          sentAt: txNow,
+          notificationType: 'kick_vote',
+          relatedEntityId: chatRoomId,
+          relatedEntityType: 'kick_vote',
+          // expiresAt 은 Notification 모델에 없으므로 message JSON 에 포함
+        }));
+
+        await tx.notification.createMany({ data: notifData });
+
+        return { members, txNow, txExpiresAt };
+      },
+      { isolationLevel: 'Serializable' },
+    );
+
+    activeMembers = result.members;
+    now = result.txNow;
+    expiresAt = result.txExpiresAt;
+  } catch (err: unknown) {
+    const e = err as Error & { code?: string };
+    if (e.code === 'VOTE_ACTIVE' || e.message === 'kick_vote_already_active') {
+      res.status(409).json({ error: 'kick_vote_already_active' });
+      return;
     }
-  });
-  if (roundIsActive) {
-    res.status(409).json({ error: 'kick_vote_already_active' });
-    return;
+    // Prisma P2034: SERIALIZABLE 트랜잭션 충돌 (동시 요청)
+    const pe = err as { code?: string; message?: string };
+    if (pe.code === 'P2034' || (pe.message && pe.message.includes('write conflict'))) {
+      res.status(409).json({ error: 'concurrent_conflict', retryable: true });
+      return;
+    }
+    throw err;
   }
-
-  // active 멤버 조회 (대상 제외)
-  const activeMembers = await prisma.groupMembership.findMany({
-    where: { chatRoomId, memberStatus: 'active', userId: { not: targetUserId } },
-    select: { userId: true },
-  });
-
-  const now = new Date();
-  const expiresAt = new Date(now.getTime() + 36 * 60 * 60 * 1000); // +36h
-
-  const notifData = activeMembers.map((m) => ({
-    userId: m.userId,
-    title: '강퇴 투표가 시작되었습니다',
-    message: JSON.stringify({ chatRoomId: chatRoomId.toString(), targetUserId: targetUserId.toString(), expiresAt: expiresAt.toISOString() }),
-    scheduledAt: now,
-    isSent: true,
-    sentAt: now,
-    notificationType: 'kick_vote',
-    relatedEntityId: chatRoomId,
-    relatedEntityType: 'kick_vote',
-    // expiresAt 은 Notification 모델에 없으므로 message JSON 에 포함
-  }));
-
-  await prisma.notification.createMany({ data: notifData });
 
   logger.info(
     { action: 'kick_vote_start', chatRoomId: chatRoomId.toString(), initiatorId: maskId(auth.userId), targetUserId: maskId(targetUserId) },
