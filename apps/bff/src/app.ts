@@ -87,6 +87,7 @@ import {
   getRecommendations,
 } from './routes/mate.js';
 import { updateMyProfile, listMyCredits } from './routes/me.js';
+import { listMyAppointments } from './routes/appointments.js';
 import { submitEvaluation, getMyEvaluation } from './routes/evaluation.js';
 import {
   sendOneToOneRequest,
@@ -423,6 +424,13 @@ export function createApp(): Express {
     '/me/credits',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => listMyCredits(req, res).catch(next),
+  );
+
+  // GG-MY-002 캘린더용 내 약속 조회 (Slice 6)
+  app.get(
+    '/me/appointments',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyAppointments(req, res).catch(next),
   );
 
   app.post(
