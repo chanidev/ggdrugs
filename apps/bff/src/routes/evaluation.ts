@@ -94,13 +94,14 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
   if (!evaluatedUserId) { res.status(400).json({ error: 'evaluatedUserId required' }); return; }
   if (evaluatedUserId === auth.userId) { res.status(400).json({ error: 'cannot_eval_self' }); return; }
 
-  // ── [이슈7] evaluatedUserId가 동일 chatRoomId 멤버인지 검증 ────────────
-  // [오버라이드] 그룹 지원: roomType 게이트 삭제. evaluatedUserId가 멤버임만 검증.
+  // ── [이슈7] evaluatedUserId가 동일 chatRoomId active 멤버인지 검증 ─────
+  // [오버라이드] 그룹 지원: roomType 게이트 삭제.
+  // [이슈review:important] memberStatus='active' 비대칭 수정 — kicked/left 전 멤버는 평가 대상 불가.
   const targetMembership = await prisma.groupMembership.findUnique({
     where: { chatRoomId_userId: { chatRoomId: appointment.chatRoomId, userId: evaluatedUserId } },
     select: { memberStatus: true },
   });
-  if (!targetMembership) {
+  if (!targetMembership || targetMembership.memberStatus !== 'active') {
     res.status(400).json({ error: 'evaluated_user_not_in_room' }); return;
   }
 
@@ -163,16 +164,23 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
         select: { evalId: true },
       });
 
-      await tx.festivalSurvey.create({
-        data: {
+      // [이슈review:critical] N-1 그룹 평가 시맨틱:
+      // FestivalSurvey/FestivalReview는 UNIQUE (appointmentId, userId) — 참가자당 1회.
+      // 그룹 N인 방에서 u1이 u2·u3를 각각 평가할 때 2번째 POST부터는 이미 존재하므로 skip.
+      // upsert({update:{}}) = "create if not exists, otherwise no-op" 패턴.
+      await tx.festivalSurvey.upsert({
+        where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
+        create: {
           appointmentId,
           userId: auth.userId,
           atmosphere, program, food, safety, transport,
         },
+        update: {}, // no-op: 이미 존재하면 변경 없음
       });
 
-      await tx.festivalReview.create({
-        data: {
+      await tx.festivalReview.upsert({
+        where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
+        create: {
           appointmentId,
           userId: auth.userId,
           eventId: appointment.eventId,   // [이슈4] Appointment.eventId 복사
@@ -180,6 +188,7 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
           body: reviewBody,
           photoUrls,
         },
+        update: {}, // no-op: 이미 존재하면 변경 없음
       });
 
       // [오버라이드] 크레딧 적립: mate_eval_complete +10

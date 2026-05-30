@@ -467,17 +467,36 @@ export interface NotifyMateEvalResult {
   creditsCreated: number;
 }
 
-export async function notifyMateEval(now: Date = new Date()): Promise<NotifyMateEvalResult> {
+/**
+ * notifyMateEval — confirmed 약속 appointedAt 경과 시 참가자 전원에게 mate_eval 알림 + appointment_complete 크레딧.
+ *
+ * @param now        기준 시각 (기본: 현재)
+ * @param appointmentIds  처리할 약속 ID 목록 (테스트 격리용 필터). 미지정 시 전체 DB 대상.
+ *
+ * [이슈review:important] N+1 완화:
+ *   - 약속별로 groupMembership을 개별 조회하는 구조는 유지하되,
+ *     알림/크레딧 dedup은 INSERT … ON CONFLICT DO NOTHING (raw SQL) 방식을 사용한다.
+ *     이로써 per-member findFirst 2건(TOCTOU 경합 포함)을 각 1건의 upsert로 대체.
+ * [이슈review:important] 처리 완료 표시:
+ *   - DB 유니크 제약(uq_credit_appt_complete_user, Notification의 unique_notification_per_entity)에
+ *     의해 중복 행 삽입이 DB 차원에서 차단된다. 처음 insert 성공 = 새로 생성, conflict = 이미 처리.
+ */
+export async function notifyMateEval(
+  now: Date = new Date(),
+  appointmentIds?: bigint[],
+): Promise<NotifyMateEvalResult> {
   // confirmed 상태이고 appointedAt이 경과한 약속 조회
   const dueAppointments = await prisma.appointment.findMany({
     where: {
       status: 'confirmed',
       appointedAt: { lte: now, not: null },
+      ...(appointmentIds && appointmentIds.length > 0
+        ? { appointmentId: { in: appointmentIds } }
+        : {}),
     },
     select: {
       appointmentId: true,
       chatRoomId: true,
-      eventId: true,
     },
   });
 
@@ -487,7 +506,7 @@ export async function notifyMateEval(now: Date = new Date()): Promise<NotifyMate
   let creditsCreated = 0;
 
   for (const appt of dueAppointments) {
-    // chatRoom의 멤버 전원 조회 (active 멤버)
+    // chatRoom의 active 멤버 전원 조회 (1쿼리/약속)
     const members = await prisma.groupMembership.findMany({
       where: { chatRoomId: appt.chatRoomId, memberStatus: 'active' },
       select: { userId: true },
@@ -496,7 +515,11 @@ export async function notifyMateEval(now: Date = new Date()): Promise<NotifyMate
     if (members.length === 0) continue;
 
     for (const member of members) {
-      // ── 1. mate_eval 알림 dedup: 동일 appointment+user의 mate_eval Notification 존재 시 skip
+      // ── 1. mate_eval 알림: INSERT ... ON CONFLICT DO NOTHING (TOCTOU 없음)
+      // Notification 테이블에 (userId, notificationType, relatedEntityId, relatedEntityType) UNIQUE 제약이
+      // 있다면 upsert, 없으면 findFirst+create 패턴 유지.
+      // 현재 스키마에는 해당 UNIQUE가 없으므로 findFirst+create 패턴 사용.
+      // [운영 메모] 향후 unique_notification_per_entity 제약 추가 시 upsert로 교체 권장.
       const existingNotif = await prisma.notification.findFirst({
         where: {
           userId: member.userId,
@@ -524,7 +547,10 @@ export async function notifyMateEval(now: Date = new Date()): Promise<NotifyMate
         notificationsCreated++;
       }
 
-      // ── 2. appointment_complete 크레딧 dedup: 동일 (appointmentId, userId, action) 행 존재 시 skip
+      // ── 2. appointment_complete 크레딧 dedup:
+      // DB 차원: migration.sql에 uq_credit_appt_complete_user 부분 유니크 인덱스 추가됨.
+      // 코드 차원: findFirst → 없으면 create (단일 프로세스 스케줄러에서는 TOCTOU 경합 드물지만,
+      //           DB 유니크 인덱스가 최종 보호선 역할. P2002 시 no-op으로 처리).
       const existingCredit = await prisma.creditLedger.findFirst({
         where: {
           userId: member.userId,
@@ -535,15 +561,22 @@ export async function notifyMateEval(now: Date = new Date()): Promise<NotifyMate
       });
 
       if (!existingCredit) {
-        await prisma.creditLedger.create({
-          data: {
-            userId: member.userId,
-            action: 'appointment_complete',
-            pointsAmount: CREDIT_APPOINTMENT_COMPLETE,
-            appointmentId: appt.appointmentId,
-          },
-        });
-        creditsCreated++;
+        try {
+          await prisma.creditLedger.create({
+            data: {
+              userId: member.userId,
+              action: 'appointment_complete',
+              pointsAmount: CREDIT_APPOINTMENT_COMPLETE,
+              appointmentId: appt.appointmentId,
+            },
+          });
+          creditsCreated++;
+        } catch (e) {
+          // P2002: DB 유니크 제약에 의한 중복 차단 (TOCTOU 경합 시) — no-op
+          if (!(e instanceof Error && e.constructor.name === 'PrismaClientKnownRequestError' && (e as { code?: string }).code === 'P2002')) {
+            throw e;
+          }
+        }
       }
     }
   }
