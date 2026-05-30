@@ -65,6 +65,11 @@ model User {
   updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
 
+  // 슬라이스8 제재 상태 (GG-REPORT-006/007). 'none'|'warned'|'suspended'
+  sanctionStatus    String    @default("none") @map("sanction_status") @db.VarChar(20)
+  sanctionExpiresAt DateTime? @map("sanction_expires_at") @db.Timestamptz
+  sanctionReason    String?   @map("sanction_reason") @db.Text
+
   region                  Region?               @relation(fields: [regionId], references: [regionId])
   uploaderProfile         UploaderProfile?
   adminProfile            AdminProfile?
@@ -95,6 +100,9 @@ model User {
   festivalSurveys         FestivalSurvey[]
   festivalReviews         FestivalReview[]
   creditLedgers           CreditLedger[]
+  reportsGiven            Report[]              @relation("ReportSender")
+  reportsReceived         Report[]              @relation("ReportTarget")
+  reportsMade             Report[]              @relation("ReportAdmin")
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -855,7 +863,7 @@ model Appointment {
 
   chatRoom        ChatRoom          @relation(fields: [chatRoomId], references: [chatRoomId])
   votes           AppointmentVote[]
-  mateEvaluations MateEvaluation[]  // [리뷰 medium] FK 관계 — 삭제된 약속 ID로 평가 행 잠김 방지
+  mateEvaluations MateEvaluation[] // [리뷰 medium] FK 관계 — 삭제된 약속 ID로 평가 행 잠김 방지
 
   @@index([chatRoomId, status], map: "idx_appointment_room_status")
   @@index([expiresAt, status], map: "idx_appointment_expires")
@@ -921,7 +929,7 @@ model MateEvaluation {
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   appointment   Appointment @relation(fields: [appointmentId], references: [appointmentId])
-  evaluator     User        @relation("EvalGiver",    fields: [evaluatorUserId], references: [userId])
+  evaluator     User        @relation("EvalGiver", fields: [evaluatorUserId], references: [userId])
   evaluatedUser User        @relation("EvalReceiver", fields: [evaluatedUserId], references: [userId])
 
   @@unique([appointmentId, evaluatorUserId, evaluatedUserId], map: "uq_mate_eval_pair")
@@ -1000,4 +1008,38 @@ model CreditLedger {
 
   @@index([userId, createdAt(sort: Desc)], map: "idx_credit_ledger_user")
   @@map("credit_ledgers")
+}
+
+// =============================================================
+// REPORT (ADR 0007 결정14 — GG-REPORT-001~009)
+// targetType: 'post'|'comment'|'chat_message'|'mate_eval'
+// reason:     'spam'|'abuse'|'harassment'|'obscene'|'no_show'|'etc'
+// status:     'pending'|'reviewed'|'dismissed'
+// adminAction: null|'warned'|'suspended'|'false_report'
+// =============================================================
+model Report {
+  reportId       BigInt    @id @default(autoincrement()) @map("report_id")
+  reporterId     BigInt    @map("reporter_id")
+  targetUserId   BigInt    @map("target_user_id")
+  targetType     String    @map("target_type") @db.VarChar(20)
+  targetEntityId BigInt    @map("target_entity_id")
+  reason         String    @db.VarChar(50)
+  detail         String?   @db.VarChar(500)
+  status         String    @default("pending") @db.VarChar(20)
+  adminId        BigInt?   @map("admin_id")
+  adminAction    String?   @map("admin_action") @db.VarChar(20)
+  adminNote      String?   @map("admin_note") @db.Text
+  reviewedAt     DateTime? @map("reviewed_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  reporter   User  @relation("ReportSender", fields: [reporterId], references: [userId])
+  targetUser User  @relation("ReportTarget", fields: [targetUserId], references: [userId])
+  admin      User? @relation("ReportAdmin", fields: [adminId], references: [userId])
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_reports_status_created")
+  @@index([reporterId, createdAt(sort: Desc)], map: "idx_reports_reporter")
+  @@index([targetUserId, createdAt(sort: Desc)], map: "idx_reports_target")
+  @@index([targetType, targetEntityId], map: "idx_reports_entity")
+  @@map("reports")
 }
