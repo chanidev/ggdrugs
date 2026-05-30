@@ -125,9 +125,10 @@ export function ChatRequestPage() {
                   <p className="mt-2 text-[14px] text-(--color-text-muted)">
                     {t('request.pendingInfo')}
                   </p>
-                  <p className="mt-1 text-[13px] text-(--color-text-subtle)">
-                    신청은 <strong>24시간</strong> 동안 유효합니다.
-                  </p>
+                  <p
+                    className="mt-1 text-[13px] text-(--color-text-subtle)"
+                    dangerouslySetInnerHTML={{ __html: t('request.expiryInfo') }}
+                  />
                 </div>
 
                 {err && (

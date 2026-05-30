@@ -29,7 +29,7 @@ function ageLabel(lower: AgeRange): string {
   return `${lower}~${lower + 4}`;
 }
 
-// ── 국적 목록 ──
+// ── 국적 목록 (백엔드 value 는 한국어 고정, 라벨만 번역) ──
 const NATIONALITIES = [
   '한국',
   '미국',
@@ -268,7 +268,7 @@ export function MateFormPage() {
                     <option value="">{t('form.nationalityPlaceholder')}</option>
                     {NATIONALITIES.map((n) => (
                       <option key={n} value={n}>
-                        {n}
+                        {t(`nationalities.${n}`)}
                       </option>
                     ))}
                   </select>
@@ -398,7 +398,7 @@ export function MateFormPage() {
                     <option value="">{t('form.nationalityPlaceholder')}</option>
                     {NATIONALITIES.map((n) => (
                       <option key={n} value={n}>
-                        {n}
+                        {t(`nationalities.${n}`)}
                       </option>
                     ))}
                   </select>

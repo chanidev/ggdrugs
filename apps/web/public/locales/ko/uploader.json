@@ -56,7 +56,8 @@
     "emailLabel": "이메일",
     "phoneLabel": "연락처",
     "appliedAt": "신청",
-    "approvedBadge": "승인됨"
+    "approvedBadge": "승인됨",
+    "createdAt": "등록"
   },
   "form": {
     "title": "제목",

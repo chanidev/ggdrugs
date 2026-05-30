@@ -1,5 +1,9 @@
 import { useTranslation } from 'react-i18next';
-import { CHAT_EXAMPLES } from '../data/mock';
+
+interface ChatExample {
+  q: string;
+  hint: string;
+}
 
 /**
  * ChatHelpPanel — 채팅 섹션의 설명 + 예시 쿼리 리스트.
@@ -7,6 +11,7 @@ import { CHAT_EXAMPLES } from '../data/mock';
  */
 export function ChatHelpPanel({ onPick }: { onPick: (q: string) => void }) {
   const { t } = useTranslation('chat');
+  const examples = t('dock.examples', { returnObjects: true }) as ChatExample[];
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="border-b border-(--color-border) bg-(--color-surface-warm) px-5 py-5">
@@ -18,7 +23,7 @@ export function ChatHelpPanel({ onPick }: { onPick: (q: string) => void }) {
         </p>
       </div>
       <div className="flex flex-col gap-2 px-5 py-4">
-        {CHAT_EXAMPLES.map((ex) => (
+        {Array.isArray(examples) && examples.map((ex) => (
           <button
             key={ex.q}
             type="button"

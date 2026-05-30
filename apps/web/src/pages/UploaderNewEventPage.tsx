@@ -237,11 +237,11 @@ export function UploaderNewEventPage() {
           <Box>{t('page.loginRequired')}</Box>
         ) : !profile ? (
           <Box>
-            먼저 <Link to="/uploader" className="underline">{t('page.apply')}</Link> 을 완료해 주세요.
+            <span dangerouslySetInnerHTML={{ __html: t('page.needApproval').replace('<a>', `<a href="/uploader" class="underline">`).replace('</a>', '</a>') }} />
           </Box>
         ) : profile.approvalStatus !== 'approved' ? (
           <Box>
-            업로더 승인이 완료되지 않았어요. <Link to="/uploader" className="underline">{t('page.title')}</Link> 에서 상태를 확인해 주세요.
+            <span dangerouslySetInnerHTML={{ __html: t('page.notApproved').replace('<a>', `<a href="/uploader" class="underline">`).replace('</a>', '</a>') }} />
           </Box>
         ) : user.activeRole !== 'uploader' ? (
           <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">

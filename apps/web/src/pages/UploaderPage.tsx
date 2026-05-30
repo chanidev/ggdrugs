@@ -254,9 +254,10 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
         <p className="m-0 mt-1 text-[13px] text-(--color-text-muted)">
           {t('page.applyDescription')}
         </p>
-        <p className="m-0 mt-2 text-[12px] text-(--color-text-subtle)">
-          주민번호 대신 <strong>기관은 사업자등록번호</strong>, <strong>개인은 본인인증</strong>으로 신원을 확인해요 (ADR 0003).
-        </p>
+        <p
+          className="m-0 mt-2 text-[12px] text-(--color-text-subtle)"
+          dangerouslySetInnerHTML={{ __html: t('page.applyIdNote') }}
+        />
       </div>
 
       <form
@@ -732,7 +733,7 @@ function ApprovedBody({
                         {e.title}
                       </div>
                       <div className="mt-0.5 tabular text-[12px] text-(--color-text-subtle)">
-                        {e.startDate} ~ {e.endDate} · 등록 {e.createdAt.slice(0, 10)}
+                        {e.startDate} ~ {e.endDate} · {t('page.createdAt')} {e.createdAt.slice(0, 10)}
                       </div>
                       {needsReason && e.latestDecision && (
                         <div
