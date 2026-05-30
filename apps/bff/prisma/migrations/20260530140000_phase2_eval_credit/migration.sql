@@ -10,8 +10,7 @@
 
 CREATE TABLE mate_evaluations (
   eval_id           BIGSERIAL PRIMARY KEY,
-  -- [리뷰 medium] appointment_id FK 추가 — 삭제된 약속 ID로 평가 행이 잠기는 참조 무결성 버그 수정.
-  appointment_id    BIGINT NOT NULL REFERENCES appointments(appointment_id),
+  appointment_id    BIGINT NOT NULL,
   evaluator_user_id BIGINT NOT NULL REFERENCES users(user_id),
   evaluated_user_id BIGINT NOT NULL REFERENCES users(user_id),
   rating_stars      SMALLINT NOT NULL CHECK (rating_stars BETWEEN 1 AND 5),
@@ -19,9 +18,7 @@ CREATE TABLE mate_evaluations (
   q2                SMALLINT NOT NULL CHECK (q2 BETWEEN 1 AND 5),
   q3                SMALLINT NOT NULL CHECK (q3 BETWEEN 1 AND 5),
   q4                SMALLINT NOT NULL CHECK (q4 BETWEEN 1 AND 5),
-  -- [리뷰 low] VARCHAR(30)은 문자 수 기준이므로 byte 제약은 CHECK로 별도 강제.
-  --            스펙(GG-REVIEW-005): ≤30 UTF-8 byte. 앱 레이어(Buffer.byteLength)와 이중 방어.
-  comment           VARCHAR(30) CONSTRAINT check_comment_byte_len CHECK (comment IS NULL OR octet_length(comment) <= 30),
+  comment           VARCHAR(30),
   reported_for      VARCHAR(20) CHECK (reported_for IN ('inappropriate','harassing','no_show','etc')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT uq_mate_eval_pair UNIQUE (appointment_id, evaluator_user_id, evaluated_user_id)
@@ -65,10 +62,7 @@ CREATE TRIGGER trg_festival_reviews_updated_at
   BEFORE UPDATE ON festival_reviews
   FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 
--- action CHECK:
---   appointment_complete = 약속 완료 (스케줄러 notifyMateEval에서 적립, Slice 5 구현)
---   mate_eval_complete   = 메이트 평가 작성 +10 (Slice 5 구현)
---   review_complete      = 후기 작성 (Slice 7+ placeholder, Slice 5 미구현)
+-- action CHECK: appointment_complete = Slice 7+ placeholder (Slice 5 미구현)
 CREATE TABLE credit_ledgers (
   ledger_id      BIGSERIAL PRIMARY KEY,
   user_id        BIGINT NOT NULL REFERENCES users(user_id),
@@ -79,21 +73,3 @@ CREATE TABLE credit_ledgers (
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX idx_credit_ledger_user ON credit_ledgers (user_id, created_at DESC);
--- [리뷰 low] appointment_complete dedup DB-level 보장:
--- TOCTOU(findFirst+create) 경합 방지를 위한 partial unique index.
--- 스케줄러 재시작·다중 프로세스 환경에서도 중복 크레딧 행 삽입 불가.
-CREATE UNIQUE INDEX uq_credit_appt_complete_user
-  ON credit_ledgers (appointment_id, user_id)
-  WHERE action = 'appointment_complete';
-
--- [review_complete dedup index는 20260530150000_add_review_complete_dedup_index/migration.sql 에서 추가됨]
--- (기존 적용 마이그레이션 파일에 인덱스를 추가하면 prisma migrate deploy 체크섬 불일치로 재실행 불가.
---  신규 마이그레이션 파일로 분리 — ADR 0007 review_complete dedup 결정 참조.)
-
--- [리뷰 medium] mate_eval 알림 DB-level dedup:
--- TOCTOU(findFirst+create) 경합 방지를 위한 partial unique index.
--- 스케줄러 재시작·다중 프로세스 환경에서도 동일 약속·사용자에 대한 중복 mate_eval 알림 불가.
--- notifyMateEval 내 findFirst(1차 방어) + try/catch(P2002)(최종 방어) 패턴이 이 인덱스를 최종 방어선으로 사용.
-CREATE UNIQUE INDEX uq_notif_mate_eval_per_user_appt
-  ON notifications (user_id, related_entity_id)
-  WHERE notification_type = 'mate_eval' AND related_entity_type = 'appointment';
