@@ -139,7 +139,7 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
         <div className="flex flex-wrap gap-2">
           {photoUrls.map((url, idx) => (
             <div key={url} className="relative h-16 w-16">
-              <img src={url} alt={`첨부사진 ${idx + 1}`} className="h-full w-full rounded-(--radius-sm) object-cover" />
+              <img src={url} alt={t('evaluation.photoAlt', { index: idx + 1 })} className="h-full w-full rounded-(--radius-sm) object-cover" />
               <button
                 type="button"
                 onClick={() => setPhotoUrls((prev) => prev.filter((_, i) => i !== idx))}

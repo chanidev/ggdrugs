@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * A_500 마이페이지 월간 캘린더.
@@ -67,6 +68,7 @@ export function MonthCalendar({
   onMonthChange: (y: number, m0: number) => void;
   onDayClick: (date: string) => void;
 }) {
+  const { t, i18n } = useTranslation('mypage');
   const today = ymd(new Date());
 
   // 6주 grid (42 cells) — 항상 고정 크기, 빈 셀은 전/다음달 dim.
@@ -96,7 +98,9 @@ export function MonthCalendar({
     return m;
   }, [events, cells]);
 
-  const label = `${year}년 ${month0 + 1}월`;
+  const label = new Intl.DateTimeFormat(i18n.language, { year: 'numeric', month: 'long' }).format(
+    new Date(year, month0, 1),
+  );
 
   const prev = () => {
     if (month0 === 0) onMonthChange(year - 1, 11);
@@ -121,14 +125,14 @@ export function MonthCalendar({
             onClick={toToday}
             className="inline-flex h-7 items-center rounded-(--radius-sm) border border-(--color-border) px-2 text-[12px] text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
           >
-            오늘
+            {t('calendar.today')}
           </button>
         </div>
         <div className="flex gap-1">
           <button
             type="button"
             onClick={prev}
-            aria-label="이전 달"
+            aria-label={t('calendar.prevMonth')}
             className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
           >
             ‹
@@ -136,7 +140,7 @@ export function MonthCalendar({
           <button
             type="button"
             onClick={next}
-            aria-label="다음 달"
+            aria-label={t('calendar.nextMonth')}
             className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
           >
             ›
@@ -146,7 +150,7 @@ export function MonthCalendar({
 
       <div
         role="grid"
-        aria-label={`${label} 캘린더`}
+        aria-label={t('calendar.calendarAriaLabel', { label })}
         className="grid grid-cols-7 gap-px bg-(--color-border) overflow-hidden rounded-(--radius-md)"
       >
         {WEEKDAY_LABELS.map((w, i) => (

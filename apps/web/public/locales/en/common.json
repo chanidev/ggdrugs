@@ -47,7 +47,13 @@
     "eventSheet": "Event sheet",
     "sheetCollapse": "Collapse sheet to half",
     "sheetExpandFull": "Expand sheet fully",
-    "sheetExpand": "Expand sheet"
+    "sheetExpand": "Expand sheet",
+    "bookmark": "Bookmark",
+    "bookmarked": "Bookmarked",
+    "bookmarkLoginRequired": "Login to bookmark",
+    "notifications": "Notifications",
+    "notificationsPlus": "Notifications 9+",
+    "notificationsCount": "Notifications {{count}}"
   },
   "search": {
     "placeholder": "Search events & places"

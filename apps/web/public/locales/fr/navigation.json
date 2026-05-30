@@ -36,7 +36,8 @@
     "chatAriaInput": "Rechercher des événements en langage naturel",
     "chatAriaSend": "Envoyer la recherche",
     "aiCandidates": "{{count}} candidats IA · sémantique",
-    "sheetTabsLabel": "Onglets de feuille"
+    "sheetTabsLabel": "Onglets de feuille",
+    "homeAria": "Accueil Alle"
   },
   "filter": {
     "region": {
@@ -186,5 +187,17 @@
     "sortHint": "En cours & à venir en premier",
     "sortHintTitle": "Les événements en cours et à venir apparaissent en premier ; les événements terminés en dernier",
     "distanceAriaLabel": "Distance {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "Recherche par filtre",
+    "list": "Voir la liste complète",
+    "chat": "Recherche de chat",
+    "detailSuffix": "Détails de {{title}}",
+    "closeAria": "Fermer le panneau"
+  },
+  "phase": {
+    "upcoming": "À venir",
+    "ongoing": "En cours",
+    "ended": "Terminé"
   }
 }

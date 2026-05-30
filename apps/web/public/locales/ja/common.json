@@ -47,7 +47,13 @@
     "eventSheet": "イベントシート",
     "sheetCollapse": "シートを半分に折りたたむ",
     "sheetExpandFull": "シートを完全に展開",
-    "sheetExpand": "シートを展開"
+    "sheetExpand": "シートを展開",
+    "bookmark": "ブックマーク",
+    "bookmarked": "ブックマーク済み",
+    "bookmarkLoginRequired": "ログイン後にブックマーク",
+    "notifications": "通知",
+    "notificationsPlus": "通知 9+",
+    "notificationsCount": "通知 {{count}}"
   },
   "search": {
     "placeholder": "イベント・場所を検索"

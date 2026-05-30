@@ -186,5 +186,20 @@
     "sortHint": "진행중·예정 우선",
     "sortHintTitle": "진행중·예정 이벤트가 먼저, 종료는 뒤로",
     "distanceAriaLabel": "거리 {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "필터 검색",
+    "list": "전체목록 조회",
+    "chat": "채팅방 검색",
+    "detailSuffix": "{{title}} 상세",
+    "closeAria": "패널 닫기"
+  },
+  "phase": {
+    "upcoming": "예정",
+    "ongoing": "진행중",
+    "ended": "종료"
+  },
+  "mobile": {
+    "homeAria": "Alle 홈"
   }
 }

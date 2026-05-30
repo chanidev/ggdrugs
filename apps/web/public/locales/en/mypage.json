@@ -42,7 +42,10 @@
     "submit": "Submit",
     "ratingAria": "Rating 1–5",
     "notEndedNotice": "Reviews can only be written after the event has ended.",
-    "firstReview": "Be the first to review!"
+    "firstReview": "Be the first to review!",
+    "photoViewAria": "View original review photo",
+    "aiVibeTitle": "AI Emotion Classification: {{label}}",
+    "starsAria": "Rating {{star}} / 5"
   },
   "reco": {
     "empty": "No recommended events.",
@@ -118,7 +121,11 @@
     "reviewWrite": "Write review",
     "reviewEdit": "Edit review",
     "reviewAfterEnd": "Review after end",
-    "reviewAfterEndShort": "Write after end"
+    "reviewAfterEndShort": "Write after end",
+    "today": "Today",
+    "prevMonth": "Previous Month",
+    "nextMonth": "Next Month",
+    "calendarAriaLabel": "{{label}} Calendar"
   },
   "credit": {
     "title": "Credit History",
@@ -244,7 +251,8 @@
       "harassing": "Harassment/Violence",
       "no_show": "No-show",
       "etc": "Other"
-    }
+    },
+    "photoAlt": "Attached photo {{index}}"
   },
   "block": {
     "loginRequired": "Login is required.",
@@ -256,6 +264,28 @@
     "uploader": "Uploader",
     "admin": "Admin",
     "switchToUploader": "Uploader mode",
-    "switchToUser": "User mode"
+    "switchToUser": "User mode",
+    "applyButton": "Apply as Uploader",
+    "pendingLabel": "Uploader Review Pending",
+    "pendingTitle": "Admin Review in Progress — Check details in console",
+    "rejectLabel": "Rejected",
+    "revisionLabel": "Revision Requested",
+    "reapplyLabel": "Reapply",
+    "cooldownTitle": "Reapply after {{date}} (7-day cooldown for rejected)",
+    "cooldownDays": "Rejected · Reapply after {{days}} days",
+    "reapplyLink": "{{label}} · Reapply",
+    "reapplyTitle": "{{label}} — Revise and Reapply",
+    "switchFailed": "Switch failed: {{message}}"
+  },
+  "session": {
+    "heading": "Session Management",
+    "logout": "Logout from this device",
+    "loggingOut": "Logging out…",
+    "logoutAll": "Logout from all devices",
+    "loggingOutAll": "Logging out from all…",
+    "logoutAllConfirm": "Do you want to logout from all devices? Sessions on other devices and browsers will also be terminated.",
+    "logoutAllSuccess": "Logged out from {{count}} sessions.",
+    "logoutFailed": "Logout failed: {{message}}",
+    "hint": "Use logout from all devices if loss or theft is suspected."
   }
 }

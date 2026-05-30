@@ -47,7 +47,13 @@
     "eventSheet": "Feuille d'événement",
     "sheetCollapse": "Réduire la feuille à moitié",
     "sheetExpandFull": "Déplier la feuille complètement",
-    "sheetExpand": "Déplier la feuille"
+    "sheetExpand": "Déplier la feuille",
+    "bookmark": "Favori",
+    "bookmarked": "Ajouté aux favoris",
+    "bookmarkLoginRequired": "Connexion requise pour ajouter aux favoris",
+    "notifications": "Notifications",
+    "notificationsPlus": "Notifications 9+",
+    "notificationsCount": "Notifications {{count}}"
   },
   "search": {
     "placeholder": "Rechercher des événements et lieux"

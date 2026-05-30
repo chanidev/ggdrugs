@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCurrentUser } from '../../../lib/auth-context';
 import { ActionButton } from 'seed-design/ui/action-button';
 
@@ -8,6 +9,7 @@ import { ActionButton } from 'seed-design/ui/action-button';
  * 보안 사고 의심 시 후자 사용 — admin revoke (D-6) 와 별개로 본인이 직접 cleanup.
  */
 export function SessionFooter() {
+  const { t } = useTranslation('mypage');
   const { logout, logoutAll } = useCurrentUser();
   const [pending, setPending] = useState<'one' | 'all' | null>(null);
 
@@ -17,25 +19,20 @@ export function SessionFooter() {
       await logout();
       window.location.href = '/';
     } catch (e) {
-      window.alert(`로그아웃 실패: ${(e as Error).message}`);
+      window.alert(t('session.logoutFailed', { message: (e as Error).message }));
       setPending(null);
     }
   };
 
   const onLogoutAll = async () => {
-    if (
-      !window.confirm(
-        '모든 디바이스에서 로그아웃할까요? 다른 기기·브라우저의 세션도 모두 끊겨요.',
-      )
-    )
-      return;
+    if (!window.confirm(t('session.logoutAllConfirm'))) return;
     setPending('all');
     try {
       const r = await logoutAll();
-      window.alert(`${r.deleted}개 세션을 끊었어요.`);
+      window.alert(t('session.logoutAllSuccess', { count: r.deleted }));
       window.location.href = '/';
     } catch (e) {
-      window.alert(`로그아웃 실패: ${(e as Error).message}`);
+      window.alert(t('session.logoutFailed', { message: (e as Error).message }));
       setPending(null);
     }
   };
@@ -43,7 +40,7 @@ export function SessionFooter() {
   return (
     <section className="mt-10 border-t border-(--color-border) pt-6">
       <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-        세션 관리
+        {t('session.heading')}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <ActionButton
@@ -53,7 +50,7 @@ export function SessionFooter() {
           loading={pending === 'one'}
           disabled={pending !== null}
         >
-          {pending === 'one' ? '로그아웃 중…' : '이 디바이스 로그아웃'}
+          {pending === 'one' ? t('session.loggingOut') : t('session.logout')}
         </ActionButton>
         <ActionButton
           variant="neutralOutline"
@@ -62,11 +59,11 @@ export function SessionFooter() {
           loading={pending === 'all'}
           disabled={pending !== null}
         >
-          {pending === 'all' ? '전체 로그아웃 중…' : '모든 디바이스 로그아웃'}
+          {pending === 'all' ? t('session.loggingOutAll') : t('session.logoutAll')}
         </ActionButton>
       </div>
       <p className="m-0 mt-2 text-[11.5px] text-(--color-text-subtle)">
-        분실·탈취가 의심되면 모든 디바이스 로그아웃을 사용하세요.
+        {t('session.hint')}
       </p>
     </section>
   );

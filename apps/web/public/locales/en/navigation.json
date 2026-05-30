@@ -36,7 +36,8 @@
     "chatAriaInput": "Search events in natural language",
     "chatAriaSend": "Send search",
     "aiCandidates": "{{count}} AI candidates · semantic",
-    "sheetTabsLabel": "Sheet tabs"
+    "sheetTabsLabel": "Sheet tabs",
+    "homeAria": "Alle Home"
   },
   "filter": {
     "region": {
@@ -186,5 +187,17 @@
     "sortHint": "Ongoing & upcoming first",
     "sortHintTitle": "Ongoing and upcoming events appear first; ended events last",
     "distanceAriaLabel": "Distance {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "Filter Search",
+    "list": "View All",
+    "chat": "Chat Room Search",
+    "detailSuffix": "{{title}} Details",
+    "closeAria": "Close Panel"
+  },
+  "phase": {
+    "upcoming": "Upcoming",
+    "ongoing": "Ongoing",
+    "ended": "Ended"
   }
 }

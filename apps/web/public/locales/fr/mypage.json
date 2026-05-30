@@ -42,7 +42,10 @@
     "submit": "Envoyer",
     "ratingAria": "Note 1–5",
     "notEndedNotice": "Les avis ne peuvent être rédigés qu'après la fin de l'événement.",
-    "firstReview": "Soyez le premier à donner votre avis !"
+    "firstReview": "Soyez le premier à donner votre avis !",
+    "photoViewAria": "Voir la photo de la critique en haute résolution",
+    "aiVibeTitle": "Classification de l'émotion AI : {{label}}",
+    "starsAria": "Évaluation {{star}} / 5"
   },
   "reco": {
     "empty": "Aucun événement recommandé.",
@@ -118,7 +121,11 @@
     "reviewWrite": "Écrire un avis",
     "reviewEdit": "Modifier l'avis",
     "reviewAfterEnd": "Avis après fin",
-    "reviewAfterEndShort": "Écrire après fin"
+    "reviewAfterEndShort": "Écrire après fin",
+    "today": "Aujourd'hui",
+    "prevMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "calendarAriaLabel": "Calendrier {{label}}"
   },
   "credit": {
     "title": "Historique des crédits",
@@ -244,7 +251,8 @@
       "harassing": "Harcèlement/Violence",
       "no_show": "Absence",
       "etc": "Autre"
-    }
+    },
+    "photoAlt": "Photo jointe {{index}}"
   },
   "block": {
     "loginRequired": "Connexion requise.",
@@ -256,6 +264,28 @@
     "uploader": "Téléverseur",
     "admin": "Administrateur",
     "switchToUploader": "Mode téléverseur",
-    "switchToUser": "Mode utilisateur"
+    "switchToUser": "Mode utilisateur",
+    "applyButton": "Demander en tant qu'uploader",
+    "pendingLabel": "En attente d'examen en tant qu'uploader",
+    "pendingTitle": "Examen en cours par l'administrateur — Vérifiez les détails dans la console",
+    "rejectLabel": "Rejeté",
+    "revisionLabel": "Demande de révision",
+    "reapplyLabel": "Nouvelle demande",
+    "cooldownTitle": "Nouvelle demande possible après {{date}} (7 jours de cooldown après rejet)",
+    "cooldownDays": "Rejeté · Nouvelle demande dans {{days}} jours",
+    "reapplyLink": "{{label}} · Nouvelle demande",
+    "reapplyTitle": "{{label}} — Révisé et nouvelle demande",
+    "switchFailed": "Échec de la transition : {{message}}"
+  },
+  "session": {
+    "heading": "Gestion de session",
+    "logout": "Déconnexion de cet appareil",
+    "loggingOut": "Déconnexion en cours…",
+    "logoutAll": "Déconnexion de tous les appareils",
+    "loggingOutAll": "Déconnexion complète en cours…",
+    "logoutAllConfirm": "Voulez-vous vous déconnecter de tous les appareils ? Les sessions sur d'autres appareils et navigateurs seront également terminées.",
+    "logoutAllSuccess": "Déconnexion de {{count}} sessions réussie.",
+    "logoutFailed": "Échec de la déconnexion : {{message}}",
+    "hint": "Utilisez la déconnexion de tous les appareils en cas de perte ou de vol suspecté."
   }
 }

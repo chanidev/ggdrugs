@@ -136,7 +136,8 @@ export function MobileShell({
  * 가장자리 스트라이프 금지 (anti-AI-slop). 아래로 살짝 fade 하는 box-shadow 만.
  */
 function MobileFloatingHeader() {
-  const { t } = useTranslation('common');
+  const { t: tc } = useTranslation('common');
+  const { t: tn } = useTranslation('navigation');
   const { user, loading } = useCurrentUser();
 
   return (
@@ -149,7 +150,7 @@ function MobileFloatingHeader() {
         boxShadow: '0 1px 0 0 color-mix(in oklch, var(--color-border) 40%, transparent)',
       }}
     >
-      <Link to="/" aria-label="Alle 홈" className="flex h-9 items-center text-(--color-text)">
+      <Link to="/" aria-label={tn('mobile.homeAria')} className="flex h-9 items-center text-(--color-text)">
         <LogoMark size={26} />
         <span className="ml-1.5 text-[15px] font-bold tracking-[-0.02em]">Alle</span>
       </Link>
@@ -162,7 +163,7 @@ function MobileFloatingHeader() {
             <NotificationBell />
             <Link
               to="/me"
-              aria-label={t('aria.myPage')}
+              aria-label={tc('aria.myPage')}
               className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-2.5 text-[12px] font-medium text-(--color-text) transition-colors hover:border-(--color-border-hover)"
             >
               <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
@@ -174,7 +175,7 @@ function MobileFloatingHeader() {
             href={loginUrl('google')}
             className="inline-flex h-8 items-center rounded-(--radius-md) bg-(--color-accent) px-3 text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
           >
-            {t('button.login')}
+            {tc('button.login')}
           </a>
         )}
       </div>

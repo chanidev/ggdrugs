@@ -36,7 +36,8 @@
     "chatAriaInput": "自然言語でイベントを検索",
     "chatAriaSend": "検索を送信",
     "aiCandidates": "AI候補 {{count}} 件 · 意味ベース",
-    "sheetTabsLabel": "シートタブ"
+    "sheetTabsLabel": "シートタブ",
+    "homeAria": "Alle ホーム"
   },
   "filter": {
     "region": {
@@ -186,5 +187,17 @@
     "sortHint": "開催中・予定を優先",
     "sortHintTitle": "開催中・予定のイベントが先に表示され、終了は後に表示されます",
     "distanceAriaLabel": "距離 {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "フィルター検索",
+    "list": "全リスト表示",
+    "chat": "チャット検索",
+    "detailSuffix": "{{title}} 詳細",
+    "closeAria": "パネルを閉じる"
+  },
+  "phase": {
+    "upcoming": "予定",
+    "ongoing": "進行中",
+    "ended": "終了"
   }
 }

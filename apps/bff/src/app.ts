@@ -22,7 +22,8 @@ import {
 } from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
-import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment, translatePost } from './routes/posts.js';
+import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment } from './routes/posts.js';
+import { translatePost } from './routes/translate.js';
 import { listMyRecommendations } from './routes/me-recommendations.js';
 import { postChat, postChatStream } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';

@@ -15,11 +15,10 @@ import {
   fetchPostDetail,
   togglePostLike,
   deletePost,
-  translatePost,
   type PostDetail,
   type TranslateLang,
-  type TranslatePostResult,
 } from '../../lib/api/posts.js';
+import { translatePostContent, type PostTranslationResponse } from '../../lib/api/translate.js';
 import { useCurrentUser } from '../../lib/auth-context';
 
 /**
@@ -42,7 +41,7 @@ export function PostDetailPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [translateOpen, setTranslateOpen] = useState(false);
   const [translateLang, setTranslateLang] = useState<TranslateLang>('en');
-  const [translateResult, setTranslateResult] = useState<TranslatePostResult | null>(null);
+  const [translateResult, setTranslateResult] = useState<PostTranslationResponse | null>(null);
   const [translateLoading, setTranslateLoading] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
 
@@ -102,7 +101,7 @@ export function PostDetailPage() {
     setTranslateError(null);
     setTranslateResult(null);
     try {
-      const result = await translatePost(detail.postId, lang);
+      const result = await translatePostContent(detail.postId, lang);
       setTranslateResult(result);
     } catch (e) {
       setTranslateError(
@@ -315,7 +314,7 @@ export function PostDetailPage() {
                     </div>
                     <div className="border-t border-(--color-border) pt-3">
                       <p className="mb-1 text-[11px] font-medium text-(--color-text-subtle)">{t('post.translateResult')}</p>
-                      <p className="text-[14px] font-semibold">{translateResult.translatedTitle}</p>
+                      <p className="text-[14px] font-semibold">{detail.title}</p>
                       <p className="mt-1 whitespace-pre-wrap text-[13px] text-(--color-text-muted)">{translateResult.translatedBody}</p>
                     </div>
                   </div>

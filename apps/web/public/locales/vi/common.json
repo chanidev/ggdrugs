@@ -47,7 +47,13 @@
     "eventSheet": "Trang sự kiện",
     "sheetCollapse": "Thu gọn trang còn một nửa",
     "sheetExpandFull": "Mở rộng trang hoàn toàn",
-    "sheetExpand": "Mở rộng trang"
+    "sheetExpand": "Mở rộng trang",
+    "bookmark": "Đánh dấu",
+    "bookmarked": "Đã đánh dấu",
+    "bookmarkLoginRequired": "Cần đăng nhập để đánh dấu",
+    "notifications": "Thông báo",
+    "notificationsPlus": "Thông báo 9+",
+    "notificationsCount": "Thông báo {{count}}"
   },
   "search": {
     "placeholder": "Tìm sự kiện & địa điểm"

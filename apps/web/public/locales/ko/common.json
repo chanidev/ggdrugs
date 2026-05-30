@@ -47,7 +47,13 @@
     "eventSheet": "이벤트 시트",
     "sheetCollapse": "시트 절반으로 축소",
     "sheetExpandFull": "시트 전체 펼치기",
-    "sheetExpand": "시트 펼치기"
+    "sheetExpand": "시트 펼치기",
+    "bookmark": "북마크",
+    "bookmarked": "북마크됨",
+    "bookmarkLoginRequired": "로그인 후 북마크",
+    "notifications": "알림",
+    "notificationsPlus": "알림 9+",
+    "notificationsCount": "알림 {{count}}"
   },
   "search": {
     "placeholder": "이벤트·장소 검색"

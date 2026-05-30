@@ -42,7 +42,10 @@
     "submit": "投稿",
     "ratingAria": "評価 1〜5",
     "notEndedNotice": "レビューはイベント終了後に書けます。",
-    "firstReview": "最初のレビュアーになりましょう！"
+    "firstReview": "最初のレビュアーになりましょう！",
+    "photoViewAria": "レビュー写真の原本を見る",
+    "aiVibeTitle": "AI感情分類: {{label}}",
+    "starsAria": "評価 {{star}} / 5"
   },
   "reco": {
     "empty": "おすすめイベントがありません。",
@@ -118,7 +121,11 @@
     "reviewWrite": "レビューを書く",
     "reviewEdit": "レビューを編集",
     "reviewAfterEnd": "終了後にレビュー",
-    "reviewAfterEndShort": "終了後に書く"
+    "reviewAfterEndShort": "終了後に書く",
+    "today": "今日",
+    "prevMonth": "前の月",
+    "nextMonth": "次の月",
+    "calendarAriaLabel": "{{label}}カレンダー"
   },
   "credit": {
     "title": "クレジット履歴",
@@ -244,7 +251,8 @@
       "harassing": "嫌がらせ/暴力",
       "no_show": "無断欠席",
       "etc": "その他"
-    }
+    },
+    "photoAlt": "添付写真 {{index}}"
   },
   "block": {
     "loginRequired": "ログインが必要です。",
@@ -256,6 +264,28 @@
     "uploader": "アップロード者",
     "admin": "管理者",
     "switchToUploader": "アップロード者モード",
-    "switchToUser": "ユーザーモード"
+    "switchToUser": "ユーザーモード",
+    "applyButton": "アップローダー申請",
+    "pendingLabel": "アップローダー審査中",
+    "pendingTitle": "管理者審査中 — コンソールで詳細確認",
+    "rejectLabel": "却下",
+    "revisionLabel": "補足要求",
+    "reapplyLabel": "再申請",
+    "cooldownTitle": "{{date}}以降再申請可能 (却下後7日クールダウン)",
+    "cooldownDays": "却下 · {{days}}日後再申請",
+    "reapplyLink": "{{label}} · 再申請",
+    "reapplyTitle": "{{label}}になりました — 補足して再申請",
+    "switchFailed": "切り替え失敗: {{message}}"
+  },
+  "session": {
+    "heading": "セッション管理",
+    "logout": "このデバイスからログアウト",
+    "loggingOut": "ログアウト中…",
+    "logoutAll": "すべてのデバイスからログアウト",
+    "loggingOutAll": "全てのログアウト中…",
+    "logoutAllConfirm": "すべてのデバイスからログアウトしますか？他のデバイス・ブラウザのセッションもすべて切断されます。",
+    "logoutAllSuccess": "{{count}}件のセッションを切断しました。",
+    "logoutFailed": "ログアウト失敗: {{message}}",
+    "hint": "紛失・盗難が疑われる場合は、すべてのデバイスからログアウトを使用してください。"
   }
 }

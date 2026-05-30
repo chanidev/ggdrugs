@@ -36,7 +36,8 @@
     "chatAriaInput": "用自然语言搜索活动",
     "chatAriaSend": "发送搜索",
     "aiCandidates": "{{count}} 个 AI 候选 · 语义",
-    "sheetTabsLabel": "工作表选项卡"
+    "sheetTabsLabel": "工作表选项卡",
+    "homeAria": "Alle 首页"
   },
   "filter": {
     "region": {
@@ -186,5 +187,17 @@
     "sortHint": "进行中和即将开始的优先",
     "sortHintTitle": "进行中和即将开始的活动优先显示；已结束的排在后面",
     "distanceAriaLabel": "距离 {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "筛选搜索",
+    "list": "查看全部列表",
+    "chat": "聊天搜索",
+    "detailSuffix": "{{title}} 详情",
+    "closeAria": "关闭面板"
+  },
+  "phase": {
+    "upcoming": "即将到来",
+    "ongoing": "进行中",
+    "ended": "结束"
   }
 }

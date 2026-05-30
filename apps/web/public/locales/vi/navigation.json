@@ -36,7 +36,8 @@
     "chatAriaInput": "Tìm sự kiện bằng ngôn ngữ tự nhiên",
     "chatAriaSend": "Gửi tìm kiếm",
     "aiCandidates": "{{count}} gợi ý AI · ngữ nghĩa",
-    "sheetTabsLabel": "Tab trang tính"
+    "sheetTabsLabel": "Tab trang tính",
+    "homeAria": "Trang chủ Alle"
   },
   "filter": {
     "region": {
@@ -186,5 +187,17 @@
     "sortHint": "Đang & sắp diễn ra trước",
     "sortHintTitle": "Sự kiện đang và sắp diễn ra hiển thị trước; sự kiện đã kết thúc ở sau",
     "distanceAriaLabel": "Khoảng cách {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "Tìm kiếm bộ lọc",
+    "list": "Xem danh sách tất cả",
+    "chat": "Tìm kiếm phòng chat",
+    "detailSuffix": "Chi tiết {{title}}",
+    "closeAria": "Đóng bảng"
+  },
+  "phase": {
+    "upcoming": "Sắp tới",
+    "ongoing": "Đang diễn ra",
+    "ended": "Đã kết thúc"
   }
 }

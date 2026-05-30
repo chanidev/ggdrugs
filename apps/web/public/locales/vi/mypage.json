@@ -42,7 +42,10 @@
     "submit": "Gửi",
     "ratingAria": "Điểm 1–5",
     "notEndedNotice": "Đánh giá chỉ có thể viết sau khi sự kiện kết thúc.",
-    "firstReview": "Hãy là người đầu tiên đánh giá!"
+    "firstReview": "Hãy là người đầu tiên đánh giá!",
+    "photoViewAria": "Xem ảnh đánh giá gốc",
+    "aiVibeTitle": "Phân loại cảm xúc AI: {{label}}",
+    "starsAria": "Đánh giá {{star}} / 5"
   },
   "reco": {
     "empty": "Không có sự kiện gợi ý nào.",
@@ -118,7 +121,11 @@
     "reviewWrite": "Viết đánh giá",
     "reviewEdit": "Chỉnh sửa đánh giá",
     "reviewAfterEnd": "Đánh giá sau khi kết thúc",
-    "reviewAfterEndShort": "Viết sau khi kết thúc"
+    "reviewAfterEndShort": "Viết sau khi kết thúc",
+    "today": "Hôm nay",
+    "prevMonth": "Tháng trước",
+    "nextMonth": "Tháng sau",
+    "calendarAriaLabel": "Lịch {{label}}"
   },
   "credit": {
     "title": "Lịch sử tín dụng",
@@ -244,7 +251,8 @@
       "harassing": "Quấy rối/Bạo lực",
       "no_show": "Vắng mặt",
       "etc": "Khác"
-    }
+    },
+    "photoAlt": "Ảnh đính kèm {{index}}"
   },
   "block": {
     "loginRequired": "Cần đăng nhập.",
@@ -256,6 +264,28 @@
     "uploader": "Người tải lên",
     "admin": "Quản trị viên",
     "switchToUploader": "Chế độ người tải lên",
-    "switchToUser": "Chế độ người dùng"
+    "switchToUser": "Chế độ người dùng",
+    "applyButton": "Đăng ký làm người tải lên",
+    "pendingLabel": "Đang xem xét làm người tải lên",
+    "pendingTitle": "Đang được quản trị viên xem xét — Kiểm tra chi tiết trong bảng điều khiển",
+    "rejectLabel": "Bị từ chối",
+    "revisionLabel": "Yêu cầu bổ sung",
+    "reapplyLabel": "Đăng ký lại",
+    "cooldownTitle": "Có thể đăng ký lại sau {{date}} (từ chối 7 ngày chờ)",
+    "cooldownDays": "Bị từ chối · Đăng ký lại sau {{days}} ngày",
+    "reapplyLink": "{{label}} · Đăng ký lại",
+    "reapplyTitle": "{{label}} — Bổ sung và đăng ký lại",
+    "switchFailed": "Chuyển đổi thất bại: {{message}}"
+  },
+  "session": {
+    "heading": "Quản lý phiên",
+    "logout": "Đăng xuất thiết bị này",
+    "loggingOut": "Đang đăng xuất…",
+    "logoutAll": "Đăng xuất tất cả thiết bị",
+    "loggingOutAll": "Đang đăng xuất toàn bộ…",
+    "logoutAllConfirm": "Bạn có chắc chắn muốn đăng xuất khỏi tất cả thiết bị? Các phiên trên thiết bị và trình duyệt khác cũng sẽ bị ngắt.",
+    "logoutAllSuccess": "Đã ngắt {{count}} phiên.",
+    "logoutFailed": "Đăng xuất thất bại: {{message}}",
+    "hint": "Nếu nghi ngờ mất mát hoặc bị đánh cắp, hãy sử dụng đăng xuất tất cả thiết bị."
   }
 }

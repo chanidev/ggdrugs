@@ -42,7 +42,10 @@
     "submit": "提交",
     "ratingAria": "评分 1–5",
     "notEndedNotice": "活动结束后才能写评价。",
-    "firstReview": "成为第一个评价者！"
+    "firstReview": "成为第一个评价者！",
+    "photoViewAria": "查看评论照片原图",
+    "aiVibeTitle": "AI情感分类: {{label}}",
+    "starsAria": "评分 {{star}} / 5"
   },
   "reco": {
     "empty": "没有推荐活动。",
@@ -118,7 +121,11 @@
     "reviewWrite": "写评价",
     "reviewEdit": "编辑评价",
     "reviewAfterEnd": "结束后评价",
-    "reviewAfterEndShort": "结束后写"
+    "reviewAfterEndShort": "结束后写",
+    "today": "今天",
+    "prevMonth": "上个月",
+    "nextMonth": "下个月",
+    "calendarAriaLabel": "{{label}}日历"
   },
   "credit": {
     "title": "积分历史",
@@ -244,7 +251,8 @@
       "harassing": "骚扰/暴力",
       "no_show": "失约",
       "etc": "其他"
-    }
+    },
+    "photoAlt": "附加照片 {{index}}"
   },
   "block": {
     "loginRequired": "需要登录。",
@@ -256,6 +264,28 @@
     "uploader": "上传者",
     "admin": "管理员",
     "switchToUploader": "上传者模式",
-    "switchToUser": "用户模式"
+    "switchToUser": "用户模式",
+    "applyButton": "申请上传者",
+    "pendingLabel": "上传者审核中",
+    "pendingTitle": "管理员审核进行中 — 在控制台查看详细信息",
+    "rejectLabel": "被拒绝",
+    "revisionLabel": "请求补充",
+    "reapplyLabel": "重新申请",
+    "cooldownTitle": "可在 {{date}} 后重新申请（被拒绝后7天冷却）",
+    "cooldownDays": "被拒绝 · {{days}}天后可重新申请",
+    "reapplyLink": "{{label}} · 重新申请",
+    "reapplyTitle": "{{label}}已被 — 补充后重新申请",
+    "switchFailed": "切换失败: {{message}}"
+  },
+  "session": {
+    "heading": "会话管理",
+    "logout": "从此设备注销",
+    "loggingOut": "正在注销…",
+    "logoutAll": "从所有设备注销",
+    "loggingOutAll": "正在全部注销…",
+    "logoutAllConfirm": "确定从所有设备注销吗？其他设备和浏览器的会话也会被断开。",
+    "logoutAllSuccess": "已断开 {{count}} 个会话。",
+    "logoutFailed": "注销失败: {{message}}",
+    "hint": "如怀疑丢失或被盗，请使用从所有设备注销。"
   }
 }

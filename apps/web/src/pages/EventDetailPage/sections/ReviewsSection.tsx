@@ -317,6 +317,7 @@ function SkeletonReview() {
 }
 
 function ReviewCard({ review }: { review: BffReviewItem }) {
+  const { t } = useTranslation('mypage');
   const date = review.createdAt.slice(0, 10);
   const photos = [...review.photos].sort((a, b) => a.sortOrder - b.sortOrder);
   return (
@@ -340,7 +341,7 @@ function ReviewCard({ review }: { review: BffReviewItem }) {
                 href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="리뷰 사진 원본 보기"
+                aria-label={t('review.photoViewAria')}
                 className="block h-full w-full"
               >
                 <img
@@ -366,10 +367,11 @@ function SentimentBadge({
 }: {
   sentiment: BffReviewItem['sentiment'];
 }) {
-  const { t } = useTranslation('common');
+  const { t: tc } = useTranslation('common');
+  const { t } = useTranslation('mypage');
   if (!sentiment) return null;
   const label =
-    sentiment === 'positive' ? t('sentiment.positive') : sentiment === 'negative' ? t('sentiment.negative') : t('sentiment.neutral');
+    sentiment === 'positive' ? tc('sentiment.positive') : sentiment === 'negative' ? tc('sentiment.negative') : tc('sentiment.neutral');
   const tone =
     sentiment === 'positive'
       ? 'bg-(--color-success)/10 text-(--color-success)'
@@ -378,7 +380,7 @@ function SentimentBadge({
         : 'bg-(--color-surface-alt) text-(--color-text-subtle)';
   return (
     <span
-      title={`AI 감성 분류: ${label}`}
+      title={t('review.aiVibeTitle', { label })}
       className={`inline-flex items-center rounded-(--radius-sm) px-1.5 py-[1px] text-[10px] font-semibold ${tone}`}
     >
       {label}
@@ -387,10 +389,11 @@ function SentimentBadge({
 }
 
 function Stars({ value }: { value: number }) {
+  const { t } = useTranslation('mypage');
   const clamped = Math.max(0, Math.min(5, value));
   return (
     <span
-      aria-label={`별점 ${clamped} / 5`}
+      aria-label={t('review.starsAria', { star: clamped })}
       className="inline-flex items-center gap-0.5 text-(--color-accent)"
     >
       {Array.from({ length: 5 }, (_, i) => (
