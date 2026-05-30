@@ -36,35 +36,59 @@ function parseBigId(raw: unknown): bigint | null {
   }
 }
 
-// ─── targetEntityId 존재 확인 ────────────────────────────────────────────────
+// ─── targetEntityId 존재 확인 + 소유자 교차 검증 ────────────────────────────
+//
+// 악의적 신고 방지: 게시글/댓글/메시지/평가의 실제 작성자가 targetUserId와
+// 일치하는지 확인. 불일치 시 400 반환 (null 반환 신호).
+//
+// 반환값: 'ok' | 'not_found' | 'owner_mismatch'
 
-async function checkTargetEntityExists(
+async function checkTargetEntityWithOwner(
   targetType: string,
   targetEntityId: bigint,
-): Promise<boolean> {
+  targetUserId: bigint,
+): Promise<'ok' | 'not_found' | 'owner_mismatch'> {
   switch (targetType) {
-    case 'post':
-      return !!(await prisma.post.findFirst({
+    case 'post': {
+      const post = await prisma.post.findFirst({
         where: { postId: targetEntityId, isDeleted: false },
-        select: { postId: true },
-      }));
-    case 'comment':
-      return !!(await prisma.comment.findFirst({
+        select: { userId: true },
+      });
+      if (!post) return 'not_found';
+      if (BigInt(post.userId) !== BigInt(targetUserId)) return 'owner_mismatch';
+      return 'ok';
+    }
+    case 'comment': {
+      const comment = await prisma.comment.findFirst({
         where: { commentId: targetEntityId, isDeleted: false },
-        select: { commentId: true },
-      }));
-    case 'chat_message':
-      return !!(await prisma.chatRoomMessage.findFirst({
+        select: { userId: true },
+      });
+      if (!comment) return 'not_found';
+      if (BigInt(comment.userId) !== BigInt(targetUserId)) return 'owner_mismatch';
+      return 'ok';
+    }
+    case 'chat_message': {
+      const msg = await prisma.chatRoomMessage.findFirst({
         where: { messageId: targetEntityId },
-        select: { messageId: true },
-      }));
-    case 'mate_eval':
-      return !!(await prisma.mateEvaluation.findFirst({
+        select: { senderUserId: true },
+      });
+      if (!msg) return 'not_found';
+      // 시스템 메시지(senderUserId=null)는 신고 불가
+      if (msg.senderUserId === null) return 'owner_mismatch';
+      if (BigInt(msg.senderUserId) !== BigInt(targetUserId)) return 'owner_mismatch';
+      return 'ok';
+    }
+    case 'mate_eval': {
+      const ev = await prisma.mateEvaluation.findFirst({
         where: { evalId: targetEntityId },
-        select: { evalId: true },
-      }));
+        select: { evaluatorUserId: true },
+      });
+      if (!ev) return 'not_found';
+      if (BigInt(ev.evaluatorUserId) !== BigInt(targetUserId)) return 'owner_mismatch';
+      return 'ok';
+    }
     default:
-      return false;
+      return 'not_found';
   }
 }
 
@@ -93,8 +117,8 @@ export async function createReport(req: Request, res: Response) {
     return;
   }
 
-  // 자기 자신 신고 방지
-  if (targetUserId === auth.userId) {
+  // 자기 자신 신고 방지 — 명시적 BigInt 변환으로 런타임 타입 안전 보장
+  if (BigInt(targetUserId) === BigInt(auth.userId)) {
     res.status(400).json({ error: 'cannot_report_self' });
     return;
   }
@@ -133,10 +157,14 @@ export async function createReport(req: Request, res: Response) {
     return;
   }
 
-  // 3. targetEntityId 존재 확인
-  const entityExists = await checkTargetEntityExists(targetType, targetEntityId);
-  if (!entityExists) {
+  // 3. targetEntityId 존재 확인 + 소유자 교차 검증 (악의적 신고 방지)
+  const entityCheck = await checkTargetEntityWithOwner(targetType, targetEntityId, targetUserId);
+  if (entityCheck === 'not_found') {
     res.status(404).json({ error: 'target_entity_not_found' });
+    return;
+  }
+  if (entityCheck === 'owner_mismatch') {
+    res.status(400).json({ error: 'target_entity_owner_mismatch' });
     return;
   }
 
@@ -261,8 +289,8 @@ export async function blockUser(req: Request, res: Response) {
     return;
   }
 
-  // 자기 자신 차단 방지
-  if (targetUserId === auth.userId) {
+  // 자기 자신 차단 방지 — 명시적 BigInt 변환으로 런타임 타입 안전 보장
+  if (BigInt(targetUserId) === BigInt(auth.userId)) {
     res.status(400).json({ error: 'cannot_block_self' });
     return;
   }
@@ -292,5 +320,5 @@ export async function blockUser(req: Request, res: Response) {
     select: { blockId: true },
   });
 
-  res.status(200).json({ blockId: block.blockId.toString() });
+  res.status(201).json({ blockId: block.blockId.toString() });
 }

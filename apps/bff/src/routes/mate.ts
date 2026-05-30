@@ -377,15 +377,50 @@ export async function getRecommendations(req: Request, res: Response) {
     prefKoreanOk: myProfile.prefKoreanOk,
   };
 
+  // GG-REPORT-009: 차단 및 이용정지 사용자 추천 제외 (Slice 8)
+  // 1) 양방향 Block 제외
+  const blockedRows = await prisma.block.findMany({
+    where: {
+      OR: [
+        { blockerId: auth.userId },
+        { blockedUserId: auth.userId },
+      ],
+    },
+    select: { blockerId: true, blockedUserId: true },
+  });
+  const blockedSet = new Set<bigint>();
+  for (const b of blockedRows) {
+    blockedSet.add(b.blockerId);
+    blockedSet.add(b.blockedUserId);
+  }
+  blockedSet.delete(auth.userId); // 본인 제거
+
+  // 2) 이용정지 만료 기준 타임스탬프
+  const recoNow = new Date();
+
   // 후보풀: consent 있고 본인 제외 + 같은 지역(슬라이스2 경계) + 자동추천 동의
   // NOTE: 슬라이스3 에서 이벤트 연결(같은 축제 2주내) 추가 예정.
-  // NOTE: 차단 사용자 제외 훅 — 슬라이스8 GG-REPORT-009 에서 구현.
+  // GG-REPORT-009: Block 양방향 제외 + 유효한 이용정지 사용자 제외
+  const blockedSetArray = [...blockedSet];
   const candidates = await prisma.mateProfile.findMany({
     where: {
       consentedAt: { not: null },
       isDeleted: false,
       autoRecommend: true, // opt-out 사용자 제외 (GG-COMM-007/008)
-      userId: { not: auth.userId },
+      // GG-REPORT-009: Block 양방향 제외 (본인 제외는 아래 AND 조건에서 처리)
+      AND: [
+        { userId: { not: auth.userId } },
+        ...(blockedSetArray.length > 0 ? [{ userId: { notIn: blockedSetArray } }] : []),
+        // 유효한 이용정지 사용자 제외 (만료된 정지는 포함)
+        {
+          NOT: {
+            user: {
+              sanctionStatus: 'suspended',
+              sanctionExpiresAt: { gt: recoNow },
+            },
+          },
+        },
+      ],
       // 슬라이스2 지역 경계: 본인 regionId 와 동일한 후보만 (null 이면 null 끼리)
       regionId: myProfile.regionId,
     },

@@ -78,6 +78,24 @@ export async function sendOneToOneRequest(req: Request, res: Response) {
     return;
   }
 
+  // GG-REPORT-009: 이용정지 대상자에게 신청 불가
+  const receiverUser = await prisma.user.findUnique({
+    where: { userId: receiverUserId },
+    select: { sanctionStatus: true, sanctionExpiresAt: true, isDeleted: true },
+  });
+  if (!receiverUser || receiverUser.isDeleted) {
+    res.status(404).json({ error: 'user_not_found' });
+    return;
+  }
+  const receiverCheckNow = new Date();
+  if (
+    receiverUser.sanctionStatus === 'suspended' &&
+    (!receiverUser.sanctionExpiresAt || receiverUser.sanctionExpiresAt > receiverCheckNow)
+  ) {
+    res.status(409).json({ error: 'target_suspended' });
+    return;
+  }
+
   // 차단 여부 확인 (양방향)
   const block = await prisma.block.findFirst({
     where: {
@@ -207,6 +225,26 @@ export async function sendGroupRequest(req: Request, res: Response) {
   if (uniqueIds.length !== receiverIds.length) {
     res.status(400).json({ error: 'duplicate_receiver_ids' });
     return;
+  }
+
+  // GG-REPORT-009: 이용정지 대상자에게 그룹 신청 불가
+  const groupReceiverCheckNow = new Date();
+  const receiverUsers = await prisma.user.findMany({
+    where: { userId: { in: receiverIds } },
+    select: { userId: true, sanctionStatus: true, sanctionExpiresAt: true, isDeleted: true },
+  });
+  for (const ru of receiverUsers) {
+    if (ru.isDeleted) {
+      res.status(404).json({ error: 'user_not_found', userId: ru.userId.toString() });
+      return;
+    }
+    if (
+      ru.sanctionStatus === 'suspended' &&
+      (!ru.sanctionExpiresAt || ru.sanctionExpiresAt > groupReceiverCheckNow)
+    ) {
+      res.status(409).json({ error: 'target_suspended', userId: ru.userId.toString() });
+      return;
+    }
   }
 
   // 차단 여부 확인 (양방향, 전체 수신자 대상) — 1:1 경로와 동일 패턴

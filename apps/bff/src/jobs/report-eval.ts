@@ -1,20 +1,24 @@
 /**
- * report-eval.ts — 신고 접수 라우트 인-프로세스 검증 하니스 (GG-REPORT-001~003, GG-REPORT-008)
+ * report-eval.ts — 신고 접수 + 차단 API 인-프로세스 검증 하니스 (GG-REPORT-001~003, GG-REPORT-008)
  *
  * 실행: npx tsx apps/bff/src/jobs/report-eval.ts
  *
- * 시나리오 6건:
+ * 시나리오 10건:
  *  1. POST /community/reports 정상 접수 → 201
  *  2. 자기 자신 신고 → 400 cannot_report_self
  *  3. 존재하지 않는 targetEntityId → 404 target_entity_not_found
  *  4. 중복 신고 (pending 상태) → 409 already_reported
  *  5. dismissed 후 재신고 → 201 허용
  *  6. 미인증 → 401 unauthenticated
+ *  7. POST /community/users/:targetUserId/block 정상 차단 → 201
+ *  8. 자기 자신 차단 → 400 cannot_block_self
+ *  9. 중복 차단 → 409 already_blocked
+ * 10. 미인증 차단 → 401 unauthenticated
  */
 
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
-import { createReport } from '../routes/reports.js';
+import { createReport, blockUser } from '../routes/reports.js';
 
 // ─── 목 헬퍼 ─────────────────────────────────────────────────────────────────
 
@@ -260,6 +264,77 @@ async function main() {
           targetEntityId: testPostIdStr,
           reason: 'spam',
         },
+      }),
+      res,
+    );
+    const f: string[] = [];
+    if (res._c.status !== 401) f.push(`status ${res._c.status} != 401`);
+    return f;
+  });
+
+  // ── blockUser 케이스 7: 정상 차단 → 201 ─────────────────────────────────
+  await check('block.ok', async () => {
+    // 기존 차단 정리 (멱등성)
+    await prisma.block.deleteMany({
+      where: { blockerId: auth1.userId, blockedUserId: u2.userId },
+    });
+    const res = mockRes();
+    await blockUser(
+      mockReq({
+        auth: auth1,
+        params: { targetUserId: u2.userId.toString() },
+      }),
+      res,
+    );
+    const f: string[] = [];
+    if (res._c.status !== 201) f.push(`status ${res._c.status} != 201`);
+    const b = res._c.json as { blockId?: string };
+    if (!b?.blockId) f.push('no blockId in response');
+    return f;
+  });
+
+  // ── blockUser 케이스 8: 자기 자신 차단 → 400 ─────────────────────────────
+  await check('block.self_block', async () => {
+    const res = mockRes();
+    await blockUser(
+      mockReq({
+        auth: auth1,
+        params: { targetUserId: u1.userId.toString() }, // 자기 자신
+      }),
+      res,
+    );
+    const f: string[] = [];
+    if (res._c.status !== 400) f.push(`status ${res._c.status} != 400`);
+    const b = res._c.json as { error?: string };
+    if (b?.error !== 'cannot_block_self') f.push(`error "${b?.error}" != "cannot_block_self"`);
+    return f;
+  });
+
+  // ── blockUser 케이스 9: 중복 차단 → 409 ──────────────────────────────────
+  await check('block.duplicate', async () => {
+    // 케이스 7에서 이미 차단 레코드가 생성됨 — 동일 조건 재시도
+    const res = mockRes();
+    await blockUser(
+      mockReq({
+        auth: auth1,
+        params: { targetUserId: u2.userId.toString() },
+      }),
+      res,
+    );
+    const f: string[] = [];
+    if (res._c.status !== 409) f.push(`status ${res._c.status} != 409`);
+    const b = res._c.json as { error?: string };
+    if (b?.error !== 'already_blocked') f.push(`error "${b?.error}" != "already_blocked"`);
+    return f;
+  });
+
+  // ── blockUser 케이스 10: 미인증 → 401 ────────────────────────────────────
+  await check('block.unauthenticated', async () => {
+    const res = mockRes();
+    await blockUser(
+      mockReq({
+        // auth 없음
+        params: { targetUserId: u2.userId.toString() },
       }),
       res,
     );

@@ -109,6 +109,7 @@ import {
   castKickVote,
 } from './routes/chat-room.js';
 import { createReport, listMyReports, blockUser } from './routes/reports.js';
+import { listAdminReports, getAdminReport, actionAdminReport } from './routes/admin-reports.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -578,6 +579,26 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireAdmin(req, res, next).catch(next),
     (req, res, next) => softDeleteUser(req, res).catch(next),
+  );
+
+  // GG-REPORT-004~007: 관리자 신고 모더레이션 (A_701)
+  app.get(
+    '/admin/reports',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => listAdminReports(req, res).catch(next),
+  );
+  app.get(
+    '/admin/reports/:reportId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => getAdminReport(req, res).catch(next),
+  );
+  app.post(
+    '/admin/reports/:reportId/action',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => actionAdminReport(req, res).catch(next),
   );
 
   // GG-REPORT-001~003: 사용자 신고 접수 (4 surface)
