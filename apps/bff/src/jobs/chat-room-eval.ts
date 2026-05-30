@@ -1151,8 +1151,105 @@ async function main() {
       return f;
     });
 
+    // ── CASE T5-4b: kick.vote.reject_blocks_kick ──────────────────
+    // owner agree + member reject → 대상 멤버십이 kicked 되지 않아야 함
+    // (critical 이슈 검증: readAt-only 체크는 reject 여도 kicked 를 허용하는 버그를 가짐)
+    const t5Suffix4 = Date.now() + 400;
+    const synRejectOwner = await prisma.user.create({
+      data: { socialUid: `t5_rej_owner_${t5Suffix4}`, authProvider: 'dev', nickname: `RejOwner${t5Suffix4}`, activeRole: 'user' },
+    });
+    const synRejectMember = await prisma.user.create({
+      data: { socialUid: `t5_rej_member_${t5Suffix4}`, authProvider: 'dev', nickname: `RejMember${t5Suffix4}`, activeRole: 'user' },
+    });
+    const synRejectTarget = await prisma.user.create({
+      data: { socialUid: `t5_rej_target_${t5Suffix4}`, authProvider: 'dev', nickname: `RejTarget${t5Suffix4}`, activeRole: 'user' },
+    });
+
+    const t5RejectRoom = await prisma.chatRoom.create({
+      data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: synRejectOwner.userId },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t5RejectRoom.chatRoomId, userId: synRejectOwner.userId, role: 'owner', memberStatus: 'active' },
+        { chatRoomId: t5RejectRoom.chatRoomId, userId: synRejectMember.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: t5RejectRoom.chatRoomId, userId: synRejectTarget.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+
+    await check('kick.vote.reject_blocks_kick', async () => {
+      const f: string[] = [];
+
+      // 방장이 투표 시작
+      const startRes = mockRes();
+      await startKickVote(
+        mockReq({
+          auth: { userId: synRejectOwner.userId, nickname: synRejectOwner.nickname, activeRole: synRejectOwner.activeRole },
+          params: { chatRoomId: t5RejectRoom.chatRoomId.toString() },
+          body: { targetUserId: synRejectTarget.userId.toString() },
+        }),
+        startRes,
+      );
+      if (startRes._c.status !== 201) { f.push(`startKickVote status ${startRes._c.status} != 201`); return f; }
+
+      // DB: kick_vote 알림 2건 확인
+      const notifs = await prisma.notification.findMany({
+        where: { notificationType: 'kick_vote', relatedEntityId: t5RejectRoom.chatRoomId },
+        select: { notificationId: true, userId: true },
+      });
+      if (notifs.length !== 2) { f.push(`${notifs.length} notifs != 2`); return f; }
+
+      const ownerNotif = notifs.find((n) => n.userId === synRejectOwner.userId);
+      const memberNotif = notifs.find((n) => n.userId === synRejectMember.userId);
+      if (!ownerNotif) { f.push('owner notif not found'); return f; }
+      if (!memberNotif) { f.push('member notif not found'); return f; }
+
+      // member reject 먼저 (readAt 기록) → owner agree 마지막
+      // 이 순서가 critical bug 를 노출: readAt-only 체크 시 전원 응답 = true → 잘못된 kick
+      const memberVoteRes = mockRes();
+      await castKickVote(
+        mockReq({
+          auth: { userId: synRejectMember.userId, nickname: synRejectMember.nickname, activeRole: synRejectMember.activeRole },
+          params: { chatRoomId: t5RejectRoom.chatRoomId.toString(), voteNotifId: memberNotif.notificationId.toString() },
+          body: { vote: 'reject' },
+        }),
+        memberVoteRes,
+      );
+      if (memberVoteRes._c.status !== 200) f.push(`member reject status ${memberVoteRes._c.status} != 200`);
+
+      // owner agree 마지막 → reject 가 있으므로 kicked=false 여야 함
+      const ownerVoteRes = mockRes();
+      await castKickVote(
+        mockReq({
+          auth: { userId: synRejectOwner.userId, nickname: synRejectOwner.nickname, activeRole: synRejectOwner.activeRole },
+          params: { chatRoomId: t5RejectRoom.chatRoomId.toString(), voteNotifId: ownerNotif.notificationId.toString() },
+          body: { vote: 'agree' },
+        }),
+        ownerVoteRes,
+      );
+      if (ownerVoteRes._c.status !== 200) f.push(`owner agree status ${ownerVoteRes._c.status} != 200`);
+      const vb = ownerVoteRes._c.json as { kicked?: boolean };
+      if (vb?.kicked !== false) f.push(`reject present → kicked=${vb?.kicked} should be false`);
+
+      // DB: 대상 멤버십이 kicked 아님 (active 여야 함)
+      const targetMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t5RejectRoom.chatRoomId, userId: synRejectTarget.userId },
+        select: { memberStatus: true },
+      });
+      if (targetMem?.memberStatus === 'kicked') f.push('target was kicked despite reject vote — critical bug!');
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { relatedEntityId: t5RejectRoom.chatRoomId } });
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t5RejectRoom.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t5RejectRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t5RejectRoom.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synRejectOwner.userId, synRejectMember.userId, synRejectTarget.userId] } } });
+
+      return f;
+    });
+
     // ── CASE T5-5: kick.concurrent.race_conditions_prevented ───────
-    // 동시 즉시강퇴 2건 시도 → SERIALIZABLE 트랜잭션으로 1건만 성공 (나머지 422)
+    // 동시 즉시강퇴 2건 시도 → SERIALIZABLE 트랜잭션으로 1건만 성공 (나머지 409)
     // 참고: 이미 t5Room 에서 instantKickUsed=true (T5-1에서 소진), synU5 는 아직 active
     // 새 방 만들어서 경쟁 조건 재현
     const t5Suffix3 = Date.now() + 300;
@@ -1203,9 +1300,10 @@ async function main() {
       ]);
 
       const statuses = [res1._c.status, res2._c.status].sort();
-      // 정확히 1건 성공(200), 1건 실패(422)
+      // 정확히 1건 성공(200), 1건 실패(409 concurrent_conflict 또는 422 instant_kick_used)
       if (!statuses.includes(200)) f.push('no successful instant kick (expected 1 success)');
-      if (!statuses.includes(422)) f.push('no failed instant kick (expected 1 failure with 422)');
+      // P2034 write conflict → 409; 실제 KICK_USED → 422. 둘 중 하나면 통과.
+      if (!statuses.includes(409) && !statuses.includes(422)) f.push('no failed instant kick (expected 409 or 422)');
 
       // DB: 정확히 1명만 kicked
       const kickedCount = await prisma.groupMembership.count({

@@ -948,6 +948,7 @@ export async function instantKick(req: Request, res: Response) {
         });
 
         // 7. 결원 충원 알림 — 남은 active 멤버에게 (대상 제외)
+        // vacancy_notification 타입: 일반 채팅 알림과 구분되도록 전용 타입 사용
         const remainingMembers = await tx.groupMembership.findMany({
           where: { chatRoomId, memberStatus: 'active' },
           select: { userId: true },
@@ -961,7 +962,7 @@ export async function instantKick(req: Request, res: Response) {
               scheduledAt: new Date(),
               isSent: true,
               sentAt: new Date(),
-              notificationType: 'chat_message',
+              notificationType: 'vacancy_notification',
               relatedEntityId: chatRoomId,
               relatedEntityType: 'chat_room',
             })),
@@ -985,11 +986,11 @@ export async function instantKick(req: Request, res: Response) {
       return;
     }
     // Prisma P2034: SERIALIZABLE 트랜잭션 충돌 (write conflict / deadlock)
-    // 동시 즉시강퇴 중 나중에 도착한 요청 — 선착순 1건이 이미 성공
-    // instantKickUsed=true 로 DB 상태가 확정됐으므로 422 반환
+    // 동시 요청 중 나중에 도착한 것 — 이 시점에서 instantKickUsed 확정 여부 불명.
+    // 의미상 concurrent conflict 이므로 409 Conflict 로 반환 (retryable).
     const pe = err as { code?: string; message?: string };
     if (pe.code === 'P2034' || (pe.message && pe.message.includes('write conflict'))) {
-      res.status(422).json({ error: 'instant_kick_used' });
+      res.status(409).json({ error: 'concurrent_conflict', retryable: true });
       return;
     }
     throw err;
@@ -1193,17 +1194,28 @@ export async function castKickVote(req: Request, res: Response) {
 
   const now = new Date();
 
-  // 내 응답 기록 (readAt = 응답 시각)
+  // 내 응답 기록: readAt = 응답 시각, voteResult = vote 값을 message JSON 에 병합
+  // 기존 message JSON 에 voteResult 필드를 추가해 agree/reject 구분을 영속화
+  let existingMeta: Record<string, unknown> = {};
+  try {
+    existingMeta = JSON.parse(notif.message) as Record<string, unknown>;
+  } catch {
+    // corrupt JSON — 빈 객체로 진행 (targetUserId 파싱은 이미 위에서 완료)
+  }
   await prisma.notification.update({
     where: { notificationId: voteNotifId },
-    data: { readAt: now },
+    data: {
+      readAt: now,
+      message: JSON.stringify({ ...existingMeta, voteResult: vote }),
+    },
   });
 
   let kicked = false;
 
+  // 강퇴 조건: 전원(대상 제외) 응답 완료 AND 모두 agree
+  // vote === 'reject' 이면 전원 agree 불가 → 즉시 skip
   if (vote === 'agree') {
-    // 같은 투표 건에 대한 모든 알림 조회 — 같은 chatRoomId + notificationType='kick_vote' + targetUserId 일치
-    // 모든 알림이 응답됐는지 확인 (readAt IS NOT NULL)
+    // 같은 투표 건에 대한 모든 알림 조회 (message 에 voteResult 포함)
     const allVoteNotifs = await prisma.notification.findMany({
       where: {
         notificationType: 'kick_vote',
@@ -1211,14 +1223,22 @@ export async function castKickVote(req: Request, res: Response) {
         relatedEntityType: 'kick_vote',
         message: { contains: `"targetUserId":"${targetUserId.toString()}"` },
       },
-      select: { notificationId: true, readAt: true },
+      select: { notificationId: true, readAt: true, message: true },
     });
 
-    // 전원 응답(readAt NOT NULL) + 현재 투표는 방금 기록했으므로 포함돼야 함
-    // 미응답 = readAt NULL → 스케줄러 처리 대상
+    // 전원 응답 여부: readAt IS NOT NULL
     const allResponded = allVoteNotifs.length > 0 && allVoteNotifs.every((n) => n.readAt !== null);
+    // 전원 agree 여부: message 의 voteResult 필드를 파싱
+    const allAgree = allResponded && allVoteNotifs.every((n) => {
+      try {
+        const m = JSON.parse(n.message) as { voteResult?: string };
+        return m.voteResult === 'agree';
+      } catch {
+        return false;
+      }
+    });
 
-    if (allResponded) {
+    if (allAgree) {
       // 전원 동의 처리
       await prisma.$transaction(async (tx) => {
         // 대상 멤버십 kicked
@@ -1242,7 +1262,7 @@ export async function castKickVote(req: Request, res: Response) {
           },
         });
 
-        // 결원 충원 알림
+        // 결원 충원 알림 — vacancy_notification 타입으로 방 안 남은 멤버에게 전송
         const remainingMembers = await tx.groupMembership.findMany({
           where: { chatRoomId, memberStatus: 'active' },
           select: { userId: true },
@@ -1256,7 +1276,7 @@ export async function castKickVote(req: Request, res: Response) {
               scheduledAt: now,
               isSent: true,
               sentAt: now,
-              notificationType: 'chat_message',
+              notificationType: 'vacancy_notification',
               relatedEntityId: chatRoomId,
               relatedEntityType: 'chat_room',
             })),
