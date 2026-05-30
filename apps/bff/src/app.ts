@@ -298,7 +298,12 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => toggleLike(req, res).catch(next),
   );
-  app.post('/community/posts/:id/translate', (req, res, next) => translatePost(req, res).catch(next));
+  // GG-COMM-013 게시글 번역 (비로그인 가능 — resolveAuth)
+  app.post(
+    '/community/posts/:id/translate',
+    (req, res, next) => resolveAuth(req, res, next).catch(next),
+    (req, res, next) => translatePost(req, res).catch(next),
+  );
 
   // A_801 메이트 프로필 저장/조회 + A_807 메이트지수 (Phase 2 / ADR 0007)
   // NOTE: /profile/me 를 /profile/:id 보다 먼저 등록해야 충돌 없음.
