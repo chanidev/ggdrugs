@@ -1,17 +1,24 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../../layout/Header';
 import type { PostCategory } from '../../../lib/api/posts.js';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { getMyCredits } from '../../../lib/api/credits.js';
 import { useCurrentUser } from '../../../lib/auth-context.js';
 
-/** GG-POST-004: 카테고리 레이블 — ComposeModal, PostListPage, CategoryGrid 등에서 참조 */
+/** GG-POST-004: 카테고리 레이블 — 하드코딩 기본값 (i18n 미적용 fallback 용) */
 export const CATEGORY_LABELS: Record<PostCategory, string> = {
   festival_story: '축제 이야기',
   mate_finder: '메이트 찾기',
   free: '자유게시판',
 };
+
+/** i18n 적용 카테고리 레이블 훅 */
+export function useCategoryLabel(category: PostCategory): string {
+  const { t } = useTranslation('community');
+  return t(`category.${category}`, { defaultValue: CATEGORY_LABELS[category] });
+}
 
 /**
  * CommunityShell — GG-COMM-001 커뮤니티 페이지 레이아웃.
@@ -26,6 +33,7 @@ export function CommunityShell({
   children: ReactNode;
   rightRail: ReactNode;
 }) {
+  const { t } = useTranslation('community');
   const { user } = useCurrentUser();
   const [creditBalance, setCreditBalance] = useState<number | null>(null);
 
@@ -43,7 +51,7 @@ export function CommunityShell({
         <div className="mx-auto flex w-full max-w-[1100px] gap-6 px-6 py-6">
           <main className="min-w-0 flex-1">
             <div className="mb-5 flex items-center justify-between">
-              <h1 className="text-(length:--text-h2) font-semibold">커뮤니티</h1>
+              <h1 className="text-(length:--text-h2) font-semibold">{t('shell.title')}</h1>
               <div className="flex items-center gap-2">
                 {/* GG-COMM-017 크레딧 실연결 (slice5) */}
                 {user ? (
@@ -51,37 +59,39 @@ export function CommunityShell({
                     to="/credits"
                     className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] text-(--color-text-muted) hover:border-(--color-border-hover)"
                   >
-                    크레딧 {creditBalance !== null ? creditBalance.toLocaleString() : '...'}개
+                    {creditBalance !== null
+                      ? t('shell.creditsLabel', { count: creditBalance.toLocaleString() })
+                      : t('shell.creditsPlaceholder')}
                   </Link>
                 ) : (
                   <span className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] text-(--color-text-muted)">
-                    크레딧
+                    {t('shell.creditsPlaceholder')}
                   </span>
                 )}
-                {/* GG-COMM-013 언어토글 placeholder — 실 i18n 미도입(슬라이스 7) */}
+                {/* GG-COMM-013 언어토글 placeholder — 슬라이스 7 */}
                 <ActionButton
                   variant="neutralOutline"
                   size="small"
                   disabled
-                  title="언어 변경 (준비 중)"
+                  title={t('shell.languageToggle')}
                 >
                   한국어
                 </ActionButton>
-                {/* GG-COMM-014/015 채팅방 이동 placeholder — 슬라이스 5에서 실구현 */}
+                {/* GG-COMM-014/015 채팅방 이동 placeholder */}
                 <ActionButton
                   variant="neutralOutline"
                   size="small"
                   disabled
-                  title="채팅방 (준비 중)"
+                  title={t('shell.chatRoomBtn')}
                 >
-                  채팅방
+                  {t('shell.chatRoomBtn')}
                 </ActionButton>
                 {/* GG-COMM-016 알림 — 실연결 */}
                 <Link
                   to="/notifications"
                   className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] hover:border-(--color-border-hover)"
                 >
-                  알림
+                  {t('common:label.notifications')}
                 </Link>
               </div>
             </div>

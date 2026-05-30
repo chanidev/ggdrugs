@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Map as KakaoMap,
   MapMarker,
@@ -384,10 +385,11 @@ export function SeoulMap({
 }
 
 function StatusBadge({ count, error }: { count: number; error: string | null }) {
+  const { t } = useTranslation('common');
   if (error) {
     return (
       <div className="absolute bottom-24 left-4 z-10 rounded-(--radius-md) bg-(--color-error) px-3 py-1.5 text-[12px] font-medium text-white shadow-(--shadow-md)">
-        지도 핀 로드 실패: {error.slice(0, 80)}
+        {t('error.loadFailed')}: {error.slice(0, 80)}
       </div>
     );
   }
@@ -436,9 +438,10 @@ function LoaderErrorNotice({ error }: { error: unknown }) {
 }
 
 function LoadingNotice() {
+  const { t } = useTranslation('common');
   return (
     <div className="flex h-full items-center justify-center bg-(--color-surface-alt)">
-      <p className="text-body-sm text-(--color-text-muted)">지도 로딩…</p>
+      <p className="text-body-sm text-(--color-text-muted)">{t('label.loading')}</p>
     </div>
   );
 }

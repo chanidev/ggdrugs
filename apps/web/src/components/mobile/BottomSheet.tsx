@@ -6,6 +6,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * BottomSheet — 모바일 메인 페이지 하단 시트.
@@ -42,6 +43,7 @@ export function BottomSheet({
   children: ReactNode;
   ariaLabel?: string;
 }) {
+  const { t } = useTranslation('common');
   // 드래그 상태: 시작 좌표, 시작 높이(vh), 누적 거리, 현재 vh
   const [dragVh, setDragVh] = useState<number | null>(null);
   const dragRef = useRef<{
@@ -122,7 +124,7 @@ export function BottomSheet({
   return (
     <section
       role="dialog"
-      aria-label={ariaLabel ?? '이벤트 시트'}
+      aria-label={ariaLabel ?? t('aria.eventSheet')}
       aria-modal="false"
       style={{
         height: `${heightVh}vh`,
@@ -138,10 +140,10 @@ export function BottomSheet({
         onPointerCancel={onPointerUp}
         aria-label={
           snap === 'full'
-            ? '시트 절반으로 축소'
+            ? t('aria.sheetCollapse')
             : snap === 'peek'
-              ? '시트 전체 펼치기'
-              : '시트 펼치기'
+              ? t('aria.sheetExpandFull')
+              : t('aria.sheetExpand')
         }
         className="group flex h-7 shrink-0 cursor-grab touch-none items-center justify-center select-none active:cursor-grabbing"
       >

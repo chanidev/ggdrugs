@@ -1,18 +1,11 @@
+import { useTranslation } from 'react-i18next';
 import type { PostCategory } from '../../../lib/api/posts.js';
-import { CATEGORY_LABELS } from './CommunityShell.js';
 import {
   SegmentedControl,
   SegmentedControlItem,
 } from 'seed-design/ui/segmented-control';
 
 export type CategoryFilter = 'all' | PostCategory;
-
-const ITEMS: Array<{ key: CategoryFilter; label: string }> = [
-  { key: 'all', label: '전체' },
-  { key: 'festival_story', label: CATEGORY_LABELS.festival_story },
-  { key: 'mate_finder', label: CATEGORY_LABELS.mate_finder },
-  { key: 'free', label: CATEGORY_LABELS.free },
-];
 
 /**
  * CategoryGrid — GG-COMM-003 카테고리 탭.
@@ -25,6 +18,15 @@ export function CategoryGrid({
   active: CategoryFilter;
   onSelect: (c: CategoryFilter) => void;
 }) {
+  const { t } = useTranslation('community');
+
+  const ITEMS: Array<{ key: CategoryFilter; label: string }> = [
+    { key: 'all',            label: t('category.all') },
+    { key: 'festival_story', label: t('category.festival_story') },
+    { key: 'mate_finder',    label: t('category.mate_finder') },
+    { key: 'free',           label: t('category.free') },
+  ];
+
   return (
     <div className="mb-4">
       <SegmentedControl

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createPost, updatePost, type PostCategory, type PostDetail } from '../../../lib/api/posts.js';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { SegmentedControl, SegmentedControlItem } from 'seed-design/ui/segmented-control';
@@ -16,6 +17,7 @@ interface ComposeModalProps {
 }
 
 export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: ComposeModalProps) {
+  const { t } = useTranslation('community');
   const [category, setCategory] = useState<PostCategory>(
     editPost ? editPost.category : (defaultCategory ?? 'free'),
   );
@@ -28,24 +30,24 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
   const bodyInvalid = err !== null && body.trim().length < 2;
 
   const submit = async () => {
-    const t = title.trim();
-    const b = body.trim();
-    if (t.length < 2 || b.length < 2) {
-      setErr('제목과 본문을 2자 이상 입력하세요.');
+    const titleTrimmed = title.trim();
+    const bodyTrimmed = body.trim();
+    if (titleTrimmed.length < 2 || bodyTrimmed.length < 2) {
+      setErr(t('compose.titleRequired'));
       return;
     }
     setPending(true);
     setErr(null);
     try {
       if (editPost) {
-        await updatePost(editPost.postId, { title: t, body: b });
+        await updatePost(editPost.postId, { title: titleTrimmed, body: bodyTrimmed });
       } else {
-        await createPost({ category, title: t, body: b });
+        await createPost({ category, title: titleTrimmed, body: bodyTrimmed });
       }
       onCreated();
     } catch (e) {
       const m = (e as Error).message;
-      setErr(m === 'UNAUTHENTICATED' ? '로그인이 필요해요.' : '저장하지 못했어요.');
+      setErr(m === 'UNAUTHENTICATED' ? t('compose.loginRequired') : t('compose.submitError'));
     } finally {
       setPending(false);
     }
@@ -61,7 +63,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
         <Dialog.Content className="w-[480px] max-w-[92vw]">
           {/* 모달 헤더 */}
           <Dialog.Header>
-            <Dialog.Title>{editPost ? '게시글 수정' : '글쓰기'}</Dialog.Title>
+            <Dialog.Title>{editPost ? t('compose.editPost') : t('compose.newPost')}</Dialog.Title>
           </Dialog.Header>
 
           <div className="flex flex-col gap-4 px-5 pb-2">
@@ -89,10 +91,10 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
               value={title}
               onValueChange={(v) => setTitle(v.value)}
               invalid={titleInvalid}
-              errorMessage={titleInvalid ? '제목을 2자 이상 입력하세요.' : undefined}
+              errorMessage={titleInvalid ? t('compose.titleRequired') : undefined}
             >
               <TextFieldInput
-                placeholder="제목을 입력하세요"
+                placeholder={t('compose.titlePlaceholder')}
                 maxLength={200}
               />
             </TextField>
@@ -106,10 +108,10 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
               value={body}
               onValueChange={(v) => setBody(v.value)}
               invalid={bodyInvalid}
-              errorMessage={bodyInvalid ? '내용을 2자 이상 입력하세요.' : undefined}
+              errorMessage={bodyInvalid ? t('compose.bodyRequired') : undefined}
             >
               <TextFieldTextarea
-                placeholder="내용을 입력하세요"
+                placeholder={t('compose.bodyPlaceholder')}
                 maxLength={5000}
                 autoresize={false}
               />
@@ -132,7 +134,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
               onClick={onClose}
               disabled={pending}
             >
-              취소
+              {t('compose.cancel')}
             </ActionButton>
             <ActionButton
               variant="brandSolid"
@@ -141,7 +143,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
               loading={pending}
               disabled={pending}
             >
-              {editPost ? '수정' : '등록'}
+              {editPost ? t('compose.save') : t('compose.submit')}
             </ActionButton>
           </Dialog.Footer>
         </Dialog.Content>

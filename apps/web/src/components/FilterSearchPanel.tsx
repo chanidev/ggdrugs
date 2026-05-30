@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PERIODS, COMPANIONS, TYPES } from '../data/mock';
 import {
   createSubscription,
@@ -87,6 +88,7 @@ export function FilterSearchPanel({
   onSelectEvent?: (id: string) => void;
   activeEventId?: string | null;
 }) {
+  const { t } = useTranslation('navigation');
   const { user } = useCurrentUser();
 
   const [regions, setRegions] = useState<RegionItem[]>([]);
@@ -194,10 +196,10 @@ export function FilterSearchPanel({
         vibeIds: Array.from(vibe),
         periodMonths,
       });
-      setSubscribeMsg('구독 생성됨 — 마이페이지 > 구독 탭에서 관리');
+      setSubscribeMsg(t('subscription.created'));
     } catch (err) {
       const msg = (err as Error).message;
-      if (msg === 'UNAUTHENTICATED') setSubscribeMsg('로그인이 필요해요');
+      if (msg === 'UNAUTHENTICATED') setSubscribeMsg(t('subscription.loginRequired'));
       else if (msg === 'MAX_SUBSCRIPTIONS_REACHED') setSubscribeMsg('구독 최대 20개 — 마이페이지에서 정리');
       else setSubscribeMsg(`실패: ${msg}`);
     } finally {
@@ -233,7 +235,7 @@ export function FilterSearchPanel({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 overflow-y-auto">
-        <FilterBlock title="지역" count={region.size}>
+        <FilterBlock title={t('filter.region.label')} count={region.size}>
           {lookupError ? (
             <div className="text-[12px] text-(--color-error)">지역 로드 실패: {lookupError}</div>
           ) : regionsBySido.length === 0 ? (
@@ -268,7 +270,7 @@ export function FilterSearchPanel({
             </div>
           )}
         </FilterBlock>
-        <FilterBlock title="기간">
+        <FilterBlock title={t('filter.period.label')}>
           <div className="flex gap-1.5">
             {PERIODS.map((p) => (
               <Chip
@@ -285,13 +287,13 @@ export function FilterSearchPanel({
             ))}
           </div>
         </FilterBlock>
-        <FilterBlock title="인원구성" count={companion.size}>
+        <FilterBlock title={t('filter.companion.label')} count={companion.size}>
           <ChipGroup items={COMPANIONS} isActive={(k) => companion.has(k)} onToggle={toggleIn(setCompanion)} />
         </FilterBlock>
-        <FilterBlock title="종류" count={type.size}>
+        <FilterBlock title={t('filter.eventType.label')} count={type.size}>
           <ChipGroup items={TYPES} isActive={(k) => type.has(k)} onToggle={toggleIn(setType)} />
         </FilterBlock>
-        <FilterBlock title="성향" count={vibe.size} last>
+        <FilterBlock title={t('filter.vibe.label')} count={vibe.size} last>
           {vibes.length === 0 ? (
             <div className="text-[12px] text-(--color-text-subtle)">불러오는 중…</div>
           ) : (

@@ -1,19 +1,9 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '../components/Icon';
 import { fetchEventsStats, type EventsStatsResponse } from '../lib/api';
 
 export type SidebarSection = 'filter' | 'list' | 'chat';
-
-const SECTIONS: Array<{
-  key: SidebarSection;
-  title: string;
-  description: string;
-  icon: 'filter' | 'list' | 'chat';
-}> = [
-  { key: 'filter', title: '필터 검색',     description: '5개 축으로 좁히기',  icon: 'filter' },
-  { key: 'list',   title: '전체목록 조회', description: '카테고리별 인덱스', icon: 'list' },
-  { key: 'chat',   title: '채팅방 검색',   description: '자연어로 묻기',       icon: 'chat' },
-];
 
 /**
  * Sidebar — 메인 페이지 탐색 rail (236px).
@@ -32,18 +22,31 @@ export function Sidebar({
   open: SidebarSection | null;
   onToggle: (key: SidebarSection) => void;
 }) {
+  const { t } = useTranslation('navigation');
+
+  const SECTIONS: Array<{
+    key: SidebarSection;
+    title: string;
+    description: string;
+    icon: 'filter' | 'list' | 'chat';
+  }> = [
+    { key: 'filter', title: t('sidebar.filter.title'), description: t('sidebar.filter.description'), icon: 'filter' },
+    { key: 'list',   title: t('sidebar.list.title'),   description: t('sidebar.list.description'),   icon: 'list' },
+    { key: 'chat',   title: t('sidebar.chat.title'),   description: t('sidebar.chat.description'),   icon: 'chat' },
+  ];
+
   return (
     <aside
       className="hidden w-[236px] shrink-0 flex-col border-r border-(--color-border) bg-(--color-surface) md:flex"
       aria-label="이벤트 탐색 메뉴"
     >
       <h2 className="m-0 px-5 pb-4 pt-6 text-[22px] font-bold leading-tight tracking-[-0.02em]">
-        이벤트를 찾는
-        <br />
-        서울의 방법
+        {t('sidebar.eyebrow').split('\n').map((line, i) => (
+          i === 0 ? <span key={i}>{line}<br /></span> : <span key={i}>{line}</span>
+        ))}
       </h2>
       <p className="m-0 border-b border-(--color-border) px-5 pb-[18px] text-[13px] leading-[1.55] text-(--color-text-muted)">
-        지도 위 핀과 채팅, 필터로 축제·박람회·심포지움·컨퍼런스를 탐색하세요.
+        {t('sidebar.description')}
       </p>
 
       <nav aria-label="탐색 섹션">
@@ -107,6 +110,7 @@ function RailRow({
 }
 
 function StatsBlock() {
+  const { t } = useTranslation('navigation');
   const [stats, setStats] = useState<EventsStatsResponse | null>(null);
 
   useEffect(() => {
@@ -125,15 +129,15 @@ function StatsBlock() {
   return (
     <div className="mt-auto border-t border-(--color-border) px-5 py-[18px]">
       <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-        현재 공개 이벤트
+        {t('stats.label')}
       </div>
-      <StatRow label="전체" value={fmt(stats?.total)} />
+      <StatRow label={t('stats.total')} value={fmt(stats?.total)} />
       <StatRow
-        label="진행중"
+        label={t('stats.ongoing')}
         value={<span className="text-(--color-accent)">{fmt(stats?.phases.ongoing)}</span>}
         separator
       />
-      <StatRow label="예정" value={fmt(stats?.phases.upcoming)} separator />
+      <StatRow label={t('stats.upcoming')} value={fmt(stats?.phases.upcoming)} separator />
     </div>
   );
 }

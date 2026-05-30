@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import {
   fetchEventDetail,
   fetchEventArticles,
@@ -57,6 +58,7 @@ export function EventSummaryPanel({
  * 모바일은 BottomSheet 내부 `<section>`.
  */
 export function EventSummaryContent({ eventId }: { eventId: string }) {
+  const { t } = useTranslation('common');
   const navigate = useNavigate();
   const [state, setState] = useState<{
     loading: boolean;
@@ -85,10 +87,10 @@ export function EventSummaryContent({ eventId }: { eventId: string }) {
       <div className="min-h-0 flex-1 overflow-y-auto">
         {state.loading && <SummarySkeleton />}
         {state.error === 'NOT_FOUND' && (
-          <EmptyBox label="이벤트를 찾을 수 없어요" hint="삭제되었거나 승인이 취소된 이벤트일 수 있어요." />
+          <EmptyBox label={t('label.notFound')} hint={t('error.networkError')} />
         )}
         {state.error === 'ERROR' && (
-          <EmptyBox label="요약을 불러오지 못했어요" hint="잠시 후 다시 시도해 주세요." />
+          <EmptyBox label={t('error.loadFailed')} hint={t('error.networkError')} />
         )}
         {state.data && <SummaryBody detail={state.data} />}
       </div>

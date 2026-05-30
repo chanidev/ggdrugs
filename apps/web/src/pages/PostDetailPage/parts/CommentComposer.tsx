@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { TextField, TextFieldInput } from 'seed-design/ui/text-field';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { createComment, type CommentNode } from '../../../lib/api/posts.js';
@@ -19,24 +20,25 @@ export function CommentComposer({
   onCreated: (c: CommentNode) => void;
   onCancel?: () => void;
 }) {
+  const { t } = useTranslation('community');
   const [text, setText] = useState('');
   const [pending, setPending] = useState(false);
 
   const submit = async () => {
-    const t = text.trim();
-    if (t.length < 1) return;
+    const trimmed = text.trim();
+    if (trimmed.length < 1) return;
     setPending(true);
     try {
       const c = await createComment(
         postId,
-        parentCommentId ? { body: t, parentCommentId } : { body: t },
+        parentCommentId ? { body: trimmed, parentCommentId } : { body: trimmed },
       );
       setText('');
       onCreated(c);
     } catch (e) {
       if ((e as Error).message === 'REPLY_TO_REPLY_NOT_ALLOWED')
-        alert('대댓글에는 답글을 달 수 없어요.');
-      else if ((e as Error).message === 'UNAUTHENTICATED') alert('로그인이 필요해요.');
+        alert(t('comment.replyNotAllowed'));
+      else if ((e as Error).message === 'UNAUTHENTICATED') alert(t('common:error.loginRequired'));
     } finally {
       setPending(false);
     }
@@ -52,8 +54,8 @@ export function CommentComposer({
           onValueChange={(v) => setText(v.value)}
         >
           <TextFieldInput
-            aria-label={parentCommentId ? '답글 입력' : '댓글 입력'}
-            placeholder={parentCommentId ? '답글을 입력하세요' : '댓글을 입력하세요'}
+            aria-label={parentCommentId ? t('comment.replyPlaceholder') : t('comment.placeholder')}
+            placeholder={parentCommentId ? t('comment.replyPlaceholder') : t('comment.placeholder')}
             maxLength={1000}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
@@ -71,11 +73,11 @@ export function CommentComposer({
         loading={pending}
         disabled={pending || text.trim().length < 1}
       >
-        등록
+        {t('comment.submit')}
       </ActionButton>
       {onCancel && (
         <ActionButton variant="neutralOutline" size="small" onClick={onCancel}>
-          취소
+          {t('common:button.cancel')}
         </ActionButton>
       )}
     </div>

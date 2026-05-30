@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from 'seed-design/ui/avatar';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { TextField, TextFieldInput } from 'seed-design/ui/text-field';
@@ -22,6 +23,7 @@ function CommentItem({
   onChanged: () => void;
   currentUserId?: string;
 }) {
+  const { t } = useTranslation('community');
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(node.body);
@@ -34,26 +36,26 @@ function CommentItem({
   }, [node.body, editing]);
 
   const saveEdit = async () => {
-    const t = editText.trim();
-    if (t.length < 1) return;
+    const trimmed = editText.trim();
+    if (trimmed.length < 1) return;
     try {
-      await updateComment(node.commentId, { body: t });
+      await updateComment(node.commentId, { body: trimmed });
       setEditing(false);
       onChanged();
     } catch (e) {
-      if ((e as Error).message === 'FORBIDDEN') alert('본인 댓글이 아니에요.');
-      else alert('수정하지 못했어요.');
+      if ((e as Error).message === 'FORBIDDEN') alert(t('comment.deleteForbidden'));
+      else alert(t('comment.deleteFail'));
     }
   };
 
   const remove = async () => {
-    if (!confirm('삭제할까요?')) return;
+    if (!confirm(t('comment.deleteConfirm'))) return;
     try {
       await deleteComment(node.commentId);
       onChanged();
     } catch (e) {
-      if ((e as Error).message === 'FORBIDDEN') alert('본인 댓글이 아니에요.');
-      else alert('삭제하지 못했어요.');
+      if ((e as Error).message === 'FORBIDDEN') alert(t('comment.deleteForbidden'));
+      else alert(t('comment.deleteFail'));
     }
   };
 
@@ -93,14 +95,14 @@ function CommentItem({
               </TextField>
             </div>
             <ActionButton variant="brandSolid" size="xsmall" onClick={saveEdit}>
-              저장
+              {t('common:button.save')}
             </ActionButton>
             <ActionButton
               variant="neutralOutline"
               size="xsmall"
               onClick={() => setEditing(false)}
             >
-              취소
+              {t('common:button.cancel')}
             </ActionButton>
           </div>
         ) : (
@@ -116,7 +118,7 @@ function CommentItem({
               size="xsmall"
               onClick={() => setReplying((v) => !v)}
             >
-              답글
+              {t('comment.reply')}
             </ActionButton>
           )}
           {node.isMine && !editing && (
@@ -125,12 +127,12 @@ function CommentItem({
               size="xsmall"
               onClick={() => setEditing(true)}
             >
-              수정
+              {t('comment.edit')}
             </ActionButton>
           )}
           {node.isMine && (
             <ActionButton variant="neutralOutline" size="xsmall" onClick={remove}>
-              삭제
+              {t('comment.delete')}
             </ActionButton>
           )}
           {/* GG-REPORT-001: 타인 댓글 신고 */}
@@ -140,7 +142,7 @@ function CommentItem({
               size="xsmall"
               onClick={() => setReportOpen(true)}
             >
-              신고
+              {t('common:button.report')}
             </ActionButton>
           )}
         </div>
@@ -202,9 +204,10 @@ export function CommentTree({
   onChanged: () => void;
   currentUserId?: string;
 }) {
+  const { t } = useTranslation('community');
   if (comments.length === 0)
     return (
-      <p className="py-4 text-[13px] text-(--color-text-muted)">첫 댓글을 남겨보세요.</p>
+      <p className="py-4 text-[13px] text-(--color-text-muted)">{t('comment.placeholder')}</p>
     );
 
   return (

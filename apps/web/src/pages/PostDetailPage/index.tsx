@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { CommunityShell, CATEGORY_LABELS } from '../CommunityPage/parts/CommunityShell.js';
 import { MateRecoPlaceholder } from '../CommunityPage/parts/MateRecoPlaceholder.js';
@@ -23,6 +24,7 @@ import { useCurrentUser } from '../../lib/auth-context';
  * - 본인 글: 수정(ComposeModal edit 모드 재사용, /edit 라우트 없음) / 삭제.
  */
 export function PostDetailPage() {
+  const { t } = useTranslation('community');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
@@ -65,7 +67,7 @@ export function PostDetailPage() {
       const r = await togglePostLike(detail.postId);
       setDetail({ ...detail, liked: r.liked, likeCount: r.likeCount });
     } catch (e) {
-      if ((e as Error).message === 'UNAUTHENTICATED') alert('로그인이 필요해요.');
+      if ((e as Error).message === 'UNAUTHENTICATED') alert(t('common:error.loginRequired'));
     } finally {
       setLikeLoading(false);
     }
@@ -73,13 +75,13 @@ export function PostDetailPage() {
 
   /** GG-POST-005: 게시글 삭제 */
   const onDeletePost = async () => {
-    if (!detail || !confirm('게시글을 삭제할까요?')) return;
+    if (!detail || !confirm(t('post.deleteConfirm'))) return;
     try {
       await deletePost(detail.postId);
       navigate('/community');
     } catch (e) {
-      if ((e as Error).message === 'FORBIDDEN') alert('본인 글이 아니에요.');
-      else alert('삭제하지 못했어요.');
+      if ((e as Error).message === 'FORBIDDEN') alert(t('post.deleteForbidden'));
+      else alert(t('post.deleteFail'));
     }
   };
 
@@ -87,18 +89,18 @@ export function PostDetailPage() {
     <CommunityShell rightRail={<MateRecoPlaceholder />}>
       {/* 로딩 상태 */}
       {loading && (
-        <div className="py-12 text-center text-[14px] text-(--color-text-muted)">불러오는 중…</div>
+        <div className="py-12 text-center text-[14px] text-(--color-text-muted)">{t('post.loading')}</div>
       )}
 
       {/* 오류 상태 */}
       {error === 'NOT_FOUND' && (
         <div className="py-12 text-center text-[14px] text-(--color-text-muted)">
-          존재하지 않거나 만료된 게시글이에요.
+          {t('post.notFound')}
         </div>
       )}
       {error === 'ERROR' && (
         <div className="py-12 text-center text-[14px] text-(--color-text-muted)">
-          불러오지 못했어요.
+          {t('post.loadError')}
         </div>
       )}
 
@@ -137,7 +139,7 @@ export function PostDetailPage() {
               onClick={onLike}
               loading={likeLoading}
               disabled={likeLoading}
-              aria-label={detail.liked ? '좋아요 취소' : '좋아요'}
+              aria-label={detail.liked ? t('post.likeAriaPressed') : t('post.likeAriaUnpressed')}
               aria-pressed={detail.liked}
             >
               ♥ {detail.likeCount}
@@ -151,7 +153,7 @@ export function PostDetailPage() {
                   size="small"
                   onClick={() => setEditOpen(true)}
                 >
-                  수정
+                  {t('common:button.edit')}
                 </ActionButton>
                 {/* GG-POST-005: 삭제 */}
                 <ActionButton
@@ -159,7 +161,7 @@ export function PostDetailPage() {
                   size="small"
                   onClick={onDeletePost}
                 >
-                  삭제
+                  {t('common:button.delete')}
                 </ActionButton>
               </>
             )}
@@ -170,7 +172,7 @@ export function PostDetailPage() {
                 size="small"
                 onClick={() => setReportOpen(true)}
               >
-                신고
+                {t('common:button.report')}
               </ActionButton>
             )}
           </div>
@@ -178,7 +180,9 @@ export function PostDetailPage() {
           {/* 댓글 섹션 */}
           <section className="mt-6 border-t border-(--color-border) pt-4">
             <h2 className="mb-3 text-[15px] font-semibold">
-              댓글 {detail.commentCount > 0 ? `(${detail.commentCount})` : ''}
+              {detail.commentCount > 0
+                ? t('post.commentCount', { count: detail.commentCount })
+                : t('post.commentSection')}
             </h2>
 
             {/* GG-POST-001: 댓글 작성 — 로그인 사용자만 */}

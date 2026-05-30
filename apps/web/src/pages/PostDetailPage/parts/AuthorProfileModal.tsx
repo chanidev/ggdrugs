@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Avatar } from 'seed-design/ui/avatar';
 import * as Dialog from 'seed-design/ui/dialog';
 import { ActionButton } from 'seed-design/ui/action-button';
@@ -22,6 +23,7 @@ export function AuthorProfileModal({
   authorUserId: string;
   onClose: () => void;
 }) {
+  const { t } = useTranslation('community');
   const navigate = useNavigate();
   // null = 아직 로딩 중, number = 조회된 지수, 'none' = 프로필 미등록
   const [mateIndex, setMateIndex] = useState<number | 'none' | null>(null);
@@ -91,7 +93,7 @@ export function AuthorProfileModal({
           <div className="flex flex-col gap-3 px-5 pb-2">
             {/* GG-POST-009: 메이트 지수 실값 (Task 6 연결) */}
             <div className="flex items-center justify-between text-[13px]">
-              <span className="text-(--color-text-muted)">메이트 지수</span>
+              <span className="text-(--color-text-muted)">{t('authorModal.mateScore')}</span>
               <span
                 className={
                   typeof mateIndex === 'number'
@@ -114,7 +116,7 @@ export function AuthorProfileModal({
               size="medium"
               onClick={onClose}
             >
-              닫기
+              {t('authorModal.close')}
             </ActionButton>
             {/* GG-REPORT-008: 일반 차단 (POST /community/users/:id/block) */}
             <ActionButton
@@ -138,7 +140,7 @@ export function AuthorProfileModal({
               }}
               aria-label={`${nickname}에게 채팅 신청하기`}
             >
-              채팅 신청하기
+              {t('authorModal.chatRequest')}
             </ActionButton>
           </Dialog.Footer>
         </Dialog.Content>

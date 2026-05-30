@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { LogoMark } from '../components/brand/Logo';
 import { Icon } from '../components/Icon';
 import { NotificationBell } from '../components/notifications/NotificationBell';
@@ -23,12 +24,6 @@ import {
 import type { ChatSuggestion, EventListQuery } from '../lib/api';
 
 type MobileTab = 'filter' | 'list' | 'chat';
-
-const TAB_ORDER: { key: MobileTab; label: string; icon: 'filter' | 'list' | 'chat' }[] = [
-  { key: 'list', label: '목록', icon: 'list' },
-  { key: 'filter', label: '필터', icon: 'filter' },
-  { key: 'chat', label: '채팅', icon: 'chat' },
-];
 
 /**
  * MobileShell — 모바일 메인 페이지 (md 미만).
@@ -141,6 +136,7 @@ export function MobileShell({
  * 가장자리 스트라이프 금지 (anti-AI-slop). 아래로 살짝 fade 하는 box-shadow 만.
  */
 function MobileFloatingHeader() {
+  const { t } = useTranslation('common');
   const { user, loading } = useCurrentUser();
 
   return (
@@ -166,7 +162,7 @@ function MobileFloatingHeader() {
             <NotificationBell />
             <Link
               to="/me"
-              aria-label="마이페이지"
+              aria-label={t('aria.myPage')}
               className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-2.5 text-[12px] font-medium text-(--color-text) transition-colors hover:border-(--color-border-hover)"
             >
               <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
@@ -178,7 +174,7 @@ function MobileFloatingHeader() {
             href={loginUrl('google')}
             className="inline-flex h-8 items-center rounded-(--radius-md) bg-(--color-accent) px-3 text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
           >
-            로그인
+            {t('button.login')}
           </a>
         )}
       </div>
@@ -207,6 +203,7 @@ function TabbedView({
 }: {
   tab: MobileTab;
   onTabChange: (t: MobileTab) => void;
+
   mapFilter: EventListQuery | null;
   setMapFilter: (q: EventListQuery | null) => void;
   setHighlightRegionIds: (ids: string[]) => void;
@@ -221,29 +218,37 @@ function TabbedView({
   /** v4.5 — distance sort anchor 로 활용. */
   mapBbox: string | null;
 }) {
+  const { t } = useTranslation('navigation');
+
+  const TAB_ORDER: { key: MobileTab; label: string; icon: 'filter' | 'list' | 'chat' }[] = [
+    { key: 'list',   label: t('mobile.tabs.list'),   icon: 'list' },
+    { key: 'filter', label: t('mobile.tabs.filter'), icon: 'filter' },
+    { key: 'chat',   label: t('mobile.tabs.chat'),   icon: 'chat' },
+  ];
+
   return (
     <>
       <nav
         aria-label="시트 탭"
         className="grid shrink-0 grid-cols-3 border-b border-(--color-border) bg-(--color-surface) px-3"
       >
-        {TAB_ORDER.map((t) => {
-          const active = tab === t.key;
+        {TAB_ORDER.map((tabItem) => {
+          const active = tab === tabItem.key;
           return (
             <button
-              key={t.key}
+              key={tabItem.key}
               type="button"
               role="tab"
               aria-selected={active}
-              onClick={() => onTabChange(t.key)}
+              onClick={() => onTabChange(tabItem.key)}
               className={`relative inline-flex h-11 items-center justify-center gap-1.5 text-[13px] transition-colors ${
                 active
                   ? 'font-semibold text-(--color-text)'
                   : 'font-medium text-(--color-text-muted) hover:text-(--color-text)'
               }`}
             >
-              <Icon name={t.icon} size={15} />
-              <span>{t.label}</span>
+              <Icon name={tabItem.icon} size={15} />
+              <span>{tabItem.label}</span>
               {active && (
                 <span
                   aria-hidden
@@ -308,6 +313,7 @@ function SelectedEventView({
   eventId: string;
   onClear: () => void;
 }) {
+  const { t } = useTranslation('navigation');
   return (
     <>
       <div className="flex shrink-0 items-center justify-between border-b border-(--color-border) bg-(--color-surface) px-4 py-2.5">
@@ -317,10 +323,10 @@ function SelectedEventView({
           className="inline-flex h-8 items-center gap-1 rounded-(--radius-md) px-2 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
         >
           <Icon name="arrow" size={14} className="rotate-180" />
-          <span>목록으로</span>
+          <span>{t('mobile.backToList')}</span>
         </button>
         <span className="text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-          이벤트 요약
+          {t('mobile.eventSummary')}
         </span>
         <span aria-hidden className="w-12" />
       </div>
@@ -349,6 +355,7 @@ function MobileChatTab({
   /** v4-A — error 풍선의 "다시 시도" 클릭 콜백. */
   onRetry?: ((retryUserText: string) => void) | undefined;
 }) {
+  const { t } = useTranslation('navigation');
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lastMsg = messages[messages.length - 1];
   useEffect(() => {
@@ -372,7 +379,7 @@ function MobileChatTab({
         {messages.length === 0 ? (
           <div className="flex flex-col gap-3">
             <p className="m-0 text-[12px] leading-[1.5] text-(--color-text-muted)">
-              자연어로 질문하면 5개 필터 + AI 의미 검색 후보를 함께 드려요.
+              {t('mobile.chatHint')}
             </p>
             <ul className="flex flex-col gap-1.5">
               {SUGGESTIONS.map((s) => (
@@ -446,15 +453,15 @@ function MobileChatTab({
             type="text"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder='"이번 주말 가족이랑 볼만한 축제"'
-            aria-label="자연어로 이벤트 검색"
+            placeholder={t('mobile.chatPlaceholder')}
+            aria-label={t('mobile.chatAriaInput')}
             className="h-11 w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) pl-9 pr-3 text-[14.5px] text-(--color-text) placeholder:text-(--color-text-subtle) transition-[border-color,box-shadow] duration-[180ms] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)] focus:outline-none"
           />
         </div>
         <button
           type="submit"
           disabled={!value.trim()}
-          aria-label="검색 전송"
+          aria-label={t('mobile.chatAriaSend')}
           className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-(--radius-md) bg-(--color-accent) text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
         >
           <Icon name="send" size={15} />
@@ -471,10 +478,11 @@ function MobileSuggestionsList({
   items: ChatSuggestion[];
   onClick: (eventId: string) => void;
 }) {
+  const { t } = useTranslation('navigation');
   return (
     <div className="flex flex-col gap-1.5">
       <p className="m-0 pl-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-(--color-text-subtle)">
-        AI 후보 {items.length}건 · 의미 기반
+        {t('mobile.aiCandidates', { count: items.length })}
       </p>
       <ul className="flex flex-col gap-1.5">
         {items.map((s) => (

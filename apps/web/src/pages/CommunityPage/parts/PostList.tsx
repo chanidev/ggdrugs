@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { ReportModal } from '../../../components/ReportModal.js';
 import type { PostListItem } from '../../../lib/api/posts.js';
 import { CATEGORY_LABELS } from './CommunityShell.js';
@@ -24,6 +25,7 @@ export function PostList({
   /** 현재 로그인 유저 ID (없으면 신고 미노출) */
   currentUserId?: string;
 }) {
+  const { t } = useTranslation('community');
   const [reportTarget, setReportTarget] = useState<{
     postId: string;
     authorUserId: string;
@@ -31,17 +33,17 @@ export function PostList({
 
   if (loading) {
     return (
-      <div className="py-12 text-center text-(--color-text-muted)">불러오는 중…</div>
+      <div className="py-12 text-center text-(--color-text-muted)">{t('postList.loadError')}</div>
     );
   }
   if (error) {
     return (
-      <div className="py-12 text-center text-(--color-text-muted)">불러오지 못했어요</div>
+      <div className="py-12 text-center text-(--color-text-muted)">{t('postList.loadError')}</div>
     );
   }
   if (items.length === 0) {
     return (
-      <div className="py-12 text-center text-(--color-text-muted)">아직 게시글이 없어요</div>
+      <div className="py-12 text-center text-(--color-text-muted)">{t('postList.empty')}</div>
     );
   }
 

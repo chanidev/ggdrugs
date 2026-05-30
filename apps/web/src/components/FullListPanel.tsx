@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchEvents,
   fetchEventsStats,
@@ -64,6 +65,7 @@ export function FullListPanel({
   /** v4.5 — SeoulMap viewport bbox. distance sort 활성 시 BFF 의 anchor 로 사용 (BFF 가 center 자동 계산). null 이면 distance 옵션 disabled. */
   mapBbox?: string | null;
 }) {
+  const { t } = useTranslation(['navigation', 'common']);
   const [stats, setStats] = useState<EventsStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedKey>('all');
