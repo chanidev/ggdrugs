@@ -314,7 +314,7 @@ export function PostDetailPage() {
                     </div>
                     <div className="border-t border-(--color-border) pt-3">
                       <p className="mb-1 text-[11px] font-medium text-(--color-text-subtle)">{t('post.translateResult')}</p>
-                      <p className="text-[14px] font-semibold">{detail.title}</p>
+                      {/* 제목 번역은 미지원(BFF 응답에 translatedTitle 없음) — 본문만 표시. */}
                       <p className="mt-1 whitespace-pre-wrap text-[13px] text-(--color-text-muted)">{translateResult.translatedBody}</p>
                     </div>
                   </div>

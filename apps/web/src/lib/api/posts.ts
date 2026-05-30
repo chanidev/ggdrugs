@@ -180,24 +180,6 @@ export async function deleteComment(id: string): Promise<void> {
   if (!res.ok) throw new Error(`DELETE /community/comments/${id} ${res.status}`);
 }
 
+// TranslateLang 타입은 PostDetailPage에서 translateLang state 선언에 사용.
+// 번역 API 호출은 apps/web/src/lib/api/translate.ts의 translatePostContent를 사용한다.
 export type TranslateLang = 'en' | 'vi' | 'zh' | 'ja' | 'fr';
-
-export interface TranslatePostResult {
-  translatedTitle: string;
-  translatedBody: string;
-  lang: TranslateLang;
-}
-
-export async function translatePost(id: string, lang: TranslateLang): Promise<TranslatePostResult> {
-  const res = await fetch(
-    `${BFF_URL}/community/posts/${encodeURIComponent(id)}/translate`,
-    withCredentials({
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lang }),
-    }),
-  );
-  if (res.status === 503) throw new Error('LLM_UNAVAILABLE');
-  if (!res.ok) throw new Error(`POST /community/posts/${id}/translate ${res.status}`);
-  return (await res.json()) as TranslatePostResult;
-}
