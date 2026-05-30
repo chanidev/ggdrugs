@@ -36,7 +36,7 @@ export function ReviewsList() {
     return (
       <EmptyBox
         label={t('review.empty')}
-        hint="상세 페이지에서 별점과 짧은 후기를 남겨 보세요."
+        hint={t('review.hint')}
       />
     );
 
@@ -50,7 +50,7 @@ export function ReviewsList() {
         total: Math.max(0, prev.total - 1),
       }));
     } catch (err) {
-      window.alert(`삭제 실패: ${(err as Error).message}`);
+      window.alert(t('review.deleteFailed', { message: (err as Error).message }));
     }
   };
 

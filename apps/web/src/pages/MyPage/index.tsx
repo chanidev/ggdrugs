@@ -38,14 +38,14 @@ export function MyPage() {
       <PageShell>
         <section className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
           <h1 className="m-0 mb-2 text-[20px] font-bold tracking-[-0.015em]">
-            로그인이 필요해요
+            {t('page.loginRequired')}
           </h1>
           <p className="m-0 mb-6 text-[14px] text-(--color-text-muted)">
-            북마크와 리뷰는 로그인 후에 확인할 수 있어요.
+            {t('page.loginHint')}
           </p>
           <ActionButton variant="brandSolid" size="medium" asChild>
             <a href={loginUrl('google', '/me')}>
-              Google 로그인 <Icon name="arrow" size={14} />
+              {t('page.loginButton')} <Icon name="arrow" size={14} />
             </a>
           </ActionButton>
         </section>
@@ -62,7 +62,7 @@ export function MyPage() {
             {t('page.title')}
           </p>
           <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">
-            <span className="text-(--color-accent)">•</span> {user.nickname} 님
+            <span className="text-(--color-accent)">•</span> {t('page.greetingUser', { nickname: user.nickname })}
           </h1>
         </div>
         <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export function MyPage() {
             to="/community"
             className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] font-medium hover:border-(--color-border-hover)"
           >
-            커뮤니티
+            {t('page.communityLink')}
           </Link>
           {/* GG-MY-007 마이페이지 → 프로필 보기 (A_807) */}
           <Link

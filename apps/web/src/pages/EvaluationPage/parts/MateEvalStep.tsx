@@ -1,5 +1,6 @@
 // apps/web/src/pages/EvaluationPage/parts/MateEvalStep.tsx
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { SegmentedControl, SegmentedControlItem } from 'seed-design/ui/segmented-control';
 import { StarRating } from './StarRating.js';
@@ -16,15 +17,11 @@ interface Props {
   onBlock: () => void;
 }
 
-const Q_LABELS = ['시간 약속', '의사소통', '분위기/유쾌함', '재방문 의향'] as const;
-const REPORT_OPTIONS = [
-  { value: 'inappropriate', label: '부적절한 언행' },
-  { value: 'harassing',     label: '괴롭힘/폭력' },
-  { value: 'no_show',       label: '노쇼' },
-  { value: 'etc',           label: '기타' },
-] as const;
+const Q_KEYS = ['punctuality', 'communication', 'vibe', 'revisit'] as const;
+const REPORT_OPTION_KEYS = ['inappropriate', 'harassing', 'no_show', 'etc'] as const;
 
 export function MateEvalStep({ onNext, onBlock }: Props) {
+  const { t } = useTranslation('mypage');
   const [stars, setStars] = useState(0);
   const [qs, setQs] = useState<[number, number, number, number]>([0, 0, 0, 0]);
   const [comment, setComment] = useState('');
@@ -40,7 +37,7 @@ export function MateEvalStep({ onNext, onBlock }: Props) {
   function handleCommentChange(v: string) {
     setComment(v);
     setCommentError(
-      new TextEncoder().encode(v).length > 30 ? '한줄평은 최대 30바이트입니다.' : null,
+      new TextEncoder().encode(v).length > 30 ? t('evaluation.commentError') : null,
     );
   }
 
@@ -48,20 +45,21 @@ export function MateEvalStep({ onNext, onBlock }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 className="text-(length:--text-h3) font-semibold">메이트 평가</h2>
+      <h2 className="text-(length:--text-h3) font-semibold">{t('evaluation.mateEval')}</h2>
 
       <section>
-        <p className="mb-2 text-[13px] text-(--color-text-muted)">전체 만족도</p>
+        <p className="mb-2 text-[13px] text-(--color-text-muted)">{t('evaluation.mateOverall')}</p>
         <StarRating value={stars} onChange={setStars} />
       </section>
 
-      {Q_LABELS.map((label, i) => {
+      {Q_KEYS.map((key, i) => {
+        const label = t(`evaluation.qLabels.${key}`);
         const qVal = qs[i];
         const segProps = qVal === 0
           ? { 'aria-label': label, onValueChange: (v: string) => setQ(i as 0 | 1 | 2 | 3, Number(v)) }
           : { 'aria-label': label, value: String(qVal), onValueChange: (v: string) => setQ(i as 0 | 1 | 2 | 3, Number(v)) };
         return (
-          <section key={label}>
+          <section key={key}>
             <p className="mb-1 text-[13px] font-medium">{label}</p>
             <SegmentedControl {...segProps}>
               {[1, 2, 3, 4, 5].map((v) => (
@@ -74,7 +72,7 @@ export function MateEvalStep({ onNext, onBlock }: Props) {
 
       <section>
         <label className="mb-1 block text-[13px] font-medium" htmlFor="comment">
-          한줄평 <span className="text-(--color-text-muted)">(선택, 최대 30바이트)</span>
+          {t('evaluation.comment')} <span className="text-(--color-text-muted)">(선택, 최대 30바이트)</span>
         </label>
         <input
           id="comment"
@@ -88,20 +86,20 @@ export function MateEvalStep({ onNext, onBlock }: Props) {
       </section>
 
       <section>
-        <p className="mb-1 text-[13px] font-medium">신고 사유 <span className="text-(--color-text-muted)">(선택)</span></p>
+        <p className="mb-1 text-[13px] font-medium">{t('evaluation.reportReason')} <span className="text-(--color-text-muted)">(선택)</span></p>
         <div className="flex flex-wrap gap-2">
-          {REPORT_OPTIONS.map((o) => (
+          {REPORT_OPTION_KEYS.map((key) => (
             <button
-              key={o.value}
+              key={key}
               type="button"
-              onClick={() => setReportedFor(reportedFor === o.value ? null : o.value)}
+              onClick={() => setReportedFor(reportedFor === key ? null : key)}
               className={`rounded-full border px-3 py-1 text-[12px] transition-colors ${
-                reportedFor === o.value
+                reportedFor === key
                   ? 'border-(--color-brand) bg-(--color-brand) text-white'
                   : 'border-(--color-border) text-(--color-text-muted)'
               }`}
             >
-              {o.label}
+              {t(`evaluation.reportOptions.${key}`)}
             </button>
           ))}
         </div>
@@ -109,7 +107,7 @@ export function MateEvalStep({ onNext, onBlock }: Props) {
 
       <div className="flex gap-2">
         <ActionButton variant="criticalSolid" size="small" onClick={onBlock}>
-          차단
+          {t('evaluation.block')}
         </ActionButton>
         <ActionButton
           variant="brandSolid"
@@ -121,7 +119,7 @@ export function MateEvalStep({ onNext, onBlock }: Props) {
           }
           className="flex-1"
         >
-          다음 — 축제 후기 작성
+          {t('evaluation.nextFestival')}
         </ActionButton>
       </div>
     </div>

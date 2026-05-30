@@ -144,7 +144,7 @@ export function MembersTab() {
             })}
           </div>
           <span className="ml-auto text-[12px] text-(--color-text-subtle)">
-            {total.toLocaleString()}건
+            {t('member.total', { count: total.toLocaleString() })}
           </span>
         </div>
 
@@ -211,11 +211,11 @@ export function MembersTab() {
                         )}
                       </div>
                       <div className="mt-0.5 text-[11px] text-(--color-text-subtle)">
-                        {u.authProvider} · 활성 역할 {u.activeRole}
+                        {u.authProvider} · {t('member.activeRole')} {u.activeRole}
                       </div>
                       <div className="tabular mt-0.5 text-[11px] text-(--color-text-subtle)">
-                        가입 {u.createdAt.slice(0, 10)} · 최근 로그인{' '}
-                        {u.lastLoggedInAt?.slice(0, 10) ?? '없음'}
+                        {t('member.joinLabel')} {u.createdAt.slice(0, 10)} · {t('member.lastLoginLabel')}{' '}
+                        {u.lastLoggedInAt?.slice(0, 10) ?? '-'}
                       </div>
                     </div>
                   </button>
@@ -233,7 +233,7 @@ export function MembersTab() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
             >
-              이전
+              {t('member.prev')}
             </button>
             <span className="tabular text-[12px] text-(--color-text-subtle)">
               {page} / {totalPages}
@@ -244,7 +244,7 @@ export function MembersTab() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
             >
-              다음
+              {t('member.next')}
             </button>
           </div>
         )}
@@ -256,7 +256,7 @@ export function MembersTab() {
           <UserDetailPanel userId={selectedId} onChanged={reload} />
         ) : (
           <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-            좌측 목록에서 회원을 선택하세요.
+            {t('member.selectHint')}
           </div>
         )}
       </aside>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { fetchEventArticlesPage, type EventArticleItem } from '../../../lib/api';
 import { Icon } from '../../../components/Icon';
 
@@ -7,6 +8,7 @@ import { Icon } from '../../../components/Icon';
  * 매핑 데이터가 없으면 섹션을 아예 렌더하지 않는다 (공간 낭비 방지).
  */
 export function ArticlesSection({ eventId }: { eventId: string }) {
+  const { t } = useTranslation('common');
   const PAGE_SIZE = 5;
   const [page, setPage] = useState(0);
   const [items, setItems] = useState<EventArticleItem[]>([]);
@@ -41,7 +43,7 @@ export function ArticlesSection({ eventId }: { eventId: string }) {
   return (
     <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
       <header className="mb-4 flex items-baseline justify-between">
-        <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">관련 기사</h2>
+        <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">{t('articles.title')}</h2>
         <span className="text-[11px] text-(--color-text-subtle)">
           {total > 0 ? (
             <>
@@ -58,7 +60,7 @@ export function ArticlesSection({ eventId }: { eventId: string }) {
         </span>
       </header>
       {error ? (
-        <div className="text-[13px] text-(--color-error)">관련 기사를 불러오지 못했어요.</div>
+        <div className="text-[13px] text-(--color-error)">{t('articles.loadError')}</div>
       ) : (
         <>
           <ul
@@ -83,7 +85,7 @@ export function ArticlesSection({ eventId }: { eventId: string }) {
                       </span>
                     )}
                     <span className="ml-auto text-[11px] text-(--color-text-subtle) group-hover:text-(--color-accent)">
-                      원문 열기 ↗
+                      {t('articles.openOriginal')}
                     </span>
                   </div>
                   <h3 className="m-0 text-[15px] font-semibold tracking-[-0.01em] group-hover:underline">
@@ -100,7 +102,7 @@ export function ArticlesSection({ eventId }: { eventId: string }) {
           </ul>
           {pageCount > 1 && (
             <nav
-              aria-label="관련 기사 페이지"
+              aria-label={t('articles.ariaLabel')}
               className="mt-4 flex items-center justify-between border-t border-(--color-border) pt-3 text-[13px]"
             >
               <button
@@ -109,7 +111,7 @@ export function ArticlesSection({ eventId }: { eventId: string }) {
                 disabled={page === 0 || loading}
                 className="inline-flex h-8 items-center gap-1 rounded-(--radius-md) px-3 text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text) disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-(--color-text-muted)"
               >
-                <Icon name="arrow" size={14} className="rotate-180" /> 이전
+                <Icon name="arrow" size={14} className="rotate-180" /> {t('articles.prev')}
               </button>
               <span className="tabular text-(--color-text-muted)">
                 {page + 1} / {pageCount}
@@ -120,7 +122,7 @@ export function ArticlesSection({ eventId }: { eventId: string }) {
                 disabled={page >= pageCount - 1 || loading}
                 className="inline-flex h-8 items-center gap-1 rounded-(--radius-md) px-3 text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text) disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-(--color-text-muted)"
               >
-                다음 <Icon name="arrow" size={14} />
+                {t('articles.next')} <Icon name="arrow" size={14} />
               </button>
             </nav>
           )}

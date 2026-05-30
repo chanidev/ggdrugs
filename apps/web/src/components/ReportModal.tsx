@@ -27,13 +27,13 @@ interface ReportModalProps {
   onSuccess?: () => void;
 }
 
-const REASON_OPTIONS: { value: ReportReason; label: string; surfaces?: ReportTargetType[] }[] = [
-  { value: 'spam',       label: '스팸/광고' },
-  { value: 'abuse',      label: '욕설/혐오' },
-  { value: 'harassment', label: '괴롭힘' },
-  { value: 'obscene',    label: '음란물' },
-  { value: 'no_show',    label: '노쇼', surfaces: ['mate_eval'] },
-  { value: 'etc',        label: '기타' },
+const REASON_VALUES: { value: ReportReason; surfaces?: ReportTargetType[] }[] = [
+  { value: 'spam' },
+  { value: 'abuse' },
+  { value: 'harassment' },
+  { value: 'obscene' },
+  { value: 'no_show', surfaces: ['mate_eval'] },
+  { value: 'etc' },
 ];
 
 export function ReportModal({
@@ -53,7 +53,7 @@ export function ReportModal({
 
   if (!open) return null;
 
-  const visibleOptions = REASON_OPTIONS.filter(
+  const visibleOptions = REASON_VALUES.filter(
     (o) => !o.surfaces || o.surfaces.includes(targetType),
   );
 
@@ -79,11 +79,11 @@ export function ReportModal({
     } catch (e) {
       const msg = (e as Error).message;
       if (msg === 'already_reported') {
-        setInlineError('이미 신고한 내용입니다.');
+        setInlineError(t('report.error.duplicate'));
       } else if (msg === 'UNAUTHENTICATED') {
-        setInlineError('로그인이 필요합니다.');
+        setInlineError(t('report.error.unauthenticated'));
       } else {
-        setInlineError('신고 접수 중 오류가 발생했어요. 다시 시도해 주세요.');
+        setInlineError(t('report.error.generic'));
       }
     } finally {
       setLoading(false);
@@ -95,7 +95,7 @@ export function ReportModal({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="신고하기"
+      aria-label={t('report.ariaLabel')}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -116,7 +116,7 @@ export function ReportModal({
 
         {/* 신고 사유 라디오 */}
         <fieldset className="mb-4">
-          <legend className="mb-2 text-[13px] font-medium text-(--color-text-muted)">신고 사유</legend>
+          <legend className="mb-2 text-[13px] font-medium text-(--color-text-muted)">{t('report.reasonLabel')}</legend>
           <div className="flex flex-col gap-2">
             {visibleOptions.map((o) => (
               <label
@@ -131,7 +131,7 @@ export function ReportModal({
                   onChange={() => setReason(o.value)}
                   className="accent-(--color-accent)"
                 />
-                {o.label}
+                {t(`report.reasons.${o.value}`)}
               </label>
             ))}
           </div>
@@ -140,7 +140,7 @@ export function ReportModal({
         {/* 상세 사유 */}
         <div className="mb-4">
           <label htmlFor="report-detail" className="mb-1 block text-[13px] font-medium">
-            상세 사유 <span className="text-(--color-text-muted)">(선택, 최대 500자)</span>
+            {t('report.detailLabelFull')}
           </label>
           <textarea
             id="report-detail"
@@ -148,7 +148,7 @@ export function ReportModal({
             onChange={(e) => setDetail(e.target.value)}
             maxLength={500}
             rows={3}
-            placeholder="구체적인 내용을 입력하면 처리에 도움이 됩니다."
+            placeholder={t('report.placeholder')}
             className="w-full resize-none rounded-(--radius-md) border border-(--color-border) px-3 py-2 text-[13px] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-accent) focus:outline-none"
           />
           <p className="mt-0.5 text-right text-[11px] text-(--color-text-subtle)">{detail.length}/500</p>
@@ -162,7 +162,7 @@ export function ReportModal({
         {/* 성공 토스트 */}
         {toast && (
           <p role="status" className="mb-3 text-[13px] font-medium text-(--color-accent)">
-            신고가 접수되었습니다.
+            {t('report.success')}
           </p>
         )}
 
@@ -173,7 +173,7 @@ export function ReportModal({
           onClick={() => { void handleSubmit(); }}
           className="w-full rounded-(--radius-md) bg-(--color-accent) py-2.5 text-[14px] font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {loading ? '신고 중…' : t('button.report')}
+          {loading ? t('report.submitting') : t('button.report')}
         </button>
       </div>
     </div>

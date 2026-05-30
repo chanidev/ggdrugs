@@ -78,19 +78,19 @@ export function ReviewsSection({
     const el = document.getElementById('reviews');
     if (!el) return;
     // 레이아웃 안정화 후 스크롤.
-    const t = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const ta = document.getElementById('review-body');
       if (ta instanceof HTMLTextAreaElement) ta.focus({ preventScroll: true });
     }, 120);
-    return () => window.clearTimeout(t);
+    return () => window.clearTimeout(timer);
   }, [state.loading]);
 
   return (
     <section id="reviews" className="scroll-mt-20 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
       <header className="mb-4 flex items-end justify-between gap-3">
         <div>
-          <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">리뷰</h2>
+          <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">{t('review.title')}</h2>
           {total > 0 && (
             <p className="tabular m-0 mt-1 text-[12px] text-(--color-text-muted)">
               ★ <span className="text-(--color-text)">{avg.toFixed(1)}</span> · {total.toLocaleString()}개
@@ -169,9 +169,9 @@ function ReviewComposer({
     } catch (err) {
       const msg = (err as Error).message;
       if (msg === 'ALREADY_REVIEWED') setError(t('evaluation.alreadyEvaluated'));
-      else if (msg === 'UNAUTHENTICATED') setError('세션이 만료됐어요. 다시 로그인해 주세요.');
-      else if (msg.startsWith('POST /reviews/photos/upload-url')) setError('사진 업로드에 실패했어요.');
-      else setError('리뷰 작성에 실패했어요. 잠시 후 다시 시도해 주세요.');
+      else if (msg === 'UNAUTHENTICATED') setError(t('review.sessionExpired'));
+      else if (msg.startsWith('POST /reviews/photos/upload-url')) setError(t('review.photoUploadFailed'));
+      else setError(t('review.writeFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -181,14 +181,14 @@ function ReviewComposer({
     return (
       <div className="flex items-center justify-between gap-3 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-4 py-3">
         <p className="m-0 text-[13px] text-(--color-text-muted)">
-          후기를 남기고 다른 사람에게 도움이 되어 주세요.
+          {t('review.writeHint')}
         </p>
         <button
           type="button"
           onClick={() => setOpen(true)}
           className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
         >
-          리뷰 쓰기 <Icon name="arrow" size={12} />
+          {t('review.writeButton')} <Icon name="arrow" size={12} />
         </button>
       </div>
     );
@@ -198,7 +198,7 @@ function ReviewComposer({
     <div className="flex flex-col gap-3 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-4">
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-[13px] text-(--color-text-muted)">
-          <span>별점</span>
+          <span>{t('review.ratingLabel')}</span>
           <RatingInput value={rating} onChange={setRating} />
         </div>
         <button
@@ -207,7 +207,7 @@ function ReviewComposer({
             setOpen(false);
             setError(null);
           }}
-          aria-label="닫기"
+          aria-label={t('review.closeButton')}
           className="flex h-7 w-7 items-center justify-center rounded-(--radius-md) text-(--color-text-subtle) hover:bg-(--color-surface-alt) hover:text-(--color-text)"
         >
           ×
@@ -216,14 +216,14 @@ function ReviewComposer({
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
-        placeholder="다녀온 느낌을 간단히 적어 주세요 (2자 이상)"
+        placeholder={t('review.bodyPlaceholder')}
         rows={4}
         maxLength={2000}
         className="w-full resize-y rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-3 text-[13px] leading-[1.55] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-accent) focus:outline-none focus:ring-2 focus:ring-(--color-accent-bg)"
       />
       <div>
         <p className="mb-1.5 text-[12px] font-semibold text-(--color-text-muted)">
-          사진 (선택, 최대 5장)
+          {t('review.photoLabel')}
         </p>
         <DocumentsPickerField
           files={photos}
@@ -245,7 +245,7 @@ function ReviewComposer({
           disabled={!canSubmit}
           className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {submitting ? '등록 중…' : '등록'}
+          {submitting ? t('review.submitting') : t('review.submit')}
         </button>
       </div>
     </div>
@@ -259,12 +259,13 @@ function RatingInput({
   value: number;
   onChange: (n: number) => void;
 }) {
+  const { t } = useTranslation('mypage');
   const [hover, setHover] = useState(0);
   const shown = hover || value;
   return (
     <div
       role="radiogroup"
-      aria-label="별점 1~5"
+      aria-label={t('review.ratingAria')}
       className="inline-flex items-center gap-0.5"
     >
       {[1, 2, 3, 4, 5].map((n) => (
@@ -288,18 +289,20 @@ function RatingInput({
 }
 
 function NotEndedNotice({ endDate }: { endDate: string }) {
+  const { t } = useTranslation('mypage');
   return (
     <div className="rounded-(--radius-md) border border-dashed border-(--color-border) bg-(--color-surface-alt) px-4 py-3 text-[13px] text-(--color-text-muted)">
-      리뷰는 이벤트가 종료된 뒤에 작성할 수 있어요.
+      {t('review.notEndedNotice')}
       <span className="tabular ml-1 text-(--color-text)">{endDate}</span> 이후 오픈.
     </div>
   );
 }
 
 function EmptyReviews() {
+  const { t } = useTranslation('mypage');
   return (
     <div className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-6 text-center text-[13px] text-(--color-text-muted)">
-      첫 리뷰의 주인공이 되어 주세요.
+      {t('review.firstReview')}
     </div>
   );
 }
@@ -363,9 +366,10 @@ function SentimentBadge({
 }: {
   sentiment: BffReviewItem['sentiment'];
 }) {
+  const { t } = useTranslation('common');
   if (!sentiment) return null;
   const label =
-    sentiment === 'positive' ? '긍정' : sentiment === 'negative' ? '부정' : '보통';
+    sentiment === 'positive' ? t('sentiment.positive') : sentiment === 'negative' ? t('sentiment.negative') : t('sentiment.neutral');
   const tone =
     sentiment === 'positive'
       ? 'bg-(--color-success)/10 text-(--color-success)'

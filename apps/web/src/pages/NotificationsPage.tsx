@@ -33,47 +33,20 @@ import { loginUrl } from '../lib/auth-redirect';
 type Filter = 'all' | 'unread';
 
 // ─── 유형별 메타 ────────────────────────────────────────────
-const NOTIF_TYPE_META: Record<
-  string,
-  { label: string; badgeCls: string }
-> = {
-  match_request: {
-    label: '메이트신청',
-    badgeCls: 'bg-(--color-accent)/10 text-(--color-accent)',
-  },
-  group_invite: {
-    label: '그룹초대',
-    badgeCls: 'bg-(--color-info)/10 text-(--color-info)',
-  },
-  appointment: {
-    label: '약속',
-    badgeCls: 'bg-emerald-50 text-emerald-700',
-  },
-  appointment_update: {
-    label: '약속만료',
-    badgeCls: 'bg-amber-50 text-amber-700',
-  },
-  mate_eval: {
-    label: '평가요청',
-    badgeCls: 'bg-amber-50 text-amber-700',
-  },
-  kick_vote: {
-    label: '퇴출투표',
-    badgeCls: 'bg-(--color-error)/10 text-(--color-error)',
-  },
-  chat_message: {
-    label: '메시지',
-    badgeCls: 'bg-(--color-surface-alt) text-(--color-text-muted)',
-  },
-  vacancy_notification: {
-    label: '공석',
-    badgeCls: 'bg-(--color-surface-alt) text-(--color-text-muted)',
-  },
+const NOTIF_TYPE_BADGE_CLS: Record<string, string> = {
+  match_request: 'bg-(--color-accent)/10 text-(--color-accent)',
+  group_invite: 'bg-(--color-info)/10 text-(--color-info)',
+  appointment: 'bg-emerald-50 text-emerald-700',
+  appointment_update: 'bg-amber-50 text-amber-700',
+  mate_eval: 'bg-amber-50 text-amber-700',
+  kick_vote: 'bg-(--color-error)/10 text-(--color-error)',
+  chat_message: 'bg-(--color-surface-alt) text-(--color-text-muted)',
+  vacancy_notification: 'bg-(--color-surface-alt) text-(--color-text-muted)',
 };
 
-function typeMeta(t: string | null) {
-  if (!t) return null;
-  return NOTIF_TYPE_META[t] ?? null;
+function typeBadgeCls(notifType: string | null): string | null {
+  if (!notifType) return null;
+  return NOTIF_TYPE_BADGE_CLS[notifType] ?? null;
 }
 
 // ─── 라우팅 헬퍼 — relatedEntityType 우선 분기 ─────────────
@@ -236,15 +209,15 @@ export function NotificationsPage() {
     return (
       <Shell>
         <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
-          <h1 className="m-0 mb-2 text-[20px] font-bold tracking-[-0.015em]">로그인이 필요해요</h1>
+          <h1 className="m-0 mb-2 text-[20px] font-bold tracking-[-0.015em]">{t('notification.loginRequired')}</h1>
           <p className="m-0 mb-6 text-[14px] text-(--color-text-muted)">
-            알림은 로그인 후 확인할 수 있어요.
+            {t('notification.loginHint')}
           </p>
           <a
             href={loginUrl('google', '/notifications')}
             className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-4 text-[14px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
           >
-            Google 로그인 <Icon name="arrow" size={14} />
+            {t('notification.loginButton')} <Icon name="arrow" size={14} />
           </a>
         </div>
       </Shell>
@@ -256,9 +229,9 @@ export function NotificationsPage() {
       <header className="mb-6 flex items-end justify-between gap-2">
         <div>
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            알림 센터 · A_806
+            {t('notification.center')}
           </p>
-          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">알림</h1>
+          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">{t('notification.title')}</h1>
         </div>
         <button
           type="button"
@@ -284,18 +257,18 @@ export function NotificationsPage() {
                   : 'text-(--color-text-muted) hover:text-(--color-text)'
               }`}
             >
-              {f === 'all' ? '전체' : '미읽음'}
+              {f === 'all' ? t('notification.allFilter') : t('notification.unreadFilter')}
             </button>
           ))}
         </div>
         <span className="ml-auto text-[12px] text-(--color-text-subtle)">
-          {total.toLocaleString()}건
+          {t('notification.total', { count: total.toLocaleString() })}
         </span>
       </div>
 
       {error && (
         <div className="mb-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-          오류: {error}
+          {t('notification.error')} {error}
         </div>
       )}
 
@@ -304,7 +277,7 @@ export function NotificationsPage() {
           <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('notification.loadError')}</div>
         ) : items.length === 0 ? (
           <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-            {filter === 'unread' ? '미읽음 알림이 없어요.' : t('notification.empty')}
+            {filter === 'unread' ? t('notification.unreadEmpty') : t('notification.empty')}
           </div>
         ) : (
           <ul className="divide-y divide-(--color-border)">
@@ -341,8 +314,12 @@ function NotifItem({
   onMarkReadOnly: (n: MyNotification) => void;
   onRespond: (n: MyNotification, action: 'accept' | 'reject') => void;
 }) {
+  const { t } = useTranslation('mypage');
   const unread = !n.readAt;
-  const meta = typeMeta(n.notificationType);
+  const badgeCls = typeBadgeCls(n.notificationType);
+  const typeLabel = n.notificationType
+    ? t(`notification.notiTypes.${n.notificationType}`, { defaultValue: n.notificationType })
+    : null;
   const showInline = hasInlineAction(n);
 
   return (
@@ -360,11 +337,11 @@ function NotifItem({
 
         <div className="min-w-0 flex-1">
           {/* 유형 뱃지 */}
-          {meta && (
+          {badgeCls && typeLabel && (
             <span
-              className={`mb-1 inline-flex items-center gap-1 rounded-(--radius-sm) px-1.5 py-0.5 text-[10px] font-semibold ${meta.badgeCls}`}
+              className={`mb-1 inline-flex items-center gap-1 rounded-(--radius-sm) px-1.5 py-0.5 text-[10px] font-semibold ${badgeCls}`}
             >
-              {meta.label}
+              {typeLabel}
             </span>
           )}
 
@@ -385,7 +362,7 @@ function NotifItem({
             <p className="tabular m-0 mt-1 text-[11px] text-(--color-text-subtle)">
               {n.createdAt.slice(0, 19).replace('T', ' ')}
               {!n.eventAvailable && n.eventId && (
-                <span className="ml-2 text-(--color-text-subtle)">(이벤트 비공개 또는 삭제됨)</span>
+                <span className="ml-2 text-(--color-text-subtle)">{t('notification.eventPrivate')}</span>
               )}
             </p>
           </button>
@@ -399,7 +376,7 @@ function NotifItem({
                 onClick={() => onRespond(n, 'accept')}
                 className="inline-flex h-7 items-center rounded-(--radius-md) bg-(--color-accent) px-3 text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:opacity-40"
               >
-                {responding ? '처리 중…' : '수락'}
+                {responding ? t('notification.applying') : t('notification.accept')}
               </button>
               <button
                 type="button"
@@ -407,7 +384,7 @@ function NotifItem({
                 onClick={() => onRespond(n, 'reject')}
                 className="inline-flex h-7 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
               >
-                거절
+                {t('notification.reject')}
               </button>
             </div>
           )}
@@ -420,7 +397,7 @@ function NotifItem({
               onClick={() => onMarkReadOnly(n)}
               className="mt-1 inline-flex items-center gap-1 text-[12px] text-(--color-accent) hover:underline"
             >
-              이벤트 보기 <Icon name="arrow" size={12} />
+              {t('notification.viewEvent')} <Icon name="arrow" size={12} />
             </Link>
           )}
         </div>

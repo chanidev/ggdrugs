@@ -65,7 +65,7 @@ export function UploadReviewsTab() {
       <section className="min-w-0">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="m-0 text-[14px] font-semibold">{t('tabs.uploadReviews')}</h2>
-          <span className="text-[12px] text-(--color-text-subtle)">{total}건</span>
+          <span className="text-[12px] text-(--color-text-subtle)">{t('uploadReview.total', { count: total })}</span>
         </div>
         {error && (
           <div className="mb-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
@@ -123,7 +123,7 @@ export function UploadReviewsTab() {
           <UploadReviewPanel event={selected} onDecided={onDecided} />
         ) : (
           <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-            왼쪽에서 이벤트를 선택하면 서류 미리보기와 결정 버튼이 나와요
+            {t('uploadReview.selectHint')}
           </div>
         )}
       </aside>

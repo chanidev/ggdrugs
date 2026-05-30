@@ -46,7 +46,7 @@ function AdminOnlyMessage() {
         {t('page.title')}
       </h1>
       <p className="m-0 text-[14px] text-(--color-text-muted)">
-        이 화면은 admin_profiles 에 등록된 관리자만 접근할 수 있어요.
+        {t('page.notAdmin')}
       </p>
     </>
   );

@@ -1,5 +1,8 @@
 {
-  "page": { "title": "관리자 콘솔" },
+  "page": {
+    "title": "관리자 콘솔",
+    "notAdmin": "이 화면은 admin_profiles 에 등록된 관리자만 접근할 수 있어요."
+  },
   "tabs": {
     "events": "이벤트 심사",
     "uploaders": "업로더 심사",
@@ -21,7 +24,21 @@
       "ended": "종료됨"
     },
     "empty": "심사할 이벤트가 없어요.",
-    "loadError": "불러오지 못했어요."
+    "loadError": "불러오지 못했어요.",
+    "vibeFilter": {
+      "unassigned": "미부여",
+      "any": "전체",
+      "assigned": "부여됨"
+    },
+    "searchPlaceholder": "제목으로 검색",
+    "searchButton": "검색",
+    "total": "{{count}}건",
+    "noLabel": "(라벨 없음)",
+    "selectHint": "왼쪽에서 이벤트를 선택하세요",
+    "vibeLoadError": "vibe 목록 로딩 실패",
+    "selectCount": "선택 {{count}}개 · 최대 10개",
+    "saved": "저장됨",
+    "saving": "저장 중…"
   },
   "uploader": {
     "approve": "승인",
@@ -46,7 +63,17 @@
     "reasonLabel": "결정 사유 (선택)",
     "reasonPlaceholder": "보완요청/반려 사유를 업로더에게 전달하려면 작성",
     "notRegistered": "(미등록)",
-    "maskingNote": "(마스킹 · scope={{scope}})"
+    "maskingNote": "(마스킹 · scope={{scope}})",
+    "statusAny": "전체",
+    "total": "{{count}}건",
+    "noResult": "결과 없음",
+    "prev": "이전",
+    "next": "다음",
+    "docCount": "{{count}}건 · 5분 TTL",
+    "openPdf": "PDF 새 탭으로 열기 →",
+    "recentEvents": "최근 이벤트",
+    "reasonRequired": "사유를 입력해 주세요",
+    "selectHint": "왼쪽에서 업로더를 선택하면 상세 정보와 결정 버튼이 나와요"
   },
   "uploadReview": {
     "documents": "제출 서류",
@@ -56,7 +83,9 @@
     "reasonPlaceholder": "보완요청/반려 사유를 업로더에게 전달하려면 작성",
     "reject": "반려",
     "requestRevision": "보완요청",
-    "approve": "승인"
+    "approve": "승인",
+    "total": "{{count}}건",
+    "selectHint": "왼쪽에서 이벤트를 선택하면 서류 미리보기와 결정 버튼이 나와요"
   },
   "report": {
     "action": "조치",
@@ -64,7 +93,64 @@
     "warn": "경고",
     "suspend": "정지",
     "empty": "신고가 없어요.",
-    "loadError": "불러오지 못했어요."
+    "loadError": "불러오지 못했어요.",
+    "falseReport": "허위신고",
+    "reviewed": "검토됨",
+    "applyAction": "조치 적용",
+    "applying": "처리 중…",
+    "selectHint": "목록에서 신고를 선택하세요",
+    "detail": "신고 상세",
+    "reporter": "신고자",
+    "accused": "피신고자",
+    "type": "유형",
+    "reason": "사유",
+    "detail_label": "상세",
+    "reportedAt": "신고일",
+    "status": "상태",
+    "content": "신고 콘텐츠",
+    "result": "처리 결과",
+    "handledBy": "처리 관리자",
+    "handledAt": "처리일시",
+    "adminNote": "관리자 메모",
+    "adminNotePlaceholder": "관리자 메모 (선택)",
+    "suspendDays": "정지 기간",
+    "suspendUnit": "일",
+    "typeAll": "유형: 전체",
+    "alreadyReviewed": "이미 처리된 신고입니다.",
+    "scopeFullRequired": "이용정지 조치는 full 권한이 필요합니다.",
+    "scopeContentRequired": "콘텐츠 관리 권한이 필요합니다.",
+    "actionError": "조치 적용 중 오류가 발생했어요.",
+    "detailLoadError": "상세 정보를 불러오지 못했어요.",
+    "targetType": {
+      "post": "게시글",
+      "comment": "댓글",
+      "chat_message": "채팅 메시지",
+      "mate_eval": "메이트 평가"
+    },
+    "reasonLabel": {
+      "spam": "스팸/광고",
+      "abuse": "욕설/혐오",
+      "harassment": "괴롭힘",
+      "obscene": "음란물",
+      "no_show": "노쇼",
+      "etc": "기타"
+    },
+    "mateEvalReason": {
+      "inappropriate": "부적절한 언행",
+      "harassing": "괴롭힘/폭력",
+      "no_show": "노쇼",
+      "etc": "기타"
+    },
+    "statusLabel": {
+      "pending": "검토 중",
+      "reviewed": "검토됨",
+      "dismissed": "기각",
+      "false_report": "허위신고"
+    },
+    "ratingLabel": "별점",
+    "reportedForLabel": "신고 사유",
+    "prev": "이전",
+    "next": "다음"
   },
   "member": {
     "searchPlaceholder": "닉네임 검색",
@@ -113,7 +199,34 @@
     "confirmSoftDelete": "계정을 비활성화할까요? 복구 불가.",
     "confirmPromote": "admin으로 승급할까요?",
     "confirmDemote": "admin을 박탈할까요?",
-    "confirmScopeChange": "scope를 변경할까요?"
+    "confirmScopeChange": "scope를 변경할까요?",
+    "total": "{{count}}건",
+    "prev": "이전",
+    "next": "다음",
+    "selectHint": "좌측 목록에서 회원을 선택하세요.",
+    "joinLabel": "가입",
+    "lastLoginLabel": "최근 로그인",
+    "activeRole": "활성 역할",
+    "activeSession": "활성 세션",
+    "deletedAt": "삭제일",
+    "createdAt": "생성일",
+    "orgName": "기관명",
+    "statusLabel": "상태",
+    "createdAt": "생성일",
+    "accountInfo": "계정 정보",
+    "uploaderProfile": "업로더 프로파일",
+    "adminProfile": "Admin 프로파일",
+    "recentAudits": "최근 처리 내역",
+    "noAudits": "기록 없음.",
+    "handledAdmin": "처리 admin",
+    "charCount": "{{count}} / 500 (최소 10자)",
+    "executing": "처리 중…",
+    "execute": "실행",
+    "cancel": "취소",
+    "activeAdmin": "admin 활성 상태 — 먼저 박탈",
+    "alreadyDeleted": "이미 삭제됨",
+    "noActiveSession": "활성 세션 없음",
+    "uploaderHint": "업로더 승급 심사·반려는 Uploaders 탭에서 처리."
   },
   "audit": {
     "overview": "개요",
@@ -134,6 +247,30 @@
       "admin_scope_change": "scope 변경",
       "user_soft_delete": "계정 비활성화",
       "uploader_decision": "업로더 심사"
+    },
+    "dashboardTitle": "검토 요약",
+    "totalCount": "{{count}}건 처리",
+    "lastActivity": "마지막 활동",
+    "periodSelect": "기간 선택",
+    "periodDays": "지난 {{days}}일",
+    "recentActivity": "최근 활동",
+    "noPeriodActivity": "지난 {{days}}일간 처리 기록이 없어요.",
+    "eventIdPlaceholder": "eventId 로 필터",
+    "search": "조회",
+    "reset": "초기화",
+    "total": "총 {{count}}건",
+    "currentStatus": "현재 상태",
+    "noTarget": "(대상 없음)",
+    "page": "{{page}} / {{lastPage}} 페이지",
+    "prev": "이전",
+    "next": "다음",
+    "noEventId": "{{eventId}} 기록 없음.",
+    "summarize": {
+      "revokeCount": "세션 {{count}}개 폐기",
+      "scope": "scope={{scope}}",
+      "demotion": "이전 scope={{scope}} → 비활성",
+      "softDelete": "세션 {{count}}개 같이 폐기",
+      "decision": "결정: {{value}}"
     }
   }
 }

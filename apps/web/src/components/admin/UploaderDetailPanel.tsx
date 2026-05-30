@@ -158,7 +158,7 @@ export function UploaderDetailPanel({
           <div className="mb-2 flex items-baseline justify-between">
             <h3 className="m-0 text-[13px] font-semibold">{t('uploader.documents')}</h3>
             <span className="text-[11px] text-(--color-text-subtle)">
-              {data.documents.length}건 · 5분 TTL
+              {t('uploader.docCount', { count: data.documents.length })}
             </span>
           </div>
           <ul className="flex flex-col gap-2">
@@ -182,7 +182,7 @@ export function UploaderDetailPanel({
                     rel="noopener noreferrer"
                     className="inline-flex h-8 items-center rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface-alt) px-3 text-[12px] font-medium hover:border-(--color-border-hover)"
                   >
-                    PDF 새 탭으로 열기 →
+                    {t('uploader.openPdf')}
                   </a>
                 ) : (
                   <a
@@ -234,7 +234,7 @@ export function UploaderDetailPanel({
 
       {recentEvents.length > 0 && (
         <section className="mb-4">
-          <h3 className="m-0 mb-2 text-[13px] font-semibold">최근 이벤트</h3>
+          <h3 className="m-0 mb-2 text-[13px] font-semibold">{t('uploader.recentEvents')}</h3>
           <ul className="flex flex-col gap-1.5">
             {recentEvents.map((e) => (
               <li
@@ -284,7 +284,7 @@ export function UploaderDetailPanel({
               type="button"
               onClick={() => decide('rejected')}
               disabled={pending !== null || reason.trim().length === 0}
-              title={reason.trim().length === 0 ? '사유를 입력해 주세요' : ''}
+              title={reason.trim().length === 0 ? t('uploader.reasonRequired') : ''}
               className="inline-flex h-9 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[13px] font-medium text-(--color-error) hover:bg-(--color-error)/10 disabled:opacity-40"
             >
               {pending === 'rejected' ? '…' : t('uploader.reject')}
@@ -293,7 +293,7 @@ export function UploaderDetailPanel({
               type="button"
               onClick={() => decide('revision_requested')}
               disabled={pending !== null || reason.trim().length === 0}
-              title={reason.trim().length === 0 ? '사유를 입력해 주세요' : ''}
+              title={reason.trim().length === 0 ? t('uploader.reasonRequired') : ''}
               className="inline-flex h-9 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text) hover:border-(--color-border-hover) disabled:opacity-40"
             >
               {pending === 'revision_requested' ? '…' : t('uploader.requestRevision')}

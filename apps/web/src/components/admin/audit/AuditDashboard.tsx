@@ -121,19 +121,19 @@ export function AuditDashboard() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-(--color-border) pb-4">
         <div>
           <h2 className="m-0 text-[20px] font-bold tracking-[-0.015em] text-(--color-text)">
-            검토 요약
+            {t('audit.dashboardTitle')}
           </h2>
           <p className="m-0 mt-1 text-[12px] text-(--color-text-subtle)">
-            <span className="tabular">{totalAll.toLocaleString()}</span>건 처리
+            <span className="tabular">{totalAll.toLocaleString()}</span>{t('audit.totalCount', { count: '' }).replace('{{count}}', '').trim()}
             {lastTime && (
               <>
                 <span className="mx-1.5">·</span>
-                <span>마지막 활동 {relativeTime(lastTime)}</span>
+                <span>{t('audit.lastActivity')} {relativeTime(lastTime)}</span>
               </>
             )}
           </p>
         </div>
-        <nav className="flex items-baseline gap-0.5" aria-label="기간 선택">
+        <nav className="flex items-baseline gap-0.5" aria-label={t('audit.periodSelect')}>
           {WINDOWS.map((w) => {
             const active = w === windowDays;
             return (
@@ -147,7 +147,7 @@ export function AuditDashboard() {
                     : 'text-(--color-text-muted) hover:text-(--color-text)'
                 }`}
               >
-                지난 {w}일
+                {t('audit.periodDays', { days: w })}
                 {active && (
                   <span
                     aria-hidden
@@ -169,11 +169,11 @@ export function AuditDashboard() {
       {/* Recent activity */}
       <section>
         <h3 className="m-0 mb-4 text-[11px] font-semibold tracking-[0.1em] text-(--color-text-subtle) uppercase">
-          최근 활동
+          {t('audit.recentActivity')}
         </h3>
         {data.recentActivity.length === 0 ? (
           <p className="m-0 py-8 text-center text-[13px] text-(--color-text-subtle)">
-            지난 {windowDays}일간 처리 기록이 없어요.
+            {t('audit.noPeriodActivity', { days: windowDays })}
           </p>
         ) : (
           <ol className="m-0 flex list-none flex-col p-0">

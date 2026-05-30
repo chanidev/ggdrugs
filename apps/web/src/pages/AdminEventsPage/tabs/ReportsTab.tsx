@@ -17,31 +17,6 @@ import {
   type ReportAdminAction,
 } from '../../../lib/api/reports.js';
 
-// ─── 상수 ─────────────────────────────────────────────────────────────────────
-
-const TARGET_TYPE_LABELS: Record<string, string> = {
-  post: '게시글',
-  comment: '댓글',
-  chat_message: '채팅 메시지',
-  mate_eval: '메이트 평가',
-};
-
-const REASON_LABELS: Record<string, string> = {
-  spam: '스팸/광고',
-  abuse: '욕설/혐오',
-  harassment: '괴롭힘',
-  obscene: '음란물',
-  no_show: '노쇼',
-  etc: '기타',
-};
-
-const REPORTED_FOR_LABELS: Record<string, string> = {
-  inappropriate: '부적절한 언행',
-  harassing: '괴롭힘/폭력',
-  no_show: '노쇼',
-  etc: '기타',
-};
-
 // ─── StatusBadge ───────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, adminAction }: { status: ReportStatus; adminAction: ReportAdminAction | null }) {
@@ -78,13 +53,13 @@ function StatusBadge({ status, adminAction }: { status: ReportStatus; adminActio
   if (adminAction === 'false_report') {
     return (
       <span className="inline-block rounded-full bg-(--color-surface-alt) px-2 py-0.5 text-[11px] font-semibold text-(--color-text-muted)">
-        허위신고
+        {t('report.falseReport')}
       </span>
     );
   }
   return (
     <span className="inline-block rounded-full bg-(--color-surface-alt) px-2 py-0.5 text-[11px] text-(--color-text-muted)">
-      검토됨
+      {t('report.reviewed')}
     </span>
   );
 }
@@ -142,9 +117,9 @@ function ReportsListPanel({
 
   const STATUS_TABS: { key: string; label: string }[] = [
     { key: 'pending',   label: `${t('event.status.pending')} (${byStatus.pending ?? 0})` },
-    { key: 'reviewed',  label: `검토됨 (${byStatus.reviewed ?? 0})` },
+    { key: 'reviewed',  label: `${t('report.reviewed')} (${byStatus.reviewed ?? 0})` },
     { key: 'dismissed', label: `${t('report.dismiss')} (${byStatus.dismissed ?? 0})` },
-    { key: 'any',       label: '전체' },
+    { key: 'any',       label: t('audit.eventAction.any') },
   ];
 
   return (
@@ -173,9 +148,9 @@ function ReportsListPanel({
         onChange={(e) => { setTargetTypeFilter(e.target.value); setPage(1); }}
         className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-1.5 text-[13px] text-(--color-text) focus:outline-none focus:border-(--color-accent)"
       >
-        <option value="any">유형: 전체</option>
-        {Object.entries(TARGET_TYPE_LABELS).map(([k, v]) => (
-          <option key={k} value={k}>{v}</option>
+        <option value="any">{t('report.typeAll')}</option>
+        {(Object.keys({ post: '', comment: '', chat_message: '', mate_eval: '' }) as string[]).map((k) => (
+          <option key={k} value={k}>{t(`report.targetType.${k}`)}</option>
         ))}
       </select>
 
@@ -190,12 +165,12 @@ function ReportsListPanel({
           <table className="w-full text-[13px]">
             <thead className="bg-(--color-surface-alt) text-(--color-text-muted)">
               <tr>
-                <th className="px-3 py-2 text-left font-medium">신고일</th>
-                <th className="px-3 py-2 text-left font-medium">신고자</th>
-                <th className="px-3 py-2 text-left font-medium">피신고자</th>
-                <th className="px-3 py-2 text-left font-medium">유형</th>
-                <th className="px-3 py-2 text-left font-medium">사유</th>
-                <th className="px-3 py-2 text-left font-medium">상태</th>
+                <th className="px-3 py-2 text-left font-medium">{t('report.reportedAt')}</th>
+                <th className="px-3 py-2 text-left font-medium">{t('report.reporter')}</th>
+                <th className="px-3 py-2 text-left font-medium">{t('report.accused')}</th>
+                <th className="px-3 py-2 text-left font-medium">{t('report.type')}</th>
+                <th className="px-3 py-2 text-left font-medium">{t('report.reason')}</th>
+                <th className="px-3 py-2 text-left font-medium">{t('report.status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-(--color-border)">
@@ -213,10 +188,10 @@ function ReportsListPanel({
                   <td className="px-3 py-2">{r.reporterNickname}</td>
                   <td className="px-3 py-2">{r.targetUserNickname}</td>
                   <td className="px-3 py-2 text-(--color-text-muted)">
-                    {TARGET_TYPE_LABELS[r.targetType] ?? r.targetType}
+                    {t(`report.targetType.${r.targetType}`, { defaultValue: r.targetType })}
                   </td>
                   <td className="px-3 py-2 text-(--color-text-muted)">
-                    {REASON_LABELS[r.reason] ?? r.reason}
+                    {t(`report.reasonLabel.${r.reason}`, { defaultValue: r.reason })}
                   </td>
                   <td className="px-3 py-2">
                     <StatusBadge status={r.status} adminAction={r.adminAction} />
@@ -237,7 +212,7 @@ function ReportsListPanel({
             onClick={() => setPage((p) => p - 1)}
             className="rounded-(--radius-sm) border border-(--color-border) px-2 py-1 disabled:opacity-40"
           >
-            이전
+            {t('report.prev')}
           </button>
           <span className="text-(--color-text-muted)">
             {page} / {Math.ceil(total / LIMIT)}
@@ -248,7 +223,7 @@ function ReportsListPanel({
             onClick={() => setPage((p) => p + 1)}
             className="rounded-(--radius-sm) border border-(--color-border) px-2 py-1 disabled:opacity-40"
           >
-            다음
+            {t('report.next')}
           </button>
         </div>
       )}
@@ -285,11 +260,11 @@ function ReportDetailPanel({
       .then((d) => setDetail(d))
       .catch((e: unknown) => {
         if ((e as Error).name === 'AbortError') return;
-        setError('상세 정보를 불러오지 못했어요.');
+        setError(t('report.detailLoadError'));
       })
       .finally(() => setLoading(false));
     return () => ctrl.abort();
-  }, [reportId]);
+  }, [reportId, t]);
 
   const handleAction = async () => {
     if (!detail) return;
@@ -307,13 +282,13 @@ function ReportDetailPanel({
     } catch (e) {
       const msg = (e as Error).message;
       if (msg === 'ALREADY_REVIEWED' || msg === 'already_reviewed') {
-        setSubmitError('이미 처리된 신고입니다.');
+        setSubmitError(t('report.alreadyReviewed'));
       } else if (msg === 'admin_scope_full_required') {
-        setSubmitError('이용정지 조치는 full 권한이 필요합니다.');
+        setSubmitError(t('report.scopeFullRequired'));
       } else if (msg === 'admin_scope_content_required') {
-        setSubmitError('콘텐츠 관리 권한이 필요합니다.');
+        setSubmitError(t('report.scopeContentRequired'));
       } else {
-        setSubmitError('조치 적용 중 오류가 발생했어요.');
+        setSubmitError(t('report.actionError'));
       }
     } finally {
       setSubmitting(false);
@@ -332,11 +307,11 @@ function ReportDetailPanel({
     <div className="flex flex-col gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-5">
       {/* 신고 기본 정보 */}
       <div>
-        <h3 className="mb-3 text-[15px] font-semibold">신고 상세</h3>
+        <h3 className="mb-3 text-[15px] font-semibold">{t('report.detail')}</h3>
         <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
-          <dt className="text-(--color-text-muted)">신고자</dt>
+          <dt className="text-(--color-text-muted)">{t('report.reporter')}</dt>
           <dd>{detail.reporterNickname}</dd>
-          <dt className="text-(--color-text-muted)">피신고자</dt>
+          <dt className="text-(--color-text-muted)">{t('report.accused')}</dt>
           <dd>
             {detail.targetUserNickname}
             {detail.targetUserSanctionStatus !== 'none' && (
@@ -345,19 +320,19 @@ function ReportDetailPanel({
               </span>
             )}
           </dd>
-          <dt className="text-(--color-text-muted)">유형</dt>
-          <dd>{TARGET_TYPE_LABELS[detail.targetType] ?? detail.targetType}</dd>
-          <dt className="text-(--color-text-muted)">사유</dt>
-          <dd>{REASON_LABELS[detail.reason] ?? detail.reason}</dd>
+          <dt className="text-(--color-text-muted)">{t('report.type')}</dt>
+          <dd>{t(`report.targetType.${detail.targetType}`, { defaultValue: detail.targetType })}</dd>
+          <dt className="text-(--color-text-muted)">{t('report.reason')}</dt>
+          <dd>{t(`report.reasonLabel.${detail.reason}`, { defaultValue: detail.reason })}</dd>
           {detail.detail && (
             <>
-              <dt className="text-(--color-text-muted)">상세</dt>
+              <dt className="text-(--color-text-muted)">{t('report.detail_label')}</dt>
               <dd className="break-all">{detail.detail}</dd>
             </>
           )}
-          <dt className="text-(--color-text-muted)">신고일</dt>
+          <dt className="text-(--color-text-muted)">{t('report.reportedAt')}</dt>
           <dd>{new Date(detail.createdAt).toLocaleString('ko-KR')}</dd>
-          <dt className="text-(--color-text-muted)">상태</dt>
+          <dt className="text-(--color-text-muted)">{t('report.status')}</dt>
           <dd><StatusBadge status={detail.status} adminAction={detail.adminAction} /></dd>
         </dl>
       </div>
@@ -365,7 +340,7 @@ function ReportDetailPanel({
       {/* 신고된 콘텐츠 */}
       {detail.targetContent && (
         <div>
-          <h4 className="mb-2 text-[13px] font-medium text-(--color-text-muted)">신고 콘텐츠</h4>
+          <h4 className="mb-2 text-[13px] font-medium text-(--color-text-muted)">{t('report.content')}</h4>
           <div className="rounded-(--radius-md) border border-(--color-border) bg-(--color-bg) p-3 text-[13px]">
             {detail.targetType === 'post' && (
               <>
@@ -389,13 +364,13 @@ function ReportDetailPanel({
             )}
             {detail.targetType === 'mate_eval' && (
               <>
-                <p>별점: {String(detail.targetContent.ratingStars ?? '')}점</p>
+                <p>{t('report.ratingLabel')}: {String(detail.targetContent.ratingStars ?? '')}점</p>
                 {detail.targetContent.comment && (
                   <p className="mt-1">{String(detail.targetContent.comment)}</p>
                 )}
                 {detail.targetContent.reportedFor && (
                   <p className="mt-1 text-(--color-text-muted)">
-                    신고 사유: {REPORTED_FOR_LABELS[detail.targetContent.reportedFor as string] ?? String(detail.targetContent.reportedFor)}
+                    {t('report.reportedForLabel')}: {t(`report.mateEvalReason.${detail.targetContent.reportedFor as string}`, { defaultValue: String(detail.targetContent.reportedFor) })}
                   </p>
                 )}
               </>
@@ -417,7 +392,7 @@ function ReportDetailPanel({
             >
               <option value="warned">{t('report.warn')}</option>
               <option value="suspended">{t('report.suspend')}</option>
-              <option value="false_report">허위신고</option>
+              <option value="false_report">{t('report.falseReport')}</option>
               <option value="dismissed">{t('report.dismiss')}</option>
             </select>
 
@@ -425,7 +400,7 @@ function ReportDetailPanel({
             {actionSelect === 'suspended' && (
               <div className="flex items-center gap-2">
                 <label htmlFor="suspend-days" className="text-[13px] text-(--color-text-muted)">
-                  정지 기간
+                  {t('report.suspendDays')}
                 </label>
                 <input
                   id="suspend-days"
@@ -436,7 +411,7 @@ function ReportDetailPanel({
                   onChange={(e) => setSuspendDays(Math.min(365, Math.max(1, Number(e.target.value))))}
                   className="w-20 rounded-(--radius-md) border border-(--color-border) px-2 py-1 text-[14px] text-center focus:outline-none focus:border-(--color-accent)"
                 />
-                <span className="text-[13px] text-(--color-text-muted)">일</span>
+                <span className="text-[13px] text-(--color-text-muted)">{t('report.suspendUnit')}</span>
               </div>
             )}
 
@@ -444,7 +419,7 @@ function ReportDetailPanel({
             <textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="관리자 메모 (선택)"
+              placeholder={t('report.adminNotePlaceholder')}
               rows={2}
               className="resize-none rounded-(--radius-md) border border-(--color-border) px-3 py-2 text-[13px] placeholder:text-(--color-text-subtle) focus:outline-none focus:border-(--color-accent)"
             />
@@ -459,30 +434,30 @@ function ReportDetailPanel({
               onClick={() => { void handleAction(); }}
               className="rounded-(--radius-md) bg-(--color-accent) py-2 text-[14px] font-semibold text-white disabled:opacity-40"
             >
-              {submitting ? '처리 중…' : '조치 적용'}
+              {submitting ? t('report.applying') : t('report.applyAction')}
             </button>
           </div>
         </div>
       ) : (
         /* 이미 처리된 신고 — 읽기 전용 */
         <div>
-          <h4 className="mb-2 text-[14px] font-semibold">처리 결과</h4>
+          <h4 className="mb-2 text-[14px] font-semibold">{t('report.result')}</h4>
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-[13px]">
-            <dt className="text-(--color-text-muted)">처리 관리자</dt>
+            <dt className="text-(--color-text-muted)">{t('report.handledBy')}</dt>
             <dd>{detail.adminNickname ?? '-'}</dd>
-            <dt className="text-(--color-text-muted)">조치</dt>
+            <dt className="text-(--color-text-muted)">{t('report.action')}</dt>
             <dd>
               <StatusBadge status={detail.status} adminAction={detail.adminAction} />
             </dd>
             {detail.adminNote && (
               <>
-                <dt className="text-(--color-text-muted)">관리자 메모</dt>
+                <dt className="text-(--color-text-muted)">{t('report.adminNote')}</dt>
                 <dd>{detail.adminNote}</dd>
               </>
             )}
             {detail.reviewedAt && (
               <>
-                <dt className="text-(--color-text-muted)">처리일시</dt>
+                <dt className="text-(--color-text-muted)">{t('report.handledAt')}</dt>
                 <dd>{new Date(detail.reviewedAt).toLocaleString('ko-KR')}</dd>
               </>
             )}
@@ -521,7 +496,7 @@ export function ReportsTab() {
       <div>
         {selectedId ? (
           <>
-            <h2 className="mb-3 text-[16px] font-semibold">상세 / 조치</h2>
+            <h2 className="mb-3 text-[16px] font-semibold">{t('report.detail')} / {t('report.action')}</h2>
             <ReportDetailPanel
               key={selectedId}
               reportId={selectedId}
@@ -530,7 +505,7 @@ export function ReportsTab() {
           </>
         ) : (
           <div className="flex h-40 items-center justify-center rounded-(--radius-lg) border border-dashed border-(--color-border) text-[13px] text-(--color-text-muted)">
-            목록에서 신고를 선택하세요
+            {t('report.selectHint')}
           </div>
         )}
       </div>

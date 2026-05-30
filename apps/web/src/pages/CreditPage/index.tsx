@@ -8,10 +8,10 @@ import { useCurrentUser } from '../../lib/auth-context.js';
 
 // [오버라이드] appointment_complete는 스케줄러 잡에서 생성 (Slice 5 전체 구현)
 // [이슈16] 출처: GG-MY-008 + GG-COMM-017
-const ACTION_LABELS: Record<string, string> = {
-  appointment_complete: '메이트 약속 완료',
-  mate_eval_complete:   '메이트 평가 작성',
-  review_complete:      '후기 작성',
+const ACTION_KEYS: Record<string, string> = {
+  appointment_complete: 'credit.actionLabels.appointment_complete',
+  mate_eval_complete:   'credit.actionLabels.mate_eval_complete',
+  review_complete:      'credit.actionLabels.review_complete',
 };
 
 export function CreditPage() {
@@ -43,7 +43,7 @@ export function CreditPage() {
           )}
         </div>
 
-        {loading && <p className="text-center text-[14px] text-(--color-text-muted)">{t('calendar.loadError')}</p>}
+        {loading && <p className="text-center text-[14px] text-(--color-text-muted)">{t('credit.loading')}</p>}
         {error  && <p className="text-center text-[13px] text-(--color-danger)">{error}</p>}
         {!loading && !error && items.length === 0 && (
           <p className="text-center text-[14px] text-(--color-text-muted)">{t('credit.empty')}</p>
@@ -54,7 +54,7 @@ export function CreditPage() {
             <li key={item.ledgerId} className="flex items-center justify-between py-3">
               <div>
                 <p className="text-[14px] font-medium">
-                  {ACTION_LABELS[item.action] ?? item.action}
+                  {ACTION_KEYS[item.action] ? t(ACTION_KEYS[item.action]!) : item.action}
                 </p>
                 <p className="text-[12px] text-(--color-text-muted)">
                   {new Date(item.createdAt).toLocaleDateString('ko-KR')}

@@ -86,7 +86,7 @@ function NotFoundBox() {
   const { t } = useTranslation('common');
   return (
     <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-10 text-center">
-      <h1 className="m-0 mb-2 text-[20px] font-bold">이벤트를 찾을 수 없어요</h1>
+      <h1 className="m-0 mb-2 text-[20px] font-bold">{t('label.eventNotFound')}</h1>
       <p className="m-0 text-[14px] text-(--color-text-muted)">
         {t('label.notFound')}
       </p>
@@ -104,6 +104,7 @@ function ErrorBox() {
 }
 
 function DetailBody({ detail }: { detail: BffEventDetail }) {
+  const { t } = useTranslation('common');
   const location = detail.addressDetail ?? detail.region.fullAddress;
   const dateLabel =
     detail.startDate === detail.endDate
@@ -116,21 +117,21 @@ function DetailBody({ detail }: { detail: BffEventDetail }) {
 
       <section className="grid grid-cols-1 gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6 md:grid-cols-[180px_1fr]">
         <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-          분류
+          {t('label.category')}
         </dt>
         <dd className="m-0 text-[14px]">{detail.category.name}</dd>
         <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-          장소
+          {t('label.location')}
         </dt>
         <dd className="m-0 text-[14px]">{location}</dd>
         <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-          기간
+          {t('label.period')}
         </dt>
         <dd className="tabular m-0 text-[14px]">{dateLabel}</dd>
         {detail.vibes.length > 0 && (
           <>
             <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-              성향
+              {t('label.vibe')}
             </dt>
             <dd className="m-0 flex flex-wrap gap-1.5">
               {detail.vibes.map((v) => (

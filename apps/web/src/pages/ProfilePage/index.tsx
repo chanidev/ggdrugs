@@ -59,11 +59,11 @@ export function ProfilePage() {
   const saveNickname = async () => {
     const trimmed = nickname.trim();
     if (!trimmed) {
-      setNicknameError('닉네임을 입력해 주세요.');
+      setNicknameError(t('profile.nicknameRequired'));
       return;
     }
     if (trimmed.length > 30) {
-      setNicknameError('닉네임은 30자 이하로 입력해 주세요.');
+      setNicknameError(t('profile.nicknameTooLong'));
       return;
     }
     setSavingNickname(true);
@@ -84,7 +84,7 @@ export function ProfilePage() {
       <div className="flex h-screen flex-col overflow-hidden bg-(--color-bg) text-(--color-text)">
         <Header />
         <div className="flex flex-1 items-center justify-center">
-          <p className="text-[14px] text-(--color-text-muted)">로그인이 필요해요.</p>
+          <p className="text-[14px] text-(--color-text-muted)">{t('profile.loginRequired')}</p>
         </div>
       </div>
     );
@@ -101,7 +101,7 @@ export function ProfilePage() {
             onClick={() => void navigate('/me')}
             className="mb-6 flex items-center gap-1.5 text-[13px] text-(--color-text-muted) hover:text-(--color-text)"
           >
-            ← 마이페이지
+            {t('profile.back')}
           </button>
 
           <h1 className="mb-8 text-(length:--text-h2) font-semibold">{t('profile.title')}</h1>
@@ -112,12 +112,12 @@ export function ProfilePage() {
               <Avatar
                 fallback={user.nickname.slice(0, 1)}
                 size="96"
-                aria-label="프로필 사진"
+                aria-label={t('profile.avatarAria')}
               />
               {/* 사진 변경 placeholder — 슬라이스 미정의 */}
               <div
                 className="absolute inset-0 flex cursor-not-allowed items-end justify-center rounded-full"
-                title="사진 변경 — 추후 지원 예정"
+                title={t('profile.changeAvatarTitle')}
                 aria-label="사진 변경 준비 중"
               />
             </div>
@@ -147,7 +147,7 @@ export function ProfilePage() {
                     }}
                     className="text-[12px] text-(--color-accent) hover:underline"
                   >
-                    수정
+                    {t('profile.edit')}
                   </button>
                 )}
               </div>
@@ -179,7 +179,7 @@ export function ProfilePage() {
                       }}
                       disabled={savingNickname}
                     >
-                      취소
+                      {t('profile.cancel')}
                     </ActionButton>
                     <ActionButton
                       variant="brandSolid"
@@ -206,7 +206,7 @@ export function ProfilePage() {
                 id="mate-index-label"
                 className="mb-1 text-[12px] font-semibold uppercase tracking-[0.06em] text-(--color-text-subtle)"
               >
-                메이트지수
+                {t('profile.mateScore')}
               </p>
               {mateLoading ? (
                 <div className="h-7 w-12 animate-pulse rounded bg-(--color-surface-alt)" />
@@ -217,12 +217,12 @@ export function ProfilePage() {
                 </div>
               ) : (
                 <p className="text-[14px] text-(--color-text-muted)">
-                  메이트 매칭 정보를 입력하면 지수가 생성돼요.
+                  {t('profile.mateScoreHint')}
                 </p>
               )}
               {/* 수정 불가 안내 (GG-PROFILE-005) */}
               <p className="mt-1 text-[12px] text-(--color-text-subtle)">
-                메이트지수는 활동 이력에 따라 자동으로 변경돼요.
+                {t('profile.mateScoreNote')}
               </p>
             </section>
           </div>

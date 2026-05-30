@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import {
   MonthCalendar,
   type CalendarEvent,
@@ -25,6 +26,7 @@ function ymd(d: Date): string {
 const APPT_PREFIX = 'appt:';
 
 export function CalendarTab() {
+  const { t } = useTranslation('mypage');
   const now = useMemo(() => new Date(), []);
   const navigate = useNavigate();
   const [year, setYear] = useState(now.getFullYear());
@@ -144,7 +146,7 @@ export function CalendarTab() {
       />
     );
   }
-  if (error) return <EmptyBox label="불러오지 못했어요" hint={error} />;
+  if (error) return <EmptyBox label={t('calendar.loadError')} hint={error} />;
 
   const hasAnything =
     selectedBookmarks.length > 0 ||
@@ -171,13 +173,13 @@ export function CalendarTab() {
             A_500 · 캘린더 요약
           </p>
           <h3 className="tabular m-0 mt-0.5 text-[15px] font-bold tracking-[-0.01em]">
-            {selectedDate ?? '날짜를 선택하세요'}
+            {selectedDate ?? t('calendar.selectDate')}
           </h3>
         </header>
 
         {!hasAnything ? (
           <p className="m-0 rounded-(--radius-md) bg-(--color-surface-alt) p-4 text-center text-[12px] text-(--color-text-subtle)">
-            이 날에 걸린 북마크·약속·리뷰 이벤트가 없어요.
+            {t('calendar.noEvents')}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
@@ -231,58 +233,59 @@ function AppointmentCard({
   appointment: MyAppointmentItem;
   onGoToRoom: () => void;
 }) {
+  const { t } = useTranslation('mypage');
   const dateLabel = a.appointedAt
     ? a.appointedAt.slice(0, 16).replace('T', ' ')
-    : '일시 미정';
+    : t('calendar.schedulePending');
   const hasEvent = a.event != null;
 
   return (
     <article className="flex flex-col gap-2 rounded-(--radius-lg) border border-emerald-200 bg-emerald-50/50 p-4 transition-colors hover:border-emerald-300">
       <header className="flex items-center gap-1.5">
         <span className="inline-flex items-center gap-1 rounded-(--radius-sm) bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-          약속 · confirmed
+          {t('calendar.appointmentBadge')}
         </span>
       </header>
 
       {/* 이벤트명 */}
       <h4 className="m-0 text-[14px] font-semibold leading-[1.4] text-(--color-text)">
-        {a.eventName ?? a.event?.title ?? '약속'}
+        {a.eventName ?? a.event?.title ?? t('calendar.appointmentFallback')}
       </h4>
 
       {/* 약속 일시 */}
-      <p className="tabular m-0 text-[12px] text-(--color-text-muted)">약속 일시: {dateLabel}</p>
+      <p className="tabular m-0 text-[12px] text-(--color-text-muted)">{t('calendar.appointedAt')} {dateLabel}</p>
 
       {/* 이벤트 기간·장소·가격·운영시간·대상 — GG-MY-002 요약 항목 */}
       {hasEvent && (
         <div className="flex flex-col gap-0.5">
           <p className="m-0 text-[11px] text-(--color-text-subtle)">
-            기간: {a.event!.startDate} ~ {a.event!.endDate}
+            {t('calendar.period')} {a.event!.startDate} ~ {a.event!.endDate}
           </p>
           {a.event!.region && (
             <p className="m-0 text-[11px] text-(--color-text-subtle)">
-              장소: {a.event!.region}
+              {t('calendar.location')} {a.event!.region}
             </p>
           )}
           {a.event!.price != null && (
             <p className="m-0 text-[11px] text-(--color-text-subtle)">
-              가격: {a.event!.price === '0' || a.event!.price === '' ? '무료' : a.event!.price}
+              {t('calendar.price')} {a.event!.price === '0' || a.event!.price === '' ? t('calendar.free') : a.event!.price}
             </p>
           )}
           {a.event!.operatingHours && (
             <p className="m-0 text-[11px] text-(--color-text-subtle)">
-              운영시간: {a.event!.operatingHours}
+              {t('calendar.operatingHours')} {a.event!.operatingHours}
             </p>
           )}
           {a.event!.targetAudience && (
             <p className="m-0 text-[11px] text-(--color-text-subtle)">
-              대상: {a.event!.targetAudience}
+              {t('calendar.targetAudience')} {a.event!.targetAudience}
             </p>
           )}
         </div>
       )}
       {!hasEvent && (
         <p className="m-0 text-[11px] text-(--color-text-subtle)">
-          기간·장소·가격: 이벤트 연결 없음
+          {t('calendar.noEventLink')}
         </p>
       )}
 
@@ -294,7 +297,7 @@ function AppointmentCard({
           onClick={onGoToRoom}
           className="inline-flex h-7 items-center justify-center rounded-(--radius-md) border border-emerald-300 bg-white px-3 text-[12px] font-medium text-emerald-700 transition-colors hover:bg-emerald-50"
         >
-          채팅방으로
+          {t('calendar.goToRoom')}
         </button>
         {/* GG-MY-002: 이벤트 상세 이동 (event 있을 때만) */}
         {hasEvent && (
@@ -302,7 +305,7 @@ function AppointmentCard({
             to={`/events/${a.event!.eventId}`}
             className="inline-flex h-7 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-white px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
           >
-            이벤트 상세
+            {t('calendar.eventDetail')}
           </Link>
         )}
       </div>

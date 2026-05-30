@@ -32,7 +32,7 @@ export function BookmarksList() {
   if (state.loading) return <SkeletonList />;
   if (state.error) return <EmptyBox label={t('bookmark.loadError')} hint={state.error} />;
   if (state.items.length === 0)
-    return <EmptyBox label={t('bookmark.empty')} hint="지도에서 마음에 드는 이벤트를 북마크해 보세요." />;
+    return <EmptyBox label={t('bookmark.empty')} hint={t('bookmark.hint')} />;
 
   return (
     <div className="flex flex-col gap-2">

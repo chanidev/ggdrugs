@@ -42,17 +42,20 @@ const PAGE_SIZE = 50;
 /**
  * admin payload → 한 줄 요약. UserDetailPanel 의 summarizeAuditPayload 와 동일 스펙.
  */
-function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TFn = (k: string, opts?: any) => string;
+
+function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown, t: TFn): string {
   if (!payload || typeof payload !== 'object') return '';
   const p = payload as Record<string, unknown>;
   switch (action) {
     case 'revoke_sessions':
-      return `세션 ${p.count ?? '?'}개 폐기`;
+      return t('audit.summarize.revokeCount', { count: p.count ?? '?' });
     case 'admin_promote':
-      return `scope=${p.scope ?? '?'}`;
+      return t('audit.summarize.scope', { scope: p.scope ?? '?' });
     case 'admin_demote': {
       const before = p.before as Record<string, unknown> | undefined;
-      return `이전 scope=${before?.scope ?? '?'} → 비활성`;
+      return t('audit.summarize.demotion', { scope: before?.scope ?? '?' });
     }
     case 'admin_scope_change': {
       const before = p.before as Record<string, unknown> | undefined;
@@ -60,15 +63,10 @@ function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown):
       return `${before?.scope ?? '?'} → ${after?.scope ?? '?'}`;
     }
     case 'user_soft_delete':
-      return `세션 ${p.deletedSessionCount ?? '?'}개 같이 폐기`;
+      return t('audit.summarize.softDelete', { count: p.deletedSessionCount ?? '?' });
     case 'uploader_decision': {
       const dec = String(p.action ?? '?');
-      const koMap: Record<string, string> = {
-        approved: '승인됨',
-        revision_requested: '보완요청',
-        rejected: '반려',
-      };
-      return `결정: ${koMap[dec] ?? dec}`;
+      return t('audit.summarize.decision', { value: t(`member.uploaderStatus.${dec}`, { defaultValue: dec }) });
     }
     default:
       return '';
@@ -227,14 +225,14 @@ function EventAuditPanel() {
             inputMode="numeric"
             value={eventIdInput}
             onChange={(e) => setEventIdInput(e.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="eventId 로 필터"
+            placeholder={t('audit.eventIdPlaceholder')}
             className="h-8 w-[160px] rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-2.5 text-[12px] outline-none focus:border-(--color-accent)"
           />
           <button
             type="submit"
             className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:text-(--color-text)"
           >
-            조회
+            {t('audit.search')}
           </button>
           {eventIdQ && (
             <button
@@ -246,12 +244,12 @@ function EventAuditPanel() {
               }}
               className="text-[12px] text-(--color-text-subtle) hover:text-(--color-accent)"
             >
-              초기화
+              {t('audit.reset')}
             </button>
           )}
         </form>
 
-        <span className="ml-auto text-[12px] text-(--color-text-subtle)">총 {total.toLocaleString()}건</span>
+        <span className="ml-auto text-[12px] text-(--color-text-subtle)">{t('audit.total', { count: total.toLocaleString() })}</span>
       </div>
 
       {error && (
@@ -265,7 +263,7 @@ function EventAuditPanel() {
           <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
         ) : items.length === 0 ? (
           <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-            {eventIdQ ? `eventId=${eventIdQ} 기록 없음.` : t('audit.empty')}
+            {eventIdQ ? t('audit.noEventId', { eventId: eventIdQ }) : t('audit.empty')}
           </div>
         ) : (
           <ul className="divide-y divide-(--color-border)">
@@ -308,7 +306,7 @@ function EventAuditPanel() {
                       {log.eventCurrentStatus && (
                         <>
                           <span aria-hidden>·</span>
-                          <span>현재 상태 {log.eventCurrentStatus}</span>
+                          <span>{t('audit.currentStatus')} {log.eventCurrentStatus}</span>
                         </>
                       )}
                     </div>
@@ -408,7 +406,7 @@ function AdminAuditPanel() {
             );
           })}
         </div>
-        <span className="ml-auto text-[12px] text-(--color-text-subtle)">총 {total.toLocaleString()}건</span>
+        <span className="ml-auto text-[12px] text-(--color-text-subtle)">{t('audit.total', { count: total.toLocaleString() })}</span>
       </div>
 
       {error && (
@@ -425,7 +423,7 @@ function AdminAuditPanel() {
         ) : (
           <ul className="divide-y divide-(--color-border)">
             {items.map((log) => {
-              const summary = summarizeAdminPayload(log.action, log.payload);
+              const summary = summarizeAdminPayload(log.action, log.payload, t);
               const reason =
                 log.payload && typeof log.payload === 'object'
                   ? ((log.payload as Record<string, unknown>).reason as string | null | undefined)
@@ -449,7 +447,7 @@ function AdminAuditPanel() {
                             {log.targetNickname}
                           </span>
                         ) : (
-                          <span className="text-(--color-text-subtle)">(대상 없음)</span>
+                          <span className="text-(--color-text-subtle)">{t('audit.noTarget')}</span>
                         )}
                         {summary && (
                           <span className="text-[12px] text-(--color-text-muted)">{summary}</span>
@@ -492,11 +490,12 @@ function Pager({
   loading: boolean;
   onChange: (next: number) => void;
 }) {
+  const { t } = useTranslation('admin');
   if (total <= PAGE_SIZE) return null;
   return (
     <div className="flex items-center justify-between text-[13px]">
       <span className="tabular text-(--color-text-subtle)">
-        {page} / {lastPage} 페이지
+        {t('audit.page', { page, lastPage })}
       </span>
       <div className="flex gap-1.5">
         <button
@@ -505,7 +504,7 @@ function Pager({
           disabled={page <= 1 || loading}
           className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:text-(--color-text) disabled:opacity-40"
         >
-          이전
+          {t('audit.prev')}
         </button>
         <button
           type="button"
@@ -513,7 +512,7 @@ function Pager({
           disabled={page >= lastPage || loading}
           className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:text-(--color-text) disabled:opacity-40"
         >
-          다음
+          {t('audit.next')}
         </button>
       </div>
     </div>

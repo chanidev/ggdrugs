@@ -35,8 +35,8 @@ export function RecommendationsList() {
   if (state.data.reason === 'no_taste_signals') {
     return (
       <EmptyBox
-        label="아직 추천을 만들 시그널이 부족해요"
-        hint="이벤트를 북마크하거나 리뷰를 남기면, 매일 한 번 그 데이터로 취향을 분석해 추천을 보여드려요."
+        label={t('reco.noSignal')}
+        hint={t('reco.noSignalHint')}
       />
     );
   }
@@ -44,7 +44,7 @@ export function RecommendationsList() {
     return (
       <EmptyBox
         label={t('reco.empty')}
-        hint="며칠 내로 새 이벤트가 등록되면 다시 표시됩니다."
+        hint={t('reco.emptyHint')}
       />
     );
   }
@@ -52,7 +52,7 @@ export function RecommendationsList() {
   return (
     <div className="flex flex-col gap-3">
       <p className="m-0 text-[12px] text-(--color-text-subtle)">
-        {state.data.items.length}건 · 매일 자동 갱신
+        {state.data.items.length}{t('reco.autoRefresh')}
       </p>
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {state.data.items.map((ev) => (

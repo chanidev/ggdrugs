@@ -30,17 +30,20 @@ const SCOPE_DOMAIN: AdminScope[] = ['full', 'content_only', 'uploader_review_onl
  * audit_logs.payload 를 사람 친화 한 줄 요약으로. action 별 표준 payload 키 가정 (ADR 0005 §E-6).
  * 모르는 action 이거나 payload shape 가 다르면 fallback (raw JSON 한 줄).
  */
-function summarizeAuditPayload(action: string, payload: unknown): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TFn = (k: string, opts?: any) => string;
+
+function summarizeAuditPayload(action: string, payload: unknown, t: TFn): string {
   if (!payload || typeof payload !== 'object') return '';
   const p = payload as Record<string, unknown>;
   switch (action) {
     case 'revoke_sessions':
-      return `세션 ${p.count ?? '?'}개 폐기`;
+      return t('audit.summarize.revokeCount', { count: p.count ?? '?' });
     case 'admin_promote':
-      return `scope=${p.scope ?? '?'}`;
+      return t('audit.summarize.scope', { scope: p.scope ?? '?' });
     case 'admin_demote': {
       const before = p.before as Record<string, unknown> | undefined;
-      return `이전 scope=${before?.scope ?? '?'} → 비활성`;
+      return t('audit.summarize.demotion', { scope: before?.scope ?? '?' });
     }
     case 'admin_scope_change': {
       const before = p.before as Record<string, unknown> | undefined;
@@ -48,16 +51,10 @@ function summarizeAuditPayload(action: string, payload: unknown): string {
       return `${before?.scope ?? '?'} → ${after?.scope ?? '?'}`;
     }
     case 'user_soft_delete':
-      return `세션 ${p.deletedSessionCount ?? '?'}개 같이 폐기`;
+      return t('audit.summarize.softDelete', { count: p.deletedSessionCount ?? '?' });
     case 'uploader_decision': {
       const dec = String(p.action ?? '?');
-      const koMap: Record<string, string> = {
-        pending: '대기',
-        approved: '승인됨',
-        revision_requested: '보완요청',
-        rejected: '반려',
-      };
-      return `결정: ${koMap[dec] ?? dec}`;
+      return t('audit.summarize.decision', { value: t(`member.uploaderStatus.${dec}`, { defaultValue: dec }) });
     }
     default:
       // unknown action — 1 줄 raw fallback (10000 char 위험 방지 위해 자름).
@@ -150,33 +147,33 @@ export function UserDetailPanel({
         </div>
         <h2 className="mt-1 text-[16px] font-bold tracking-[-0.01em]">{user.nickname}</h2>
         <p className="m-0 mt-0.5 text-[12px] text-(--color-text-subtle)">
-          {user.authProvider} · 활성 역할 {user.activeRole}
+          {user.authProvider} · {t('member.activeRole')} {user.activeRole}
         </p>
       </div>
 
       {/* Identity */}
       <section className="mb-4">
-        <h3 className="m-0 mb-2 text-[13px] font-semibold">계정 정보</h3>
+        <h3 className="m-0 mb-2 text-[13px] font-semibold">{t('member.accountInfo')}</h3>
         <dl className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[12px]">
           <dt className="text-(--color-text-subtle)">{t('uploader.joinMethod')}</dt>
           <dd className="m-0 text-(--color-text-muted)">{user.authProvider}</dd>
           <dt className="text-(--color-text-subtle)">social_uid</dt>
           <dd className="m-0 font-mono text-[11px] text-(--color-text-muted)">{user.socialUid}</dd>
-          <dt className="text-(--color-text-subtle)">활성 역할</dt>
+          <dt className="text-(--color-text-subtle)">{t('member.activeRole')}</dt>
           <dd className="m-0 text-(--color-text-muted)">{user.activeRole}</dd>
           <dt className="text-(--color-text-subtle)">{t('uploader.createdAt')}</dt>
           <dd className="tabular m-0 text-(--color-text-muted)">{user.createdAt.slice(0, 10)}</dd>
-          <dt className="text-(--color-text-subtle)">최근 로그인</dt>
+          <dt className="text-(--color-text-subtle)">{t('member.lastLoginLabel')}</dt>
           <dd className="tabular m-0 text-(--color-text-muted)">
-            {user.lastLoggedInAt?.slice(0, 19).replace('T', ' ') ?? '없음'}
+            {user.lastLoggedInAt?.slice(0, 19).replace('T', ' ') ?? '-'}
           </dd>
-          <dt className="text-(--color-text-subtle)">활성 세션</dt>
+          <dt className="text-(--color-text-subtle)">{t('member.activeSession')}</dt>
           <dd className="tabular m-0 text-(--color-text)">
             {activeSessionCount.toLocaleString()}건
           </dd>
           {user.deletedAt && (
             <>
-              <dt className="text-(--color-text-subtle)">삭제일</dt>
+              <dt className="text-(--color-text-subtle)">{t('member.deletedAt')}</dt>
               <dd className="tabular m-0 text-(--color-error)">
                 {user.deletedAt.slice(0, 19).replace('T', ' ')}
               </dd>
@@ -188,11 +185,11 @@ export function UserDetailPanel({
       {/* Uploader sub-state */}
       {uploader && (
         <section className="mb-4">
-          <h3 className="m-0 mb-2 text-[13px] font-semibold">업로더 프로파일</h3>
+          <h3 className="m-0 mb-2 text-[13px] font-semibold">{t('member.uploaderProfile')}</h3>
           <dl className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[12px]">
-            <dt className="text-(--color-text-subtle)">기관명</dt>
+            <dt className="text-(--color-text-subtle)">{t('member.orgName')}</dt>
             <dd className="m-0 text-(--color-text)">{uploader.organizationName || '(없음)'}</dd>
-            <dt className="text-(--color-text-subtle)">상태</dt>
+            <dt className="text-(--color-text-subtle)">{t('member.statusLabel')}</dt>
             <dd className="m-0 text-(--color-text-muted)">{t(`member.uploaderStatus.${uploader.approvalStatus}`)}</dd>
             {uploader.approvedAt && (
               <>
@@ -204,7 +201,7 @@ export function UserDetailPanel({
             )}
           </dl>
           <p className="m-0 mt-2 text-[11px] text-(--color-text-subtle)">
-            업로더 승급 심사·반려는 Uploaders 탭에서 처리.
+            {t('member.uploaderHint')}
           </p>
         </section>
       )}
@@ -212,13 +209,13 @@ export function UserDetailPanel({
       {/* Admin sub-state */}
       {admin && (
         <section className="mb-4">
-          <h3 className="m-0 mb-2 text-[13px] font-semibold">Admin 프로파일</h3>
+          <h3 className="m-0 mb-2 text-[13px] font-semibold">{t('member.adminProfile')}</h3>
           <dl className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[12px]">
             <dt className="text-(--color-text-subtle)">scope</dt>
             <dd className="m-0 text-(--color-text)">{t(`member.scopeLabel.${admin.scope}`)}</dd>
-            <dt className="text-(--color-text-subtle)">활성</dt>
+            <dt className="text-(--color-text-subtle)">{t('member.statusLabel')}</dt>
             <dd className="m-0 text-(--color-text-muted)">{admin.isActive ? 'ACTIVE' : 'disabled'}</dd>
-            <dt className="text-(--color-text-subtle)">생성일</dt>
+            <dt className="text-(--color-text-subtle)">{t('member.createdAt')}</dt>
             <dd className="tabular m-0 text-(--color-text-muted)">{admin.createdAt.slice(0, 10)}</dd>
           </dl>
         </section>
@@ -226,14 +223,14 @@ export function UserDetailPanel({
 
       {/* Recent audits — 사람 친화 카드. payload 는 한 줄 요약 + reason 별도 표시. */}
       <section className="mb-4">
-        <h3 className="m-0 mb-2 text-[13px] font-semibold">최근 처리 내역</h3>
+        <h3 className="m-0 mb-2 text-[13px] font-semibold">{t('member.recentAudits')}</h3>
         {recentAudits.length === 0 ? (
-          <p className="m-0 text-[12px] text-(--color-text-subtle)">기록 없음.</p>
+          <p className="m-0 text-[12px] text-(--color-text-subtle)">{t('member.noAudits')}</p>
         ) : (
           <ul className="flex flex-col gap-1.5">
             {recentAudits.map((a) => {
               const label = t(`member.actionLabel.${a.action}`, { defaultValue: a.action });
-              const summary = summarizeAuditPayload(a.action, a.payload);
+              const summary = summarizeAuditPayload(a.action, a.payload, t);
               const reason =
                 a.payload && typeof a.payload === 'object'
                   ? (a.payload as Record<string, unknown>).reason
@@ -253,7 +250,7 @@ export function UserDetailPanel({
                     </span>
                   </div>
                   <div className="mt-0.5 text-[11px] text-(--color-text-subtle)">
-                    처리 admin {a.adminNickname ?? `#${a.adminId}`}
+                    {t('member.handledAdmin')} {a.adminNickname ?? `#${a.adminId}`}
                   </div>
                   {typeof reason === 'string' && reason.length > 0 && (
                     <p className="m-0 mt-1.5 rounded-(--radius-sm) bg-(--color-surface) p-2 text-[11.5px] leading-[1.55] text-(--color-text)">
@@ -276,7 +273,7 @@ export function UserDetailPanel({
               onClick={() => setOpenAction('revoke')}
               className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-warning)/40 bg-(--color-warning)/5 px-3 text-[12px] font-medium text-(--color-warning) hover:bg-(--color-warning)/10"
               disabled={activeSessionCount === 0}
-              title={activeSessionCount === 0 ? '활성 세션 없음' : ''}
+              title={activeSessionCount === 0 ? t('member.noActiveSession') : ''}
             >
               {t('member.revokeSession')}
             </button>
@@ -314,8 +311,8 @@ export function UserDetailPanel({
               title={
                 !canSoftDelete
                   ? isActiveAdmin
-                    ? 'admin 활성 상태 — 먼저 박탈'
-                    : '이미 삭제됨'
+                    ? t('member.activeAdmin')
+                    : t('member.alreadyDeleted')
                   : ''
               }
               className="ml-auto inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[12px] font-medium text-(--color-error) hover:bg-(--color-error)/10 disabled:opacity-40"
@@ -330,6 +327,10 @@ export function UserDetailPanel({
               hint="활성 세션 모두 끊김. scope='full' 또는 'security' admin 만 가능."
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
+              cancelLabel={t('member.cancel')}
+              executeLabel={t('member.execute')}
+              executingLabel={t('member.executing')}
+              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await revokeUserSessionsByAdmin(userId, reason);
@@ -351,6 +352,10 @@ export function UserDetailPanel({
               }}
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
+              cancelLabel={t('member.cancel')}
+              executeLabel={t('member.execute')}
+              executingLabel={t('member.executing')}
+              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason, scope) => {
                 const r = await promoteUserToAdmin(userId, scope!, reason);
@@ -373,6 +378,10 @@ export function UserDetailPanel({
               }}
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
+              cancelLabel={t('member.cancel')}
+              executeLabel={t('member.execute')}
+              executingLabel={t('member.executing')}
+              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason, scope) => {
                 const r = await changeUserAdminScope(userId, scope!, reason);
@@ -387,6 +396,10 @@ export function UserDetailPanel({
               hint="is_active=false 토글. user 행 자체는 유지."
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
+              cancelLabel={t('member.cancel')}
+              executeLabel={t('member.execute')}
+              executingLabel={t('member.executing')}
+              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await demoteUserAdmin(userId, reason);
@@ -402,6 +415,10 @@ export function UserDetailPanel({
               danger
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
+              cancelLabel={t('member.cancel')}
+              executeLabel={t('member.execute')}
+              executingLabel={t('member.executing')}
+              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await softDeleteUserAccount(userId, reason);
@@ -425,6 +442,10 @@ function ActionForm({
   danger,
   reasonLabel,
   reasonPlaceholder,
+  cancelLabel,
+  executeLabel,
+  executingLabel,
+  charCountLabel,
   onCancel,
   onSubmit,
 }: {
@@ -436,6 +457,10 @@ function ActionForm({
   danger?: boolean;
   reasonLabel: string;
   reasonPlaceholder: string;
+  cancelLabel: string;
+  executeLabel: string;
+  executingLabel: string;
+  charCountLabel: (len: number) => string;
   onCancel: () => void;
   onSubmit: (reason: string, scope?: AdminScope) => Promise<void>;
 }) {
@@ -487,7 +512,7 @@ function ActionForm({
           className="w-full resize-y rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface) p-2 text-[12px] text-(--color-text) focus:border-(--color-border-hover) focus:outline-none"
         />
         <span className="tabular m-0 mt-0.5 block text-right text-[10px] text-(--color-text-subtle)">
-          {reason.trim().length} / 500 (최소 10자)
+          {charCountLabel(reason.trim().length)}
         </span>
       </label>
       {err && (
@@ -502,7 +527,7 @@ function ActionForm({
           disabled={pending}
           className="inline-flex h-8 items-center rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) disabled:opacity-40"
         >
-          취소
+          {cancelLabel}
         </button>
         <button
           type="button"
@@ -522,7 +547,7 @@ function ActionForm({
             danger ? 'bg-(--color-error) hover:opacity-90' : 'bg-(--color-accent) hover:bg-(--color-accent-hover)'
           } disabled:opacity-40`}
         >
-          {pending ? '처리 중…' : '실행'}
+          {pending ? executingLabel : executeLabel}
         </button>
       </div>
     </div>

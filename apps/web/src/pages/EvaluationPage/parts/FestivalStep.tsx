@@ -1,5 +1,6 @@
 // apps/web/src/pages/EvaluationPage/parts/FestivalStep.tsx
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { SegmentedControl, SegmentedControlItem } from 'seed-design/ui/segmented-control';
 import { StarRating } from './StarRating.js';
@@ -17,19 +18,14 @@ interface Props {
   submitting: boolean;
 }
 
-const SURVEY_ITEMS = [
-  { key: 'atmosphere', label: '분위기' },
-  { key: 'program',    label: '프로그램' },
-  { key: 'food',       label: '먹거리' },
-  { key: 'safety',     label: '안전' },
-  { key: 'transport',  label: '교통' },
-] as const;
-type SurveyKey = (typeof SURVEY_ITEMS)[number]['key'];
+const SURVEY_KEYS = ['atmosphere', 'program', 'food', 'safety', 'transport'] as const;
+type SurveyKey = (typeof SURVEY_KEYS)[number];
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
 export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
+  const { t } = useTranslation('mypage');
   const [survey, setSurvey] = useState<Record<SurveyKey, number>>({
     atmosphere: 0, program: 0, food: 0, safety: 0, transport: 0,
   });
@@ -39,14 +35,14 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const surveyComplete = SURVEY_ITEMS.every((i) => survey[i.key] > 0);
+  const surveyComplete = SURVEY_KEYS.every((k) => survey[k] > 0);
   const canSubmit = surveyComplete && reviewRating > 0 && reviewBody.trim().length > 0 && !submitting && !uploading;
 
   // [이슈1] 실제 BFF 계약에 맞춘 업로드
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
     if (photoUrls.length + files.length > 10) {
-      alert('사진은 최대 10장까지 첨부할 수 있어요.'); return;
+      alert(t('evaluation.photoMax')); return;
     }
 
     const BFF = (import.meta.env['VITE_BFF_URL'] as string | undefined) ?? 'http://localhost:3001';
@@ -56,11 +52,11 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
     for (const file of files) {
       // 클라이언트 사전 필터
       if (!ALLOWED_MIME.has(file.type)) {
-        alert(`지원하지 않는 형식입니다: ${file.type} (jpeg/png/webp만 가능)`);
+        alert(t('evaluation.photoInvalidType', { type: file.type }));
         continue;
       }
       if (file.size > MAX_PHOTO_BYTES) {
-        alert(`${file.name}이 5MB를 초과합니다.`);
+        alert(t('evaluation.photoTooLarge', { name: file.name }));
         continue;
       }
 
@@ -96,10 +92,11 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
 
   return (
     <div className="flex flex-col gap-5">
-      <h2 className="text-(length:--text-h3) font-semibold">축제 설문 + 후기</h2>
-      <p className="text-[12px] text-(--color-text-muted)">설문은 비공개, 후기는 이벤트 페이지에 공개됩니다.</p>
+      <h2 className="text-(length:--text-h3) font-semibold">{t('evaluation.festivalTitle')}</h2>
+      <p className="text-[12px] text-(--color-text-muted)">{t('evaluation.surveyPrivate')}</p>
 
-      {SURVEY_ITEMS.map(({ key, label }) => {
+      {SURVEY_KEYS.map((key) => {
+        const label = t(`evaluation.surveyItems.${key}`);
         const sVal = survey[key];
         const segProps = sVal === 0
           ? { 'aria-label': label, onValueChange: (v: string) => setSurvey((prev) => ({ ...prev, [key]: Number(v) })) }
@@ -117,27 +114,27 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
       })}
 
       <section>
-        <p className="mb-2 text-[13px] font-medium">후기 별점</p>
+        <p className="mb-2 text-[13px] font-medium">{t('evaluation.reviewRating')}</p>
         <StarRating value={reviewRating} onChange={setReviewRating} />
       </section>
 
       <section>
         <label className="mb-1 block text-[13px] font-medium" htmlFor="reviewBody">
-          후기 <span className="text-(--color-text-muted)">({reviewBody.length}/5000자)</span>
+          {t('evaluation.reviewLabel')} <span className="text-(--color-text-muted)">({reviewBody.length}/5000자)</span>
         </label>
         <textarea
           id="reviewBody"
           value={reviewBody}
           onChange={(e) => setReviewBody(e.target.value.slice(0, 5000))}
           rows={5}
-          placeholder="축제 경험을 자유롭게 작성해 주세요."
+          placeholder={t('evaluation.reviewPlaceholder')}
           className="w-full resize-y rounded-(--radius-md) border border-(--color-border) px-3 py-2 text-[14px] focus:outline-none focus:border-(--color-brand)"
         />
       </section>
 
       <section>
         <p className="mb-2 text-[13px] font-medium">
-          사진 <span className="text-(--color-text-muted)">({photoUrls.length}/10, jpeg/png/webp, 각 최대 5MB)</span>
+          {t('evaluation.photoLabel')} <span className="text-(--color-text-muted)">({photoUrls.length}/10, jpeg/png/webp, 각 최대 5MB)</span>
         </p>
         <div className="flex flex-wrap gap-2">
           {photoUrls.map((url, idx) => (
@@ -147,7 +144,7 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
                 type="button"
                 onClick={() => setPhotoUrls((prev) => prev.filter((_, i) => i !== idx))}
                 className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-danger) text-[10px] text-white"
-                aria-label="사진 삭제"
+                aria-label={t('evaluation.photoDeleteAria')}
               >
                 x
               </button>
@@ -159,7 +156,7 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
               onClick={() => fileRef.current?.click()}
               disabled={uploading}
               className="flex h-16 w-16 items-center justify-center rounded-(--radius-sm) border border-dashed border-(--color-border) text-[24px] text-(--color-text-muted) disabled:opacity-50"
-              aria-label="사진 추가"
+              aria-label={t('evaluation.photoAddAria')}
             >
               {uploading ? '...' : '+'}
             </button>
@@ -177,7 +174,7 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
 
       <div className="flex gap-2">
         <ActionButton variant="neutralOutline" size="medium" onClick={onBack} disabled={submitting || uploading}>
-          이전
+          {t('evaluation.back')}
         </ActionButton>
         <ActionButton
           variant="brandSolid"
@@ -186,7 +183,7 @@ export function FestivalStep({ onBack, onSubmit, submitting }: Props) {
           onClick={() => canSubmit && onSubmit({ ...survey, reviewRating, reviewBody, photoUrls })}
           className="flex-1"
         >
-          {submitting ? '제출 중...' : '평가 완료'}
+          {submitting ? t('evaluation.submitting') : t('evaluation.complete')}
         </ActionButton>
       </div>
     </div>

@@ -68,7 +68,7 @@ export function UploadersTab() {
     { key: 'revision_requested', label: `${t('member.uploaderStatus.revision_requested')} ${byStatus.revision_requested}` },
     { key: 'approved',           label: `${t('member.uploaderStatus.approved')} ${byStatus.approved}` },
     { key: 'rejected',           label: `${t('member.uploaderStatus.rejected')} ${byStatus.rejected}` },
-    { key: 'any',                label: '전체' },
+    { key: 'any',                label: t('uploader.statusAny') },
   ];
 
   return (
@@ -98,7 +98,7 @@ export function UploadersTab() {
             })}
           </div>
           <span className="ml-auto text-[12px] text-(--color-text-subtle)">
-            {total.toLocaleString()}건
+            {t('uploader.total', { count: total.toLocaleString() })}
           </span>
         </div>
 
@@ -113,7 +113,7 @@ export function UploadersTab() {
             <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
           ) : items.length === 0 ? (
             <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-              {statusFilter === 'pending' ? t('uploader.empty') : '결과 없음'}
+              {statusFilter === 'pending' ? t('uploader.empty') : t('uploader.noResult')}
             </div>
           ) : (
             <ul className="divide-y divide-(--color-border)">
@@ -164,7 +164,7 @@ export function UploadersTab() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
             >
-              이전
+              {t('uploader.prev')}
             </button>
             <span className="text-[13px] text-(--color-text-muted)">
               {page} / {totalPages}
@@ -175,7 +175,7 @@ export function UploadersTab() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
             >
-              다음
+              {t('uploader.next')}
             </button>
           </div>
         )}
@@ -192,7 +192,7 @@ export function UploadersTab() {
           />
         ) : (
           <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-            왼쪽에서 업로더를 선택하면 상세 정보와 결정 버튼이 나와요
+            {t('uploader.selectHint')}
           </div>
         )}
       </aside>

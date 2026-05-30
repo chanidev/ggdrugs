@@ -1,5 +1,13 @@
 {
-  "page": { "title": "마이페이지" },
+  "page": {
+    "title": "마이페이지",
+    "loginRequired": "로그인이 필요해요",
+    "loginHint": "북마크와 리뷰는 로그인 후에 확인할 수 있어요.",
+    "loginButton": "Google 로그인",
+    "greetingUser": "{{nickname}} 님",
+    "communityLink": "커뮤니티",
+    "profileLink": "프로필"
+  },
   "tabs": {
     "bookmarks": "북마크",
     "reviews": "내 리뷰",
@@ -9,35 +17,111 @@
   },
   "bookmark": {
     "empty": "북마크한 이벤트가 없어요.",
-    "loadError": "불러오지 못했어요."
+    "loadError": "불러오지 못했어요.",
+    "hint": "지도에서 마음에 드는 이벤트를 북마크해 보세요."
   },
   "review": {
     "empty": "작성한 리뷰가 없어요.",
     "loadError": "불러오지 못했어요.",
     "delete": "삭제",
-    "deleteConfirm": "리뷰를 삭제할까요?"
+    "deleteConfirm": "리뷰를 삭제할까요?",
+    "deleteFailed": "삭제 실패: {{message}}",
+    "hint": "상세 페이지에서 별점과 짧은 후기를 남겨 보세요.",
+    "title": "리뷰",
+    "avg": "★ {{avg}} · {{count}}개",
+    "sessionExpired": "세션이 만료됐어요. 다시 로그인해 주세요.",
+    "photoUploadFailed": "사진 업로드에 실패했어요.",
+    "writeFailed": "리뷰 작성에 실패했어요. 잠시 후 다시 시도해 주세요.",
+    "writeHint": "후기를 남기고 다른 사람에게 도움이 되어 주세요.",
+    "writeButton": "리뷰 쓰기",
+    "ratingLabel": "별점",
+    "closeButton": "닫기",
+    "bodyPlaceholder": "다녀온 느낌을 간단히 적어 주세요 (2자 이상)",
+    "photoLabel": "사진 (선택, 최대 5장)",
+    "submitting": "등록 중…",
+    "submit": "등록",
+    "ratingAria": "별점 1~5",
+    "notEndedNotice": "리뷰는 이벤트가 종료된 뒤에 작성할 수 있어요.",
+    "firstReview": "첫 리뷰의 주인공이 되어 주세요."
   },
   "reco": {
     "empty": "추천 이벤트가 없어요.",
-    "loadError": "불러오지 못했어요."
+    "loadError": "불러오지 못했어요.",
+    "noSignal": "아직 추천을 만들 시그널이 부족해요",
+    "noSignalHint": "이벤트를 북마크하거나 리뷰를 남기면, 매일 한 번 그 데이터로 취향을 분석해 추천을 보여드려요.",
+    "emptyHint": "며칠 내로 새 이벤트가 등록되면 다시 표시됩니다.",
+    "autoRefresh": "건 · 매일 자동 갱신"
   },
   "subscription": {
     "empty": "구독한 이벤트가 없어요.",
     "loadError": "불러오지 못했어요.",
     "toggleOn": "알림 켜짐",
     "toggleOff": "알림 꺼짐",
-    "delete": "구독 취소"
+    "delete": "구독 취소",
+    "companionType": {
+      "solo": "혼자",
+      "couple": "연인",
+      "friend": "친구",
+      "family": "가족"
+    },
+    "eventType": {
+      "festival": "축제",
+      "expo": "박람회",
+      "symposium": "심포지움",
+      "conference": "컨퍼런스",
+      "exhibition": "전시",
+      "performance": "공연",
+      "education": "교육",
+      "movie": "영화"
+    },
+    "regionCount": "지역 {{count}}개",
+    "vibeCount": "성향 {{count}}개",
+    "periodMonths": "{{count}}개월 이내",
+    "allConditions": "모든 조건 (매우 광범위)",
+    "deleteConfirm": "이 구독을 삭제할까요?",
+    "deleteFailed": "삭제 실패: {{message}}",
+    "toggleFailed": "변경 실패: {{message}}",
+    "active": "활성",
+    "inactive": "정지",
+    "registered": "등록",
+    "pause": "정지",
+    "resume": "재개",
+    "deleteButton": "삭제",
+    "noCondition": "구독한 조건이 없어요",
+    "noConditionHint": "필터 검색 패널의 '이 조건 구독' 버튼으로 만들 수 있어요.",
+    "count": "{{count}}개 구독. 새 이벤트가 조건에 맞으면 알림으로 받아요."
   },
   "calendar": {
     "empty": "예정된 약속이 없어요.",
     "loadError": "불러오지 못했어요.",
-    "evaluate": "평가하기"
+    "evaluate": "평가하기",
+    "appointmentFallback": "약속",
+    "selectDate": "날짜를 선택하세요",
+    "noEvents": "이 날에 걸린 북마크·약속·리뷰 이벤트가 없어요.",
+    "appointmentBadge": "약속 · confirmed",
+    "appointedAt": "약속 일시:",
+    "period": "기간:",
+    "location": "장소:",
+    "price": "가격:",
+    "free": "무료",
+    "operatingHours": "운영시간:",
+    "targetAudience": "대상:",
+    "noEventLink": "기간·장소·가격: 이벤트 연결 없음",
+    "goToRoom": "채팅방으로",
+    "eventDetail": "이벤트 상세",
+    "schedulePending": "일시 미정"
   },
   "credit": {
     "title": "크레딧 내역",
     "balance": "잔액: {{count}}개",
     "empty": "내역이 없어요.",
-    "loadError": "불러오지 못했어요."
+    "loadError": "불러오지 못했어요.",
+    "loading": "불러오는 중…",
+    "actionLabels": {
+      "appointment_complete": "메이트 약속 완료",
+      "mate_eval_complete": "메이트 평가 작성",
+      "review_complete": "후기 작성"
+    }
   },
   "profile": {
     "title": "프로필 수정",
@@ -45,14 +129,53 @@
     "nicknamePlaceholder": "닉네임을 입력하세요",
     "save": "저장",
     "saveSuccess": "저장됐어요.",
-    "saveError": "저장하지 못했어요."
+    "saveError": "저장하지 못했어요.",
+    "nicknameRequired": "닉네임을 입력해 주세요.",
+    "nicknameTooLong": "닉네임은 30자 이하로 입력해 주세요.",
+    "loginRequired": "로그인이 필요해요.",
+    "back": "← 마이페이지",
+    "avatarAria": "프로필 사진",
+    "changeAvatarTitle": "사진 변경 — 추후 지원 예정",
+    "edit": "수정",
+    "cancel": "취소",
+    "mateScore": "메이트지수",
+    "mateScoreHint": "메이트 매칭 정보를 입력하면 지수가 생성돼요.",
+    "mateScoreNote": "메이트지수는 활동 이력에 따라 자동으로 변경돼요."
   },
   "notification": {
     "title": "알림",
     "empty": "알림이 없어요.",
     "loadError": "불러오지 못했어요.",
     "markAllRead": "모두 읽음",
-    "markRead": "읽음"
+    "markRead": "읽음",
+    "notiTypes": {
+      "match_request": "메이트신청",
+      "group_invite": "그룹초대",
+      "appointment": "약속",
+      "appointment_update": "약속만료",
+      "appointment_expired": "약속만료",
+      "eval_request": "평가요청",
+      "mate_eval": "평가요청",
+      "kick_vote": "퇴출투표",
+      "message": "메시지",
+      "chat_message": "메시지",
+      "vacancy": "공석",
+      "vacancy_notification": "공석"
+    },
+    "loginRequired": "로그인이 필요해요",
+    "loginHint": "알림은 로그인 후 확인할 수 있어요.",
+    "loginButton": "Google 로그인",
+    "center": "알림 센터 · A_806",
+    "allFilter": "전체",
+    "unreadFilter": "미읽음",
+    "total": "{{count}}건",
+    "error": "오류:",
+    "unreadEmpty": "미읽음 알림이 없어요.",
+    "applying": "처리 중…",
+    "accept": "수락",
+    "reject": "거절",
+    "eventPrivate": "(이벤트 비공개 또는 삭제됨)",
+    "viewEvent": "이벤트 보기"
   },
   "evaluation": {
     "title": "평가",
@@ -61,7 +184,46 @@
     "submit": "제출",
     "submitSuccess": "평가했어요.",
     "submitError": "제출하지 못했어요.",
-    "alreadyEvaluated": "이미 평가했어요."
+    "alreadyEvaluated": "이미 평가했어요.",
+    "festivalTitle": "축제 설문 + 후기",
+    "surveyPrivate": "설문은 비공개, 후기는 이벤트 페이지에 공개됩니다.",
+    "surveyItems": {
+      "atmosphere": "분위기",
+      "program": "프로그램",
+      "food": "먹거리",
+      "safety": "안전",
+      "transport": "교통"
+    },
+    "reviewRating": "후기 별점",
+    "reviewLabel": "후기",
+    "reviewPlaceholder": "축제 경험을 자유롭게 작성해 주세요.",
+    "photoLabel": "사진",
+    "photoDeleteAria": "사진 삭제",
+    "photoAddAria": "사진 추가",
+    "photoMax": "사진은 최대 10장까지 첨부할 수 있어요.",
+    "photoInvalidType": "지원하지 않는 형식입니다: {{type}} (jpeg/png/webp만 가능)",
+    "photoTooLarge": "{{name}}이 5MB를 초과합니다.",
+    "back": "이전",
+    "submitting": "제출 중...",
+    "complete": "평가 완료",
+    "mateOverall": "전체 만족도",
+    "comment": "한줄평",
+    "commentError": "한줄평은 최대 30바이트입니다.",
+    "reportReason": "신고 사유",
+    "block": "차단",
+    "nextFestival": "다음 — 축제 후기 작성",
+    "qLabels": {
+      "punctuality": "시간 약속",
+      "communication": "의사소통",
+      "vibe": "분위기/유쾌함",
+      "revisit": "재방문 의향"
+    },
+    "reportOptions": {
+      "inappropriate": "부적절한 언행",
+      "harassing": "괴롭힘/폭력",
+      "no_show": "노쇼",
+      "etc": "기타"
+    }
   },
   "role": {
     "toggle": "역할 전환",
