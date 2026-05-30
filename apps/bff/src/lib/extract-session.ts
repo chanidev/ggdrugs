@@ -47,36 +47,43 @@ export async function extractSession(
   const sid = parseSidFromCookieHeader(cookieHeader);
   if (!sid) return null;
 
-  const row = await prisma.authSession.findUnique({
-    where: { sessionId: sid },
-    select: {
-      expiresAt: true,
-      createdAt: true,
-      user: {
-        select: {
-          userId: true,
-          isDeleted: true,
-          nickname: true,
-          activeRole: true,
-        },
-      },
-    },
-  });
-
-  if (!row) return null;
-  if (row.user.isDeleted) return null;
-  if (row.expiresAt <= new Date()) return null;
-
-  const base: SessionInfo = {
-    userId: row.user.userId,
-    sessionId: sid,
-    createdAt: row.createdAt,
-  };
-
   if (withUserFields) {
-    base.nickname = row.user.nickname;
-    base.activeRole = row.user.activeRole;
+    // HTTP 경로: nickname/activeRole 포함 조회
+    const row = await prisma.authSession.findUnique({
+      where: { sessionId: sid },
+      select: {
+        expiresAt: true,
+        createdAt: true,
+        user: { select: { userId: true, isDeleted: true, nickname: true, activeRole: true } },
+      },
+    });
+    if (!row) return null;
+    if (row.user.isDeleted) return null;
+    if (row.expiresAt <= new Date()) return null;
+    return {
+      userId: row.user.userId,
+      sessionId: sid,
+      createdAt: row.createdAt,
+      nickname: row.user.nickname,
+      activeRole: row.user.activeRole,
+    };
+  } else {
+    // Socket 경로: userId/isDeleted 만 조회 — DB 전송량 최소화
+    const row = await prisma.authSession.findUnique({
+      where: { sessionId: sid },
+      select: {
+        expiresAt: true,
+        createdAt: true,
+        user: { select: { userId: true, isDeleted: true } },
+      },
+    });
+    if (!row) return null;
+    if (row.user.isDeleted) return null;
+    if (row.expiresAt <= new Date()) return null;
+    return {
+      userId: row.user.userId,
+      sessionId: sid,
+      createdAt: row.createdAt,
+    };
   }
-
-  return base;
 }

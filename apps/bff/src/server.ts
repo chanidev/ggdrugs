@@ -4,7 +4,7 @@ import { prisma } from './prisma.js';
 import { env } from './env.js';
 import { startScheduler } from './jobs/scheduler.js';
 import { startChatScheduler } from './jobs/chat-scheduler.js';
-import { createSocketServer } from './lib/socket-server.js';
+import { createSocketServer, closeSocketServer } from './lib/socket-server.js';
 import { closeRedisClient } from './lib/redis-client.js';
 
 const PORT = 3000;
@@ -29,7 +29,11 @@ startChatScheduler();
 
 async function shutdown(signal: string) {
   logger.info({ signal }, 'Shutdown requested');
+  // 1. HTTP 신규 연결 중단
   httpServer.close();
+  // 2. Socket.IO io.close() + subClient.quit() — pubClient(closeRedisClient) 이전에 처리
+  await closeSocketServer();
+  // 3. Redis pub 클라이언트 종료
   await closeRedisClient();
   await prisma.$disconnect();
   process.exit(0);

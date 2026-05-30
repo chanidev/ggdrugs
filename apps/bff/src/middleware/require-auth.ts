@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '../prisma.js';
-import { extractSession, parseSidFromCookieHeader } from '../lib/extract-session.js';
+import { extractSession } from '../lib/extract-session.js';
 
 /**
  * 세션 쿠키 → user 조회. 성공 시 req.auth 채워서 다음 핸들러로, 실패 시 401.
@@ -54,14 +54,9 @@ function touchSession(sessionId: string, createdAt: Date): void {
  * 공개 + 인증 시 개인화 응답을 섞는 엔드포인트용 (예: event-detail 에 isBookmarked).
  */
 export async function resolveAuth(req: Request, _res: Response, next: NextFunction) {
-  const cookieHeader = req.headers.cookie;
-  const sid = parseSidFromCookieHeader(cookieHeader);
-  if (!sid) {
-    next();
-    return;
-  }
-  // withUserFields=true: nickname/activeRole 을 단일 쿼리로 함께 가져옴
-  const session = await extractSession(cookieHeader, prisma, true);
+  // extractSession 내부에서 alle_sid 파싱 + 만료/삭제 검증 일괄 처리.
+  // null 반환이면 미인증이므로 추가 early-return 불필요.
+  const session = await extractSession(req.headers.cookie, prisma, true);
   if (session && session.nickname && session.activeRole) {
     (req as AuthenticatedRequest).auth = {
       userId: session.userId,
@@ -74,14 +69,9 @@ export async function resolveAuth(req: Request, _res: Response, next: NextFuncti
 }
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const cookieHeader = req.headers.cookie;
-  const sid = parseSidFromCookieHeader(cookieHeader);
-  if (!sid) {
-    res.status(401).json({ error: 'unauthenticated' });
-    return;
-  }
-  // withUserFields=true: nickname/activeRole 을 단일 쿼리로 함께 가져옴
-  const session = await extractSession(cookieHeader, prisma, true);
+  // extractSession 내부에서 alle_sid 파싱 + 만료/삭제 검증 일괄 처리.
+  // null 반환이면 미인증 → 401. 중복 parseSid 호출 제거.
+  const session = await extractSession(req.headers.cookie, prisma, true);
   if (!session || !session.nickname || !session.activeRole) {
     res.status(401).json({ error: 'unauthenticated' });
     return;

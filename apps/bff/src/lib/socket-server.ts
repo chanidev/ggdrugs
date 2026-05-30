@@ -29,6 +29,7 @@
 import { Server as SocketServer } from 'socket.io';
 import { createAdapter } from '@socket.io/redis-adapter';
 import type { Server as HttpServer } from 'http';
+import type Redis from 'ioredis';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
 import { logger } from '../logger.js';
@@ -66,10 +67,30 @@ declare module 'socket.io' {
 // ─── 싱글톤 ─────────────────────────────────────────────────────────────────
 
 let _io: SocketServer | null = null;
+// subClient 를 모듈 스코프에 보관 — closeSocketServer() 에서 quit 가능하게
+let _subClient: Redis | null = null;
 
 export function getSocketServer(): SocketServer {
   if (!_io) throw new Error('Socket.IO server not initialized — call createSocketServer() first');
   return _io;
+}
+
+/**
+ * Graceful shutdown:
+ *   1. io.close() — 열린 WebSocket 연결 전부 종료 (HTTP server.close() 자동 연계 안 됨)
+ *   2. subClient.quit() — Redis sub 연결 해제 (pubClient 는 closeRedisClient() 에서 처리)
+ *
+ * server.ts shutdown 핸들러에서 closeRedisClient() 이전에 호출해야 한다.
+ */
+export async function closeSocketServer(): Promise<void> {
+  if (_io) {
+    await new Promise<void>((resolve) => _io!.close(() => resolve()));
+    _io = null;
+  }
+  if (_subClient) {
+    await _subClient.quit();
+    _subClient = null;
+  }
 }
 
 // ─── 초기화 ─────────────────────────────────────────────────────────────────
@@ -81,8 +102,10 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
   }
 
   const pubClient = getRedisClient();
-  // subClient 는 adapter 전용 — 외부에서 재사용 금지
+  // subClient 는 adapter 전용 — 외부에서 재사용 금지.
+  // 모듈 스코프 _subClient 에 저장해 closeSocketServer() 에서 quit 할 수 있게 함.
   const subClient = pubClient.duplicate();
+  _subClient = subClient;
 
   subClient.on('error', (err) => logger.warn({ err }, 'redis sub client error'));
 
