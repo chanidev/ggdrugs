@@ -229,6 +229,19 @@ async function main() {
       return f;
     });
 
+    // ── CASE 7b: [리뷰 medium] review_complete 크레딧 적립 검증 ─────────
+    // FestivalReview 최초 제출 시 review_complete +10 이 생성됐는지 확인.
+    await check('credit.review_complete.created', async () => {
+      const ledger = await prisma.creditLedger.findFirst({
+        where: { userId: auth1.userId, action: 'review_complete', appointmentId: appt.appointmentId },
+        select: { pointsAmount: true },
+      });
+      const f: string[] = [];
+      if (!ledger) f.push('CreditLedger review_complete row not found');
+      if (ledger?.pointsAmount !== 10) f.push(`pointsAmount ${ledger?.pointsAmount} != 10`);
+      return f;
+    });
+
     // ── CASE 8: GET /me/credits 잔액 반영 ────────────────────────────────
     await check('credit.balance.ok', async () => {
       const res = mockRes();

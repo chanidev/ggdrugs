@@ -560,6 +560,12 @@ export async function notifyMateEval(
 
   for (const appt of dueAppointments) {
     // chatRoom의 active 멤버 전원 조회 (1쿼리/약속)
+    // [리뷰 low] chatRoom.status 필터 의도적 미포함:
+    //   약속 완료(appointedAt 경과) 후 방이 ended/closed 상태로 전환되는 경우가 있더라도
+    //   평가 알림과 appointment_complete 크레딧은 여전히 적립돼야 한다.
+    //   따라서 chatRoom.status 필터를 추가하면 ended 방의 처리를 막아 의도에 반한다.
+    //   groupMembership.memberStatus='active' 필터만으로 현재 참가 중인 멤버를 식별한다.
+    //   candidates $queryRaw도 chatRoom.status를 필터하지 않음 — 동일 의도.
     const members = await prisma.groupMembership.findMany({
       where: { chatRoomId: appt.chatRoomId, memberStatus: 'active' },
       select: { userId: true },

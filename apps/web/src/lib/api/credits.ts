@@ -11,7 +11,10 @@ export interface CreditLedgerItem {
 
 /**
  * [이슈21] balance = SUM(pointsAmount). 행 없으면 0.
- * [오버라이드] appointment_complete 항목은 스케줄러 잡(notifyMateEval)에서 생성.
+ * action 종류:
+ *   mate_eval_complete   — 메이트 평가 제출 시 +10 (Slice 5 구현)
+ *   review_complete      — 후기 최초 제출 시 +10 (Slice 5 구현)
+ *   appointment_complete — 스케줄러 잡(notifyMateEval) +10 (Slice 5 구현)
  */
 export interface CreditsResponse {
   balance: number;

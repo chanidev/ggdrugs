@@ -11,8 +11,10 @@
  *   - [이슈4] Appointment.eventId 게이트 (null 시 400 event_required)
  *   - [이슈7] evaluatedUserId가 동일 chatRoomId 멤버인지 검증
  *   - MateEvaluation + FestivalSurvey + FestivalReview + CreditLedger 원자 저장
- *   - [오버라이드] 크레딧 2종: mate_eval_complete +10 (트랜잭션 내)
- *     appointment_complete +10 (스케줄러 잡에서 적립 — 여기서는 미생성)
+ *   - [오버라이드] 크레딧 3종 (모두 트랜잭션 내):
+ *     mate_eval_complete +10 — 메이트 평가 1건당
+ *     review_complete +10    — 후기 최초 제출 1회 (FestivalReview 신규 생성 시)
+ *     appointment_complete +10 — 스케줄러 잡(notifyMateEval)에서 적립 — 여기서는 미생성
  *   - best-effort: updateMateIndex(evaluatedUserId)
  *
  * GET /community/appointments/:appointmentId/evaluation
@@ -27,7 +29,8 @@ import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 import { updateMateIndex } from '../lib/mate-index-updater.js';
 
 const REPORTED_FOR_VALUES = new Set(['inappropriate', 'harassing', 'no_show', 'etc']);
-const CREDIT_MATE_EVAL = 10; // ADR 0007 결정5 — 액수 Open items, 10으로 가정
+const CREDIT_MATE_EVAL    = 10; // ADR 0007 결정5 — 액수 Open items, 10으로 가정
+const CREDIT_REVIEW       = 10; // review_complete +10 (ADR 0007 결정5, 동일 액수 가정)
 
 function parseBigId(raw: unknown): bigint | null {
   const s = typeof raw === 'string' ? raw : '';
@@ -96,7 +99,14 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
 
   // ── [이슈7] evaluatedUserId가 동일 chatRoomId active 멤버인지 검증 ─────
   // [오버라이드] 그룹 지원: roomType 게이트 삭제.
-  // [이슈review:important] memberStatus='active' 비대칭 수정 — kicked/left 전 멤버는 평가 대상 불가.
+  // [리뷰 low] targetMembership active-only 정책 (ADR 결정):
+  //   평가 대상이 kicked/left 상태인 경우에도 평가를 허용할지 여부는 요구사항이 모호하다.
+  //   현재 구현은 "평가 시점에 active 멤버만 평가 가능"(가장 엄격한 해석)을 채택한다.
+  //   근거: 약속 완료 후 곧바로 평가(appointedAt 경과 직후)하는 것이 정상 흐름이며,
+  //   이 시점에 kicked/left인 경우는 비정상 시나리오(예: 무단이탈 후 평가 회피)로 간주.
+  //   만약 "약속 당시 멤버였으면 평가 가능" 정책으로 변경해야 한다면
+  //   memberStatus IN ('active', 'left', 'kicked') 로 조건 완화 필요 — ADR 개정 선행.
+  //   슬라이스5 하니스(CASE 12)에서 kicked 멤버 평가 차단을 회귀 검증한다.
   const targetMembership = await prisma.groupMembership.findUnique({
     where: { chatRoomId_userId: { chatRoomId: appointment.chatRoomId, userId: evaluatedUserId } },
     select: { memberStatus: true },
@@ -180,6 +190,15 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
         update: {}, // no-op: 이미 존재하면 변경 없음
       });
 
+      // festivalReview.upsert 전 존재 여부 확인 — review_complete 크레딧 1회성 적립에 사용.
+      // 그룹 N-1 시나리오: u1이 u2·u3를 각각 평가하는 2번째 POST에서 FestivalReview가 이미
+      // 존재하므로 upsert는 no-op. review_complete 크레딧은 최초 생성 시 1회만 적립한다.
+      // dedup 방어선: existingReview 조회(1차) + uq_mate_eval_pair(P2002 최종). 트랜잭션 내 검사.
+      const existingReview = await tx.festivalReview.findUnique({
+        where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
+        select: { reviewId: true },
+      });
+
       await tx.festivalReview.upsert({
         where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
         create: {
@@ -192,6 +211,21 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
         },
         update: {}, // no-op: 이미 존재하면 변경 없음
       });
+
+      // [리뷰 medium] review_complete 크레딧 적립 +10 (최초 후기 제출 시 1회).
+      // FestivalReview가 신규 생성(existingReview=null)인 경우에만 적립.
+      // 그룹 N-1에서 2번째 이후 평가 POST는 FestivalReview가 이미 존재(existingReview!=null)
+      // → 이 블록을 건너뜀으로써 review_complete 중복 적립 방지.
+      if (!existingReview) {
+        await tx.creditLedger.create({
+          data: {
+            userId: auth.userId,
+            action: 'review_complete',
+            pointsAmount: CREDIT_REVIEW,
+            appointmentId,
+          },
+        });
+      }
 
       // [오버라이드] 크레딧 적립: mate_eval_complete +10
       // appointment_complete는 스케줄러 잡(notifyMateEval)에서 별도 적립.
