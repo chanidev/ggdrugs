@@ -288,15 +288,15 @@ export async function proposeAppointment(req: Request, res: Response) {
     return;
   }
 
-  // active 멤버 목록 조회
-  const activeMembers = await prisma.groupMembership.findMany({
-    where: { chatRoomId, memberStatus: 'active' },
-    select: { userId: true },
-  });
-
   const expiresAt = new Date(Date.now() + APPOINTMENT_TTL_MS);
 
   const appointment = await prisma.$transaction(async (tx) => {
+    // active 멤버 목록 조회 — 트랜잭션 내에서 읽어 TOCTOU 방지
+    const activeMembers = await tx.groupMembership.findMany({
+      where: { chatRoomId, memberStatus: 'active' },
+      select: { userId: true },
+    });
+
     const appt = await tx.appointment.create({
       data: {
         chatRoomId,
@@ -608,6 +608,9 @@ export async function voteAppointment(req: Request, res: Response) {
       io.to(`room:${chatRoomId.toString()}`).emit('appointment:confirmed', apptOut);
     } else if (finalStatus === 'counter_proposed') {
       io.to(`room:${chatRoomId.toString()}`).emit('appointment:proposed', apptOut);
+    } else if (finalStatus === 'rejected') {
+      // 단일 거절 즉시 파기 시 클라이언트에 실시간 신호 전달 (ADR 0009 참조)
+      io.to(`room:${chatRoomId.toString()}`).emit('appointment:rejected', apptOut);
     }
   } catch {
     // Socket.IO 미초기화 — 무시
@@ -682,10 +685,10 @@ export async function leaveRoom(req: Request, res: Response) {
     });
 
     if (room.roomType === '1:1') {
-      // 1:1: 채팅방 종료 + 모든 멤버십 일괄 left 처리
-      // [medium] 상대방(u2) 멤버십도 stale 'active' 로 남지 않도록 일괄 업데이트
+      // 1:1: 채팅방 종료 + 상대방 멤버십 left 처리
+      // 요청자 멤버십은 이미 위에서 update 완료 → 상대방(active)만 대상으로 한정해 중복 업데이트 방지
       await tx.groupMembership.updateMany({
-        where: { chatRoomId, memberStatus: 'active' },
+        where: { chatRoomId, memberStatus: 'active', userId: { not: auth.userId } },
         data: { memberStatus: 'left', leftAt: now },
       });
       await tx.chatRoom.update({
