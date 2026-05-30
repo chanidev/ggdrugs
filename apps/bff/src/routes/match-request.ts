@@ -209,6 +209,20 @@ export async function sendGroupRequest(req: Request, res: Response) {
     return;
   }
 
+  // 차단 여부 확인 (양방향, 전체 수신자 대상) — 1:1 경로와 동일 패턴
+  const groupBlock = await prisma.block.findFirst({
+    where: {
+      OR: receiverIds.flatMap((id) => [
+        { blockerId: auth.userId, blockedUserId: id },
+        { blockerId: id, blockedUserId: auth.userId },
+      ]),
+    },
+  });
+  if (groupBlock) {
+    res.status(409).json({ error: 'blocked' });
+    return;
+  }
+
   // MateProfile 본인 확인
   const myProfile = await prisma.mateProfile.findUnique({
     where: { userId: auth.userId },

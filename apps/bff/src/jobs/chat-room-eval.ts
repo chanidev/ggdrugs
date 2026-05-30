@@ -335,6 +335,30 @@ async function main() {
       return f;
     });
 
+    // ── CASE 8b: match.group.blocked — 차단된 대상에게 그룹 초대 409 ─────────────
+    await check('match.group.blocked', async () => {
+      // u1 → u2 차단 설정
+      const blk = await prisma.block.create({
+        data: { blockerId: u1.userId, blockedUserId: u2.userId },
+        select: { blockId: true },
+      });
+      const res = mockRes();
+      await sendGroupRequest(
+        mockReq({
+          auth: auth1,
+          body: { receiverUserIds: [u2.userId.toString()] },
+        }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 409) f.push(`status ${res._c.status} != 409`);
+      const b = res._c.json as { error?: string };
+      if (b?.error !== 'blocked') f.push(`error '${b?.error}' != 'blocked'`);
+      // 차단 해제
+      await prisma.block.delete({ where: { blockId: blk.blockId } });
+      return f;
+    });
+
     // ── CASE 9: notif.new_types_populated_on_create — Notification에 notificationType 채워짐 ──
     await check('notif.new_types_populated_on_create', async () => {
       // u2 에게 생성된 가장 최근 알림(match_request) 확인
