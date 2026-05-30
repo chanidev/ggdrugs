@@ -392,8 +392,10 @@ function MessageBubble({
   }
 
   const isMe = msg.senderUserId === myUserId;
-  // 본인 메시지 또는 시스템 메시지(senderUserId=null)는 신고 불가
-  const canReport = !isMe && msg.senderUserId != null;
+  // 비로그인(user=null), 본인 메시지, 시스템 메시지(senderUserId=null)는 신고 불가.
+  // [review: important] user != null 조건 추가 — 비로그인 시 신고 버튼 숨김.
+  // PostDetailPage/CommentTree 와 동일 패턴: user && !isMine.
+  const canReport = myUserId !== '' && !isMe && msg.senderUserId != null;
 
   return (
     <div className={`group flex items-end gap-1 ${isMe ? 'justify-end' : 'justify-start'}`}>

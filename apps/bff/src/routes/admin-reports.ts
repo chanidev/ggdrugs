@@ -47,6 +47,11 @@ const VALID_ACTIONS = new Set(['warned', 'suspended', 'false_report', 'dismissed
  *
  * query: status(기본 pending), targetType, page, limit
  * 응답: byStatus 통계 포함
+ *
+ * [review: critical — scope 설계 의도 명시]
+ * 신고 목록/상세 조회(GET)는 모든 활성 관리자 scope에 열려있다 (uploader_review_only 포함).
+ * 조치(POST /action)에만 scope 제한 적용: 경고/허위신고/기각 = full|content_only, 이용정지 = full.
+ * uploader_review_only 관리자가 조회는 가능하지만 조치(actionAdminReport)는 403 반환됨.
  */
 export async function listAdminReports(req: Request, res: Response) {
   // requireAdmin middleware guarantees req.admin is populated before this handler.
@@ -138,6 +143,10 @@ export async function listAdminReports(req: Request, res: Response) {
  *   comment: { body }
  *   chat_message: { body, messageType }
  *   mate_eval: { ratingStars, comment, reportedFor }
+ *
+ * [review: critical — scope 설계 의도 명시]
+ * 신고 상세 조회는 모든 활성 관리자 scope에 열려있다 (uploader_review_only 포함).
+ * 조치(actionAdminReport)만 scope 제한을 받는다.
  */
 export async function getAdminReport(req: Request, res: Response) {
   // requireAdmin middleware guarantees req.admin is populated before this handler.
@@ -376,6 +385,10 @@ export async function actionAdminReport(req: Request, res: Response) {
     }
 
     // 2) Report 상태 업데이트
+    // [review: low] dismissed 시 adminAction=null: DB 스키마 설계상 dismissed 는
+    // status 필드로 판별한다 (adminAction enum에 dismissed 미포함). 클라이언트
+    // StatusBadge 는 status='dismissed' 분기를 adminAction 보다 먼저 처리하므로
+    // 올바르게 '기각'으로 표시된다. adminAction=null 의 의미는 'no sanction applied'.
     const finalStatus = action === 'dismissed' ? 'dismissed' : 'reviewed';
     const finalAdminAction = action === 'dismissed' ? null : action;
     await tx.report.update({
@@ -390,11 +403,17 @@ export async function actionAdminReport(req: Request, res: Response) {
     });
 
     // 3) AdminAuditLog 생성
+    // [review: important] false_report 시 targetId = reporterId (허위신고 판정 대상 = 신고자).
+    // dismissed 는 조치 없음이므로 null. warned/suspended 는 targetUserId (피신고자).
+    const auditTargetId =
+      action === 'dismissed' ? null :
+      action === 'false_report' ? report.reporterId :
+      report.targetUserId;
     const auditLog = await tx.adminAuditLog.create({
       data: {
         adminId: auth.userId,  // FK → users(user_id), NOT AdminProfile.adminId
         action: auditAction,
-        targetId: action === 'false_report' || action === 'dismissed' ? null : report.targetUserId,
+        targetId: auditTargetId,
         payload: {
           reportId: reportId.toString(),
           targetUserId: report.targetUserId.toString(),

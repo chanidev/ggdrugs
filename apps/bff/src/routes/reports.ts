@@ -82,7 +82,9 @@ async function checkTargetEntityWithOwner(
       // 신고 대상 = 평가를 받은 사람(피평가자, evaluatedUserId).
       // EvaluationPage에서 targetUserId=evaluatedUserId 를 전송하므로
       // evaluatedUserId 와 비교해야 한다. (evaluatorUserId 는 평가 작성자 — 신고자 본인)
-      const ev = await prisma.mateEvaluation.findFirst({
+      // [review: important] findUnique 사용 — evalId PK 단건 조회로 타입 일관성 보장.
+      // 다른 케이스와 동일하게 BigInt 변환 패턴 유지.
+      const ev = await prisma.mateEvaluation.findUnique({
         where: { evalId: targetEntityId },
         select: { evaluatedUserId: true },
       });

@@ -5,7 +5,7 @@ import { Header } from '../../layout/Header.js';
 import { MateEvalStep, type MateEvalData } from './parts/MateEvalStep.js';
 import { FestivalStep, type FestivalData } from './parts/FestivalStep.js';
 import { submitEvaluation, getMyEvaluation } from '../../lib/api/evaluation.js';
-import { createReport, type ReportReason } from '../../lib/api/reports.js';
+import { createReport, blockUser, type ReportReason } from '../../lib/api/reports.js';
 
 type Step = 'loading' | 'mate' | 'festival' | 'done';
 
@@ -48,16 +48,21 @@ export function EvaluationPage() {
   }
 
   async function handleBlock() {
-    if (!chatRoomId) { alert('채팅방 정보가 없어 차단할 수 없어요.'); return; }
-    const BFF = (import.meta.env['VITE_BFF_URL'] as string | undefined) ?? 'http://localhost:3001';
+    // GG-REPORT-008: 일반 차단 API (chatRoomId 없는 surface용).
+    // EvaluationPage 에서는 chatRoomId 컨텍스트 없이 평가 대상자를 차단하므로
+    // lib/api/reports.ts blockUser() 를 사용한다 — raw fetch 대신 withCredentials 보장.
     try {
-      await fetch(`${BFF}/community/chat-rooms/${chatRoomId}/block/${evaluatedUserId}`, {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await blockUser(evaluatedUserId);
       alert('차단되었습니다.');
-    } catch {
-      alert('차단 처리 중 오류가 발생했어요.');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : '';
+      if (msg === 'ALREADY_BLOCKED' || msg === 'already_blocked') {
+        alert('이미 차단한 사용자입니다.');
+      } else if (msg === 'UNAUTHENTICATED') {
+        alert('로그인이 필요합니다.');
+      } else {
+        alert('차단 처리 중 오류가 발생했어요.');
+      }
     }
   }
 
@@ -101,8 +106,10 @@ export function EvaluationPage() {
             targetEntityId: evalResult.evalId,
             reason: REPORTED_FOR_TO_REASON[mateData.reportedFor]!,
           });
-        } catch {
-          // 신고 실패는 평가 완료에 영향을 주지 않음 (사용자는 평가 완료로 인식)
+        } catch (reportErr) {
+          // 신고 실패는 평가 완료에 영향을 주지 않음 (사용자는 평가 완료로 인식).
+          // [review: low] 최소 경고 로그 유지 — 모니터링 시 누락 신고 추적 가능.
+          console.warn('[EvaluationPage] mate_eval createReport silent fail:', reportErr);
         }
       }
 
