@@ -12,7 +12,6 @@ import {
   selectRoomEvent,
   proposeAppointment,
   leaveRoom,
-  blockUser,
   instantKick,
   startKickVote,
   voteAppointment,
@@ -22,6 +21,8 @@ import {
 } from '../../lib/api/match.js';
 import { fetchEvents, fetchEventDetail, type BffEventItem, type BffEventDetail } from '../../lib/api/events.js';
 import { ReportModal } from '../../components/ReportModal.js';
+// GG-REPORT-008: 일반 차단 (Block.create only, GroupMembership 변경 없음)
+import { blockUser as blockUserGeneral } from '../../lib/api/reports.js';
 
 /**
  * ChatRoomPage — 실시간 채팅방 (와이어 9-4/9-5/9-17/9-19, A_805).
@@ -78,6 +79,11 @@ export function ChatRoomPage() {
   const [eventBoxOpen, setEventBoxOpen] = useState(false);
   const [appointmentOpen, setAppointmentOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  // GG-REPORT-001: 채팅 메시지 신고 — 최상위 단일 상태 (MessageBubble 버블마다 인스턴스 생성 방지)
+  const [reportMsgTarget, setReportMsgTarget] = useState<{
+    messageId: string;
+    senderUserId: string;
+  } | null>(null);
 
   // 새 메시지 오면 스크롤 맨 아래로
   useEffect(() => {
@@ -251,7 +257,12 @@ export function ChatRoomPage() {
             )}
             <div className="flex flex-col gap-3">
               {allMessages.map((msg) => (
-                <MessageBubble key={msg.messageId} msg={msg} myUserId={myUserId} />
+                <MessageBubble
+                  key={msg.messageId}
+                  msg={msg}
+                  myUserId={myUserId}
+                  onReport={setReportMsgTarget}
+                />
               ))}
             </div>
           </div>
@@ -366,21 +377,36 @@ export function ChatRoomPage() {
           }}
         />
       )}
+
+      {/* GG-REPORT-001: 채팅 메시지 신고 모달 — 최상위 단일 인스턴스 (MessageBubble onReport 콜백으로 열림) */}
+      {reportMsgTarget && (
+        <ReportModal
+          open
+          onClose={() => setReportMsgTarget(null)}
+          targetType="chat_message"
+          targetEntityId={reportMsgTarget.messageId}
+          targetUserId={reportMsgTarget.senderUserId}
+          onSuccess={() => setReportMsgTarget(null)}
+        />
+      )}
     </div>
   );
 }
 
 // ── MessageBubble ─────────────────────────────────────────────
+// [review fix] 최상위 단일 reportMsgTarget 상태 패턴 — 버블마다 ReportModal 인스턴스 생성 방지.
+// onReport 콜백으로 ChatRoomPage 상태를 업데이트한다.
 
 function MessageBubble({
   msg,
   myUserId,
+  onReport,
 }: {
   msg: ChatRoomMessageOut;
   myUserId: string;
+  /** 신고 버튼 클릭 시 ChatRoomPage 최상위 상태에 타깃을 전달 */
+  onReport: (target: { messageId: string; senderUserId: string }) => void;
 }) {
-  const [reportOpen, setReportOpen] = useState(false);
-
   if (msg.messageType === 'system') {
     return (
       <div className="my-1 text-center">
@@ -393,18 +419,17 @@ function MessageBubble({
 
   const isMe = msg.senderUserId === myUserId;
   // 비로그인(user=null), 본인 메시지, 시스템 메시지(senderUserId=null)는 신고 불가.
-  // [review: important] user != null 조건 추가 — 비로그인 시 신고 버튼 숨김.
   // PostDetailPage/CommentTree 와 동일 패턴: user && !isMine.
   const canReport = myUserId !== '' && !isMe && msg.senderUserId != null;
 
   return (
     <div className={`group flex items-end gap-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
       {/* GG-REPORT-001: 타인 메시지 신고 버튼 (hover 시 표시) */}
-      {canReport && (
+      {canReport && msg.senderUserId != null && (
         <button
           type="button"
           aria-label="메시지 신고"
-          onClick={() => setReportOpen(true)}
+          onClick={() => onReport({ messageId: msg.messageId, senderUserId: msg.senderUserId! })}
           className="invisible shrink-0 rounded-(--radius-sm) border border-(--color-border) px-1.5 py-0.5 text-[10px] text-(--color-text-subtle) opacity-0 transition-opacity hover:text-(--color-text-muted) group-hover:visible group-hover:opacity-100"
         >
           신고
@@ -428,18 +453,6 @@ function MessageBubble({
           {new Date(msg.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
-
-      {/* GG-REPORT-001: 채팅 메시지 신고 모달 */}
-      {canReport && msg.senderUserId != null && (
-        <ReportModal
-          open={reportOpen}
-          onClose={() => setReportOpen(false)}
-          targetType="chat_message"
-          targetEntityId={msg.messageId}
-          targetUserId={msg.senderUserId}
-          onSuccess={() => setReportOpen(false)}
-        />
-      )}
     </div>
   );
 }
@@ -473,15 +486,18 @@ function MenuDialog({
 
   const otherMembers = members.filter((m) => m.userId !== myUserId);
 
+  // [review fix: critical] GG-REPORT-008: 일반 차단(Block.create only, GroupMembership 변경 없음).
+  // 기존 blockUser(chatRoomId, targetUserId)는 채팅방 전용 API(GroupMembership 변경 포함) — 스펙 불일치.
+  // blockUserGeneral(targetUserId) 로 교체.
   const handleBlock = async (targetUserId: string) => {
     setPending(true);
     setActionErr(null);
     try {
-      await blockUser(chatRoomId, targetUserId);
+      await blockUserGeneral(targetUserId);
       onClose();
     } catch (e) {
       const msg = (e as Error).message;
-      setActionErr(msg === 'ALREADY_BLOCKED' ? '이미 차단한 사용자입니다.' : '차단하지 못했어요.');
+      setActionErr(msg === 'ALREADY_BLOCKED' || msg === 'already_blocked' ? '이미 차단한 사용자입니다.' : '차단하지 못했어요.');
     } finally {
       setPending(false);
     }

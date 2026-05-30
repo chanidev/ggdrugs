@@ -62,13 +62,20 @@ export async function listAdminReports(req: Request, res: Response) {
   const statusRaw = typeof req.query.status === 'string' ? req.query.status : 'pending';
   const targetTypeRaw = typeof req.query.targetType === 'string' ? req.query.targetType : 'any';
 
+  // [review fix: medium] 유효하지 않은 status/targetType 쿼리 파라미터 → 400.
+  // 이전: 조용히 무시하고 전체 결과 반환 (silent fallback). 이제 명시적 400 반환.
+  if (!VALID_STATUSES.has(statusRaw)) {
+    res.status(400).json({ error: 'invalid_status', validValues: [...VALID_STATUSES] });
+    return;
+  }
+  if (!VALID_TARGET_TYPES.has(targetTypeRaw)) {
+    res.status(400).json({ error: 'invalid_target_type', validValues: [...VALID_TARGET_TYPES] });
+    return;
+  }
+
   const whereFilter: Record<string, unknown> = {};
-  if (statusRaw !== 'any' && VALID_STATUSES.has(statusRaw)) {
-    whereFilter.status = statusRaw;
-  }
-  if (targetTypeRaw !== 'any' && VALID_TARGET_TYPES.has(targetTypeRaw)) {
-    whereFilter.targetType = targetTypeRaw;
-  }
+  if (statusRaw !== 'any') whereFilter.status = statusRaw;
+  if (targetTypeRaw !== 'any') whereFilter.targetType = targetTypeRaw;
 
   const [total, rows, statusBreakdown] = await Promise.all([
     prisma.report.count({ where: whereFilter }),

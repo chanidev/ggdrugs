@@ -411,13 +411,15 @@ export async function getRecommendations(req: Request, res: Response) {
       AND: [
         { userId: { not: auth.userId } },
         ...(blockedSetArray.length > 0 ? [{ userId: { notIn: blockedSetArray } }] : []),
-        // 유효한 이용정지 사용자 제외 (만료된 정지는 포함)
+        // 유효한 이용정지 사용자 제외 (만료된 정지는 포함).
+        // [review fix: high] sanctionExpiresAt=null 방어: NOT { A AND B }는 NOT A OR NOT B.
+        // null expiresAt suspended 사용자도 제외되도록 user 레벨 OR 조건으로 변경.
         {
-          NOT: {
-            user: {
-              sanctionStatus: 'suspended',
-              sanctionExpiresAt: { gt: recoNow },
-            },
+          user: {
+            OR: [
+              { sanctionStatus: { not: 'suspended' } },
+              { sanctionExpiresAt: { lte: recoNow } },
+            ],
           },
         },
       ],
