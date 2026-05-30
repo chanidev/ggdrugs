@@ -79,12 +79,15 @@ async function checkTargetEntityWithOwner(
       return 'ok';
     }
     case 'mate_eval': {
+      // 신고 대상 = 평가를 받은 사람(피평가자, evaluatedUserId).
+      // EvaluationPage에서 targetUserId=evaluatedUserId 를 전송하므로
+      // evaluatedUserId 와 비교해야 한다. (evaluatorUserId 는 평가 작성자 — 신고자 본인)
       const ev = await prisma.mateEvaluation.findFirst({
         where: { evalId: targetEntityId },
-        select: { evaluatorUserId: true },
+        select: { evaluatedUserId: true },
       });
       if (!ev) return 'not_found';
-      if (BigInt(ev.evaluatorUserId) !== BigInt(targetUserId)) return 'owner_mismatch';
+      if (BigInt(ev.evaluatedUserId) !== BigInt(targetUserId)) return 'owner_mismatch';
       return 'ok';
     }
     default:

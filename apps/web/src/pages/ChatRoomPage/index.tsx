@@ -398,7 +398,7 @@ function MessageBubble({
   return (
     <div className={`group flex items-end gap-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
       {/* GG-REPORT-001: 타인 메시지 신고 버튼 (hover 시 표시) */}
-      {canReport && !isMe && (
+      {canReport && (
         <button
           type="button"
           aria-label="메시지 신고"

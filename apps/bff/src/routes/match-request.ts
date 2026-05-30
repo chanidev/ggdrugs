@@ -89,7 +89,10 @@ export async function sendOneToOneRequest(req: Request, res: Response) {
   }
   const receiverCheckNow = new Date();
   // GG-REPORT-009: 유효한 이용정지(만료 전)인 수신자에게 신청 불가.
-  // sanctionExpiresAt이 null이거나 과거면 만료된 정지 → 통과 허용 (getRecommendations 패턴과 통일).
+  // 컨벤션: actionAdminReport(admin-reports.ts)는 항상 non-null sanctionExpiresAt을 설정한다.
+  // sanctionExpiresAt=null 은 "만료됨/정지 없음"을 의미하며, suspended + null = 정지 해제로 취급한다.
+  // (ADR 0007 결정14: 이용정지는 항상 기간 지정 필수, 기간 미지정 정지는 actionAdminReport에서 400 반환)
+  // 이 암묵적 가정은 getRecommendations(mate.ts), sendGroupRequest 와 통일된 패턴이다.
   // runSanctionExpirySweep이 아직 실행 전일 수 있으므로 앱 레이어에서도 만료 여부 확인.
   if (
     receiverUser.sanctionStatus === 'suspended' &&
@@ -232,6 +235,8 @@ export async function sendGroupRequest(req: Request, res: Response) {
   }
 
   // GG-REPORT-009: 이용정지 대상자에게 그룹 신청 불가
+  // 컨벤션: sanctionExpiresAt=null 은 "만료됨/정지 없음"으로 취급 (sendOneToOneRequest 와 동일).
+  // actionAdminReport 는 항상 non-null expiresAt 을 설정 (ADR 0007 결정14).
   // 만료된 정지는 통과 허용 (getRecommendations / sendOneToOneRequest 패턴과 통일).
   const groupReceiverCheckNow = new Date();
   const receiverUsers = await prisma.user.findMany({
