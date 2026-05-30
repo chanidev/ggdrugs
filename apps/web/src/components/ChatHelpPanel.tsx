@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { CHAT_EXAMPLES } from '../data/mock';
 
 /**
@@ -5,15 +6,15 @@ import { CHAT_EXAMPLES } from '../data/mock';
  * 예시 클릭 → 오버레이 닫고 하단 ChatDock 입력창에 쿼리 세팅 (onPick).
  */
 export function ChatHelpPanel({ onPick }: { onPick: (q: string) => void }) {
+  const { t } = useTranslation('chat');
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="border-b border-(--color-border) bg-(--color-surface-warm) px-5 py-5">
         <h3 className="m-0 mb-1.5 text-[17px] font-semibold tracking-[-0.01em]">
-          자연어로 물어보세요
+          {t('dock.helpTitle')}
         </h3>
         <p className="m-0 text-[13px] leading-[1.55] text-(--color-text-muted)">
-          하단 입력창에 일상 언어로 질문하면, LLM이 5개 필터(지역·기간·인원구성·종류·성향)를
-          자동으로 매핑해서 좁혀 드립니다.
+          {t('dock.helpBody')}
         </p>
       </div>
       <div className="flex flex-col gap-2 px-5 py-4">

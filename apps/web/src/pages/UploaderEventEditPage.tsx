@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PosterPickerField } from '../components/uploader/PosterPickerField';
@@ -43,6 +44,7 @@ const MAX_DOCS = 5;
 type PosterMode = 'keep' | 'clear' | 'replace';
 
 export function UploaderEventEditPage() {
+  const { t } = useTranslation('uploader');
   const { id: eventId } = useParams<{ id: string }>();
   const { user, loading: authLoading, refresh } = useCurrentUser();
   const navigate = useNavigate();
@@ -142,7 +144,7 @@ export function UploaderEventEditPage() {
       try {
         newPosterUrl = await uploadPoster(posterFile);
       } catch (err) {
-        setSubmitError(err instanceof Error ? `포스터 업로드 실패: ${err.message}` : '포스터 업로드 실패');
+        setSubmitError(err instanceof Error ? `${t('form.posterUploadFail')} ${err.message}` : t('form.posterUploadFail'));
         setSubmitting(false);
         setPosterUploading(false);
         return;
@@ -158,7 +160,7 @@ export function UploaderEventEditPage() {
       try {
         uploadedDocs = await uploadDocuments(docs.map((d) => d.file));
       } catch (err) {
-        setSubmitError(err instanceof Error ? `서류 업로드 실패: ${err.message}` : '서류 업로드 실패');
+        setSubmitError(err instanceof Error ? `${t('form.docUploadFail')} ${err.message}` : t('form.docUploadFail'));
         setSubmitting(false);
         setDocsUploading(false);
         return;
@@ -191,7 +193,7 @@ export function UploaderEventEditPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'submit failed';
       if (msg.startsWith('NOT_EDITABLE')) {
-        setSubmitError('현재 상태에서는 수정할 수 없어요. 최신 상태를 다시 확인해 주세요.');
+        setSubmitError(t('page.notEditable'));
       } else {
         setSubmitError(msg);
       }
@@ -212,39 +214,39 @@ export function UploaderEventEditPage() {
             <span aria-hidden className="inline-block rotate-180">
               <Icon name="arrow" size={14} />
             </span>
-            업로더 콘솔로
+            {t('page.uploaderConsoleBackLink')}
           </Link>
         </div>
 
         <header className="mb-6">
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            Uploader · A_601b
+            {t('page.editSubtitle')}
           </p>
-          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">이벤트 수정 재제출</h1>
+          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">{t('page.editTitle')}</h1>
           <p className="m-0 mt-2 text-[13px] text-(--color-text-muted)">
-            관리자 피드백을 반영해 다시 승인 대기로 제출할 수 있어요.
+            {t('page.editDesc')}
           </p>
         </header>
 
         {authLoading || loading ? (
-          <Box>불러오는 중…</Box>
+          <Box>{t('page.loading')}</Box>
         ) : !user ? (
-          <Box>로그인이 필요해요.</Box>
+          <Box>{t('page.loginRequired')}</Box>
         ) : loadError ? (
           <Box>
-            불러오기 실패: {loadError}
+            {t('page.loadFail')} {loadError}
           </Box>
         ) : !detail ? (
-          <Box>이벤트를 찾을 수 없어요.</Box>
+          <Box>{t('page.eventNotFound')}</Box>
         ) : !editable ? (
           <Box>
-            현재 상태({detail.approvalStatus})에서는 수정할 수 없어요. 업로더 콘솔로 돌아가 상태를 확인해 주세요.
+            {t('page.notEditableStatus', { status: detail.approvalStatus })}
           </Box>
         ) : !activeRoleOk ? (
           <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
-            <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">업로더 역할로 전환이 필요해요</h2>
+            <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">{t('page.roleSwitch')}</h2>
             <p className="mt-1 text-[13px] text-(--color-text-muted)">
-              수정 폼은 uploader 역할일 때만 활성화돼요.
+              {t('page.roleSwitchEditDesc')}
             </p>
             <div className="mt-4 flex gap-2">
               <button
@@ -253,7 +255,7 @@ export function UploaderEventEditPage() {
                 disabled={toggling}
                 className="inline-flex h-10 items-center rounded-(--radius-md) bg-(--color-accent) px-4 text-[14px] font-medium text-white hover:bg-(--color-accent-hover) disabled:opacity-40"
               >
-                {toggling ? '…' : 'uploader 역할로 전환'}
+                {toggling ? t('page.switching') : t('page.switchToUploader')}
               </button>
             </div>
           </section>
@@ -275,10 +277,10 @@ export function UploaderEventEditPage() {
                     detail.approvalStatus === 'rejected' ? 'text-(--color-error)' : 'text-(--color-warning)'
                   }`}
                 >
-                  관리자 사유 · {detail.latestDecision.decidedAt.slice(0, 10)}
+                  {t('page.adminReason', { date: detail.latestDecision.decidedAt.slice(0, 10) })}
                 </div>
                 <p className="m-0 whitespace-pre-wrap text-(--color-text)">
-                  {detail.latestDecision.reason ?? '(사유 없음)'}
+                  {detail.latestDecision.reason ?? t('page.noReason')}
                 </p>
               </aside>
             )}
@@ -286,7 +288,7 @@ export function UploaderEventEditPage() {
             <EventFormFields form={form} setForm={setForm} regions={regions} />
 
             {/* 포스터 — 유지·제거·교체 */}
-            <Field label="포스터 이미지">
+            <Field label={t('form.poster')}>
               <PosterEditor
                 currentUrl={detail.posterImageUrl}
                 mode={posterMode}
@@ -299,11 +301,11 @@ export function UploaderEventEditPage() {
 
             {/* 서류 — 기본은 기존 유지, "교체" 토글 시 새 파일 2~5개 필요 */}
             <Field
-              label="증빙 서류"
+              label={t('form.document')}
               hint={
                 replaceDocs
-                  ? `새 파일 ${MIN_DOCS}~${MAX_DOCS}개 업로드. 저장 시 기존 서류는 삭제돼요.`
-                  : '기존 서류를 그대로 유지합니다. 교체하려면 아래 버튼을 누르세요.'
+                  ? t('form.docsHintReplace', { min: MIN_DOCS, max: MAX_DOCS })
+                  : t('form.docsHintKeep')
               }
             >
               {replaceDocs ? (
@@ -324,7 +326,7 @@ export function UploaderEventEditPage() {
                     }}
                     className="self-start text-[12px] text-(--color-text-subtle) hover:text-(--color-accent)"
                   >
-                    교체 취소 (기존 유지)
+                    {t('form.docsReplaceCancel')}
                   </button>
                 </div>
               ) : (
@@ -335,7 +337,7 @@ export function UploaderEventEditPage() {
                     onClick={() => setReplaceDocs(true)}
                     className="inline-flex h-9 w-fit items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
                   >
-                    서류 교체
+                    {t('form.docsReplace')}
                   </button>
                 </div>
               )}
@@ -349,21 +351,21 @@ export function UploaderEventEditPage() {
 
             <div className="flex items-center justify-between border-t border-(--color-border) pt-4">
               <p className="m-0 text-[12px] text-(--color-text-subtle)">
-                저장 시 상태가 '승인 대기' 로 다시 바뀌어 관리자 심사가 다시 진행됩니다.
+                {t('form.resubmitNote')}
               </p>
               <div className="flex gap-2">
                 <Link
                   to="/uploader"
                   className="inline-flex h-10 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-4 text-[13px] font-medium text-(--color-text-muted) hover:text-(--color-text)"
                 >
-                  취소
+                  {t('form.cancel')}
                 </Link>
                 <button
                   type="submit"
                   disabled={!canSubmit || submitting}
                   className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-5 text-[14px] font-medium text-white hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {submitting ? '제출 중…' : '다시 제출'}
+                  {submitting ? t('form.submitting') : t('form.resubmit')}
                 </button>
               </div>
             </div>
@@ -397,6 +399,7 @@ function PosterEditor({
   onFileChange: (f: File | null) => void;
   uploading: boolean;
 }) {
+  const { t } = useTranslation('uploader');
   return (
     <div className="flex flex-col gap-2">
       {mode === 'keep' && (
@@ -405,13 +408,13 @@ function PosterEditor({
             <>
               <img
                 src={currentUrl}
-                alt="기존 포스터"
+                alt={t('picker.posterPreview')}
                 className="h-16 w-16 rounded-(--radius-sm) object-cover"
               />
-              <span className="flex-1 text-[13px] text-(--color-text-muted)">기존 포스터를 유지합니다.</span>
+              <span className="flex-1 text-[13px] text-(--color-text-muted)">{t('form.posterKeep')}</span>
             </>
           ) : (
-            <span className="flex-1 text-[13px] text-(--color-text-muted)">포스터 없음 (유지)</span>
+            <span className="flex-1 text-[13px] text-(--color-text-muted)">{t('form.posterNone')}</span>
           )}
           <div className="flex gap-2">
             <button
@@ -419,7 +422,7 @@ function PosterEditor({
               onClick={() => onModeChange('replace')}
               className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text)"
             >
-              교체
+              {t('form.posterReplace')}
             </button>
             {currentUrl && (
               <button
@@ -427,7 +430,7 @@ function PosterEditor({
                 onClick={() => onModeChange('clear')}
                 className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[12px] font-medium text-(--color-error) hover:bg-(--color-error)/10"
               >
-                제거
+                {t('form.posterClear')}
               </button>
             )}
           </div>
@@ -444,19 +447,19 @@ function PosterEditor({
             }}
             className="self-start text-[12px] text-(--color-text-subtle) hover:text-(--color-accent)"
           >
-            교체 취소 (기존 유지)
+            {t('form.posterReplaceCancel')}
           </button>
         </div>
       )}
       {mode === 'clear' && (
         <div className="flex items-center gap-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3">
-          <span className="flex-1 text-[13px] text-(--color-error)">저장 시 포스터가 제거됩니다.</span>
+          <span className="flex-1 text-[13px] text-(--color-error)">{t('form.posterClearMsg')}</span>
           <button
             type="button"
             onClick={() => onModeChange('keep')}
             className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:text-(--color-text)"
           >
-            취소
+            {t('form.cancel')}
           </button>
         </div>
       )}
@@ -465,8 +468,9 @@ function PosterEditor({
 }
 
 function ExistingDocsList({ documents }: { documents: UploaderEventDetail['documents'] }) {
+  const { t } = useTranslation('uploader');
   if (documents.length === 0) {
-    return <div className="text-[13px] text-(--color-text-subtle)">기존 서류 없음.</div>;
+    return <div className="text-[13px] text-(--color-text-subtle)">{t('form.docsNone')}</div>;
   }
   return (
     <ul className="flex flex-col gap-1.5">
@@ -487,7 +491,7 @@ function ExistingDocsList({ documents }: { documents: UploaderEventDetail['docum
             rel="noopener noreferrer"
             className="text-[12px] text-(--color-accent) hover:underline"
           >
-            미리보기
+            {t('form.docPreview')}
           </a>
         </li>
       ))}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header.js';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { Avatar } from 'seed-design/ui/avatar';
@@ -16,6 +17,7 @@ import { getMateIndex } from '../../lib/api/mate.js';
  * 7-2 스펙: 상대 닉네임 + 메이트지수 표시
  */
 export function ChatRequestPage() {
+  const { t } = useTranslation('chat');
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const receiverUserId = params.get('to') ?? '';
@@ -51,7 +53,7 @@ export function ChatRequestPage() {
 
   const handleSend = async () => {
     if (!receiverUserId) {
-      setErr('올바르지 않은 접근입니다.');
+      setErr(t('request.invalidAccess'));
       return;
     }
     setPending(true);
@@ -62,11 +64,11 @@ export function ChatRequestPage() {
       setSent(true);
     } catch (e) {
       const msg = (e as Error).message;
-      if (msg === 'UNAUTHENTICATED') setErr('로그인이 필요해요.');
-      else if (msg === 'DUPLICATE_PENDING') setErr('이미 신청 중입니다. 상대방이 수락하기를 기다려주세요.');
-      else if (msg === 'BLOCKED') setErr('차단 관계여서 신청할 수 없어요.');
-      else if (msg === 'PROFILE_REQUIRED') setErr('메이트 프로필을 먼저 등록해 주세요.');
-      else setErr('신청하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      if (msg === 'UNAUTHENTICATED') setErr(t('request.loginRequired'));
+      else if (msg === 'DUPLICATE_PENDING') setErr(t('request.duplicate'));
+      else if (msg === 'BLOCKED') setErr(t('request.blocked'));
+      else if (msg === 'PROFILE_REQUIRED') setErr(t('request.profileRequired'));
+      else setErr(t('request.submitError'));
     } finally {
       setPending(false);
     }
@@ -88,7 +90,7 @@ export function ChatRequestPage() {
             className="mb-6 inline-flex items-center gap-1.5 text-[14px] text-(--color-text-muted) hover:text-(--color-text)"
           >
             <span aria-hidden>&#8592;</span>
-            돌아가기
+            {t('request.goBack')}
           </button>
 
           <div className="flex flex-col items-center gap-6 rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-6 py-10 text-center">
@@ -100,14 +102,14 @@ export function ChatRequestPage() {
                 aria-label={`${nickname}의 프로필 아바타`}
               />
               <div className="flex items-center gap-1.5 text-[13px]">
-                <span className="text-(--color-text-muted)">메이트 지수</span>
+                <span className="text-(--color-text-muted)">{t('request.mateScore')}</span>
                 <span
                   className={
                     typeof mateIndex === 'number'
                       ? 'font-semibold text-(--color-text)'
                       : 'text-(--color-text-muted)'
                   }
-                  aria-label={`메이트 지수 ${mateIndexLabel}`}
+                  aria-label={`${t('request.mateScore')} ${mateIndexLabel}`}
                 >
                   {mateIndexLabel}
                 </span>
@@ -118,10 +120,10 @@ export function ChatRequestPage() {
               <>
                 <div>
                   <h1 className="text-[20px] font-semibold text-(--color-text)">
-                    {nickname}님에게 채팅 신청
+                    {t('request.toNickname', { nickname })}
                   </h1>
                   <p className="mt-2 text-[14px] text-(--color-text-muted)">
-                    신청이 수락되면 채팅방이 열려요.
+                    {t('request.pendingInfo')}
                   </p>
                   <p className="mt-1 text-[13px] text-(--color-text-subtle)">
                     신청은 <strong>24시간</strong> 동안 유효합니다.
@@ -143,7 +145,7 @@ export function ChatRequestPage() {
                     disabled={pending}
                     className="w-full"
                   >
-                    신청 보내기
+                    {t('request.submit')}
                   </ActionButton>
                   <ActionButton
                     variant="neutralOutline"
@@ -152,7 +154,7 @@ export function ChatRequestPage() {
                     disabled={pending}
                     className="w-full"
                   >
-                    취소
+                    {t('request.cancel')}
                   </ActionButton>
                 </div>
               </>
@@ -164,14 +166,14 @@ export function ChatRequestPage() {
                     &#10003;
                   </div>
                   <h1 className="text-[20px] font-semibold text-(--color-text)">
-                    신청 완료!
+                    {t('request.success')}
                   </h1>
                   <p className="mt-2 text-[14px] text-(--color-text-muted)">
-                    {nickname}님이 수락하면 채팅이 시작돼요.
+                    {t('request.successDetail', { nickname })}
                   </p>
                   {expiresAt && (
                     <p className="mt-1 text-[13px] text-(--color-text-subtle)">
-                      유효 기간: {formatExpiry(expiresAt)}까지
+                      {t('request.expiryDetail', { expiry: formatExpiry(expiresAt) })}
                     </p>
                   )}
                 </div>
@@ -183,7 +185,7 @@ export function ChatRequestPage() {
                     asChild
                     className="w-full"
                   >
-                    <Link to="/notifications">알림에서 확인하기</Link>
+                    <Link to="/notifications">{t('request.checkNotifications')}</Link>
                   </ActionButton>
                   <ActionButton
                     variant="neutralOutline"
@@ -191,7 +193,7 @@ export function ChatRequestPage() {
                     onClick={() => navigate('/community')}
                     className="w-full"
                   >
-                    커뮤니티로 돌아가기
+                    {t('request.backToCommunity')}
                   </ActionButton>
                 </div>
               </>

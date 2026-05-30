@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header.js';
 import { Avatar } from 'seed-design/ui/avatar';
 import { ActionButton } from 'seed-design/ui/action-button';
@@ -35,6 +36,7 @@ import { blockUser as blockUserGeneral } from '../../lib/api/reports.js';
  * GG-MATE-017/018: 방장 즉시강퇴 + 강퇴투표
  */
 export function ChatRoomPage() {
+  const { t } = useTranslation('chat');
   const { chatRoomId } = useParams<{ chatRoomId: string }>();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
@@ -55,10 +57,10 @@ export function ChatRoomPage() {
         setInitMessages(page.messages.slice().reverse()); // DB는 최신순 → 역순
       })
       .catch(() => {
-        if (mounted) setLoadErr('채팅방을 불러오지 못했어요.');
+        if (mounted) setLoadErr(t('room.loadError'));
       });
     return () => { mounted = false; };
-  }, [id]);
+  }, [id, t]);
 
   // ── 실시간 소켓 훅 ──
   const { messages: liveMessages, members, appointment, send, leave } = useChatRoom(id);
@@ -120,7 +122,7 @@ export function ChatRoomPage() {
           <div className="text-center">
             <p className="mb-4 text-(--color-text-muted)">{loadErr}</p>
             <ActionButton variant="neutralOutline" size="medium" onClick={() => void navigate('/community')}>
-              커뮤니티로 돌아가기
+              {t('room.backToCommunity')}
             </ActionButton>
           </div>
         </div>
@@ -147,12 +149,15 @@ export function ChatRoomPage() {
                 <Avatar
                   fallback={m.nickname.slice(0, 1)}
                   size="42"
-                  aria-label={`${m.nickname}${m.role === 'owner' ? ' (방장)' : ''}`}
+                  aria-label={t('room.memberAriaLabel', {
+                    nickname: m.nickname,
+                    ownerSuffix: m.role === 'owner' ? t('room.ownerSuffix') : '',
+                  })}
                 />
                 {m.role === 'owner' && (
                   <span
                     className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-(--color-accent) text-[9px] text-white"
-                    aria-label="방장"
+                    aria-label={t('room.ownerAriaLabel')}
                   >
                     ★
                   </span>
@@ -174,12 +179,14 @@ export function ChatRoomPage() {
                 type="button"
                 onClick={() => void navigate('/community')}
                 className="text-[20px] text-(--color-text-muted) hover:text-(--color-text)"
-                aria-label="뒤로 가기"
+                aria-label={t('room.backAriaLabel')}
               >
                 &#8592;
               </button>
               <span className="text-[15px] font-semibold">
-                {room?.roomType === '1:1' ? '1:1 채팅' : `그룹 채팅 (${displayMembers.length}명)`}
+                {room?.roomType === '1:1'
+                  ? t('room.oneToOneTitle')
+                  : t('room.groupTitle', { count: displayMembers.length })}
               </span>
             </div>
             {/* 우측: 이벤트 선택 + 햄버거 */}
@@ -189,9 +196,9 @@ export function ChatRoomPage() {
                 type="button"
                 onClick={() => setEventBoxOpen(true)}
                 className="hidden items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 py-1.5 text-[13px] text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text) sm:flex"
-                aria-label="축제 정하기"
+                aria-label={t('room.chooseEvent')}
               >
-                {room?.eventId ? '축제 선택됨' : '축제 정하기'}
+                {room?.eventId ? t('room.chooseEventSelected') : t('room.chooseEvent')}
               </button>
               {/* 약속 버튼 (GG-ROOM-013) */}
               <button
@@ -199,16 +206,16 @@ export function ChatRoomPage() {
                 onClick={() => setAppointmentOpen(true)}
                 disabled={appointmentConfirmed}
                 className="hidden items-center gap-1.5 rounded-(--radius-md) border border-(--color-accent)/40 bg-(--color-accent)/5 px-3 py-1.5 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/10 disabled:cursor-not-allowed disabled:opacity-40 sm:flex"
-                aria-label="같이 가자 — 약속 제안"
+                aria-label={t('room.proposeAppointment')}
               >
-                같이 가자
+                {t('room.proposeAppointment')}
               </button>
               {/* 햄버거 메뉴 */}
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
                 className="flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) hover:bg-(--color-surface-alt) hover:text-(--color-text)"
-                aria-label="채팅방 메뉴"
+                aria-label={t('room.menuAriaLabel')}
               >
                 &#9776;
               </button>
@@ -220,7 +227,7 @@ export function ChatRoomPage() {
             <div className="flex items-center gap-2 border-b border-(--color-border) bg-(--color-accent)/5 px-4 py-2 text-[13px] text-(--color-accent)">
               <span aria-hidden>&#10003;</span>
               <span>
-                약속이 확정됐어요!{' '}
+                {t('room.appointmentConfirmed')}{' '}
                 {appointment?.appointedAt
                   ? new Date(appointment.appointedAt).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
                   : ''}
@@ -232,10 +239,10 @@ export function ChatRoomPage() {
           {!appointmentConfirmed && (
             <div
               className="flex items-center gap-2 border-b border-(--color-border) bg-(--color-surface-alt) px-4 py-2 text-[12px] text-(--color-text-muted)"
-              aria-label="메이트 추천"
+              aria-label={t('room.mateRecommendAriaLabel')}
             >
               <span aria-hidden>&#9733;</span>
-              <span>이 채팅방에 어울리는 메이트를 추천해 드려요.</span>
+              <span>{t('room.mateRecommend')}</span>
               {/* Slice 4 에서 실제 추천 목록 연결 예정 (A_802 메이트 추천 API) */}
             </div>
           )}
@@ -244,14 +251,14 @@ export function ChatRoomPage() {
           <div
             ref={scrollRef}
             className="flex-1 overflow-y-auto px-4 py-4"
-            aria-label="채팅 메시지 목록"
+            aria-label={t('room.messageList')}
             aria-live="polite"
             aria-relevant="additions"
           >
             {allMessages.length === 0 && (
               <div className="flex h-full items-center justify-center">
                 <p className="text-[14px] text-(--color-text-muted)">
-                  첫 메시지를 보내서 대화를 시작해 보세요!
+                  {t('room.firstMessage')}
                 </p>
               </div>
             )}
@@ -276,7 +283,7 @@ export function ChatRoomPage() {
                 onClick={() => setEventBoxOpen(true)}
                 className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[12px] text-(--color-text-muted)"
               >
-                축제 정하기
+                {t('room.chooseEvent')}
               </button>
               <button
                 type="button"
@@ -284,23 +291,20 @@ export function ChatRoomPage() {
                 disabled={appointmentConfirmed}
                 className="rounded-(--radius-md) border border-(--color-accent)/40 px-3 py-1.5 text-[12px] text-(--color-accent) disabled:opacity-40"
               >
-                같이 가자
+                {t('room.proposeAppointment')}
               </button>
             </div>
             <div className="flex gap-2">
               {/*
                * GG-ROOM-008: 이미지 업로드 + 스티커 팔레트.
-               * Slice 4 (A_808) 에서 구현 예정:
-               *   - 이미지: uploads.ts uploadFile() → S3 URL → socket.emit('room:message', { type:'image', attachmentUrl })
-               *   - 스티커: SEED BottomSheet 기반 팔레트 UI → socket.emit('room:message', { type:'sticker', stickerId })
-               * 현재는 disabled placeholder 유지 (기획서 v5.0 범위 외).
+               * Slice 4 (A_808) 에서 구현 예정.
                */}
               {/* 이미지 업로드 placeholder (GG-ROOM-008 — Slice 4 예정) */}
               <button
                 type="button"
-                title="이미지 첨부 (Slice 4 예정)"
+                title={t('room.imageTitle')}
                 disabled
-                aria-label="이미지 첨부 (준비 중)"
+                aria-label={t('room.imageAttach')}
                 className="flex h-9 w-9 shrink-0 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-(--color-border) text-(--color-text-subtle) opacity-50"
               >
                 &#128247;
@@ -308,9 +312,9 @@ export function ChatRoomPage() {
               {/* 스티커 팔레트 placeholder (GG-ROOM-008 — Slice 4 예정) */}
               <button
                 type="button"
-                title="스티커 (Slice 4 예정)"
+                title={t('room.stickerTitle')}
                 disabled
-                aria-label="스티커 팔레트 (준비 중)"
+                aria-label={t('room.stickerPalette')}
                 className="flex h-9 w-9 shrink-0 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-(--color-border) text-(--color-text-subtle) opacity-50"
               >
                 &#128512;
@@ -320,8 +324,8 @@ export function ChatRoomPage() {
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                placeholder="메시지를 입력하세요"
-                aria-label="메시지 입력"
+                placeholder={t('room.inputPlaceholder')}
+                aria-label={t('room.inputAriaLabel')}
                 className="flex-1 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 py-2 text-[14px] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-accent) focus:outline-none"
               />
               <ActionButton
@@ -329,9 +333,9 @@ export function ChatRoomPage() {
                 size="small"
                 onClick={handleSend}
                 disabled={!text.trim()}
-                aria-label="전송"
+                aria-label={t('room.sendAriaLabel')}
               >
-                전송
+                {t('room.send')}
               </ActionButton>
             </div>
           </div>
@@ -407,6 +411,7 @@ function MessageBubble({
   /** 신고 버튼 클릭 시 ChatRoomPage 최상위 상태에 타깃을 전달 */
   onReport: (target: { messageId: string; senderUserId: string }) => void;
 }) {
+  const { t } = useTranslation('chat');
   if (msg.messageType === 'system') {
     return (
       <div className="my-1 text-center">
@@ -428,11 +433,11 @@ function MessageBubble({
       {canReport && msg.senderUserId != null && (
         <button
           type="button"
-          aria-label="메시지 신고"
+          aria-label={t('room.stickerReport')}
           onClick={() => onReport({ messageId: msg.messageId, senderUserId: msg.senderUserId! })}
           className="invisible shrink-0 rounded-(--radius-sm) border border-(--color-border) px-1.5 py-0.5 text-[10px] text-(--color-text-subtle) opacity-0 transition-opacity hover:text-(--color-text-muted) group-hover:visible group-hover:opacity-100"
         >
-          신고
+          {t('room.report')}
         </button>
       )}
       <div
@@ -444,10 +449,10 @@ function MessageBubble({
       >
         {msg.messageType === 'text' && <p>{msg.body}</p>}
         {msg.messageType === 'image' && msg.attachmentUrl && (
-          <img src={msg.attachmentUrl} alt="첨부 이미지" className="max-w-full rounded" />
+          <img src={msg.attachmentUrl} alt={t('room.attachedImage')} className="max-w-full rounded" />
         )}
         {msg.messageType === 'sticker' && (
-          <span className="text-[32px]" aria-label="스티커">&#128512;</span>
+          <span className="text-[32px]" aria-label={t('room.sticker')}>&#128512;</span>
         )}
         <span className="mt-0.5 block text-[10px] opacity-60">
           {new Date(msg.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
@@ -476,6 +481,7 @@ function MenuDialog({
   onLeave: () => void;
   allMessages: ChatRoomMessageOut[];
 }) {
+  const { t } = useTranslation('chat');
   const [kickUsed, setKickUsed] = useState(false);
   const [actionErr, setActionErr] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -497,7 +503,11 @@ function MenuDialog({
       onClose();
     } catch (e) {
       const msg = (e as Error).message;
-      setActionErr(msg === 'ALREADY_BLOCKED' || msg === 'already_blocked' ? '이미 차단한 사용자입니다.' : '차단하지 못했어요.');
+      setActionErr(
+        msg === 'ALREADY_BLOCKED' || msg === 'already_blocked'
+          ? t('room.alreadyBlocked')
+          : t('room.blockFail'),
+      );
     } finally {
       setPending(false);
     }
@@ -514,9 +524,9 @@ function MenuDialog({
       const msg = (e as Error).message;
       if (msg === 'INSTANT_KICK_USED') {
         setKickUsed(true);
-        setActionErr('즉시강퇴 권한을 이미 사용했어요.');
+        setActionErr(t('room.kickUsedError'));
       } else {
-        setActionErr('강퇴하지 못했어요.');
+        setActionErr(t('room.kickFail'));
       }
     } finally {
       setPending(false);
@@ -531,7 +541,11 @@ function MenuDialog({
       onClose();
     } catch (e) {
       const msg = (e as Error).message;
-      setActionErr(msg === 'VOTE_ALREADY_ACTIVE' ? '이미 강퇴 투표가 진행 중입니다.' : '투표를 시작하지 못했어요.');
+      setActionErr(
+        msg === 'VOTE_ALREADY_ACTIVE'
+          ? t('room.kickVoteActive')
+          : t('room.kickVoteFail'),
+      );
     } finally {
       setPending(false);
     }
@@ -544,7 +558,7 @@ function MenuDialog({
       <Dialog.Positioner>
         <Dialog.Content className="w-[320px] max-w-[92vw]">
           <Dialog.Header>
-            <Dialog.Title>{isOwner ? '방장 메뉴' : '채팅방 메뉴'}</Dialog.Title>
+            <Dialog.Title>{isOwner ? t('room.ownerMenu') : t('room.chatMenu')}</Dialog.Title>
           </Dialog.Header>
 
           <div className="flex flex-col gap-2 px-5 pb-3">
@@ -555,7 +569,7 @@ function MenuDialog({
             {/* 방장 메뉴: 멤버별 액션 (7-4 스펙: 즉시강퇴 + 강퇴투표 + 차단 + 신고placeholder) */}
             {isOwner && otherMembers.length > 0 && (
               <div className="mb-2">
-                <p className="mb-2 text-[12px] font-medium text-(--color-text-muted)">멤버 관리</p>
+                <p className="mb-2 text-[12px] font-medium text-(--color-text-muted)">{t('room.memberManage')}</p>
                 {otherMembers.map((m) => (
                   <div key={m.userId} className="mb-2 rounded-(--radius-md) bg-(--color-surface-alt) p-3">
                     <span className="mb-2 block text-[14px] font-medium">{m.nickname}</span>
@@ -566,9 +580,9 @@ function MenuDialog({
                         onClick={() => { void handleInstantKick(m.userId); }}
                         disabled={kickUsed || pending}
                         className="rounded-(--radius-md) border border-(--color-error)/40 px-2 py-1 text-[12px] text-(--color-error) disabled:cursor-not-allowed disabled:opacity-40"
-                        title={kickUsed ? '1회 권한 소진' : '즉시강퇴'}
+                        title={kickUsed ? t('room.kickUsedTitle') : t('room.kick')}
                       >
-                        {kickUsed ? '권한 소진' : '즉시강퇴'}
+                        {kickUsed ? t('room.kickUsed') : t('room.kick')}
                       </button>
                       {/* 강퇴투표 (GG-MATE-018) */}
                       <button
@@ -577,7 +591,7 @@ function MenuDialog({
                         disabled={pending}
                         className="rounded-(--radius-md) border border-(--color-border) px-2 py-1 text-[12px] text-(--color-text-muted) disabled:opacity-40"
                       >
-                        강퇴투표
+                        {t('room.kickVote')}
                       </button>
                       {/* 차단하기 (7-4 스펙: 방장도 차단 가능) */}
                       <button
@@ -586,7 +600,7 @@ function MenuDialog({
                         disabled={pending}
                         className="rounded-(--radius-md) border border-(--color-error)/40 px-2 py-1 text-[12px] text-(--color-error) disabled:opacity-40"
                       >
-                        차단하기
+                        {t('room.block')}
                       </button>
                       {/* GG-REPORT-001: 신고 — 최근 메시지 신고 (chat_message surface) */}
                       <button
@@ -598,14 +612,14 @@ function MenuDialog({
                             .reverse()
                             .find((msg) => msg.senderUserId === m.userId && msg.messageType !== 'system');
                           if (!lastMsg) {
-                            setActionErr('신고할 메시지가 없습니다.');
+                            setActionErr(t('room.noReportTarget'));
                             return;
                           }
                           setReportTarget({ messageId: lastMsg.messageId, senderUserId: m.userId });
                         }}
                         className="rounded-(--radius-md) border border-(--color-border) px-2 py-1 text-[12px] text-(--color-text-muted) disabled:opacity-40"
                       >
-                        신고
+                        {t('room.report')}
                       </button>
                     </div>
                   </div>
@@ -616,7 +630,7 @@ function MenuDialog({
             {/* 일반 멤버: 차단 */}
             {!isOwner && otherMembers.length > 0 && (
               <div className="mb-2">
-                <p className="mb-2 text-[12px] font-medium text-(--color-text-muted)">멤버 관리</p>
+                <p className="mb-2 text-[12px] font-medium text-(--color-text-muted)">{t('room.memberManage')}</p>
                 {otherMembers.map((m) => (
                   <div key={m.userId} className="mb-2 flex items-center justify-between gap-2 rounded-(--radius-md) bg-(--color-surface-alt) p-3">
                     <span className="text-[14px] font-medium">{m.nickname}</span>
@@ -626,7 +640,7 @@ function MenuDialog({
                       disabled={pending}
                       className="rounded-(--radius-md) border border-(--color-error)/40 px-2 py-1 text-[12px] text-(--color-error) disabled:opacity-40"
                     >
-                      차단하기
+                      {t('room.block')}
                     </button>
                   </div>
                 ))}
@@ -641,7 +655,7 @@ function MenuDialog({
               onClick={onClose}
               disabled={pending}
             >
-              닫기
+              {t('room.close')}
             </ActionButton>
             {/* 나가기 */}
             <ActionButton
@@ -650,7 +664,7 @@ function MenuDialog({
               onClick={() => { void onLeave(); }}
               disabled={pending}
             >
-              나가기
+              {t('room.leave')}
             </ActionButton>
           </Dialog.Footer>
         </Dialog.Content>
@@ -686,6 +700,7 @@ function EventSelectDialog({
   onClose: () => void;
   onSelected: (eventId: string) => void;
 }) {
+  const { t } = useTranslation('chat');
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<BffEventItem[]>([]);
@@ -707,9 +722,9 @@ function EventSelectDialog({
     try {
       const resp = await fetchEvents({ page: 1, limit: 20, search: q });
       setSearchResults(resp.items);
-      if (resp.items.length === 0) setErr('검색 결과가 없어요. 다른 키워드를 시도해 보세요.');
+      if (resp.items.length === 0) setErr(t('room.noResults'));
     } catch {
-      setErr('이벤트 목록을 불러오지 못했어요.');
+      setErr(t('room.fetchFail'));
     } finally {
       setSearching(false);
     }
@@ -740,7 +755,7 @@ function EventSelectDialog({
       onSelected(ev.eventId);
     } catch (e) {
       const msg = (e as Error).message;
-      setErr(msg === 'EVENT_NOT_FOUND' ? '해당 이벤트를 찾을 수 없어요.' : '이벤트를 선택하지 못했어요.');
+      setErr(msg === 'EVENT_NOT_FOUND' ? t('room.eventNotFound') : t('room.eventSelectFail'));
       setPending(false);
     }
   };
@@ -764,19 +779,19 @@ function EventSelectDialog({
             <div className="flex flex-col gap-2 px-5 pb-3">
               {/* GG-ROOM-003: 주관처 정보 — 업로더 이벤트는 organizer 표시, 크롤 이벤트는 없음 안내 */}
               {detailLoading ? (
-                <p className="text-[12px] text-(--color-text-muted)">주관처 정보 불러오는 중...</p>
+                <p className="text-[12px] text-(--color-text-muted)">{t('room.organizerLoading')}</p>
               ) : organizer ? (
                 <div className="rounded-(--radius-md) bg-(--color-surface-alt) p-2.5 text-[12px]">
                   <p className="font-medium text-(--color-text)">{organizer.name}</p>
                   {organizer.phone && (
-                    <p className="mt-0.5 text-(--color-text-muted)">연락처: {organizer.phone}</p>
+                    <p className="mt-0.5 text-(--color-text-muted)">{t('room.contact', { phone: organizer.phone })}</p>
                   )}
                   {organizer.email && (
-                    <p className="mt-0.5 text-(--color-text-muted)">이메일: {organizer.email}</p>
+                    <p className="mt-0.5 text-(--color-text-muted)">{t('room.email', { email: organizer.email })}</p>
                   )}
                 </div>
               ) : (
-                <p className="text-[12px] text-(--color-text-muted)">주관처 정보 없음 (크롤 이벤트)</p>
+                <p className="text-[12px] text-(--color-text-muted)">{t('room.noOrganizer')}</p>
               )}
               {err && <p role="alert" className="text-[13px] text-(--color-error)">{err}</p>}
             </div>
@@ -787,7 +802,7 @@ function EventSelectDialog({
                 onClick={() => setSummaryOpen(false)}
                 disabled={pending}
               >
-                뒤로
+                {t('room.back')}
               </ActionButton>
               {/* GG-ROOM-006: 상세 보기 → /events/:id */}
               <ActionButton
@@ -799,7 +814,7 @@ function EventSelectDialog({
                 }}
                 disabled={pending}
               >
-                상세 보기
+                {t('room.viewDetail')}
               </ActionButton>
               <ActionButton
                 variant="brandSolid"
@@ -808,7 +823,7 @@ function EventSelectDialog({
                 loading={pending}
                 disabled={pending}
               >
-                이 축제로 정하기
+                {t('room.selectThisEvent')}
               </ActionButton>
             </Dialog.Footer>
           </Dialog.Content>
@@ -823,9 +838,9 @@ function EventSelectDialog({
       <Dialog.Positioner>
         <Dialog.Content className="w-[360px] max-w-[92vw]">
           <Dialog.Header>
-            <Dialog.Title>같이 갈 축제 정하기</Dialog.Title>
+            <Dialog.Title>{t('room.eventSelectTitle')}</Dialog.Title>
             <Dialog.Description>
-              축제 이름으로 검색해 채팅방에 연결하세요. (GG-ROOM-004)
+              {t('room.eventSelectDesc')}
             </Dialog.Description>
           </Dialog.Header>
 
@@ -837,8 +852,8 @@ function EventSelectDialog({
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === 'Enter') void handleSearch(); }}
-                placeholder="축제 이름 입력"
-                aria-label="축제 이름 검색"
+                placeholder={t('room.eventSearch')}
+                aria-label={t('room.eventSearchAriaLabel')}
                 className="flex-1 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 py-2 text-[14px] focus:border-(--color-accent) focus:outline-none"
               />
               <ActionButton
@@ -848,14 +863,14 @@ function EventSelectDialog({
                 loading={searching}
                 disabled={searching || !query.trim()}
               >
-                검색
+                {t('room.searchBtn')}
               </ActionButton>
             </div>
 
             {/* 현재 선택된 축제 안내 */}
             {currentEventId && searchResults.length === 0 && (
               <p className="text-[12px] text-(--color-text-muted)">
-                현재 선택된 축제 ID: {currentEventId}
+                {t('room.currentEvent', { id: currentEventId })}
               </p>
             )}
 
@@ -883,7 +898,7 @@ function EventSelectDialog({
 
           <Dialog.Footer>
             <ActionButton variant="neutralOutline" size="medium" onClick={onClose} disabled={pending}>
-              닫기
+              {t('room.close')}
             </ActionButton>
           </Dialog.Footer>
         </Dialog.Content>
@@ -905,6 +920,7 @@ function AppointmentDialog({
   onClose: () => void;
   onProposed: (appt: AppointmentOut) => void;
 }) {
+  const { t } = useTranslation('chat');
   const [dateStr, setDateStr] = useState('');
   const [timeStr, setTimeStr] = useState('');
   const [eventName, setEventName] = useState('');
@@ -924,12 +940,12 @@ function AppointmentDialog({
 
   const handlePropose = async () => {
     if (!dateStr || !timeStr) {
-      setErr('날짜와 시간을 입력해 주세요.');
+      setErr(t('room.dateTimeRequired'));
       return;
     }
     const appointedAt = new Date(`${dateStr}T${timeStr}`);
     if (isNaN(appointedAt.getTime())) {
-      setErr('올바른 날짜/시간을 입력해 주세요.');
+      setErr(t('room.invalidDateTime'));
       return;
     }
     setPending(true);
@@ -941,7 +957,7 @@ function AppointmentDialog({
       });
       onProposed(appt);
     } catch {
-      setErr('약속을 제안하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      setErr(t('room.proposeFail'));
     } finally {
       setPending(false);
     }
@@ -958,7 +974,7 @@ function AppointmentDialog({
       });
       onClose();
     } catch {
-      setErr('투표하지 못했어요.');
+      setErr(t('room.voteFail'));
     } finally {
       setVotePending(false);
     }
@@ -966,12 +982,12 @@ function AppointmentDialog({
 
   const handleCounter = () => {
     if (!counterDateStr || !counterTimeStr) {
-      setErr('역제안할 날짜와 시간을 입력해 주세요.');
+      setErr(t('room.counterDateTimeRequired'));
       return;
     }
     const counterAt = new Date(`${counterDateStr}T${counterTimeStr}`);
     if (isNaN(counterAt.getTime())) {
-      setErr('올바른 날짜/시간을 입력해 주세요.');
+      setErr(t('room.invalidDateTime'));
       return;
     }
     void handleVote('counter', counterAt.toISOString());
@@ -983,10 +999,10 @@ function AppointmentDialog({
       <Dialog.Positioner>
         <Dialog.Content className="w-[360px] max-w-[92vw]">
           <Dialog.Header>
-            <Dialog.Title>같이 가자 — 약속 제안</Dialog.Title>
+            <Dialog.Title>{t('room.appointmentTitle')}</Dialog.Title>
             {canVote && (
               <Dialog.Description>
-                제안된 약속이 있어요. 동의하거나 역제안할 수 있어요.
+                {t('room.appointmentVoteDesc')}
               </Dialog.Description>
             )}
           </Dialog.Header>
@@ -995,7 +1011,7 @@ function AppointmentDialog({
             {/* 현재 약속 표시 + 투표 액션 */}
             {currentAppointment && canVote && (
               <div className="rounded-(--radius-md) bg-(--color-surface-alt) p-3">
-                <p className="text-[13px] font-medium">제안된 약속</p>
+                <p className="text-[13px] font-medium">{t('room.proposedAppointment')}</p>
                 <p className="mt-1 text-[14px]">
                   {currentAppointment.appointedAt
                     ? new Date(currentAppointment.appointedAt).toLocaleString('ko-KR')
@@ -1012,7 +1028,7 @@ function AppointmentDialog({
                     loading={votePending}
                     disabled={votePending}
                   >
-                    동의
+                    {t('room.voteYes')}
                   </ActionButton>
                   <ActionButton
                     variant="neutralOutline"
@@ -1020,7 +1036,7 @@ function AppointmentDialog({
                     onClick={() => { void handleVote('reject'); }}
                     disabled={votePending}
                   >
-                    거절
+                    {t('room.voteNo')}
                   </ActionButton>
                 </div>
               </div>
@@ -1029,14 +1045,14 @@ function AppointmentDialog({
             {/* 역제안 입력 폼 (GG-ROOM-016) — canVote 상태에서만 표시 */}
             {canVote && (
               <div className="rounded-(--radius-md) border border-(--color-border) p-3">
-                <p className="mb-2 text-[13px] font-medium text-(--color-text-muted)">역제안 날짜/시간</p>
+                <p className="mb-2 text-[13px] font-medium text-(--color-text-muted)">{t('room.counterProposalLabel')}</p>
                 <div className="flex gap-2">
                   <input
                     id="counter-date"
                     type="date"
                     value={counterDateStr}
                     onChange={(e) => setCounterDateStr(e.target.value)}
-                    aria-label="역제안 날짜"
+                    aria-label={t('room.counterDate')}
                     className="flex-1 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-2 py-1.5 text-[13px] focus:border-(--color-accent) focus:outline-none"
                   />
                   <input
@@ -1044,7 +1060,7 @@ function AppointmentDialog({
                     type="time"
                     value={counterTimeStr}
                     onChange={(e) => setCounterTimeStr(e.target.value)}
-                    aria-label="역제안 시간"
+                    aria-label={t('room.counterTime')}
                     className="w-[100px] rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-2 py-1.5 text-[13px] focus:border-(--color-accent) focus:outline-none"
                   />
                 </div>
@@ -1056,7 +1072,7 @@ function AppointmentDialog({
                   disabled={votePending || !counterDateStr || !counterTimeStr}
                   className="mt-2 w-full"
                 >
-                  역제안하기
+                  {t('room.counterPropose')}
                 </ActionButton>
               </div>
             )}
@@ -1065,7 +1081,7 @@ function AppointmentDialog({
             {!canVote && (
               <>
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="appt-date" className="text-[13px] font-medium">날짜</label>
+                  <label htmlFor="appt-date" className="text-[13px] font-medium">{t('room.dateLabel')}</label>
                   <input
                     id="appt-date"
                     type="date"
@@ -1075,7 +1091,7 @@ function AppointmentDialog({
                   />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="appt-time" className="text-[13px] font-medium">시간</label>
+                  <label htmlFor="appt-time" className="text-[13px] font-medium">{t('room.timeLabel')}</label>
                   <input
                     id="appt-time"
                     type="time"
@@ -1086,14 +1102,14 @@ function AppointmentDialog({
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="appt-event-name" className="text-[13px] font-medium">
-                    축제 이름 (선택)
+                    {t('room.eventNameLabel')}
                   </label>
                   <input
                     id="appt-event-name"
                     type="text"
                     value={eventName}
                     onChange={(e) => setEventName(e.target.value)}
-                    placeholder="예: 2026 서울 벚꽃 축제"
+                    placeholder={t('room.eventNamePlaceholder')}
                     className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 py-2 text-[14px] focus:border-(--color-accent) focus:outline-none"
                   />
                 </div>
@@ -1105,7 +1121,7 @@ function AppointmentDialog({
 
           <Dialog.Footer>
             <ActionButton variant="neutralOutline" size="medium" onClick={onClose} disabled={pending || votePending}>
-              닫기
+              {t('room.close')}
             </ActionButton>
             {!canVote && (
               <ActionButton
@@ -1115,7 +1131,7 @@ function AppointmentDialog({
                 loading={pending}
                 disabled={pending}
               >
-                약속 제안하기
+                {t('room.proposeAppointmentBtn')}
               </ActionButton>
             )}
           </Dialog.Footer>
@@ -1124,4 +1140,3 @@ function AppointmentDialog({
     </Dialog.Root>
   );
 }
-

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { SegmentedControl, SegmentedControlItem } from 'seed-design/ui/segmented-control';
@@ -94,6 +95,7 @@ const INIT: FormState = {
 };
 
 export function MateFormPage() {
+  const { t } = useTranslation('mate');
   const navigate = useNavigate();
   const [regions, setRegions] = useState<RegionItem[]>([]);
   const [form, setForm] = useState<FormState>(INIT);
@@ -127,12 +129,12 @@ export function MateFormPage() {
   }, []);
 
   const validate = (): string | null => {
-    if (!form.gender) return '성별을 선택해 주세요.';
-    if (form.ageRangeLower === null) return '연령대를 선택해 주세요.';
-    if (form.hasCar === null) return '자차 보유 여부를 선택해 주세요.';
-    if (!form.nationality) return '국적을 선택해 주세요.';
-    if (form.koreanOk === null) return '한국어 소통 가능 여부를 선택해 주세요.';
-    if (!form.consented) return '개인정보 수집·이용에 동의해 주세요.';
+    if (!form.gender) return t('form.selectGender');
+    if (form.ageRangeLower === null) return t('form.selectAgeRange');
+    if (form.hasCar === null) return t('form.selectHasCar');
+    if (!form.nationality) return t('form.selectNationality');
+    if (form.koreanOk === null) return t('form.selectKoreanOk');
+    if (!form.consented) return t('form.consentRequired');
     return null;
   };
 
@@ -165,10 +167,10 @@ export function MateFormPage() {
       setSuccessOpen(true);
     } catch (e) {
       const m = (e as Error).message;
-      if (m === 'UNAUTHENTICATED') setErr('로그인이 필요해요.');
-      else if (m === 'CONSENT_REQUIRED') setErr('개인정보 수집·이용에 동의해 주세요.');
-      else if (m.startsWith('VALIDATION:')) setErr('입력 값을 확인해 주세요.');
-      else setErr('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      if (m === 'UNAUTHENTICATED') setErr(t('form.loginRequired'));
+      else if (m === 'CONSENT_REQUIRED') setErr(t('form.consentRequired'));
+      else if (m.startsWith('VALIDATION:')) setErr(t('form.validationError'));
+      else setErr(t('form.saveError'));
     } finally {
       setPending(false);
     }
@@ -181,9 +183,9 @@ export function MateFormPage() {
         <div className="mx-auto w-full max-w-[640px] px-4 py-8">
           {/* 페이지 타이틀 */}
           <div className="mb-6">
-            <h1 className="text-(length:--text-h2) font-semibold">메이트 추천 받기</h1>
+            <h1 className="text-(length:--text-h2) font-semibold">{t('form.title')}</h1>
             <p className="mt-1 text-[13px] text-(--color-text-muted)">
-              나의 정보와 선호 조건을 입력하면 어울리는 메이트를 추천해 드려요.
+              {t('form.subtitle')}
             </p>
           </div>
 
@@ -194,25 +196,25 @@ export function MateFormPage() {
                 id="my-info-title"
                 className="mb-4 text-[15px] font-semibold text-(--color-text)"
               >
-                내 정보
+                {t('form.myInfo')}
               </h2>
               <div className="flex flex-col gap-5">
                 {/* 성별 */}
-                <FieldRow label="성별" required>
+                <FieldRow label={t('form.gender')} required>
                   <SegmentedControl
-                    aria-label="성별 선택"
+                    aria-label={t('form.genderAriaLabel')}
                     value={form.gender}
                     onValueChange={(v) => upd('gender', v as 'M' | 'F')}
                   >
-                    <SegmentedControlItem value="M">남성</SegmentedControlItem>
-                    <SegmentedControlItem value="F">여성</SegmentedControlItem>
+                    <SegmentedControlItem value="M">{t('form.male')}</SegmentedControlItem>
+                    <SegmentedControlItem value="F">{t('form.female')}</SegmentedControlItem>
                   </SegmentedControl>
                 </FieldRow>
 
                 {/* 연령대 */}
-                <FieldRow label="연령대" required>
+                <FieldRow label={t('form.ageRange')} required>
                   <SegmentedControl
-                    aria-label="연령대 선택"
+                    aria-label={t('form.ageRangeAriaLabel')}
                     value={form.ageRangeLower !== null ? String(form.ageRangeLower) : ''}
                     onValueChange={(v) => upd('ageRangeLower', Number(v) as AgeRange)}
                   >
@@ -225,15 +227,15 @@ export function MateFormPage() {
                 </FieldRow>
 
                 {/* 지역 (시/도) — GG-MATCH-004 */}
-                <FieldRow label="지역 (시/도)" htmlFor="field-region-id">
+                <FieldRow label={t('form.region')} htmlFor="field-region-id">
                   <select
                     id="field-region-id"
-                    aria-label="본인 지역 선택"
+                    aria-label={t('form.regionAriaLabel')}
                     value={form.regionId ?? ''}
                     onChange={(e) => upd('regionId', e.target.value || null)}
                     className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] text-(--color-text) focus:border-(--color-accent) focus:outline-none"
                   >
-                    <option value="">선택 안 함 (상관없음)</option>
+                    <option value="">{t('form.regionNone')}</option>
                     {sidoRegions.map((r) => (
                       <option key={r.regionId} value={r.regionId}>
                         {r.sido}
@@ -243,27 +245,27 @@ export function MateFormPage() {
                 </FieldRow>
 
                 {/* 자차 */}
-                <FieldRow label="자차 보유" required>
+                <FieldRow label={t('form.hasCar')} required>
                   <SegmentedControl
-                    aria-label="자차 보유 여부"
+                    aria-label={t('form.hasCarAriaLabel')}
                     value={form.hasCar === null ? '' : String(form.hasCar)}
                     onValueChange={(v) => upd('hasCar', v === 'true')}
                   >
-                    <SegmentedControlItem value="true">있음</SegmentedControlItem>
-                    <SegmentedControlItem value="false">없음</SegmentedControlItem>
+                    <SegmentedControlItem value="true">{t('form.hasCarYes')}</SegmentedControlItem>
+                    <SegmentedControlItem value="false">{t('form.hasCarNo')}</SegmentedControlItem>
                   </SegmentedControl>
                 </FieldRow>
 
                 {/* 국적 */}
-                <FieldRow label="국적" required htmlFor="field-nationality-id">
+                <FieldRow label={t('form.nationality')} required htmlFor="field-nationality-id">
                   <select
                     id="field-nationality-id"
-                    aria-label="국적 선택"
+                    aria-label={t('form.nationalityAriaLabel')}
                     value={form.nationality}
                     onChange={(e) => upd('nationality', e.target.value)}
                     className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] text-(--color-text) focus:border-(--color-accent) focus:outline-none"
                   >
-                    <option value="">선택해 주세요</option>
+                    <option value="">{t('form.nationalityPlaceholder')}</option>
                     {NATIONALITIES.map((n) => (
                       <option key={n} value={n}>
                         {n}
@@ -273,14 +275,14 @@ export function MateFormPage() {
                 </FieldRow>
 
                 {/* 한국어 소통 */}
-                <FieldRow label="한국어 소통" required>
+                <FieldRow label={t('form.koreanOk')} required>
                   <SegmentedControl
-                    aria-label="한국어 소통 가능 여부"
+                    aria-label={t('form.koreanOkAriaLabel')}
                     value={form.koreanOk === null ? '' : String(form.koreanOk)}
                     onValueChange={(v) => upd('koreanOk', v === 'true')}
                   >
-                    <SegmentedControlItem value="true">가능</SegmentedControlItem>
-                    <SegmentedControlItem value="false">불가</SegmentedControlItem>
+                    <SegmentedControlItem value="true">{t('form.koreanOkYes')}</SegmentedControlItem>
+                    <SegmentedControlItem value="false">{t('form.koreanOkNo')}</SegmentedControlItem>
                   </SegmentedControl>
                 </FieldRow>
               </div>
@@ -292,36 +294,38 @@ export function MateFormPage() {
                 id="pref-title"
                 className="mb-1 text-[15px] font-semibold text-(--color-text)"
               >
-                선호 조건
+                {t('form.prefConditions')}
               </h2>
               <p className="mb-4 text-[12px] text-(--color-text-muted)">
-                "상관없음" 체크 시 해당 조건을 무시하고 매칭합니다.
+                {t('form.prefNote')}
               </p>
               <div className="flex flex-col gap-5">
                 {/* 선호 성별 */}
                 <PrefRow
-                  label="선호 성별"
+                  label={t('form.prefGender')}
                   dontCare={form.prefGenderDontCare}
+                  dontCareLabel={t('form.dontCare')}
                   onDontCareChange={(v) => upd('prefGenderDontCare', v)}
                 >
                   <SegmentedControl
-                    aria-label="선호 성별 선택"
+                    aria-label={t('form.prefGenderAriaLabel')}
                     value={form.prefGender}
                     onValueChange={(v) => upd('prefGender', v as 'M' | 'F')}
                   >
-                    <SegmentedControlItem value="M">남성</SegmentedControlItem>
-                    <SegmentedControlItem value="F">여성</SegmentedControlItem>
+                    <SegmentedControlItem value="M">{t('form.male')}</SegmentedControlItem>
+                    <SegmentedControlItem value="F">{t('form.female')}</SegmentedControlItem>
                   </SegmentedControl>
                 </PrefRow>
 
                 {/* 선호 연령대 */}
                 <PrefRow
-                  label="선호 연령대"
+                  label={t('form.prefAgeRange')}
                   dontCare={form.prefAgeDontCare}
+                  dontCareLabel={t('form.dontCare')}
                   onDontCareChange={(v) => upd('prefAgeDontCare', v)}
                 >
                   <SegmentedControl
-                    aria-label="선호 연령대 선택"
+                    aria-label={t('form.prefAgeRangeAriaLabel')}
                     value={form.prefAgeLower !== null ? String(form.prefAgeLower) : ''}
                     onValueChange={(v) => upd('prefAgeLower', Number(v) as AgeRange)}
                   >
@@ -335,20 +339,21 @@ export function MateFormPage() {
 
                 {/* 선호 지역 (시/도) — GG-MATCH-005 */}
                 <PrefRow
-                  label="선호 지역"
+                  label={t('form.prefRegion')}
                   dontCare={form.prefRegionDontCare}
+                  dontCareLabel={t('form.dontCare')}
                   onDontCareChange={(v) => upd('prefRegionDontCare', v)}
                   htmlFor="field-pref-region-id"
                 >
                   <select
                     id="field-pref-region-id"
-                    aria-label="선호 지역 선택"
+                    aria-label={t('form.prefRegionAriaLabel')}
                     value={form.prefRegionId ?? ''}
                     onChange={(e) => upd('prefRegionId', e.target.value || null)}
                     disabled={form.prefRegionDontCare}
                     className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] text-(--color-text) focus:border-(--color-accent) focus:outline-none disabled:opacity-40"
                   >
-                    <option value="">선택해 주세요</option>
+                    <option value="">{t('form.nationalityPlaceholder')}</option>
                     {sidoRegions.map((r) => (
                       <option key={r.regionId} value={r.regionId}>
                         {r.sido}
@@ -359,36 +364,38 @@ export function MateFormPage() {
 
                 {/* 선호 자차 */}
                 <PrefRow
-                  label="자차 보유 선호"
+                  label={t('form.prefHasCar')}
                   dontCare={form.prefHasCarDontCare}
+                  dontCareLabel={t('form.dontCare')}
                   onDontCareChange={(v) => upd('prefHasCarDontCare', v)}
                 >
                   <SegmentedControl
-                    aria-label="자차 보유 선호 여부"
+                    aria-label={t('form.prefHasCarAriaLabel')}
                     value={form.prefHasCar === null ? '' : String(form.prefHasCar)}
                     onValueChange={(v) => upd('prefHasCar', v === 'true')}
                   >
-                    <SegmentedControlItem value="true">있으면 좋음</SegmentedControlItem>
-                    <SegmentedControlItem value="false">없어도 됨</SegmentedControlItem>
+                    <SegmentedControlItem value="true">{t('form.prefHasCarYes')}</SegmentedControlItem>
+                    <SegmentedControlItem value="false">{t('form.prefHasCarNo')}</SegmentedControlItem>
                   </SegmentedControl>
                 </PrefRow>
 
                 {/* 선호 국적 */}
                 <PrefRow
-                  label="선호 국적"
+                  label={t('form.prefNationality')}
                   dontCare={form.prefNationalityDontCare}
+                  dontCareLabel={t('form.dontCare')}
                   onDontCareChange={(v) => upd('prefNationalityDontCare', v)}
                   htmlFor="field-pref-nationality-id"
                 >
                   <select
                     id="field-pref-nationality-id"
-                    aria-label="선호 국적 선택"
+                    aria-label={t('form.prefNationalityAriaLabel')}
                     value={form.prefNationality}
                     onChange={(e) => upd('prefNationality', e.target.value)}
                     disabled={form.prefNationalityDontCare}
                     className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] text-(--color-text) focus:border-(--color-accent) focus:outline-none disabled:opacity-40"
                   >
-                    <option value="">선택해 주세요</option>
+                    <option value="">{t('form.nationalityPlaceholder')}</option>
                     {NATIONALITIES.map((n) => (
                       <option key={n} value={n}>
                         {n}
@@ -399,17 +406,18 @@ export function MateFormPage() {
 
                 {/* 선호 한국어 소통 */}
                 <PrefRow
-                  label="한국어 소통 선호"
+                  label={t('form.prefKoreanOk')}
                   dontCare={form.prefKoreanOkDontCare}
+                  dontCareLabel={t('form.dontCare')}
                   onDontCareChange={(v) => upd('prefKoreanOkDontCare', v)}
                 >
                   <SegmentedControl
-                    aria-label="한국어 소통 선호 여부"
+                    aria-label={t('form.prefKoreanOkAriaLabel')}
                     value={form.prefKoreanOk === null ? '' : String(form.prefKoreanOk)}
                     onValueChange={(v) => upd('prefKoreanOk', v === 'true')}
                   >
-                    <SegmentedControlItem value="true">가능해야 함</SegmentedControlItem>
-                    <SegmentedControlItem value="false">불가도 됨</SegmentedControlItem>
+                    <SegmentedControlItem value="true">{t('form.prefKoreanOkYes')}</SegmentedControlItem>
+                    <SegmentedControlItem value="false">{t('form.prefKoreanOkNo')}</SegmentedControlItem>
                   </SegmentedControl>
                 </PrefRow>
               </div>
@@ -421,18 +429,18 @@ export function MateFormPage() {
                 id="match-options-title"
                 className="mb-4 text-[15px] font-semibold text-(--color-text)"
               >
-                매칭 옵션
+                {t('form.matchOptions')}
               </h2>
               <div className="flex flex-col gap-3">
                 <Checkbox
                   checked={form.autoRecommend}
                   onCheckedChange={(v) => upd('autoRecommend', v)}
-                  label="자동 추천 활성화 (추천 목록에 내 프로필이 노출됩니다)"
+                  label={t('form.autoRecommend')}
                 />
                 <Checkbox
                   checked={form.groupApply}
                   onCheckedChange={(v) => upd('groupApply', v)}
-                  label="그룹 신청 허용 (2~4인 메이트 그룹도 추천받기)"
+                  label={t('form.groupApply')}
                 />
               </div>
             </section>
@@ -463,7 +471,7 @@ export function MateFormPage() {
                 disabled={pending}
                 className="flex-1"
               >
-                다시 입력
+                {t('form.reset')}
               </ActionButton>
               {/* 적용 — 미동의 시 disabled (GG-MATCH-010) */}
               <ActionButton
@@ -474,7 +482,7 @@ export function MateFormPage() {
                 disabled={pending || !form.consented}
                 className="flex-1"
               >
-                적용하기
+                {t('form.submit')}
               </ActionButton>
             </div>
           </div>
@@ -495,11 +503,11 @@ export function MateFormPage() {
         <Dialog.Positioner>
           <Dialog.Content className="w-[360px] max-w-[92vw]">
             <Dialog.Header>
-              <Dialog.Title>메이트 매칭 등록 완료</Dialog.Title>
+              <Dialog.Title>{t('form.successTitle')}</Dialog.Title>
             </Dialog.Header>
             <div className="px-5 pb-2 text-[14px] text-(--color-text-muted)">
               <p>
-                정보가 저장됐어요. 이제 커뮤니티에서 추천 메이트를 확인해 보세요!
+                {t('form.successBody')}
               </p>
             </div>
             <Dialog.Footer>
@@ -511,7 +519,7 @@ export function MateFormPage() {
                   void navigate('/community');
                 }}
               >
-                커뮤니티 보기
+                {t('form.goToCommunity')}
               </ActionButton>
             </Dialog.Footer>
           </Dialog.Content>
@@ -551,12 +559,14 @@ function FieldRow({
 function PrefRow({
   label,
   dontCare,
+  dontCareLabel,
   onDontCareChange,
   htmlFor,
   children,
 }: {
   label: string;
   dontCare: boolean;
+  dontCareLabel: string;
   onDontCareChange: (v: boolean) => void;
   /** Pass the id of an associated native control (e.g. <select>) to link the visible label
    *  text via htmlFor. Not needed for SegmentedControl, which carries its own aria-label. */
@@ -579,7 +589,7 @@ function PrefRow({
         <Checkbox
           checked={dontCare}
           onCheckedChange={onDontCareChange}
-          label="상관없음"
+          label={dontCareLabel}
         />
       </div>
       <div

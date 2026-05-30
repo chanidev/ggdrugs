@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { Avatar } from 'seed-design/ui/avatar';
@@ -16,6 +17,7 @@ import { getRecommendations, type RecommendationsResponse, type RecommendationIt
  * 슬라이스3~5 placeholder: 채팅중·약속·사용후 상태는 추후 구현 예정.
  */
 export function MateRecommendationsPage() {
+  const { t } = useTranslation('mate');
   const [data, setData] = useState<RecommendationsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +35,12 @@ export function MateRecommendationsPage() {
       })
       .catch(() => {
         if (mounted) {
-          setError('추천 목록을 불러오지 못했어요.');
+          setError(t('reco.loadError'));
           setLoading(false);
         }
       });
     return () => { mounted = false; };
-  }, []);
+  }, [t]);
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-(--color-bg) text-(--color-text)">
@@ -46,13 +48,13 @@ export function MateRecommendationsPage() {
       <div className="flex-1 overflow-y-auto">
         <div className="mx-auto w-full max-w-[640px] px-4 py-8">
           <div className="mb-6">
-            <h1 className="text-(length:--text-h2) font-semibold">메이트 추천</h1>
+            <h1 className="text-(length:--text-h2) font-semibold">{t('reco.title')}</h1>
             <p className="mt-1 text-[13px] text-(--color-text-muted)">
-              매칭 조건에 맞는 메이트를 추천해 드려요.
+              {t('reco.subtitle')}
             </p>
           </div>
 
-          {loading && <LoadingSkeleton />}
+          {loading && <LoadingSkeleton ariaLabel={t('reco.loadingAriaLabel')} />}
 
           {!loading && error && (
             <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-8 text-center">
@@ -63,7 +65,7 @@ export function MateRecommendationsPage() {
                 onClick={() => window.location.reload()}
                 className="mt-4"
               >
-                다시 시도
+                {t('reco.retry')}
               </ActionButton>
             </div>
           )}
@@ -83,6 +85,7 @@ export function MateRecommendationsPage() {
 // ── 블라인드 상태 (GG-COMM-007/008) ──
 
 function BlindState() {
+  const { t } = useTranslation('mate');
   return (
     <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
       {/* 블라인드 placeholder 카드 3장 */}
@@ -98,13 +101,13 @@ function BlindState() {
         ))}
       </div>
       <h2 className="mb-2 text-[17px] font-semibold">
-        메이트 정보를 입력하면 추천 목록이 보여요
+        {t('reco.blindTitle')}
       </h2>
       <p className="mb-6 text-[13px] text-(--color-text-muted)">
-        나의 정보와 선호 조건을 입력하고 어울리는 메이트를 찾아보세요.
+        {t('reco.blindSubtitle')}
       </p>
       <ActionButton variant="brandSolid" size="medium" asChild>
-        <Link to="/mate/form">메이트 추천 받기</Link>
+        <Link to="/mate/form">{t('reco.blindCta')}</Link>
       </ActionButton>
     </div>
   );
@@ -113,17 +116,18 @@ function BlindState() {
 // ── 추천 카드 목록 ──
 
 function RecoList({ items }: { items: RecommendationItem[] }) {
+  const { t } = useTranslation('mate');
   if (items.length === 0) {
     return (
       <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
         <p className="text-[14px] text-(--color-text-muted)">
-          현재 매칭 가능한 메이트가 없어요.
+          {t('reco.noMatch')}
         </p>
         <p className="mt-1 text-[13px] text-(--color-text-muted)">
-          조건이나 지역을 조정해 보세요.
+          {t('reco.noMatchSub')}
         </p>
         <ActionButton variant="neutralOutline" size="small" asChild className="mt-4">
-          <Link to="/mate/form">조건 수정하기</Link>
+          <Link to="/mate/form">{t('reco.adjustConditions')}</Link>
         </ActionButton>
       </div>
     );
@@ -140,6 +144,7 @@ function RecoList({ items }: { items: RecommendationItem[] }) {
 }
 
 function RecoCard({ item }: { item: RecommendationItem }) {
+  const { t } = useTranslation('mate');
   const navigate = useNavigate();
   return (
     <div className="flex items-center gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-4 py-3">
@@ -155,7 +160,7 @@ function RecoCard({ item }: { item: RecommendationItem }) {
           {item.nickname}
         </p>
         <p className="text-[12px] text-(--color-text-muted)">
-          메이트지수{' '}
+          {t('reco.mateScore')}{' '}
           <span className="font-semibold text-(--color-accent)">{item.mateIndex}</span>
         </p>
       </div>
@@ -168,9 +173,9 @@ function RecoCard({ item }: { item: RecommendationItem }) {
             `/chat/request?to=${encodeURIComponent(item.userId)}&nickname=${encodeURIComponent(item.nickname)}`,
           );
         }}
-        aria-label={`${item.nickname}에게 채팅 신청`}
+        aria-label={t('reco.chatRequestAriaLabel', { nickname: item.nickname })}
       >
-        채팅 신청
+        {t('reco.chatRequest')}
       </ActionButton>
     </div>
   );
@@ -178,9 +183,9 @@ function RecoCard({ item }: { item: RecommendationItem }) {
 
 // ── 로딩 스켈레톤 ──
 
-function LoadingSkeleton() {
+function LoadingSkeleton({ ariaLabel }: { ariaLabel: string }) {
   return (
-    <div className="flex flex-col gap-3" aria-busy="true" aria-label="추천 목록 로딩 중">
+    <div className="flex flex-col gap-3" aria-busy="true" aria-label={ariaLabel}>
       {[1, 2, 3].map((i) => (
         <div
           key={i}

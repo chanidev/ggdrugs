@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { PosterPickerField } from '../components/uploader/PosterPickerField';
@@ -8,6 +9,11 @@ import {
   DocumentsPickerField,
   type StagedDoc,
 } from '../components/uploader/DocumentsPickerField';
+import {
+  Field,
+  EVENT_CATEGORY_CODES,
+  EVENT_COMPANION_CODES,
+} from '../components/uploader/EventFormFields';
 import { useCurrentUser } from '../lib/auth-context';
 import {
   createUploaderEvent,
@@ -32,23 +38,7 @@ import { uploadDocuments, uploadPoster } from '../lib/uploads';
  * 현재는 posterImageUrl (외부 URL 입력) 만 받음.
  */
 
-const CATEGORY_OPTIONS: { code: string; label: string }[] = [
-  { code: 'festival', label: '축제' },
-  { code: 'expo', label: '박람회' },
-  { code: 'symposium', label: '심포지움' },
-  { code: 'conference', label: '컨퍼런스' },
-  { code: 'exhibition', label: '전시' },
-  { code: 'performance', label: '공연' },
-  { code: 'education', label: '교육' },
-  { code: 'movie', label: '영화' },
-];
-
-const COMPANION_OPTIONS: { code: 'family' | 'friend' | 'couple' | 'solo'; label: string }[] = [
-  { code: 'family', label: '가족' },
-  { code: 'friend', label: '친구' },
-  { code: 'couple', label: '연인' },
-  { code: 'solo', label: '혼자' },
-];
+type CompanionCode = 'family' | 'friend' | 'couple' | 'solo';
 
 type FormState = {
   title: string;
@@ -61,9 +51,8 @@ type FormState = {
   operatingHours: string;
   targetAudience: string;
   admissionFee: string;
-  expectedCompanionPrimary: '' | 'family' | 'friend' | 'couple' | 'solo';
-  expectedCompanionSecondary: '' | 'family' | 'friend' | 'couple' | 'solo';
-  // posterImageUrl 은 file 업로드 후 presigned publicUrl 을 submit 직전 주입. form state 에 없음.
+  expectedCompanionPrimary: '' | CompanionCode;
+  expectedCompanionSecondary: '' | CompanionCode;
 };
 
 const INITIAL: FormState = {
@@ -86,6 +75,7 @@ const MIN_DOCS = 2;
 const MAX_DOCS = 5;
 
 export function UploaderNewEventPage() {
+  const { t } = useTranslation('uploader');
   const { user, loading: authLoading, refresh } = useCurrentUser();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<MyUploaderProfile | null>(null);
@@ -166,7 +156,7 @@ export function UploaderNewEventPage() {
       try {
         posterUrl = await uploadPoster(posterFile);
       } catch (err) {
-        setError(err instanceof Error ? `포스터 업로드 실패: ${err.message}` : '포스터 업로드 실패');
+        setError(err instanceof Error ? `${t('form.posterUploadFail')} ${err.message}` : t('form.posterUploadFail'));
         setSubmitting(false);
         setPosterUploading(false);
         return;
@@ -181,7 +171,7 @@ export function UploaderNewEventPage() {
     try {
       uploadedDocs = await uploadDocuments(docs.map((d) => d.file));
     } catch (err) {
-      setError(err instanceof Error ? `서류 업로드 실패: ${err.message}` : '서류 업로드 실패');
+      setError(err instanceof Error ? `${t('form.docUploadFail')} ${err.message}` : t('form.docUploadFail'));
       setSubmitting(false);
       setDocsUploading(false);
       return;
@@ -227,39 +217,39 @@ export function UploaderNewEventPage() {
             <span aria-hidden className="inline-block rotate-180">
               <Icon name="arrow" size={14} />
             </span>
-            업로더 콘솔로
+            {t('page.uploaderConsoleBackLink')}
           </Link>
         </div>
 
         <header className="mb-6">
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            Uploader · A_602
+            {t('page.newUploadSubtitle')}
           </p>
-          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">새 이벤트 업로드</h1>
+          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">{t('page.newUploadTitle')}</h1>
           <p className="m-0 mt-2 text-[13px] text-(--color-text-muted)">
-            등록 후 관리자 승인을 거쳐 공개됩니다.
+            {t('page.newUploadDesc')}
           </p>
         </header>
 
         {authLoading || profileLoading ? (
-          <Box>불러오는 중…</Box>
+          <Box>{t('page.loading')}</Box>
         ) : !user ? (
-          <Box>로그인이 필요해요.</Box>
+          <Box>{t('page.loginRequired')}</Box>
         ) : !profile ? (
           <Box>
-            먼저 <Link to="/uploader" className="underline">업로더 역할 신청</Link> 을 완료해 주세요.
+            먼저 <Link to="/uploader" className="underline">{t('page.apply')}</Link> 을 완료해 주세요.
           </Box>
         ) : profile.approvalStatus !== 'approved' ? (
           <Box>
-            업로더 승인이 완료되지 않았어요. <Link to="/uploader" className="underline">업로더 콘솔</Link> 에서 상태를 확인해 주세요.
+            업로더 승인이 완료되지 않았어요. <Link to="/uploader" className="underline">{t('page.title')}</Link> 에서 상태를 확인해 주세요.
           </Box>
         ) : user.activeRole !== 'uploader' ? (
           <section className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
             <h2 className="m-0 text-[16px] font-semibold tracking-[-0.01em]">
-              업로더 역할로 전환이 필요해요
+              {t('page.roleSwitch')}
             </h2>
             <p className="mt-1 text-[13px] text-(--color-text-muted)">
-              실수 업로드를 막기 위해 일반 탐색 중에는 업로드 폼이 비활성화돼요. 전환 후 이어서 작성할 수 있어요.
+              {t('page.roleSwitchDesc')}
             </p>
             {error && (
               <div className="mt-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
@@ -273,7 +263,7 @@ export function UploaderNewEventPage() {
                 disabled={toggling}
                 className="inline-flex h-10 items-center rounded-(--radius-md) bg-(--color-accent) px-4 text-[14px] font-medium text-white hover:bg-(--color-accent-hover) disabled:opacity-40"
               >
-                {toggling ? '…' : 'uploader 역할로 전환'}
+                {toggling ? t('page.switching') : t('page.switchToUploader')}
               </button>
             </div>
           </section>
@@ -282,31 +272,31 @@ export function UploaderNewEventPage() {
             onSubmit={submit}
             className="flex flex-col gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6"
           >
-            <Field label="제목" required>
+            <Field label={t('form.title')} required>
               <input
                 type="text"
                 value={form.title}
                 onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                 maxLength={200}
-                placeholder="예: 2026 한강 여름 페스티벌"
+                placeholder={t('form.titleNewPlaceholder')}
                 className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
               />
             </Field>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Field label="분류" required>
+              <Field label={t('form.category')} required>
                 <select
                   value={form.categoryCode}
                   onChange={(e) => setForm((f) => ({ ...f, categoryCode: e.target.value }))}
                   className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
                 >
-                  {CATEGORY_OPTIONS.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.label}
+                  {EVENT_CATEGORY_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {t(`category.${code}`)}
                     </option>
                   ))}
                 </select>
               </Field>
-              <Field label="지역" required>
+              <Field label={t('form.region')} required>
                 <div className="flex flex-col gap-2">
                   <select
                     value={selectedSido}
@@ -316,7 +306,7 @@ export function UploaderNewEventPage() {
                     }}
                     className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
                   >
-                    <option value="">시·도 선택</option>
+                    <option value="">{t('form.sidoPlaceholder')}</option>
                     {sidoList.map((sido) => (
                       <option key={sido} value={sido}>
                         {sido}
@@ -329,7 +319,7 @@ export function UploaderNewEventPage() {
                     disabled={selectedSido === ''}
                     className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    <option value="">시·군·구 선택</option>
+                    <option value="">{t('form.sigunguPlaceholder')}</option>
                     {sigunguOptions.map((r) => (
                       <option key={r.regionId} value={r.regionId}>
                         {r.sigungu}
@@ -340,7 +330,7 @@ export function UploaderNewEventPage() {
               </Field>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Field label="시작일" required>
+              <Field label={t('form.startDate')} required>
                 <input
                   type="date"
                   value={form.startDate}
@@ -348,7 +338,7 @@ export function UploaderNewEventPage() {
                   className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
                 />
               </Field>
-              <Field label="종료일" required>
+              <Field label={t('form.endDate')} required>
                 <input
                   type="date"
                   value={form.endDate}
@@ -357,28 +347,28 @@ export function UploaderNewEventPage() {
                 />
               </Field>
             </div>
-            <Field label="상세 주소">
+            <Field label={t('form.addressDetail')}>
               <input
                 type="text"
                 value={form.addressDetail}
                 onChange={(e) => setForm((f) => ({ ...f, addressDetail: e.target.value }))}
                 maxLength={255}
-                placeholder="예: 서울 영등포구 여의도동 한강공원"
+                placeholder={t('form.addressDetailPlaceholder')}
                 className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
               />
             </Field>
-            <Field label="설명" hint="최대 10,000자. 사실 기반 담백하게">
+            <Field label={t('form.description')} hint={t('form.descriptionHint')}>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 maxLength={10_000}
                 rows={6}
-                placeholder="이벤트 개요, 프로그램, 대상 등"
+                placeholder={t('form.descriptionPlaceholder')}
                 className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] outline-none focus:border-(--color-accent)"
               />
             </Field>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <Field label="운영 시간" hint="예: 매일 10:00~22:00">
+              <Field label={t('form.operatingHours')} hint={t('form.operatingHoursHint')}>
                 <input
                   type="text"
                   value={form.operatingHours}
@@ -387,7 +377,7 @@ export function UploaderNewEventPage() {
                   className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
                 />
               </Field>
-              <Field label="대상 관객" hint="예: 가족, 20대">
+              <Field label={t('form.targetAudience')} hint={t('form.targetAudienceHint')}>
                 <input
                   type="text"
                   value={form.targetAudience}
@@ -396,7 +386,7 @@ export function UploaderNewEventPage() {
                   className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
                 />
               </Field>
-              <Field label="입장료" hint="예: 무료, 1만원">
+              <Field label={t('form.admissionFee')} hint={t('form.admissionFeeHint')}>
                 <input
                   type="text"
                   value={form.admissionFee}
@@ -407,7 +397,7 @@ export function UploaderNewEventPage() {
               </Field>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <Field label="예상 인원구성 (주)" hint="가장 많을 것으로 예상되는 관객">
+              <Field label={t('form.companionPrimary')} hint={t('form.companionPrimaryHint')}>
                 <select
                   value={form.expectedCompanionPrimary}
                   onChange={(e) =>
@@ -419,15 +409,15 @@ export function UploaderNewEventPage() {
                   }
                   className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
                 >
-                  <option value="">선택 안 함</option>
-                  {COMPANION_OPTIONS.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.label}
+                  <option value="">{t('form.companionNone')}</option>
+                  {EVENT_COMPANION_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {t(`companion.${code}`)}
                     </option>
                   ))}
                 </select>
               </Field>
-              <Field label="예상 인원구성 (보조)">
+              <Field label={t('form.companionSecondary')}>
                 <select
                   value={form.expectedCompanionSecondary}
                   onChange={(e) =>
@@ -439,18 +429,18 @@ export function UploaderNewEventPage() {
                   }
                   className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
                 >
-                  <option value="">선택 안 함</option>
-                  {COMPANION_OPTIONS.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.label}
+                  <option value="">{t('form.companionNone')}</option>
+                  {EVENT_COMPANION_CODES.map((code) => (
+                    <option key={code} value={code}>
+                      {t(`companion.${code}`)}
                     </option>
                   ))}
                 </select>
               </Field>
             </div>
             <Field
-              label={`서류 (${MIN_DOCS}~${MAX_DOCS}개 필수)`}
-              hint="사업자등록증 · 상위기관 승인서 · 허가서 · 기타 신분 등. JPEG · PNG · PDF, 파일당 5MB"
+              label={t('form.documentRange', { min: MIN_DOCS, max: MAX_DOCS })}
+              hint={t('form.documentRangeHint')}
             >
               <DocumentsPickerField
                 files={docs}
@@ -462,7 +452,7 @@ export function UploaderNewEventPage() {
               />
             </Field>
 
-            <Field label="포스터 이미지" hint="JPEG · PNG · WebP, 최대 5MB">
+            <Field label={t('form.poster')} hint={t('form.posterHint')}>
               <PosterPickerField
                 file={posterFile}
                 onChange={setPosterFile}
@@ -472,27 +462,27 @@ export function UploaderNewEventPage() {
 
             {error && (
               <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-                업로드 실패: {error}
+                {t('form.submitError')} {error}
               </div>
             )}
 
             <div className="flex items-center justify-between border-t border-(--color-border) pt-4">
               <p className="m-0 text-[12px] text-(--color-text-subtle)">
-                등록 후 관리자 승인을 거쳐 공개됩니다.
+                {t('form.pendingNote')}
               </p>
               <div className="flex gap-2">
                 <Link
                   to="/uploader"
                   className="inline-flex h-10 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-4 text-[13px] font-medium text-(--color-text-muted) hover:text-(--color-text)"
                 >
-                  취소
+                  {t('form.cancel')}
                 </Link>
                 <button
                   type="submit"
                   disabled={!canSubmit || submitting}
                   className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-5 text-[14px] font-medium text-white hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  {submitting ? '제출 중…' : '승인 대기로 제출'}
+                  {submitting ? t('form.submitting') : t('form.submit')}
                 </button>
               </div>
             </div>
@@ -508,28 +498,5 @@ function Box({ children }: { children: React.ReactNode }) {
     <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center text-[14px] text-(--color-text-muted)">
       {children}
     </div>
-  );
-}
-
-function Field({
-  label,
-  required,
-  hint,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-1.5">
-      <span className="text-[13px] font-semibold text-(--color-text)">
-        {label}
-        {required && <span className="ml-0.5 text-(--color-accent)">*</span>}
-      </span>
-      {children}
-      {hint && <span className="text-[12px] text-(--color-text-subtle)">{hint}</span>}
-    </label>
   );
 }
