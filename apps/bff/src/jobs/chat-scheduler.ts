@@ -452,11 +452,15 @@ export async function handleInactiveMembers(now: Date = new Date()): Promise<Ina
 // 조건: appointment.status='confirmed' AND appointedAt <= now (약속일 경과)
 // 동작:
 //   1. 해당 chatRoom의 active 멤버 전원에게 notificationType='mate_eval' 알림 생성
-//      — dedup: 동일 (appointmentId, userId) 기존 mate_eval Notification 존재 시 skip
+//      — dedup: uq_notif_mate_eval_per_user_appt partial unique index (DB-level 보장)
+//              + findFirst 1차 방어(불필요한 INSERT 절감) + P2002 catch 최종 방어
 //   2. appointment_complete +10 크레딧 적립
-//      — dedup: credit_ledger에 동일 (appointmentId, userId, 'appointment_complete') 행 존재 시 skip
+//      — dedup: uq_credit_appt_complete_user partial unique index (DB-level 보장)
+//              + findFirst 1차 방어 + P2002 catch 최종 방어
 //
-// [스키마] appointment_complete action은 credit_ledger에 정의됨 (Slice 5 구현).
+// [성능] 스캔 최적화: 모든 active 멤버가 이미 양쪽(알림+크레딧)을 보유한 약속은 건너뜀.
+//   subquery: credit_ledgers에 모든 멤버의 appointment_complete 행이 존재하는 약속 → 제외.
+//   (알림은 크레딧보다 먼저 생성되므로, 크레딧 완전 보유 = 처리 완료 약속의 충분 조건.)
 // ============================================================
 
 const MATE_EVAL_NOTIFY_INTERVAL = 10 * 60 * 1000;  // 10분
@@ -471,34 +475,84 @@ export interface NotifyMateEvalResult {
 /**
  * notifyMateEval — confirmed 약속 appointedAt 경과 시 참가자 전원에게 mate_eval 알림 + appointment_complete 크레딧.
  *
- * @param now        기준 시각 (기본: 현재)
+ * @param now             기준 시각 (기본: 현재)
  * @param appointmentIds  처리할 약속 ID 목록 (테스트 격리용 필터). 미지정 시 전체 DB 대상.
  *
- * [이슈review:important] dedup 신뢰 수준:
- *   - DB-level unique 제약 없음 — credit_ledgers 및 notifications 테이블에 현재
- *     관련 UNIQUE 제약이 존재하지 않는다. 아래 findFirst+create 패턴은 TOCTOU 경합이
- *     가능하며, 단일 프로세스 순차 실행에서만 안전하다.
- *   - 향후 uq_credit_appt_complete_user(credit_ledgers) 및
- *     notifications unique 제약 추가 시 upsert/skipDuplicates 패턴으로 교체 권장.
+ * dedup 신뢰 수준:
+ *   - notifications: uq_notif_mate_eval_per_user_appt partial unique index (migration SQL).
+ *     findFirst(1차 방어) + P2002 catch(최종 방어) = TOCTOU-safe.
+ *   - credit_ledgers: uq_credit_appt_complete_user partial unique index (migration SQL).
+ *     동일 패턴 적용.
+ *
+ * 스캔 범위 최적화:
+ *   - 모든 active 멤버의 appointment_complete 크레딧이 이미 존재하는 약속(= 완전 처리됨)은
+ *     candidates 쿼리에서 NOT EXISTS 서브쿼리로 제외 → 시간이 지날수록 O(1)에 수렴.
+ *   - Prisma raw query가 필요 없도록 Prisma의 `none` relation filter 활용:
+ *     "active 멤버 중 appointment_complete 크레딧이 없는 멤버가 한 명도 없는 약속" 제외.
+ *     즉 "아직 처리 안 된 멤버가 한 명이라도 있는 약속"만 조회.
  */
 export async function notifyMateEval(
   now: Date = new Date(),
   appointmentIds?: bigint[],
 ): Promise<NotifyMateEvalResult> {
-  // confirmed 상태이고 appointedAt이 경과한 약속 조회
-  const dueAppointments = await prisma.appointment.findMany({
-    where: {
-      status: 'confirmed',
-      appointedAt: { lte: now, not: null },
-      ...(appointmentIds && appointmentIds.length > 0
-        ? { appointmentId: { in: appointmentIds } }
-        : {}),
-    },
-    select: {
-      appointmentId: true,
-      chatRoomId: true,
-    },
-  });
+  // confirmed 상태이고 appointedAt이 경과한 약속 중,
+  // [성능] active 멤버 전원의 appointment_complete 크레딧이 이미 존재하는 약속(= 완전 처리됨)을 제외.
+  // NOT EXISTS 서브쿼리: "active 멤버 중 appointment_complete 크레딧이 없는 멤버가 한 명이라도 있는 약속"만 반환.
+  // 시간이 지날수록 처리 완료 약속이 늘어도 O(미처리 약속)에 수렴 — unbounded scan 해소.
+  // Prisma $queryRaw 태그드 템플릿 리터럴: PostgreSQL $1,$2... 파라미터 바인딩 자동 처리.
+  type ApptRow = { appointment_id: bigint; chat_room_id: bigint };
+
+  const idList = appointmentIds && appointmentIds.length > 0 ? appointmentIds : null;
+
+  // PostgreSQL은 IN (${Prisma.join(...)}) 형태로 처리해야 함.
+  // idList 유무에 따라 두 개의 분기로 작성 — 조건 분기를 tagged template에서 직접 삽입 불가.
+  const rawRows: ApptRow[] = idList
+    ? await prisma.$queryRaw<ApptRow[]>`
+        SELECT a.appointment_id, a.chat_room_id
+        FROM appointments a
+        WHERE a.status = 'confirmed'
+          AND a.appointed_at IS NOT NULL
+          AND a.appointed_at <= ${now}
+          AND a.appointment_id IN (${Prisma.join(idList)})
+          AND EXISTS (
+            SELECT 1
+            FROM group_memberships gm
+            WHERE gm.chat_room_id = a.chat_room_id
+              AND gm.member_status = 'active'
+              AND NOT EXISTS (
+                SELECT 1
+                FROM credit_ledgers cl
+                WHERE cl.appointment_id = a.appointment_id
+                  AND cl.user_id = gm.user_id
+                  AND cl.action = 'appointment_complete'
+              )
+          )
+      `
+    : await prisma.$queryRaw<ApptRow[]>`
+        SELECT a.appointment_id, a.chat_room_id
+        FROM appointments a
+        WHERE a.status = 'confirmed'
+          AND a.appointed_at IS NOT NULL
+          AND a.appointed_at <= ${now}
+          AND EXISTS (
+            SELECT 1
+            FROM group_memberships gm
+            WHERE gm.chat_room_id = a.chat_room_id
+              AND gm.member_status = 'active'
+              AND NOT EXISTS (
+                SELECT 1
+                FROM credit_ledgers cl
+                WHERE cl.appointment_id = a.appointment_id
+                  AND cl.user_id = gm.user_id
+                  AND cl.action = 'appointment_complete'
+              )
+          )
+      `;
+
+  const dueAppointments = rawRows.map((r) => ({
+    appointmentId: r.appointment_id,
+    chatRoomId:    r.chat_room_id,
+  }));
 
   if (dueAppointments.length === 0) return { appointmentsProcessed: 0, notificationsCreated: 0, creditsCreated: 0 };
 
@@ -515,12 +569,12 @@ export async function notifyMateEval(
     if (members.length === 0) continue;
 
     for (const member of members) {
-      // ── 1. mate_eval 알림: findFirst+create 패턴 (DB-level dedup 없음)
-      // [알려진 한계] notifications 테이블에 (userId, notificationType, relatedEntityId, relatedEntityType)
-      // UNIQUE 제약이 현재 스키마에 존재하지 않는다. 따라서 스케줄러 재시작/동시 실행 시
-      // findFirst와 create 사이 TOCTOU 경합으로 중복 알림이 생성될 수 있다.
-      // DB-level unique constraint를 추가하기 전까지 이 코드는 단일 프로세스 순차 실행에서만 안전.
-      // [운영 메모] 향후 unique_notification_per_entity 제약 추가 시 upsert로 교체 권장.
+      // ── 1. mate_eval 알림 dedup:
+      // DB-level: uq_notif_mate_eval_per_user_appt partial unique index
+      //   UNIQUE ON notifications (user_id, related_entity_id)
+      //   WHERE notification_type = 'mate_eval' AND related_entity_type = 'appointment'
+      // findFirst: 불필요한 INSERT를 줄이는 1차 방어(성능). DB UNIQUE가 최종 방어선.
+      // P2002 catch: TOCTOU 경합(스케줄러 재시작·다중 프로세스)에서 발동 — 정상 dedup.
       const existingNotif = await prisma.notification.findFirst({
         where: {
           userId: member.userId,
@@ -532,27 +586,35 @@ export async function notifyMateEval(
       });
 
       if (!existingNotif) {
-        await prisma.notification.create({
-          data: {
-            userId: member.userId,
-            title: '약속 후 평가를 남겨주세요',
-            message: '함께한 메이트를 평가하고 크레딧을 받아보세요.',
-            scheduledAt: now,
-            isSent: true,
-            sentAt: now,
-            notificationType: 'mate_eval',
-            relatedEntityId: appt.appointmentId,
-            relatedEntityType: 'appointment',
-          },
-        });
-        notificationsCreated++;
+        try {
+          await prisma.notification.create({
+            data: {
+              userId: member.userId,
+              title: '약속 후 평가를 남겨주세요',
+              message: '함께한 메이트를 평가하고 크레딧을 받아보세요.',
+              scheduledAt: now,
+              isSent: true,
+              sentAt: now,
+              notificationType: 'mate_eval',
+              relatedEntityId: appt.appointmentId,
+              relatedEntityType: 'appointment',
+            },
+          });
+          notificationsCreated++;
+        } catch (e) {
+          // P2002: uq_notif_mate_eval_per_user_appt partial unique index 위반.
+          // TOCTOU 경합(스케줄러 재시작·다중 프로세스)에서 실제로 발동됨 — 정상 dedup.
+          if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) {
+            throw e;
+          }
+        }
       }
 
       // ── 2. appointment_complete 크레딧 dedup:
-      // migration uq_credit_appt_complete_user: UNIQUE INDEX ON credit_ledgers
-      //   (appointment_id, user_id) WHERE action = 'appointment_complete'
-      // → DB-level 중복 방지 보장. P2002 catch가 실제로 발동되어 TOCTOU 경합 방어.
-      // findFirst는 불필요한 INSERT를 줄이는 1차 방어선(성능). DB UNIQUE가 최종 방어선.
+      // DB-level: uq_credit_appt_complete_user partial unique index
+      //   UNIQUE ON credit_ledgers (appointment_id, user_id) WHERE action = 'appointment_complete'
+      // findFirst: 불필요한 INSERT를 줄이는 1차 방어(성능). DB UNIQUE가 최종 방어선.
+      // P2002 catch: TOCTOU 경합(스케줄러 재시작·다중 프로세스)에서 발동됨 — 정상 dedup.
       const existingCredit = await prisma.creditLedger.findFirst({
         where: {
           userId: member.userId,

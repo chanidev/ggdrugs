@@ -386,6 +386,110 @@ async function main() {
       return f;
     });
 
+    // ── CASE 13: [리뷰 low] appointment_complete dedup — 다중 메이트 평가 후 1회만 적립 검증 ──
+    // N=3 그룹에서 u1이 u2·u3 각각을 평가(mate_eval_complete 2행)한 뒤
+    // notifyMateEval을 실행해도 u1의 appointment_complete는 정확히 1행만 존재해야 한다.
+    // uq_credit_appt_complete_user partial unique index가 중복 삽입을 막는지 검증.
+    await check('scheduler.appointment_complete.no_double_count_for_multi_eval', async () => {
+      // 3인 그룹방 생성
+      const u3b = await prisma.user.findFirst({
+        where: { isDeleted: false, userId: { notIn: [u1.userId, u2.userId] } },
+        select: { userId: true, nickname: true, activeRole: true },
+      });
+      if (!u3b) return ['need 3+ users for CASE 13'];
+
+      const groupRoom13 = await prisma.chatRoom.create({
+        data: { roomType: 'group', status: 'active', maxMembers: 4 },
+        select: { chatRoomId: true },
+      });
+      await prisma.groupMembership.createMany({ data: [
+        { chatRoomId: groupRoom13.chatRoomId, userId: u1.userId, role: 'owner', memberStatus: 'active' },
+        { chatRoomId: groupRoom13.chatRoomId, userId: u2.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: groupRoom13.chatRoomId, userId: u3b.userId, role: 'member', memberStatus: 'active' },
+      ]});
+      const groupAppt13 = await prisma.appointment.create({
+        data: {
+          chatRoomId: groupRoom13.chatRoomId,
+          proposerUserId: u1.userId,
+          status: 'confirmed',
+          eventId: event.eventId,
+          appointedAt: new Date(Date.now() - 30 * 60 * 1000), // 과거
+          expiresAt: new Date(Date.now() + 36 * 3600 * 1000),
+        },
+        select: { appointmentId: true },
+      });
+      await prisma.mateIndex.upsert({
+        where: { userId: u3b.userId },
+        create: { userId: u3b.userId, indexValue: 50 },
+        update: {},
+      });
+
+      const f: string[] = [];
+
+      // u1 → u2 평가 (mate_eval_complete 1행)
+      const r1 = mockRes();
+      await submitEvaluation(
+        mockReq({ auth: auth1, params: { appointmentId: groupAppt13.appointmentId.toString() }, body: { ...BASE_EVAL_BODY, evaluatedUserId: u2.userId.toString() } }),
+        r1,
+      );
+      if (r1._c.status !== 201) f.push(`u1→u2 eval status ${r1._c.status} != 201`);
+
+      // u1 → u3 평가 (mate_eval_complete 2행, FestivalSurvey/Review skip)
+      const r2 = mockRes();
+      await submitEvaluation(
+        mockReq({ auth: auth1, params: { appointmentId: groupAppt13.appointmentId.toString() }, body: { ...BASE_EVAL_BODY, evaluatedUserId: u3b.userId.toString() } }),
+        r2,
+      );
+      if (r2._c.status !== 201) f.push(`u1→u3 eval status ${r2._c.status} != 201`);
+
+      // 이 시점: u1은 mate_eval_complete 2행, appointment_complete 0행
+      const evalCredits = await prisma.creditLedger.count({
+        where: { appointmentId: groupAppt13.appointmentId, userId: u1.userId, action: 'mate_eval_complete' },
+      });
+      if (evalCredits !== 2) f.push(`mate_eval_complete count ${evalCredits} != 2 before notifyMateEval`);
+
+      // notifyMateEval 실행 — u1·u2·u3 각 1행 appointment_complete 적립
+      await notifyMateEval(new Date(), [groupAppt13.appointmentId]);
+
+      // u1의 appointment_complete는 정확히 1행 (N=2 평가를 했어도 중복 없음)
+      const apptCredits1 = await prisma.creditLedger.count({
+        where: { appointmentId: groupAppt13.appointmentId, userId: u1.userId, action: 'appointment_complete' },
+      });
+      if (apptCredits1 !== 1) f.push(`u1 appointment_complete count ${apptCredits1} != 1 (dedup violated)`);
+
+      // u2, u3도 각 1행
+      const apptCredits2 = await prisma.creditLedger.count({
+        where: { appointmentId: groupAppt13.appointmentId, userId: u2.userId, action: 'appointment_complete' },
+      });
+      if (apptCredits2 !== 1) f.push(`u2 appointment_complete count ${apptCredits2} != 1`);
+
+      const apptCredits3 = await prisma.creditLedger.count({
+        where: { appointmentId: groupAppt13.appointmentId, userId: u3b.userId, action: 'appointment_complete' },
+      });
+      if (apptCredits3 !== 1) f.push(`u3 appointment_complete count ${apptCredits3} != 1`);
+
+      // 두 번째 notifyMateEval — 이미 처리됨(모든 크레딧 존재) → skip (성능 최적화 검증)
+      const result2 = await notifyMateEval(new Date(), [groupAppt13.appointmentId]);
+      // 성능 최적화: 모든 멤버가 크레딧 보유 → 약속 처리 수 = 0 (skip)
+      if (result2.appointmentsProcessed !== 0) {
+        f.push(`2nd run appointmentsProcessed ${result2.appointmentsProcessed} != 0 (expected fully-processed skip)`);
+      }
+
+      // 클린업
+      await prisma.notification.deleteMany({
+        where: { notificationType: 'mate_eval', relatedEntityId: groupAppt13.appointmentId, relatedEntityType: 'appointment' },
+      });
+      await prisma.creditLedger.deleteMany({ where: { appointmentId: groupAppt13.appointmentId } });
+      await prisma.festivalReview.deleteMany({ where: { appointmentId: groupAppt13.appointmentId } });
+      await prisma.festivalSurvey.deleteMany({ where: { appointmentId: groupAppt13.appointmentId } });
+      await prisma.mateEvaluation.deleteMany({ where: { appointmentId: groupAppt13.appointmentId } });
+      await prisma.appointment.delete({ where: { appointmentId: groupAppt13.appointmentId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: groupRoom13.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: groupRoom13.chatRoomId } });
+
+      return f;
+    });
+
     // ── CASE 12: targetMembership active 검증 — kicked 멤버는 평가 대상 불가 ──────
     await check('eval.target_member.kicked_rejected', async () => {
       const kickedRoom = await prisma.chatRoom.create({

@@ -62,7 +62,10 @@ CREATE TRIGGER trg_festival_reviews_updated_at
   BEFORE UPDATE ON festival_reviews
   FOR EACH ROW EXECUTE FUNCTION fn_set_updated_at();
 
--- action CHECK: appointment_complete = Slice 7+ placeholder (Slice 5 미구현)
+-- action CHECK:
+--   appointment_complete = 약속 완료 (스케줄러 notifyMateEval에서 적립, Slice 5 구현)
+--   mate_eval_complete   = 메이트 평가 작성 +10 (Slice 5 구현)
+--   review_complete      = 후기 작성 (Slice 7+ placeholder, Slice 5 미구현)
 CREATE TABLE credit_ledgers (
   ledger_id      BIGSERIAL PRIMARY KEY,
   user_id        BIGINT NOT NULL REFERENCES users(user_id),
@@ -79,3 +82,11 @@ CREATE INDEX idx_credit_ledger_user ON credit_ledgers (user_id, created_at DESC)
 CREATE UNIQUE INDEX uq_credit_appt_complete_user
   ON credit_ledgers (appointment_id, user_id)
   WHERE action = 'appointment_complete';
+
+-- [리뷰 medium] mate_eval 알림 DB-level dedup:
+-- TOCTOU(findFirst+create) 경합 방지를 위한 partial unique index.
+-- 스케줄러 재시작·다중 프로세스 환경에서도 동일 약속·사용자에 대한 중복 mate_eval 알림 불가.
+-- notifyMateEval 내 upsert({create:..., update:{}}) 패턴이 이 인덱스를 최종 방어선으로 사용.
+CREATE UNIQUE INDEX uq_notif_mate_eval_per_user_appt
+  ON notifications (user_id, related_entity_id)
+  WHERE notification_type = 'mate_eval' AND related_entity_type = 'appointment';
