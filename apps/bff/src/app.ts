@@ -87,6 +87,13 @@ import {
   getRecommendations,
 } from './routes/mate.js';
 import { updateMyProfile } from './routes/me.js';
+import {
+  sendOneToOneRequest,
+  sendGroupRequest,
+  acceptMatchRequest,
+  rejectMatchRequest,
+  listIncomingRequests,
+} from './routes/match-request.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -300,6 +307,34 @@ export function createApp(): Express {
   );
   // 경량 메이트지수 조회 (작성자 프로필 모달 — Task 6 연결 예정)
   app.get('/community/mate/index/:userId', (req, res, next) => getMateIndex(req, res).catch(next));
+
+  // A_803/A_804 1:1/그룹 신청 REST (Task 3 — GG-MATE-001~016)
+  // NOTE: /incoming 을 /:matchRequestId/* 보다 먼저 등록해야 충돌 없음.
+  app.get(
+    '/community/match/request/incoming',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listIncomingRequests(req, res).catch(next),
+  );
+  app.post(
+    '/community/match/request/1-to-1',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => sendOneToOneRequest(req, res).catch(next),
+  );
+  app.post(
+    '/community/match/request/group',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => sendGroupRequest(req, res).catch(next),
+  );
+  app.patch(
+    '/community/match/request/:matchRequestId/accept',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => acceptMatchRequest(req, res).catch(next),
+  );
+  app.patch(
+    '/community/match/request/:matchRequestId/reject',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => rejectMatchRequest(req, res).catch(next),
+  );
 
   app.post(
     '/chat',
