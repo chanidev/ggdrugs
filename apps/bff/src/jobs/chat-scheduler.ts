@@ -445,6 +445,119 @@ export async function handleInactiveMembers(now: Date = new Date()): Promise<Ina
   return { kicked };
 }
 
+// ============================================================
+// notifyMateEval — [오버라이드 GG-REVIEW-001] mate_eval 평가 알림 + appointment_complete 크레딧
+//
+// 조건: appointment.status='confirmed' AND appointedAt <= now (약속일 경과)
+// 동작:
+//   1. 해당 chatRoom의 active 멤버 전원에게 notificationType='mate_eval' 알림 생성
+//      — dedup: 동일 (appointmentId, userId) 기존 mate_eval Notification 존재 시 skip
+//   2. appointment_complete +10 크레딧 적립
+//      — dedup: credit_ledger에 동일 (appointmentId, userId, 'appointment_complete') 행 존재 시 skip
+//
+// [스키마] appointment_complete action은 credit_ledger에 정의됨 (Slice 5 구현).
+// ============================================================
+
+const MATE_EVAL_NOTIFY_INTERVAL = 10 * 60 * 1000;  // 10분
+const CREDIT_APPOINTMENT_COMPLETE = 10;              // ADR 0007 결정5 — 상수 가정
+
+export interface NotifyMateEvalResult {
+  appointmentsProcessed: number;
+  notificationsCreated: number;
+  creditsCreated: number;
+}
+
+export async function notifyMateEval(now: Date = new Date()): Promise<NotifyMateEvalResult> {
+  // confirmed 상태이고 appointedAt이 경과한 약속 조회
+  const dueAppointments = await prisma.appointment.findMany({
+    where: {
+      status: 'confirmed',
+      appointedAt: { lte: now, not: null },
+    },
+    select: {
+      appointmentId: true,
+      chatRoomId: true,
+      eventId: true,
+    },
+  });
+
+  if (dueAppointments.length === 0) return { appointmentsProcessed: 0, notificationsCreated: 0, creditsCreated: 0 };
+
+  let notificationsCreated = 0;
+  let creditsCreated = 0;
+
+  for (const appt of dueAppointments) {
+    // chatRoom의 멤버 전원 조회 (active 멤버)
+    const members = await prisma.groupMembership.findMany({
+      where: { chatRoomId: appt.chatRoomId, memberStatus: 'active' },
+      select: { userId: true },
+    });
+
+    if (members.length === 0) continue;
+
+    for (const member of members) {
+      // ── 1. mate_eval 알림 dedup: 동일 appointment+user의 mate_eval Notification 존재 시 skip
+      const existingNotif = await prisma.notification.findFirst({
+        where: {
+          userId: member.userId,
+          notificationType: 'mate_eval',
+          relatedEntityId: appt.appointmentId,
+          relatedEntityType: 'appointment',
+        },
+        select: { notificationId: true },
+      });
+
+      if (!existingNotif) {
+        await prisma.notification.create({
+          data: {
+            userId: member.userId,
+            title: '약속 후 평가를 남겨주세요',
+            message: '함께한 메이트를 평가하고 크레딧을 받아보세요.',
+            scheduledAt: now,
+            isSent: true,
+            sentAt: now,
+            notificationType: 'mate_eval',
+            relatedEntityId: appt.appointmentId,
+            relatedEntityType: 'appointment',
+          },
+        });
+        notificationsCreated++;
+      }
+
+      // ── 2. appointment_complete 크레딧 dedup: 동일 (appointmentId, userId, action) 행 존재 시 skip
+      const existingCredit = await prisma.creditLedger.findFirst({
+        where: {
+          userId: member.userId,
+          action: 'appointment_complete',
+          appointmentId: appt.appointmentId,
+        },
+        select: { ledgerId: true },
+      });
+
+      if (!existingCredit) {
+        await prisma.creditLedger.create({
+          data: {
+            userId: member.userId,
+            action: 'appointment_complete',
+            pointsAmount: CREDIT_APPOINTMENT_COMPLETE,
+            appointmentId: appt.appointmentId,
+          },
+        });
+        creditsCreated++;
+      }
+    }
+  }
+
+  if (notificationsCreated > 0 || creditsCreated > 0) {
+    logger.info(
+      { action: 'notify_mate_eval', appointmentsProcessed: dueAppointments.length, notificationsCreated, creditsCreated },
+      'mate_eval notifications and credits created',
+    );
+  }
+
+  return { appointmentsProcessed: dueAppointments.length, notificationsCreated, creditsCreated };
+}
+
 // ─── wrapHandler ─────────────────────────────────────────────
 // 핸들러 오류가 interval 을 멈추거나 다른 잡에 전파되지 않도록 보호.
 // fn 의 반환 타입을 Promise<unknown> 으로 받아 각 핸들러를 직접 전달 가능.
@@ -465,6 +578,8 @@ export function startChatScheduler(): void {
   setInterval(wrapHandler(resolveExpiredKickVotes), VOTE_EXPIRE_INTERVAL);
   setInterval(wrapHandler(expireAppointments),      APPT_EXPIRE_INTERVAL);
   setInterval(wrapHandler(handleInactiveMembers),   INACTIVITY_INTERVAL);
+  // [오버라이드 GG-REVIEW-001] mate_eval 알림 + appointment_complete 크레딧 (Slice 5)
+  setInterval(wrapHandler(notifyMateEval),          MATE_EVAL_NOTIFY_INTERVAL);
 
   // 스케줄러 기동 시점: 7일 이전 미처리 kick_vote 알림이 있으면 운영자 경고.
   // 스케줄러가 7일 이상 정지됐을 경우 자동 처리 불가 행이 남을 수 있음 — 수동 조정 필요.
@@ -494,6 +609,7 @@ export function startChatScheduler(): void {
       voteExpireEveryMs: VOTE_EXPIRE_INTERVAL,
       apptExpireEveryMs: APPT_EXPIRE_INTERVAL,
       inactivityEveryMs: INACTIVITY_INTERVAL,
+      mateEvalNotifyEveryMs: MATE_EVAL_NOTIFY_INTERVAL,
     },
     'chat scheduler started',
   );
