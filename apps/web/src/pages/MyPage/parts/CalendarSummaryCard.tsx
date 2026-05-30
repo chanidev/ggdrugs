@@ -61,7 +61,7 @@ export function CalendarSummaryCard({
         {event.articleCount > 0 && (
           <span
             className="ml-auto inline-flex items-center gap-1 rounded-full bg-(--color-surface-alt) px-2 py-0.5 text-[10px] font-medium text-(--color-text-muted)"
-            title={`${t('calendar.relatedArticles')} ${event.articleCount}건 — 상세에서 전체 보기`}
+            title={t('calendar.relatedArticlesTitle', { count: event.articleCount })}
           >
             <span className="tabular text-(--color-text)">{event.articleCount}</span>
             <span>{t('calendar.relatedArticles')}</span>

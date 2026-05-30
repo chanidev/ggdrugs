@@ -109,7 +109,16 @@
     "noEventLink": "기간·장소·가격: 이벤트 연결 없음",
     "goToRoom": "채팅방으로",
     "eventDetail": "이벤트 상세",
-    "schedulePending": "일시 미정"
+    "schedulePending": "일시 미정",
+    "relatedArticles": "관련 기사",
+    "relatedArticlesTitle": "관련 기사 {{count}}건 — 상세에서 전체 보기",
+    "place": "장소",
+    "audience": "대상",
+    "viewDetail": "상세 보기",
+    "reviewWrite": "리뷰 작성",
+    "reviewEdit": "리뷰 수정",
+    "reviewAfterEnd": "리뷰는 종료 후",
+    "reviewAfterEndShort": "종료 후 작성"
   },
   "credit": {
     "title": "크레딧 내역",
@@ -238,18 +247,6 @@
   "block": {
     "loginRequired": "로그인이 필요합니다.",
     "error": "차단 처리 중 오류가 발생했어요."
-  },
-  "calendar": {
-    "relatedArticles": "관련 기사",
-    "place": "장소",
-    "period": "기간",
-    "price": "가격",
-    "audience": "대상",
-    "viewDetail": "상세 보기",
-    "reviewWrite": "리뷰 작성",
-    "reviewEdit": "리뷰 수정",
-    "reviewAfterEnd": "리뷰는 종료 후",
-    "reviewAfterEndShort": "종료 후 작성"
   },
   "role": {
     "toggle": "역할 전환",
