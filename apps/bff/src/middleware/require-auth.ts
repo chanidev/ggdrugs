@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '../prisma.js';
+import { extractSession, parseSidFromCookieHeader } from '../lib/extract-session.js';
 
 /**
  * 세션 쿠키 → user 조회. 성공 시 req.auth 채워서 다음 핸들러로, 실패 시 401.
@@ -10,24 +11,16 @@ import { prisma } from '../prisma.js';
  * Sliding + cap (ADR 0004 D-4): 세션 검증 성공 시 last_seen_at 과 함께
  *   expires_at = MIN(now()+SLIDING_TTL, created_at+ABSOLUTE_CAP) 로 갱신.
  *   같은 UPDATE 한 statement 라 추가 IO 없음. fire-and-forget.
+ *
+ * 세션 파싱/검증 로직은 extractSession (lib/extract-session.ts) 에서 공유.
+ * Socket.IO io.use() 미들웨어도 동일 함수를 사용한다 (withUserFields=false).
  */
 
-const COOKIE_NAME = 'alle_sid';
 export const SESSION_SLIDING_TTL_MS = 7 * 24 * 60 * 60 * 1000;       // 7d sliding
 export const SESSION_ABSOLUTE_CAP_MS = 30 * 24 * 60 * 60 * 1000;     // 30d max from createdAt
 
 export interface AuthenticatedRequest extends Request {
   auth: { userId: bigint; nickname: string; activeRole: string };
-}
-
-function parseSid(req: Request): string | null {
-  const raw = req.headers.cookie;
-  if (!raw) return null;
-  for (const part of raw.split(';')) {
-    const [k, ...rest] = part.trim().split('=');
-    if (k === COOKIE_NAME) return rest.join('=') || null;
-  }
-  return null;
 }
 
 /**
@@ -61,67 +54,43 @@ function touchSession(sessionId: string, createdAt: Date): void {
  * 공개 + 인증 시 개인화 응답을 섞는 엔드포인트용 (예: event-detail 에 isBookmarked).
  */
 export async function resolveAuth(req: Request, _res: Response, next: NextFunction) {
-  const sid = parseSid(req);
+  const cookieHeader = req.headers.cookie;
+  const sid = parseSidFromCookieHeader(cookieHeader);
   if (!sid) {
     next();
     return;
   }
-  const row = await prisma.authSession.findUnique({
-    where: { sessionId: sid },
-    select: {
-      expiresAt: true,
-      createdAt: true,
-      user: {
-        select: {
-          userId: true,
-          nickname: true,
-          activeRole: true,
-          isDeleted: true,
-        },
-      },
-    },
-  });
-  if (row && !row.user.isDeleted && row.expiresAt > new Date()) {
+  // withUserFields=true: nickname/activeRole 을 단일 쿼리로 함께 가져옴
+  const session = await extractSession(cookieHeader, prisma, true);
+  if (session && session.nickname && session.activeRole) {
     (req as AuthenticatedRequest).auth = {
-      userId: row.user.userId,
-      nickname: row.user.nickname,
-      activeRole: row.user.activeRole,
+      userId: session.userId,
+      nickname: session.nickname,
+      activeRole: session.activeRole,
     };
-    touchSession(sid, row.createdAt);
+    touchSession(session.sessionId, session.createdAt);
   }
   next();
 }
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const sid = parseSid(req);
+  const cookieHeader = req.headers.cookie;
+  const sid = parseSidFromCookieHeader(cookieHeader);
   if (!sid) {
     res.status(401).json({ error: 'unauthenticated' });
     return;
   }
-  const row = await prisma.authSession.findUnique({
-    where: { sessionId: sid },
-    select: {
-      expiresAt: true,
-      createdAt: true,
-      user: {
-        select: {
-          userId: true,
-          nickname: true,
-          activeRole: true,
-          isDeleted: true,
-        },
-      },
-    },
-  });
-  if (!row || row.user.isDeleted || row.expiresAt <= new Date()) {
+  // withUserFields=true: nickname/activeRole 을 단일 쿼리로 함께 가져옴
+  const session = await extractSession(cookieHeader, prisma, true);
+  if (!session || !session.nickname || !session.activeRole) {
     res.status(401).json({ error: 'unauthenticated' });
     return;
   }
   (req as AuthenticatedRequest).auth = {
-    userId: row.user.userId,
-    nickname: row.user.nickname,
-    activeRole: row.user.activeRole,
+    userId: session.userId,
+    nickname: session.nickname,
+    activeRole: session.activeRole,
   };
-  touchSession(sid, row.createdAt);
+  touchSession(session.sessionId, session.createdAt);
   next();
 }
