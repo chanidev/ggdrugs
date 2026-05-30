@@ -108,6 +108,7 @@ import {
   startKickVote,
   castKickVote,
 } from './routes/chat-room.js';
+import { createReport, listMyReports, blockUser } from './routes/reports.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -577,6 +578,25 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => requireAdmin(req, res, next).catch(next),
     (req, res, next) => softDeleteUser(req, res).catch(next),
+  );
+
+  // GG-REPORT-001~003: 사용자 신고 접수 (4 surface)
+  app.post(
+    '/community/reports',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => createReport(req, res).catch(next),
+  );
+  app.get(
+    '/me/reports',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyReports(req, res).catch(next),
+  );
+
+  // GG-REPORT-008: 일반 사용자 차단 (chatRoom 없는 surface — Block.create 만, GroupMembership 변경 없음)
+  app.post(
+    '/community/users/:targetUserId/block',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => blockUser(req, res).catch(next),
   );
 
   // Uploader — 본인 프로파일/신청/역할 토글/이벤트 업로드

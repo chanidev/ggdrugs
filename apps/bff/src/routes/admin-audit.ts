@@ -119,6 +119,11 @@ const ADMIN_AUDIT_ACTIONS = new Set([
   'admin_scope_change',
   'user_soft_delete',
   'uploader_decision',
+  // 슬라이스8 신고 관련 액션 (GG-REPORT-006/007)
+  'report_action_warned',
+  'report_action_suspended',
+  'report_action_false_report',
+  'report_dismissed',
 ]);
 
 /**
@@ -190,6 +195,11 @@ export async function listAdminAuditAdminLogs(req: Request, res: Response) {
     admin_scope_change: 0,
     user_soft_delete: 0,
     uploader_decision: 0,
+    // 슬라이스8 추가
+    report_action_warned: 0,
+    report_action_suspended: 0,
+    report_action_false_report: 0,
+    report_dismissed: 0,
   };
   for (const row of breakdown) byAction[row.action] = row._count._all;
 
@@ -289,6 +299,11 @@ export async function getAdminAuditSummary(req: Request, res: Response) {
     admin_scope_change: 0,
     user_soft_delete: 0,
     uploader_decision: 0,
+    // 슬라이스8 추가
+    report_action_warned: 0,
+    report_action_suspended: 0,
+    report_action_false_report: 0,
+    report_dismissed: 0,
   };
   for (const r of adminBreakdown) adminActions[r.action] = r._count._all;
 
