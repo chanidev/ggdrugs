@@ -23,6 +23,7 @@
  *   두 값 모두 신청 생성 시 expiresAt 에 이미 반영되나, 스케줄러가 타입별로 독립 검증함.
  */
 
+import { Prisma } from '@prisma/client';
 import { logger } from '../logger.js';
 import { env } from '../env.js';
 import { prisma } from '../prisma.js';
@@ -515,10 +516,11 @@ export async function notifyMateEval(
     if (members.length === 0) continue;
 
     for (const member of members) {
-      // ── 1. mate_eval 알림: INSERT ... ON CONFLICT DO NOTHING (TOCTOU 없음)
-      // Notification 테이블에 (userId, notificationType, relatedEntityId, relatedEntityType) UNIQUE 제약이
-      // 있다면 upsert, 없으면 findFirst+create 패턴 유지.
-      // 현재 스키마에는 해당 UNIQUE가 없으므로 findFirst+create 패턴 사용.
+      // ── 1. mate_eval 알림: findFirst+create 패턴 (DB-level dedup 없음)
+      // [알려진 한계] notifications 테이블에 (userId, notificationType, relatedEntityId, relatedEntityType)
+      // UNIQUE 제약이 현재 스키마에 존재하지 않는다. 따라서 스케줄러 재시작/동시 실행 시
+      // findFirst와 create 사이 TOCTOU 경합으로 중복 알림이 생성될 수 있다.
+      // DB-level unique constraint를 추가하기 전까지 이 코드는 단일 프로세스 순차 실행에서만 안전.
       // [운영 메모] 향후 unique_notification_per_entity 제약 추가 시 upsert로 교체 권장.
       const existingNotif = await prisma.notification.findFirst({
         where: {
@@ -548,9 +550,12 @@ export async function notifyMateEval(
       }
 
       // ── 2. appointment_complete 크레딧 dedup:
-      // DB 차원: migration.sql에 uq_credit_appt_complete_user 부분 유니크 인덱스 추가됨.
-      // 코드 차원: findFirst → 없으면 create (단일 프로세스 스케줄러에서는 TOCTOU 경합 드물지만,
-      //           DB 유니크 인덱스가 최종 보호선 역할. P2002 시 no-op으로 처리).
+      // [알려진 한계] credit_ledgers 테이블에 (appointment_id, user_id) 조합에 대한 DB-level
+      // UNIQUE 제약이 현재 스키마에 존재하지 않는다. 아래 P2002 catch 블록은 실제로는
+      // 발동되지 않는 방어 코드다(DB가 P2002를 raise하지 않으므로). 스케줄러 재시작이나
+      // 동시 실행 시 findFirst와 create 사이 TOCTOU 경합으로 중복 크레딧 행이 삽입될 수 있다.
+      // DB-level partial unique index (uq_credit_appt_complete_user)를 추가하기 전까지
+      // 이 코드는 단일 프로세스 순차 실행에서만 안전하다.
       const existingCredit = await prisma.creditLedger.findFirst({
         where: {
           userId: member.userId,
@@ -572,8 +577,10 @@ export async function notifyMateEval(
           });
           creditsCreated++;
         } catch (e) {
-          // P2002: DB 유니크 제약에 의한 중복 차단 (TOCTOU 경합 시) — no-op
-          if (!(e instanceof Error && e.constructor.name === 'PrismaClientKnownRequestError' && (e as { code?: string }).code === 'P2002')) {
+          // P2002: 향후 DB-level unique 제약이 추가될 경우를 대비한 방어 코드.
+          // 현재 스키마에는 credit_ledgers에 관련 UNIQUE 제약이 없으므로 이 분기는
+          // 실제로 실행되지 않는다. evaluation.ts의 instanceof 패턴과 동일하게 유지.
+          if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) {
             throw e;
           }
         }
