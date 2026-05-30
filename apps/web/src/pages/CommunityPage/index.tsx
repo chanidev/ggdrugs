@@ -72,7 +72,7 @@ export function CommunityPage() {
           글쓰기
         </ActionButton>
       </div>
-      <PostList items={items} loading={loading} error={error} />
+      <PostList items={items} loading={loading} error={error} {...(user?.userId ? { currentUserId: user.userId } : {})} />
       {composeOpen && (
         <ComposeModal
           defaultCategory={cat === 'all' ? 'free' : cat}

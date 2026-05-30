@@ -34,6 +34,9 @@ function parseBigId(raw: unknown): bigint | null {
 
 const VALID_STATUSES = new Set(['pending', 'reviewed', 'dismissed', 'any']);
 const VALID_TARGET_TYPES = new Set(['post', 'comment', 'chat_message', 'mate_eval', 'any']);
+// VALID_ACTIONS: 입력 action 허용값 (4종).
+// DB admin_action 컬럼은 NULL|warned|suspended|false_report — dismissed 시 null 저장.
+// 'dismissed' 구분은 응답의 status 필드로 확인. (review: medium — 명시 주석)
 const VALID_ACTIONS = new Set(['warned', 'suspended', 'false_report', 'dismissed']);
 
 // ─── GET /admin/reports ──────────────────────────────────────────────────────
@@ -45,11 +48,8 @@ const VALID_ACTIONS = new Set(['warned', 'suspended', 'false_report', 'dismissed
  * 응답: byStatus 통계 포함
  */
 export async function listAdminReports(req: Request, res: Response) {
-  const admin = (req as AdminRequest).admin;
-  if (!admin) {
-    res.status(403).json({ error: 'admin_required' });
-    return;
-  }
+  // requireAdmin middleware guarantees req.admin is populated before this handler.
+  const admin = (req as AdminRequest).admin!;
 
   const page = parseIntClamp(req.query.page, 1, 1, 1_000_000);
   const limit = parseIntClamp(req.query.limit, 20, 1, 100);
@@ -136,11 +136,8 @@ export async function listAdminReports(req: Request, res: Response) {
  *   mate_eval: { ratingStars, comment, reportedFor }
  */
 export async function getAdminReport(req: Request, res: Response) {
-  const admin = (req as AdminRequest).admin;
-  if (!admin) {
-    res.status(403).json({ error: 'admin_required' });
-    return;
-  }
+  // requireAdmin middleware guarantees req.admin is populated before this handler.
+  void (req as AdminRequest).admin!;
 
   const reportId = parseBigId(req.params.reportId);
   if (!reportId) {
@@ -247,12 +244,9 @@ export async function getAdminReport(req: Request, res: Response) {
  * 원자 트랜잭션: Report status + User sanction + AdminAuditLog + Notification
  */
 export async function actionAdminReport(req: Request, res: Response) {
+  // requireAdmin middleware guarantees req.admin is populated before this handler.
   const adminReq = req as AdminRequest;
-  const admin = adminReq.admin;
-  if (!admin) {
-    res.status(403).json({ error: 'admin_required' });
-    return;
-  }
+  const admin = adminReq.admin!;
 
   const reportId = parseBigId(req.params.reportId);
   if (!reportId) {
@@ -330,10 +324,12 @@ export async function actionAdminReport(req: Request, res: Response) {
 
     if (action === 'warned') {
       // 1a) User 경고 처리
+      // sanctionExpiresAt: null — 이전에 suspended였던 경우 만료일 오염 방지 (review: medium)
       await tx.user.update({
         where: { userId: report.targetUserId },
         data: {
           sanctionStatus: 'warned',
+          sanctionExpiresAt: null,
           sanctionReason: note ?? null,
         },
       });

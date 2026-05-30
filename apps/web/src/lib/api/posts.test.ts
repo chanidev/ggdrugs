@@ -47,6 +47,7 @@ const server = setupServer(
           postId: 'p1',
           category: 'free',
           title: '테스트 게시글',
+          authorUserId: '1',
           authorNickname: '작성자',
           commentCount: 0,
           likeCount: 0,

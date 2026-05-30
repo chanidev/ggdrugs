@@ -52,6 +52,7 @@ export async function listPosts(req: Request, res: Response) {
       select: {
         postId: true, category: true, title: true, likeCount: true,
         commentCount: true, createdAt: true,
+        userId: true,
         user: { select: { nickname: true } },
       },
     }),
@@ -63,6 +64,7 @@ export async function listPosts(req: Request, res: Response) {
       postId: p.postId.toString(),
       category: p.category,
       title: p.title,
+      authorUserId: p.userId.toString(),
       authorNickname: p.user.nickname,
       commentCount: p.commentCount,
       likeCount: p.likeCount,

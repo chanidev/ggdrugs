@@ -5,6 +5,7 @@ import { TextField, TextFieldInput } from 'seed-design/ui/text-field';
 import type { CommentNode } from '../../../lib/api/posts.js';
 import { deleteComment, updateComment } from '../../../lib/api/posts.js';
 import { CommentComposer } from './CommentComposer.js';
+import { ReportModal } from '../../../components/ReportModal.js';
 
 function CommentItem({
   node,
@@ -12,16 +13,19 @@ function CommentItem({
   isReply,
   onAuthorClick,
   onChanged,
+  currentUserId,
 }: {
   node: CommentNode;
   postId: string;
   isReply: boolean;
   onAuthorClick: (nickname: string, userId: string) => void;
   onChanged: () => void;
+  currentUserId?: string;
 }) {
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editText, setEditText] = useState(node.body);
+  const [reportOpen, setReportOpen] = useState(false);
 
   // [review fix] 서버 확정 본문이 변경됐을 때(onChanged → 부모 reload) editText 를
   // 최신 node.body 로 동기화. editing 중엔 사용자 입력을 유지하고, editing 이 false 일 때만 적용.
@@ -52,6 +56,9 @@ function CommentItem({
       else alert('삭제하지 못했어요.');
     }
   };
+
+  const isMyComment = currentUserId != null && node.authorUserId === currentUserId;
+  const canReport = currentUserId != null && !isMyComment;
 
   return (
     <li className={isReply ? 'ml-6 border-l border-(--color-border) pl-3' : ''}>
@@ -126,6 +133,16 @@ function CommentItem({
               삭제
             </ActionButton>
           )}
+          {/* GG-REPORT-001: 타인 댓글 신고 */}
+          {canReport && (
+            <ActionButton
+              variant="neutralOutline"
+              size="xsmall"
+              onClick={() => setReportOpen(true)}
+            >
+              신고
+            </ActionButton>
+          )}
         </div>
 
         {replying && (
@@ -153,10 +170,21 @@ function CommentItem({
               isReply
               onAuthorClick={onAuthorClick}
               onChanged={onChanged}
+              {...(currentUserId ? { currentUserId } : {})}
             />
           ))}
         </ul>
       )}
+
+      {/* GG-REPORT-001: 댓글 신고 모달 */}
+      <ReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        targetType="comment"
+        targetEntityId={node.commentId}
+        targetUserId={node.authorUserId}
+        onSuccess={() => setReportOpen(false)}
+      />
     </li>
   );
 }
@@ -166,11 +194,13 @@ export function CommentTree({
   postId,
   onAuthorClick,
   onChanged,
+  currentUserId,
 }: {
   comments: CommentNode[];
   postId: string;
   onAuthorClick: (nickname: string, userId: string) => void;
   onChanged: () => void;
+  currentUserId?: string;
 }) {
   if (comments.length === 0)
     return (
@@ -187,6 +217,7 @@ export function CommentTree({
           isReply={false}
           onAuthorClick={onAuthorClick}
           onChanged={onChanged}
+          {...(currentUserId ? { currentUserId } : {})}
         />
       ))}
     </ul>

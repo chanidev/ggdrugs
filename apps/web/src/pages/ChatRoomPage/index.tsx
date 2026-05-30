@@ -21,6 +21,7 @@ import {
   type AppointmentOut,
 } from '../../lib/api/match.js';
 import { fetchEvents, fetchEventDetail, type BffEventItem, type BffEventDetail } from '../../lib/api/events.js';
+import { ReportModal } from '../../components/ReportModal.js';
 
 /**
  * ChatRoomPage — 실시간 채팅방 (와이어 9-4/9-5/9-17/9-19, A_805).
@@ -335,6 +336,7 @@ export function ChatRoomPage() {
           myUserId={myUserId}
           onClose={() => setMenuOpen(false)}
           onLeave={handleLeave}
+          allMessages={allMessages}
         />
       )}
 
@@ -377,6 +379,8 @@ function MessageBubble({
   msg: ChatRoomMessageOut;
   myUserId: string;
 }) {
+  const [reportOpen, setReportOpen] = useState(false);
+
   if (msg.messageType === 'system') {
     return (
       <div className="my-1 text-center">
@@ -388,9 +392,22 @@ function MessageBubble({
   }
 
   const isMe = msg.senderUserId === myUserId;
+  // 본인 메시지 또는 시스템 메시지(senderUserId=null)는 신고 불가
+  const canReport = !isMe && msg.senderUserId != null;
 
   return (
-    <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+    <div className={`group flex items-end gap-1 ${isMe ? 'justify-end' : 'justify-start'}`}>
+      {/* GG-REPORT-001: 타인 메시지 신고 버튼 (hover 시 표시) */}
+      {canReport && !isMe && (
+        <button
+          type="button"
+          aria-label="메시지 신고"
+          onClick={() => setReportOpen(true)}
+          className="invisible shrink-0 rounded-(--radius-sm) border border-(--color-border) px-1.5 py-0.5 text-[10px] text-(--color-text-subtle) opacity-0 transition-opacity hover:text-(--color-text-muted) group-hover:visible group-hover:opacity-100"
+        >
+          신고
+        </button>
+      )}
       <div
         className={`max-w-[70%] rounded-(--radius-lg) px-3 py-2 text-[14px] ${
           isMe
@@ -409,6 +426,18 @@ function MessageBubble({
           {new Date(msg.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
+
+      {/* GG-REPORT-001: 채팅 메시지 신고 모달 */}
+      {canReport && msg.senderUserId != null && (
+        <ReportModal
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          targetType="chat_message"
+          targetEntityId={msg.messageId}
+          targetUserId={msg.senderUserId}
+          onSuccess={() => setReportOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -422,6 +451,7 @@ function MenuDialog({
   myUserId,
   onClose,
   onLeave,
+  allMessages,
 }: {
   isOwner: boolean;
   chatRoomId: string;
@@ -429,10 +459,15 @@ function MenuDialog({
   myUserId: string;
   onClose: () => void;
   onLeave: () => void;
+  allMessages: ChatRoomMessageOut[];
 }) {
   const [kickUsed, setKickUsed] = useState(false);
   const [actionErr, setActionErr] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [reportTarget, setReportTarget] = useState<{
+    messageId: string;
+    senderUserId: string;
+  } | null>(null);
 
   const otherMembers = members.filter((m) => m.userId !== myUserId);
 
@@ -485,6 +520,7 @@ function MenuDialog({
   };
 
   return (
+    <>
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Backdrop />
       <Dialog.Positioner>
@@ -534,12 +570,22 @@ function MenuDialog({
                       >
                         차단하기
                       </button>
-                      {/* 신고 placeholder (7-4 스펙: 방장 메뉴에도 신고 버튼 placeholder 필수) */}
+                      {/* GG-REPORT-001: 신고 — 최근 메시지 신고 (chat_message surface) */}
                       <button
                         type="button"
-                        disabled
-                        title="신고 기능 준비 중"
-                        className="cursor-not-allowed rounded-(--radius-md) border border-(--color-border) px-2 py-1 text-[12px] text-(--color-text-subtle) opacity-40"
+                        disabled={pending}
+                        onClick={() => {
+                          // 해당 멤버의 가장 최근 메시지 찾기
+                          const lastMsg = [...allMessages]
+                            .reverse()
+                            .find((msg) => msg.senderUserId === m.userId && msg.messageType !== 'system');
+                          if (!lastMsg) {
+                            setActionErr('신고할 메시지가 없습니다.');
+                            return;
+                          }
+                          setReportTarget({ messageId: lastMsg.messageId, senderUserId: m.userId });
+                        }}
+                        className="rounded-(--radius-md) border border-(--color-border) px-2 py-1 text-[12px] text-(--color-text-muted) disabled:opacity-40"
                       >
                         신고
                       </button>
@@ -592,6 +638,19 @@ function MenuDialog({
         </Dialog.Content>
       </Dialog.Positioner>
     </Dialog.Root>
+
+    {/* GG-REPORT-001: 채팅 메시지 신고 모달 (MenuDialog 내 신고 버튼에서 열림) */}
+    {reportTarget && (
+      <ReportModal
+        open
+        onClose={() => setReportTarget(null)}
+        targetType="chat_message"
+        targetEntityId={reportTarget.messageId}
+        targetUserId={reportTarget.senderUserId}
+        onSuccess={() => { setReportTarget(null); onClose(); }}
+      />
+    )}
+    </>
   );
 }
 

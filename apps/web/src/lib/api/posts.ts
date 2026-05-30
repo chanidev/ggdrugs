@@ -6,6 +6,7 @@ export interface PostListItem {
   postId: string;
   category: PostCategory;
   title: string;
+  authorUserId: string;
   authorNickname: string;
   commentCount: number;
   likeCount: number;

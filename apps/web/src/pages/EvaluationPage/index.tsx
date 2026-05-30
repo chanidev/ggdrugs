@@ -5,6 +5,7 @@ import { Header } from '../../layout/Header.js';
 import { MateEvalStep, type MateEvalData } from './parts/MateEvalStep.js';
 import { FestivalStep, type FestivalData } from './parts/FestivalStep.js';
 import { submitEvaluation, getMyEvaluation } from '../../lib/api/evaluation.js';
+import { createReport, type ReportReason } from '../../lib/api/reports.js';
 
 type Step = 'loading' | 'mate' | 'festival' | 'done';
 
@@ -60,6 +61,14 @@ export function EvaluationPage() {
     }
   }
 
+  // reportedFor → ReportReason 매핑 (MateEvalStep REPORT_OPTIONS 기준)
+  const REPORTED_FOR_TO_REASON: Record<string, ReportReason> = {
+    inappropriate: 'abuse',
+    harassing: 'harassment',
+    no_show: 'no_show',
+    etc: 'etc',
+  };
+
   async function handleFestivalSubmit(festivalData: FestivalData) {
     if (!mateData) return;
     setSubmitting(true);
@@ -80,7 +89,23 @@ export function EvaluationPage() {
         photoUrls: festivalData.photoUrls,
         ...(mateData.comment ? { comment: mateData.comment } : {}),
       };
-      await submitEvaluation(appointmentId!, submitBody);
+      const evalResult = await submitEvaluation(appointmentId!, submitBody);
+
+      // GG-REPORT-001 (mate_eval surface): 평가 제출 성공 후 reportedFor가 있으면
+      // 자동으로 Report 생성 — ReportModal 팝업 없이 자동 처리.
+      if (mateData.reportedFor && REPORTED_FOR_TO_REASON[mateData.reportedFor]) {
+        try {
+          await createReport({
+            targetUserId: evaluatedUserId,
+            targetType: 'mate_eval',
+            targetEntityId: evalResult.evalId,
+            reason: REPORTED_FOR_TO_REASON[mateData.reportedFor]!,
+          });
+        } catch {
+          // 신고 실패는 평가 완료에 영향을 주지 않음 (사용자는 평가 완료로 인식)
+        }
+      }
+
       setStep('done');
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);

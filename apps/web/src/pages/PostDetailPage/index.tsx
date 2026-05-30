@@ -7,6 +7,7 @@ import { ComposeModal } from '../CommunityPage/parts/ComposeModal.js';
 import { CommentTree } from './parts/CommentTree.js';
 import { CommentComposer } from './parts/CommentComposer.js';
 import { AuthorProfileModal } from './parts/AuthorProfileModal.js';
+import { ReportModal } from '../../components/ReportModal.js';
 import {
   fetchPostDetail,
   togglePostLike,
@@ -31,6 +32,7 @@ export function PostDetailPage() {
   const [likeLoading, setLikeLoading] = useState(false);
   const [modalAuthor, setModalAuthor] = useState<{ nickname: string; userId: string } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const reload = useCallback(
     (signal?: AbortSignal) => {
@@ -161,6 +163,16 @@ export function PostDetailPage() {
                 </ActionButton>
               </>
             )}
+            {/* GG-REPORT-001: 타인 게시글 신고 */}
+            {!detail.isMine && user && (
+              <ActionButton
+                variant="neutralOutline"
+                size="small"
+                onClick={() => setReportOpen(true)}
+              >
+                신고
+              </ActionButton>
+            )}
           </div>
 
           {/* 댓글 섹션 */}
@@ -182,6 +194,7 @@ export function PostDetailPage() {
               postId={detail.postId}
               onAuthorClick={(nickname, userId) => setModalAuthor({ nickname, userId })}
               onChanged={() => reload()}
+              {...(user?.userId ? { currentUserId: user.userId } : {})}
             />
           </section>
         </article>
@@ -205,6 +218,18 @@ export function PostDetailPage() {
             setEditOpen(false);
             reload();
           }}
+        />
+      )}
+
+      {/* GG-REPORT-001: 게시글 신고 모달 */}
+      {detail && (
+        <ReportModal
+          open={reportOpen}
+          onClose={() => setReportOpen(false)}
+          targetType="post"
+          targetEntityId={detail.postId}
+          targetUserId={detail.authorUserId}
+          onSuccess={() => setReportOpen(false)}
         />
       )}
     </CommunityShell>

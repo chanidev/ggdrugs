@@ -4,6 +4,7 @@ import { Avatar } from 'seed-design/ui/avatar';
 import * as Dialog from 'seed-design/ui/dialog';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { getMateIndex } from '../../../lib/api/mate.js';
+import { blockUser } from '../../../lib/api/reports.js';
 
 /**
  * GG-POST-008/009: 작성자 프로필 모달.
@@ -24,6 +25,27 @@ export function AuthorProfileModal({
   const navigate = useNavigate();
   // null = 아직 로딩 중, number = 조회된 지수, 'none' = 프로필 미등록
   const [mateIndex, setMateIndex] = useState<number | 'none' | null>(null);
+  const [blockMsg, setBlockMsg] = useState<string | null>(null);
+  const [blocking, setBlocking] = useState(false);
+
+  const handleBlock = async () => {
+    if (!confirm(`${nickname}님을 차단하시겠어요?`)) return;
+    setBlocking(true);
+    setBlockMsg(null);
+    try {
+      await blockUser(authorUserId);
+      setBlockMsg('차단되었습니다.');
+    } catch (e) {
+      const msg = (e as Error).message;
+      if (msg === 'already_blocked' || msg === 'ALREADY_BLOCKED') {
+        setBlockMsg('이미 차단된 사용자입니다.');
+      } else {
+        setBlockMsg('차단하지 못했어요.');
+      }
+    } finally {
+      setBlocking(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -80,6 +102,10 @@ export function AuthorProfileModal({
                 {mateIndexLabel}
               </span>
             </div>
+            {/* GG-REPORT-008: 차단 피드백 메시지 */}
+            {blockMsg && (
+              <p className="text-[12px] text-(--color-text-muted)">{blockMsg}</p>
+            )}
           </div>
 
           <Dialog.Footer>
@@ -89,6 +115,16 @@ export function AuthorProfileModal({
               onClick={onClose}
             >
               닫기
+            </ActionButton>
+            {/* GG-REPORT-008: 일반 차단 (POST /community/users/:id/block) */}
+            <ActionButton
+              variant="neutralOutline"
+              size="medium"
+              onClick={() => { void handleBlock(); }}
+              disabled={blocking}
+              aria-label={`${nickname} 차단하기`}
+            >
+              차단하기
             </ActionButton>
             {/* GG-POST-008: 채팅신청 — 슬라이스3 실구현 */}
             <ActionButton

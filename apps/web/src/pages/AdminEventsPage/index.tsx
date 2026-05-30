@@ -6,6 +6,7 @@ import { useCurrentUser } from '../../lib/auth-context';
 import { EventsTab } from './tabs/EventsTab.js';
 import { UploadReviewsTab } from './tabs/UploadReviewsTab.js';
 import { UploadersTab } from './tabs/UploadersTab.js';
+import { ReportsTab } from './tabs/ReportsTab.js';
 
 /**
  * A_700 관리자 콘솔 — 탭 2종.
@@ -16,7 +17,7 @@ import { UploadersTab } from './tabs/UploadersTab.js';
  * 인증: /auth/me 의 isAdmin 확인. 서버가 다시 403 하므로 이중 방어.
  */
 
-type AdminTab = 'events' | 'upload-review' | 'uploaders' | 'members' | 'audit-logs';
+type AdminTab = 'events' | 'upload-review' | 'uploaders' | 'members' | 'audit-logs' | 'reports';
 
 export function AdminEventsPage() {
   const { user, loading: authLoading } = useCurrentUser();
@@ -50,6 +51,7 @@ function AdminBody() {
       {tab === 'uploaders' && <UploadersTab />}
       {tab === 'members' && <MembersTab />}
       {tab === 'audit-logs' && <AuditLogsTab />}
+      {tab === 'reports' && <ReportsTab />}
     </Shell>
   );
 }
@@ -69,6 +71,7 @@ function Shell({
     { key: 'uploaders', label: 'Uploaders', subtitle: '업로더 승급 심사' },
     { key: 'members', label: 'Members', subtitle: '회원/admin 관리' },
     { key: 'audit-logs', label: 'Audit', subtitle: '승인 결정 히스토리' },
+    { key: 'reports', label: 'Reports', subtitle: '신고 모더레이션' },
   ];
   return (
     <div className="flex min-h-screen flex-col bg-(--color-surface)">

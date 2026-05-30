@@ -88,9 +88,13 @@ export async function sendOneToOneRequest(req: Request, res: Response) {
     return;
   }
   const receiverCheckNow = new Date();
+  // GG-REPORT-009: 유효한 이용정지(만료 전)인 수신자에게 신청 불가.
+  // sanctionExpiresAt이 null이거나 과거면 만료된 정지 → 통과 허용 (getRecommendations 패턴과 통일).
+  // runSanctionExpirySweep이 아직 실행 전일 수 있으므로 앱 레이어에서도 만료 여부 확인.
   if (
     receiverUser.sanctionStatus === 'suspended' &&
-    (!receiverUser.sanctionExpiresAt || receiverUser.sanctionExpiresAt > receiverCheckNow)
+    receiverUser.sanctionExpiresAt != null &&
+    receiverUser.sanctionExpiresAt > receiverCheckNow
   ) {
     res.status(409).json({ error: 'target_suspended' });
     return;
@@ -228,6 +232,7 @@ export async function sendGroupRequest(req: Request, res: Response) {
   }
 
   // GG-REPORT-009: 이용정지 대상자에게 그룹 신청 불가
+  // 만료된 정지는 통과 허용 (getRecommendations / sendOneToOneRequest 패턴과 통일).
   const groupReceiverCheckNow = new Date();
   const receiverUsers = await prisma.user.findMany({
     where: { userId: { in: receiverIds } },
@@ -240,7 +245,8 @@ export async function sendGroupRequest(req: Request, res: Response) {
     }
     if (
       ru.sanctionStatus === 'suspended' &&
-      (!ru.sanctionExpiresAt || ru.sanctionExpiresAt > groupReceiverCheckNow)
+      ru.sanctionExpiresAt != null &&
+      ru.sanctionExpiresAt > groupReceiverCheckNow
     ) {
       res.status(409).json({ error: 'target_suspended', userId: ru.userId.toString() });
       return;
