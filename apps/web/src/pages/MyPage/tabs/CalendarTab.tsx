@@ -88,8 +88,9 @@ export function CalendarTab() {
       }
     }
 
-    // 약속 — appointedAt 날짜를 단일 날짜 이벤트로 매핑
-    // 'appt:' 접두사 → MonthCalendar 셀에서 별도 도트로 구분 가능
+    // 약속 — appointedAt 날짜를 단일 날짜 이벤트로 매핑.
+    // 'appt:' 접두사는 Map 키 충돌 방지용이며, MonthCalendar는 현재 phase 기반 색상만
+    // 구분하고 이 접두사를 별도 처리하지 않는다 (도트 색상 미분화는 알려진 한계).
     for (const a of appointments) {
       if (!a.appointedAt) continue;
       const dateStr = a.appointedAt.slice(0, 10);

@@ -80,7 +80,11 @@ function typeMeta(t: string | null) {
 function resolveHref(n: MyNotification): string | null {
   const { notificationType: nt, relatedEntityType: ret, relatedEntityId: rid, relatedChatRoomId: rcrid } = n;
 
-  // chat_room 타입: match_request 수락됨, group_invite 수락됨, chat_message 모두
+  // chat_room 타입: match_request 수락됨, group_invite 수락됨, chat_message,
+  // 그리고 vacancy_notification(BFF에서 relatedEntityType='chat_room'으로 생성됨)까지
+  // 이 분기에서 모두 처리된다. 플랜 표의 "이벤트 폴백" 설명은 구 설계 기준이며,
+  // 실제 BFF(chat-room.ts:983)가 vacancy_notification의 relatedEntityType을 'chat_room'으로
+  // 설정하므로 채팅방 이동이 올바른 동작이다.
   if (ret === 'chat_room') {
     return rid ? `/chat/rooms/${rid}` : null;
   }
@@ -157,7 +161,21 @@ export function NotificationsPage() {
     return reload();
   }, [authLoading, user, reload]);
 
-  // 읽음 처리 + 이동 (readAt 여부와 무관하게 resolveHref로 이동)
+  // 읽음 처리만 수행 (navigate 없음) — Link의 네이티브 to 이동과 중복되지 않도록 분리.
+  // notificationType 없는 이벤트 폴백 Link의 onClick에서 이 함수만 호출한다.
+  const markReadOnly = async (n: MyNotification) => {
+    if (!n.readAt) {
+      setItems((prev) =>
+        prev.map((x) =>
+          x.notificationId === n.notificationId ? { ...x, readAt: new Date().toISOString() } : x,
+        ),
+      );
+      try { await markNotificationRead(n.notificationId); } catch { /* silent */ }
+    }
+  };
+
+  // 읽음 처리 + 이동 — resolveHref 결과가 있을 때 navigate 호출.
+  // notificationType이 있는 알림의 버튼(button 요소) onClick에서만 사용한다.
   const onItemClick = async (n: MyNotification) => {
     if (!n.readAt) {
       setItems((prev) =>
@@ -175,7 +193,9 @@ export function NotificationsPage() {
     setMarkAllBusy(true);
     try {
       await markAllNotificationsRead();
-      reload();
+      // reload()는 AbortController cleanup을 반환한다.
+      // 여기서는 effect 구독이 아닌 수동 호출이므로 cleanup을 void로 명시해 혼용을 방지한다.
+      void reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'mark-all failed');
     } finally {
@@ -194,7 +214,9 @@ export function NotificationsPage() {
     try {
       await respondMatchRequest(n.relatedEntityId, action);
       try { await markNotificationRead(n.notificationId); } catch { /* silent */ }
-      reload();
+      // reload()는 AbortController cleanup을 반환한다.
+      // 수동 호출이므로 void로 명시해 effect cleanup 반환값과의 혼용을 방지한다.
+      void reload();
     } catch (e) {
       setError(e instanceof Error ? e.message : `${action} failed`);
     } finally {
@@ -290,6 +312,7 @@ export function NotificationsPage() {
                 n={n}
                 responding={respondingIds.has(n.notificationId)}
                 onItemClick={onItemClick}
+                onMarkReadOnly={markReadOnly}
                 onRespond={onRespond}
               />
             ))}
@@ -306,11 +329,14 @@ function NotifItem({
   n,
   responding,
   onItemClick,
+  onMarkReadOnly,
   onRespond,
 }: {
   n: MyNotification;
   responding: boolean;
   onItemClick: (n: MyNotification) => void;
+  /** Link 네이티브 이동과 중복 navigate 방지용 — 읽음 처리만 수행 */
+  onMarkReadOnly: (n: MyNotification) => void;
   onRespond: (n: MyNotification, action: 'accept' | 'reject') => void;
 }) {
   const unread = !n.readAt;
@@ -385,10 +411,11 @@ function NotifItem({
           )}
 
           {/* 이벤트 링크 (notificationType 없는 이벤트 알림 폴백) */}
+          {/* onClick에서 onMarkReadOnly(읽음 처리만) 사용 — Link의 to 이동과 navigate 중복 방지 */}
           {!n.notificationType && n.eventAvailable && n.eventId && (
             <Link
               to={`/events/${n.eventId}`}
-              onClick={() => onItemClick(n)}
+              onClick={() => onMarkReadOnly(n)}
               className="mt-1 inline-flex items-center gap-1 text-[12px] text-(--color-accent) hover:underline"
             >
               이벤트 보기 <Icon name="arrow" size={12} />
