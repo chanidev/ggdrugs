@@ -75,6 +75,23 @@
 />
 ```
 
+### 다국어 폰트 Fallback (i18n 예외)
+
+기본 전략은 Pretendard 단일 패밀리이나, 6개국어 서비스(Slice 7~)에서 zh/ja/vi 렌더 시
+Han unification 글리프 왜곡·tofu 방지를 위해 언어별 fallback을 추가한다.
+
+구현: `index.css`의 `--font-sans` 커스텀 프로퍼티 체인에 추가.
+
+```css
+--font-sans: 'Pretendard Variable', 'Noto Sans JP', 'Noto Sans SC',
+             'Noto Sans Vietnamese', sans-serif;
+```
+
+로딩: Google Fonts CDN에서 `display=swap`으로 비동기 로드. Pretendard 이후 fallback이므로
+한국어/영어/프랑스어는 영향 없음.
+
+금지: Pretendard 자체를 제거하거나 언어별 완전히 다른 패밀리로 교체하는 것.
+
 **Modular scale** (8px base, 1.250 Major Third):
 
 | 레벨 | px | rem | 용도 |
