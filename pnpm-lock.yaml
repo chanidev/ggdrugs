@@ -78,12 +78,24 @@ importers:
       '@seed-design/react':
         specifier: ^1.2.10
         version: 1.2.10(@seed-design/css@1.2.12)(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(embla-carousel@8.6.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      i18next:
+        specifier: ^26.3.0
+        version: 26.3.0(typescript@5.9.3)
+      i18next-browser-languagedetector:
+        specifier: ^8.2.1
+        version: 8.2.1
+      i18next-http-backend:
+        specifier: ^4.0.0
+        version: 4.0.0
       react:
         specifier: ^19.0.0
         version: 19.2.5
       react-dom:
         specifier: ^19.0.0
         version: 19.2.5(react@19.2.5)
+      react-i18next:
+        specifier: ^17.0.8
+        version: 17.0.8(i18next@26.3.0(typescript@5.9.3))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.9.3)
       react-kakao-maps-sdk:
         specifier: ^1.2.1
         version: 1.2.1(kakao.maps.d.ts@0.1.40)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -2198,9 +2210,27 @@ packages:
   html-escaper@2.0.2:
     resolution: {integrity: sha512-H2iMtd0I4Mt5eYiapRdIDjp+XzelXQ0tFE4JS7YFwFevXXMmOp9myNrUvCg0D6ws8iqkRPBfKHgbwig1SmlLfg==}
 
+  html-parse-stringify@3.0.1:
+    resolution: {integrity: sha512-KknJ50kTInJ7qIScF3jeaFRpMpE8/lfiTdzf/twXyPBLAGrLRTmkz3AdTnKeh40X8k9L2fdYwEp/42WGXIRGcg==}
+
   http-errors@2.0.1:
     resolution: {integrity: sha512-4FbRdAX+bSdmo4AUFuS0WNiPz8NgFt+r8ThgNWmlrjQjt1Q7ZR9+zTlce2859x4KSXrwIsaeTqDoKQmtP8pLmQ==}
     engines: {node: '>= 0.8'}
+
+  i18next-browser-languagedetector@8.2.1:
+    resolution: {integrity: sha512-bZg8+4bdmaOiApD7N7BPT9W8MLZG+nPTOFlLiJiT8uzKXFjhxw4v2ierCXOwB5sFDMtuA5G4kgYZ0AznZxQ/cw==}
+
+  i18next-http-backend@4.0.0:
+    resolution: {integrity: sha512-EgSjO3Q1G6f2Q5oy7u9mmxuesE0oSfzAD97NFBjC8EmkK4guBSYLljM0Fng3DarMWIIkU70jfo4+mUzmyVISTA==}
+    engines: {node: '>=18'}
+
+  i18next@26.3.0:
+    resolution: {integrity: sha512-gHSgGpUXVmuqE2El1W61DmxeyeTlFfZgdJRWMo9jScAn5pu7TuTuiccb1zh3E2J9hEBVGJ23+96x0ieBhfuIHA==}
+    peerDependencies:
+      typescript: ^5 || ^6
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   iconv-lite@0.7.2:
     resolution: {integrity: sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw==}
@@ -2537,6 +2567,22 @@ packages:
     resolution: {integrity: sha512-J5bAZz+DXMMwW/wV3xzKke59Af6CHY7G4uYLN1OvBcKEsWOs4pQExj86BBKamxl/Ik5bx9whOrvBlSDfWzgSag==}
     peerDependencies:
       react: ^19.2.5
+
+  react-i18next@17.0.8:
+    resolution: {integrity: sha512-0ooKbGLU8JXhe1zwpQUWIeXSgLPOfwJmgheWRIUpcoA0CpyabpGhayjdG+/eA5esC1AQ8h2jWpXjJfzQzeDOCw==}
+    peerDependencies:
+      i18next: '>= 26.2.0'
+      react: '>= 16.8.0'
+      react-dom: '*'
+      react-native: '*'
+      typescript: ^5 || ^6
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+      typescript:
+        optional: true
 
   react-kakao-maps-sdk@1.2.1:
     resolution: {integrity: sha512-qvdt+82D/MxTxmgF9tXaqa6eNqMUiFOeEdn+PyU0u9EHoxeD9WMJeHkum/GWrbP62MR0qWPtZ/G4iM9f2/1TPQ==}
@@ -2971,6 +3017,10 @@ packages:
         optional: true
       jsdom:
         optional: true
+
+  void-elements@3.1.0:
+    resolution: {integrity: sha512-Dhxzh5HZuiHQhbvTW9AMetFfBHDMYpo23Uo9btPXgdYP+3T5S+p+jgNy7spra+veYhBP2dCSgxR/i2Y02h5/6w==}
+    engines: {node: '>=0.10.0'}
 
   which@2.0.2:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
@@ -5486,6 +5536,10 @@ snapshots:
 
   html-escaper@2.0.2: {}
 
+  html-parse-stringify@3.0.1:
+    dependencies:
+      void-elements: 3.1.0
+
   http-errors@2.0.1:
     dependencies:
       depd: 2.0.0
@@ -5493,6 +5547,16 @@ snapshots:
       setprototypeof: 1.2.0
       statuses: 2.0.2
       toidentifier: 1.0.1
+
+  i18next-browser-languagedetector@8.2.1:
+    dependencies:
+      '@babel/runtime': 7.29.2
+
+  i18next-http-backend@4.0.0: {}
+
+  i18next@26.3.0(typescript@5.9.3):
+    optionalDependencies:
+      typescript: 5.9.3
 
   iconv-lite@0.7.2:
     dependencies:
@@ -5803,6 +5867,17 @@ snapshots:
     dependencies:
       react: 19.2.5
       scheduler: 0.27.0
+
+  react-i18next@17.0.8(i18next@26.3.0(typescript@5.9.3))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.9.3):
+    dependencies:
+      '@babel/runtime': 7.29.2
+      html-parse-stringify: 3.0.1
+      i18next: 26.3.0(typescript@5.9.3)
+      react: 19.2.5
+      use-sync-external-store: 1.6.0(react@19.2.5)
+    optionalDependencies:
+      react-dom: 19.2.5(react@19.2.5)
+      typescript: 5.9.3
 
   react-kakao-maps-sdk@1.2.1(kakao.maps.d.ts@0.1.40)(react-dom@19.2.5(react@19.2.5))(react@19.2.5):
     dependencies:
@@ -6213,6 +6288,8 @@ snapshots:
       '@vitest/coverage-v8': 4.1.7(vitest@4.1.7)
     transitivePeerDependencies:
       - msw
+
+  void-elements@3.1.0: {}
 
   which@2.0.2:
     dependencies:
