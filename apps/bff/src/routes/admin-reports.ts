@@ -13,6 +13,7 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
 import type { AdminRequest } from '../middleware/require-admin.js';
+import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 
 // ─── 유틸 ────────────────────────────────────────────────────────────────────
 
@@ -88,7 +89,10 @@ export async function listAdminReports(req: Request, res: Response) {
         targetUser: { select: { nickname: true } },
       },
     }),
-    // byStatus 통계 — 전체 (targetType 필터 무관하게 상태별 전체 카운트)
+    // byStatus 통계 — 전체 global 카운트 (targetType 필터 무관).
+    // 의도적 설계: byStatus 뱃지는 항상 전체 신고 현황을 표시하여 관리자가
+    // 필터 적용 시에도 전체 대기/처리 건수를 한눈에 파악할 수 있게 함.
+    // (filter-scoped count 가 필요하면 total 필드 사용)
     prisma.report.groupBy({
       by: ['status'],
       _count: { _all: true },
@@ -247,6 +251,10 @@ export async function actionAdminReport(req: Request, res: Response) {
   // requireAdmin middleware guarantees req.admin is populated before this handler.
   const adminReq = req as AdminRequest;
   const admin = adminReq.admin!;
+  // [review: critical fix] admin.adminId = AdminProfile PK (auto-increment), NOT users(user_id).
+  // Report.adminId and AdminAuditLog.adminId are FK → users(user_id). Must use auth.userId.
+  // See admin-users.ts line 88 for the same pattern with explicit comment.
+  const auth = (req as AuthenticatedRequest).auth!;
 
   const reportId = parseBigId(req.params.reportId);
   if (!reportId) {
@@ -318,13 +326,14 @@ export async function actionAdminReport(req: Request, res: Response) {
   // 원자 트랜잭션
   const result = await prisma.$transaction(async (tx) => {
     let auditAction: string;
-    let notificationTarget: bigint;
-    let notificationTitle: string;
-    let notificationMessage: string;
+    // Notification 대상 (dismissed 는 알림 없음 — 플랜 T3 스펙: reports.update + adminAuditLog.create 만)
+    let notificationTarget: bigint | null = null;
+    let notificationTitle: string | null = null;
+    let notificationMessage: string | null = null;
 
     if (action === 'warned') {
       // 1a) User 경고 처리
-      // sanctionExpiresAt: null — 이전에 suspended였던 경우 만료일 오염 방지 (review: medium)
+      // sanctionExpiresAt: null — 이전에 suspended였던 경우 만료일 오염 방지
       await tx.user.update({
         where: { userId: report.targetUserId },
         data: {
@@ -361,11 +370,9 @@ export async function actionAdminReport(req: Request, res: Response) {
       notificationTitle = '허위신고 처리 안내';
       notificationMessage = '제출하신 신고가 허위신고로 처리되었습니다.';
     } else {
-      // action === 'dismissed'
+      // action === 'dismissed' — 플랜 스펙: reports.update + adminAuditLog.create 만 (알림 없음)
       auditAction = 'report_dismissed';
-      notificationTarget = report.reporterId;
-      notificationTitle = '신고 기각 안내';
-      notificationMessage = '제출하신 신고가 검토 결과 기각 처리되었습니다.';
+      // notificationTarget = null (알림 생략)
     }
 
     // 2) Report 상태 업데이트
@@ -375,7 +382,7 @@ export async function actionAdminReport(req: Request, res: Response) {
       where: { reportId },
       data: {
         status: finalStatus,
-        adminId: admin.adminId,
+        adminId: auth.userId,  // FK → users(user_id), NOT AdminProfile.adminId
         adminAction: finalAdminAction,
         adminNote: note ?? null,
         reviewedAt: now,
@@ -385,7 +392,7 @@ export async function actionAdminReport(req: Request, res: Response) {
     // 3) AdminAuditLog 생성
     const auditLog = await tx.adminAuditLog.create({
       data: {
-        adminId: admin.adminId,
+        adminId: auth.userId,  // FK → users(user_id), NOT AdminProfile.adminId
         action: auditAction,
         targetId: action === 'false_report' || action === 'dismissed' ? null : report.targetUserId,
         payload: {
@@ -400,20 +407,22 @@ export async function actionAdminReport(req: Request, res: Response) {
       select: { auditId: true },
     });
 
-    // 4) Notification 생성 — notificationType='report_action'
-    await tx.notification.create({
-      data: {
-        userId: notificationTarget,
-        title: notificationTitle,
-        message: notificationMessage,
-        scheduledAt: now,
-        isSent: true,
-        sentAt: now,
-        notificationType: 'report_action',
-        relatedEntityId: reportId,
-        relatedEntityType: 'report',
-      },
-    });
+    // 4) Notification 생성 — warned/suspended/false_report 에만 적용 (dismissed 는 알림 없음)
+    if (notificationTarget !== null && notificationTitle !== null && notificationMessage !== null) {
+      await tx.notification.create({
+        data: {
+          userId: notificationTarget,
+          title: notificationTitle,
+          message: notificationMessage,
+          scheduledAt: now,
+          isSent: true,
+          sentAt: now,
+          notificationType: 'report_action',
+          relatedEntityId: reportId,
+          relatedEntityType: 'report',
+        },
+      });
+    }
 
     return { auditId: auditLog.auditId };
   });
