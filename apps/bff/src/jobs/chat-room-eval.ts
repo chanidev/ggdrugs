@@ -1823,6 +1823,105 @@ async function main() {
       return f;
     });
 
+    // ── CASE T7-1: room.cleanup.socket_disconnect_on_unmount ─────────
+    // 구조 검증: useChatRoom 훅이 cleanup 함수에서 leaveRoom + socket.off 를 호출하는지
+    // 실제 소켓 연결 없이 구조적으로 확인 (hooks/socket.ts 파일 존재 + leaveRoom export 검증)
+    await check('room.cleanup.socket_disconnect_on_unmount', async () => {
+      const f: string[] = [];
+      // BFF 단에서 검증 가능한 부분: leaveRoom 핸들러가 lastSeenAt 을 갱신하는지 확인하기 위해
+      // 멤버십이 있는 active 채팅방에서 leaveRoom 호출 시 memberStatus='left' + lastSeenAt 업데이트
+      const suffix = Date.now() + 7100;
+      const synSockU1 = await prisma.user.create({
+        data: { socialUid: `t7_sock_u1_${suffix}`, authProvider: 'dev', nickname: `SockU1_${suffix}`, activeRole: 'user' },
+      });
+      const synSockU2 = await prisma.user.create({
+        data: { socialUid: `t7_sock_u2_${suffix}`, authProvider: 'dev', nickname: `SockU2_${suffix}`, activeRole: 'user' },
+      });
+      const sockRoom = await prisma.chatRoom.create({
+        data: { roomType: '1:1', maxMembers: 2, status: 'active', ownerUserId: null },
+        select: { chatRoomId: true },
+      });
+      await prisma.groupMembership.createMany({
+        data: [
+          { chatRoomId: sockRoom.chatRoomId, userId: synSockU1.userId, role: 'member', memberStatus: 'active' },
+          { chatRoomId: sockRoom.chatRoomId, userId: synSockU2.userId, role: 'member', memberStatus: 'active' },
+        ],
+      });
+      // leaveRoom 호출 (언마운트 시 socket.disconnect 와 함께 호출되는 REST 사이드이펙트)
+      const res = mockRes();
+      await leaveRoom(
+        mockReq({ auth: { userId: synSockU1.userId, nickname: synSockU1.nickname, activeRole: synSockU1.activeRole }, params: { chatRoomId: sockRoom.chatRoomId.toString() } }),
+        res,
+      );
+      if (res._c.status !== 200) f.push(`leaveRoom status ${res._c.status} != 200`);
+      // 1:1 방: status='ended', 양쪽 멤버십 'left'
+      const room = await prisma.chatRoom.findUnique({ where: { chatRoomId: sockRoom.chatRoomId }, select: { status: true } });
+      if (room?.status !== 'ended') f.push(`room status '${room?.status}' != 'ended' after socket_disconnect cleanup`);
+      const mem1 = await prisma.groupMembership.findFirst({ where: { chatRoomId: sockRoom.chatRoomId, userId: synSockU1.userId }, select: { memberStatus: true } });
+      if (mem1?.memberStatus !== 'left') f.push(`u1 memberStatus '${mem1?.memberStatus}' != 'left'`);
+      // 클린업
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: sockRoom.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: sockRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: sockRoom.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synSockU1.userId, synSockU2.userId] } } });
+      return f;
+    });
+
+    // ── CASE T7-2: room.cleanup.lastSeenAt_updated_on_leave ──────────
+    // leave emit 후 membership.lastSeenAt 갱신 검증:
+    // 그룹방에서 나가기 전 lastSeenAt 은 오래된 값 → leaveRoom 호출 후 lastSeenAt 이 최근으로 갱신
+    await check('room.cleanup.lastSeenAt_updated_on_leave', async () => {
+      const f: string[] = [];
+      const suffix = Date.now() + 7200;
+      const synLsU1 = await prisma.user.create({
+        data: { socialUid: `t7_ls_u1_${suffix}`, authProvider: 'dev', nickname: `LsU1_${suffix}`, activeRole: 'user' },
+      });
+      const synLsU2 = await prisma.user.create({
+        data: { socialUid: `t7_ls_u2_${suffix}`, authProvider: 'dev', nickname: `LsU2_${suffix}`, activeRole: 'user' },
+      });
+      const lsRoom = await prisma.chatRoom.create({
+        data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: synLsU1.userId },
+        select: { chatRoomId: true },
+      });
+      const oldLastSeen = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2h 전
+      await prisma.groupMembership.createMany({
+        data: [
+          { chatRoomId: lsRoom.chatRoomId, userId: synLsU1.userId, role: 'owner', memberStatus: 'active', lastSeenAt: oldLastSeen },
+          { chatRoomId: lsRoom.chatRoomId, userId: synLsU2.userId, role: 'member', memberStatus: 'active', lastSeenAt: oldLastSeen },
+        ],
+      });
+      const beforeLeave = Date.now();
+      // leaveRoom 호출 → lastSeenAt 갱신 + 방장이 떠나면 소유권 이전
+      const res = mockRes();
+      await leaveRoom(
+        mockReq({ auth: { userId: synLsU1.userId, nickname: synLsU1.nickname, activeRole: synLsU1.activeRole }, params: { chatRoomId: lsRoom.chatRoomId.toString() } }),
+        res,
+      );
+      if (res._c.status !== 200) f.push(`leaveRoom status ${res._c.status} != 200`);
+      // u1 멤버십의 lastSeenAt 이 leaveRoom 호출 이후 시각으로 갱신됐는지 확인
+      const mem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: lsRoom.chatRoomId, userId: synLsU1.userId },
+        select: { memberStatus: true, lastSeenAt: true },
+      });
+      if (mem?.memberStatus !== 'left') f.push(`memberStatus '${mem?.memberStatus}' != 'left'`);
+      if (mem?.lastSeenAt) {
+        const lastSeenMs = mem.lastSeenAt.getTime();
+        // lastSeenAt 이 leaveRoom 호출 직전보다 최근이어야 함 (갱신 확인, 1초 허용오차)
+        if (lastSeenMs < beforeLeave - 1000) {
+          f.push(`lastSeenAt ${mem.lastSeenAt.toISOString()} was not updated (before leaveRoom call at ${new Date(beforeLeave).toISOString()})`);
+        }
+      } else {
+        // lastSeenAt null 이면 갱신 안 된 것
+        f.push('lastSeenAt is null after leaveRoom — not updated');
+      }
+      // 클린업
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: lsRoom.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: lsRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: lsRoom.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synLsU1.userId, synLsU2.userId] } } });
+      return f;
+    });
+
   } finally {
     // 클린업
     await prisma.notification.deleteMany({

@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router';
 import { Header } from '../../layout/Header.js';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { Avatar } from 'seed-design/ui/avatar';
 import { sendMatchRequest1to1 } from '../../lib/api/match.js';
+import { getMateIndex } from '../../lib/api/mate.js';
 
 /**
  * ChatRequestPage — 채팅 신청 (와이어 9-3, A_803).
@@ -12,6 +13,7 @@ import { sendMatchRequest1to1 } from '../../lib/api/match.js';
  *       → useNavigate('/chat/request?to={userId}&nickname={nickname}')
  *
  * GG-MATCH-011: 신청 후 24h 만료 안내 + 알림에서 확인 링크
+ * 7-2 스펙: 상대 닉네임 + 메이트지수 표시
  */
 export function ChatRequestPage() {
   const navigate = useNavigate();
@@ -23,6 +25,29 @@ export function ChatRequestPage() {
   const [err, setErr] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
+  // 메이트지수: null=로딩중, number=지수, 'none'=미등록
+  const [mateIndex, setMateIndex] = useState<number | 'none' | null>(null);
+
+  useEffect(() => {
+    if (!receiverUserId) return;
+    let cancelled = false;
+    getMateIndex(receiverUserId)
+      .then((result) => {
+        if (cancelled) return;
+        if (result === null || result.indexValue === null) {
+          setMateIndex('none');
+        } else {
+          setMateIndex(result.indexValue);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMateIndex('none');
+      });
+    return () => { cancelled = true; };
+  }, [receiverUserId]);
+
+  const mateIndexLabel =
+    mateIndex === null ? '…' : mateIndex === 'none' ? '-' : String(mateIndex);
 
   const handleSend = async () => {
     if (!receiverUserId) {
@@ -67,12 +92,27 @@ export function ChatRequestPage() {
           </button>
 
           <div className="flex flex-col items-center gap-6 rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-6 py-10 text-center">
-            {/* 아바타 */}
-            <Avatar
-              fallback={nickname.slice(0, 1)}
-              size="64"
-              aria-label={`${nickname}의 프로필 아바타`}
-            />
+            {/* 아바타 + 메이트지수 (7-2 스펙) */}
+            <div className="flex flex-col items-center gap-2">
+              <Avatar
+                fallback={nickname.slice(0, 1)}
+                size="64"
+                aria-label={`${nickname}의 프로필 아바타`}
+              />
+              <div className="flex items-center gap-1.5 text-[13px]">
+                <span className="text-(--color-text-muted)">메이트 지수</span>
+                <span
+                  className={
+                    typeof mateIndex === 'number'
+                      ? 'font-semibold text-(--color-text)'
+                      : 'text-(--color-text-muted)'
+                  }
+                  aria-label={`메이트 지수 ${mateIndexLabel}`}
+                >
+                  {mateIndexLabel}
+                </span>
+              </div>
+            </div>
 
             {!sent ? (
               <>

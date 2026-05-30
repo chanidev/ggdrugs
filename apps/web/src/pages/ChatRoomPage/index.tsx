@@ -20,6 +20,7 @@ import {
   type ChatRoomMessageOut,
   type AppointmentOut,
 } from '../../lib/api/match.js';
+import { fetchEvents, type BffEventItem } from '../../lib/api/events.js';
 
 /**
  * ChatRoomPage — 실시간 채팅방 (와이어 9-4/9-5/9-17/9-19, A_805).
@@ -478,14 +479,14 @@ function MenuDialog({
               <p role="alert" className="text-[13px] text-(--color-error)">{actionErr}</p>
             )}
 
-            {/* 방장 메뉴: 멤버별 액션 */}
+            {/* 방장 메뉴: 멤버별 액션 (7-4 스펙: 즉시강퇴 + 강퇴투표 + 차단 + 신고placeholder) */}
             {isOwner && otherMembers.length > 0 && (
               <div className="mb-2">
                 <p className="mb-2 text-[12px] font-medium text-(--color-text-muted)">멤버 관리</p>
                 {otherMembers.map((m) => (
-                  <div key={m.userId} className="mb-2 flex items-center justify-between gap-2 rounded-(--radius-md) bg-(--color-surface-alt) p-3">
-                    <span className="text-[14px] font-medium">{m.nickname}</span>
-                    <div className="flex gap-1.5">
+                  <div key={m.userId} className="mb-2 rounded-(--radius-md) bg-(--color-surface-alt) p-3">
+                    <span className="mb-2 block text-[14px] font-medium">{m.nickname}</span>
+                    <div className="flex flex-wrap gap-1.5">
                       {/* 즉시강퇴 (GG-MATE-017) */}
                       <button
                         type="button"
@@ -504,6 +505,24 @@ function MenuDialog({
                         className="rounded-(--radius-md) border border-(--color-border) px-2 py-1 text-[12px] text-(--color-text-muted) disabled:opacity-40"
                       >
                         강퇴투표
+                      </button>
+                      {/* 차단하기 (7-4 스펙: 방장도 차단 가능) */}
+                      <button
+                        type="button"
+                        onClick={() => { void handleBlock(m.userId); }}
+                        disabled={pending}
+                        className="rounded-(--radius-md) border border-(--color-error)/40 px-2 py-1 text-[12px] text-(--color-error) disabled:opacity-40"
+                      >
+                        차단하기
+                      </button>
+                      {/* 신고 placeholder (7-4 스펙: 방장 메뉴에도 신고 버튼 placeholder 필수) */}
+                      <button
+                        type="button"
+                        disabled
+                        title="신고 기능 준비 중"
+                        className="cursor-not-allowed rounded-(--radius-md) border border-(--color-border) px-2 py-1 text-[12px] text-(--color-text-subtle) opacity-40"
+                      >
+                        신고
                       </button>
                     </div>
                   </div>
@@ -557,7 +576,8 @@ function MenuDialog({
   );
 }
 
-// ── EventSelectDialog (GG-ROOM-004) ──────────────────────────
+// ── EventSelectDialog (GG-ROOM-004/005/006) ──────────────────
+// 이름 검색 → 결과 목록 선택 → 요약 팝업 → 상세이동
 
 function EventSelectDialog({
   chatRoomId,
@@ -570,74 +590,177 @@ function EventSelectDialog({
   onClose: () => void;
   onSelected: (eventId: string) => void;
 }) {
-  const [inputEventId, setInputEventId] = useState(currentEventId ?? '');
+  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<BffEventItem[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<BffEventItem | null>(null);
+  const [summaryOpen, setSummaryOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
-  const handleSelect = async () => {
-    if (!inputEventId.trim()) {
-      setErr('이벤트 ID를 입력해 주세요.');
-      return;
+  const handleSearch = async () => {
+    const q = query.trim();
+    if (!q) return;
+    setSearching(true);
+    setErr(null);
+    try {
+      const resp = await fetchEvents({ page: 1, limit: 10 });
+      // 클라이언트 사이드 이름 필터 (BFF 텍스트 검색 엔드포인트가 별도 없으므로 제목 포함 검색)
+      const filtered = resp.items.filter((ev) =>
+        ev.title.toLowerCase().includes(q.toLowerCase()),
+      );
+      setSearchResults(filtered);
+      if (filtered.length === 0) setErr('검색 결과가 없어요. 다른 키워드를 시도해 보세요.');
+    } catch {
+      setErr('이벤트 목록을 불러오지 못했어요.');
+    } finally {
+      setSearching(false);
     }
+  };
+
+  const handleSelectEvent = async (ev: BffEventItem) => {
     setPending(true);
     setErr(null);
     try {
-      await selectRoomEvent(chatRoomId, inputEventId.trim());
-      onSelected(inputEventId.trim());
+      await selectRoomEvent(chatRoomId, ev.eventId);
+      onSelected(ev.eventId);
     } catch (e) {
       const msg = (e as Error).message;
       setErr(msg === 'EVENT_NOT_FOUND' ? '해당 이벤트를 찾을 수 없어요.' : '이벤트를 선택하지 못했어요.');
-    } finally {
       setPending(false);
     }
   };
+
+  // 선택된 이벤트 요약 팝업 (GG-ROOM-005/006)
+  if (summaryOpen && selectedEvent) {
+    return (
+      <Dialog.Root open onOpenChange={(open) => { if (!open) setSummaryOpen(false); }}>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content className="w-[340px] max-w-[92vw]">
+            <Dialog.Header>
+              <Dialog.Title>{selectedEvent.title}</Dialog.Title>
+              <Dialog.Description>
+                {selectedEvent.region.sidoName} {selectedEvent.region.sigunguName ?? ''}
+                {' · '}
+                {selectedEvent.startDate} ~ {selectedEvent.endDate}
+              </Dialog.Description>
+            </Dialog.Header>
+            <div className="flex flex-col gap-2 px-5 pb-3">
+              {/* 주관처 연락처 placeholder (GG-ROOM-003: 슬라이스4에서 실구현) */}
+              <p className="text-[12px] text-(--color-text-muted)">
+                주관처 연락처: 준비 중
+              </p>
+              {err && <p role="alert" className="text-[13px] text-(--color-error)">{err}</p>}
+            </div>
+            <Dialog.Footer>
+              <ActionButton
+                variant="neutralOutline"
+                size="medium"
+                onClick={() => setSummaryOpen(false)}
+                disabled={pending}
+              >
+                뒤로
+              </ActionButton>
+              {/* GG-ROOM-006: 상세 보기 → /events/:id */}
+              <ActionButton
+                variant="neutralSolid"
+                size="medium"
+                onClick={() => {
+                  onClose();
+                  void navigate(`/events/${selectedEvent.eventId}`);
+                }}
+                disabled={pending}
+              >
+                상세 보기
+              </ActionButton>
+              <ActionButton
+                variant="brandSolid"
+                size="medium"
+                onClick={() => { void handleSelectEvent(selectedEvent); }}
+                loading={pending}
+                disabled={pending}
+              >
+                이 축제로 정하기
+              </ActionButton>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
+      </Dialog.Root>
+    );
+  }
 
   return (
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Backdrop />
       <Dialog.Positioner>
-        <Dialog.Content className="w-[340px] max-w-[92vw]">
+        <Dialog.Content className="w-[360px] max-w-[92vw]">
           <Dialog.Header>
             <Dialog.Title>같이 갈 축제 정하기</Dialog.Title>
             <Dialog.Description>
-              이벤트 ID를 입력하면 채팅방에 축제 정보가 연결돼요. (GG-ROOM-004)
+              축제 이름으로 검색해 채팅방에 연결하세요. (GG-ROOM-004)
             </Dialog.Description>
           </Dialog.Header>
 
           <div className="flex flex-col gap-3 px-5 pb-3">
-            <label htmlFor="event-id-input" className="text-[13px] font-medium">
-              이벤트 ID
-            </label>
-            <input
-              id="event-id-input"
-              type="text"
-              value={inputEventId}
-              onChange={(e) => setInputEventId(e.target.value)}
-              placeholder="이벤트 ID 입력"
-              className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 py-2 text-[14px] focus:border-(--color-accent) focus:outline-none"
-            />
-            {/* 주관처 연락처 (GG-ROOM-003 placeholder) */}
-            {currentEventId && (
+            {/* 검색 입력 */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') void handleSearch(); }}
+                placeholder="축제 이름 입력"
+                aria-label="축제 이름 검색"
+                className="flex-1 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-3 py-2 text-[14px] focus:border-(--color-accent) focus:outline-none"
+              />
+              <ActionButton
+                variant="neutralOutline"
+                size="small"
+                onClick={() => { void handleSearch(); }}
+                loading={searching}
+                disabled={searching || !query.trim()}
+              >
+                검색
+              </ActionButton>
+            </div>
+
+            {/* 현재 선택된 축제 안내 */}
+            {currentEventId && searchResults.length === 0 && (
               <p className="text-[12px] text-(--color-text-muted)">
                 현재 선택된 축제 ID: {currentEventId}
-                {/* GG-ROOM-003: 슬라이스4에서 주관처 연락처 실구현 */}
               </p>
             )}
+
+            {/* 검색 결과 목록 */}
+            {searchResults.length > 0 && (
+              <div className="max-h-[200px] overflow-y-auto rounded-(--radius-md) border border-(--color-border)">
+                {searchResults.map((ev) => (
+                  <button
+                    key={ev.eventId}
+                    type="button"
+                    onClick={() => {
+                      setSelectedEvent(ev);
+                      setSummaryOpen(true);
+                    }}
+                    className="flex w-full flex-col gap-0.5 border-b border-(--color-border) px-3 py-2 text-left last:border-b-0 hover:bg-(--color-surface-alt)"
+                  >
+                    <span className="text-[14px] font-medium text-(--color-text)">{ev.title}</span>
+                    <span className="text-[12px] text-(--color-text-muted)">
+                      {ev.region.sidoName} · {ev.startDate}~{ev.endDate}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
             {err && <p role="alert" className="text-[13px] text-(--color-error)">{err}</p>}
           </div>
 
           <Dialog.Footer>
             <ActionButton variant="neutralOutline" size="medium" onClick={onClose} disabled={pending}>
-              취소
-            </ActionButton>
-            <ActionButton
-              variant="brandSolid"
-              size="medium"
-              onClick={() => { void handleSelect(); }}
-              loading={pending}
-              disabled={pending}
-            >
-              선택하기
+              닫기
             </ActionButton>
           </Dialog.Footer>
         </Dialog.Content>
@@ -667,6 +790,10 @@ function AppointmentDialog({
 
   // 약속 투표 액션
   const [votePending, setVotePending] = useState(false);
+
+  // 역제안용 날짜/시간 입력 (GG-ROOM-016)
+  const [counterDateStr, setCounterDateStr] = useState('');
+  const [counterTimeStr, setCounterTimeStr] = useState('');
 
   const canVote =
     currentAppointment &&
@@ -700,6 +827,7 @@ function AppointmentDialog({
   const handleVote = async (vote: 'agree' | 'reject' | 'counter', counterAt?: string) => {
     if (!currentAppointment) return;
     setVotePending(true);
+    setErr(null);
     try {
       await voteAppointment(chatRoomId, currentAppointment.appointmentId, {
         vote,
@@ -711,6 +839,19 @@ function AppointmentDialog({
     } finally {
       setVotePending(false);
     }
+  };
+
+  const handleCounter = () => {
+    if (!counterDateStr || !counterTimeStr) {
+      setErr('역제안할 날짜와 시간을 입력해 주세요.');
+      return;
+    }
+    const counterAt = new Date(`${counterDateStr}T${counterTimeStr}`);
+    if (isNaN(counterAt.getTime())) {
+      setErr('올바른 날짜/시간을 입력해 주세요.');
+      return;
+    }
+    void handleVote('counter', counterAt.toISOString());
   };
 
   return (
@@ -728,7 +869,7 @@ function AppointmentDialog({
           </Dialog.Header>
 
           <div className="flex flex-col gap-3 px-5 pb-3">
-            {/* 현재 약속 표시 */}
+            {/* 현재 약속 표시 + 투표 액션 */}
             {currentAppointment && canVote && (
               <div className="rounded-(--radius-md) bg-(--color-surface-alt) p-3">
                 <p className="text-[13px] font-medium">제안된 약속</p>
@@ -758,8 +899,42 @@ function AppointmentDialog({
                   >
                     거절
                   </ActionButton>
-                  {/* 역제안 (GG-ROOM-016): 현재는 새 날짜 입력 후 counter */}
                 </div>
+              </div>
+            )}
+
+            {/* 역제안 입력 폼 (GG-ROOM-016) — canVote 상태에서만 표시 */}
+            {canVote && (
+              <div className="rounded-(--radius-md) border border-(--color-border) p-3">
+                <p className="mb-2 text-[13px] font-medium text-(--color-text-muted)">역제안 날짜/시간</p>
+                <div className="flex gap-2">
+                  <input
+                    id="counter-date"
+                    type="date"
+                    value={counterDateStr}
+                    onChange={(e) => setCounterDateStr(e.target.value)}
+                    aria-label="역제안 날짜"
+                    className="flex-1 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-2 py-1.5 text-[13px] focus:border-(--color-accent) focus:outline-none"
+                  />
+                  <input
+                    id="counter-time"
+                    type="time"
+                    value={counterTimeStr}
+                    onChange={(e) => setCounterTimeStr(e.target.value)}
+                    aria-label="역제안 시간"
+                    className="w-[100px] rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) px-2 py-1.5 text-[13px] focus:border-(--color-accent) focus:outline-none"
+                  />
+                </div>
+                <ActionButton
+                  variant="neutralSolid"
+                  size="small"
+                  onClick={handleCounter}
+                  loading={votePending}
+                  disabled={votePending || !counterDateStr || !counterTimeStr}
+                  className="mt-2 w-full"
+                >
+                  역제안하기
+                </ActionButton>
               </div>
             )}
 
@@ -806,7 +981,7 @@ function AppointmentDialog({
           </div>
 
           <Dialog.Footer>
-            <ActionButton variant="neutralOutline" size="medium" onClick={onClose} disabled={pending}>
+            <ActionButton variant="neutralOutline" size="medium" onClick={onClose} disabled={pending || votePending}>
               닫기
             </ActionButton>
             {!canVote && (
