@@ -10,11 +10,13 @@
  *     아니면 409 not_attended_yet.
  *   - [이슈4] Appointment.eventId 게이트 (null 시 400 event_required)
  *   - [이슈7] evaluatedUserId가 동일 chatRoomId 멤버인지 검증
- *   - MateEvaluation + FestivalSurvey + FestivalReview + CreditLedger 원자 저장
- *   - [오버라이드] 크레딧 3종 (모두 트랜잭션 내):
- *     mate_eval_complete +10 — 메이트 평가 1건당
- *     review_complete +10    — 후기 최초 제출 1회 (FestivalReview 신규 생성 시)
- *     appointment_complete +10 — 스케줄러 잡(notifyMateEval)에서 적립 — 여기서는 미생성
+ *   - MateEvaluation + FestivalSurvey + FestivalReview + mate_eval_complete 크레딧 원자 저장
+ *   - [리뷰 critical 수정] review_complete 크레딧은 트랜잭션 밖 bare prisma.* 로 적립.
+ *     이유: Prisma 5 interactive transaction은 SAVEPOINT를 사용하지 않으므로
+ *     트랜잭션 내 P2002 catch 후 이후 SQL이 "transaction is aborted" 오류를 유발.
+ *     → review_complete insert를 트랜잭션 커밋 후 별도 bare prisma.creditLedger.create 로 분리.
+ *     try/catch P2002 를 적용해 idempotent 처리 (uq_credit_review_complete_user 최종 방어선).
+ *   - appointment_complete +10 — 스케줄러 잡(notifyMateEval)에서 적립 — 여기서는 미생성
  *   - best-effort: updateMateIndex(evaluatedUserId)
  *
  * GET /community/appointments/:appointmentId/evaluation
@@ -160,7 +162,22 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
   if (!reviewRating) { res.status(400).json({ error: 'reviewRating 1~5 required' }); return; }
 
   // ── Step E: 트랜잭션 저장 ────────────────────────────────────────────
+  // [리뷰 critical 수정] review_complete 크레딧 insert를 트랜잭션 밖으로 이동.
+  // 이유: Prisma 5 interactive transaction은 PostgreSQL SAVEPOINT를 사용하지 않는다.
+  // 트랜잭션 내에서 P2002(uq_credit_review_complete_user 위반) 발생 시 catch 후에도
+  // PostgreSQL이 트랜잭션을 "aborted" 상태로 표시하므로 이후 SQL(mate_eval_complete insert 등)이
+  // 'ERROR: current transaction is aborted' 오류를 유발 → 전체 롤백 + 500.
+  // 해결책: review_complete insert를 트랜잭션 커밋 성공 후 별도 bare prisma.* 호출로 분리.
+  // 이는 chat-scheduler.ts의 notifyMateEval 패턴(appointment_complete·notif 모두 bare prisma.*)과
+  // 동일한 idiomatic 접근법이다.
+  //
+  // N-1 그룹 평가에서 review_complete 중복 방지:
+  //   트랜잭션 내 festivalReview.upsert에서 isNewReview(FestivalReview 신규 생성 여부)를
+  //   upsert 결과의 _count를 확인하거나 사전 findUnique로 판별한다.
+  //   트랜잭션 커밋 후 isNewReview=true인 경우에만 review_complete 적립.
+  //   TOCTOU 최종 방어선: uq_credit_review_complete_user partial unique index (P2002 → idempotent).
   let evalId: bigint;
+  let isNewReview = false; // review_complete 크레딧 적립 여부 플래그 (트랜잭션 밖에서 사용)
   try {
     const result = await prisma.$transaction(async (tx) => {
       const ev = await tx.mateEvaluation.create({
@@ -176,7 +193,7 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
         select: { evalId: true },
       });
 
-      // [이슈review:critical] N-1 그룹 평가 시맨틱:
+      // [그룹 N-1 평가 시맨틱]
       // FestivalSurvey/FestivalReview는 UNIQUE (appointmentId, userId) — 참가자당 1회.
       // 그룹 N인 방에서 u1이 u2·u3를 각각 평가할 때 2번째 POST부터는 이미 존재하므로 skip.
       // upsert({update:{}}) = "create if not exists, otherwise no-op" 패턴.
@@ -193,16 +210,13 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
       // festivalReview.upsert 전 존재 여부 확인 — review_complete 크레딧 1회성 적립에 사용.
       // 그룹 N-1 시나리오: u1이 u2·u3를 각각 평가하는 2번째 POST에서 FestivalReview가 이미
       // 존재하므로 upsert는 no-op. review_complete 크레딧은 최초 생성 시 1회만 적립한다.
-      // dedup 방어선(1차): existingReview 조회 (READ COMMITTED 하에서 선행 트랜잭션이 커밋된 행 감지).
-      // dedup 최종 방어선: uq_credit_review_complete_user partial unique index
-      //   (migration.sql 20260530140000_phase2_eval_credit 에 정의).
-      //   TOCTOU 경합(동시 rapid-retry / client double-tap) 시에도 DB가 중복 삽입을 P2002로 거부.
-      //   uq_festival_review_pair 는 FestivalReview 행의 중복 삽입을 막는 인덱스이며
-      //   credit_ledgers review_complete dedup 과는 무관하다.
+      // existingReview=null → 신규 생성(isNewReview=true) → 트랜잭션 밖 review_complete 적립.
+      // existingReview!=null → 이미 존재(isNewReview=false) → review_complete 건너뜀.
       const existingReview = await tx.festivalReview.findUnique({
         where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
         select: { reviewId: true },
       });
+      const willCreateReview = !existingReview;
 
       await tx.festivalReview.upsert({
         where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
@@ -217,31 +231,7 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
         update: {}, // no-op: 이미 존재하면 변경 없음
       });
 
-      // review_complete 크레딧 적립 +10 (최초 후기 제출 시 1회).
-      // FestivalReview가 신규 생성(existingReview=null)인 경우에만 시도.
-      // 그룹 N-1에서 2번째 이후 평가 POST는 FestivalReview가 이미 존재(existingReview!=null)
-      // → 이 블록을 건너뜀으로써 review_complete 중복 적립 방지 (1차 방어).
-      // TOCTOU 경합(동시 rapid-retry / client double-tap)에 대한 최종 방어선은
-      // uq_credit_review_complete_user partial unique index — P2002 throw 시 무시(idempotent).
-      if (!existingReview) {
-        try {
-          await tx.creditLedger.create({
-            data: {
-              userId: auth.userId,
-              action: 'review_complete',
-              pointsAmount: CREDIT_REVIEW,
-              appointmentId,
-            },
-          });
-        } catch (creditErr) {
-          // uq_credit_review_complete_user 위반: 동시 rapid-retry 등으로 이미 적립됨 → 무시(idempotent).
-          if (!(creditErr instanceof Prisma.PrismaClientKnownRequestError && creditErr.code === 'P2002')) {
-            throw creditErr;
-          }
-        }
-      }
-
-      // [오버라이드] 크레딧 적립: mate_eval_complete +10
+      // [오버라이드] 크레딧 적립: mate_eval_complete +10 (트랜잭션 내)
       // appointment_complete는 스케줄러 잡(notifyMateEval)에서 별도 적립.
       //
       // [리뷰 medium] mate_eval_complete dedup 분석:
@@ -270,14 +260,39 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
         },
       });
 
-      return ev;
+      return { ev, willCreateReview };
     });
-    evalId = result.evalId;
+    evalId = result.ev.evalId;
+    isNewReview = result.willCreateReview;
   } catch (e) {
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
       res.status(409).json({ error: 'already_submitted' }); return;
     }
     throw e;
+  }
+
+  // ── Step E2: review_complete 크레딧 (트랜잭션 밖 bare prisma.*) ──────
+  // [리뷰 critical 수정] 트랜잭션이 커밋된 후에 별도 적립.
+  // isNewReview=true 이고 FestivalReview 신규 생성인 경우에만 시도.
+  // TOCTOU 최종 방어선: uq_credit_review_complete_user partial unique index
+  //   (20260530150000_add_review_complete_dedup_index/migration.sql).
+  //   P2002 → catch → 무시 (idempotent, 동시 rapid-retry / client double-tap 내성).
+  if (isNewReview) {
+    try {
+      await prisma.creditLedger.create({
+        data: {
+          userId: auth.userId,
+          action: 'review_complete',
+          pointsAmount: CREDIT_REVIEW,
+          appointmentId,
+        },
+      });
+    } catch (creditErr) {
+      // uq_credit_review_complete_user 위반: 동시 경합으로 이미 적립됨 → 무시(idempotent).
+      if (!(creditErr instanceof Prisma.PrismaClientKnownRequestError && creditErr.code === 'P2002')) {
+        throw creditErr;
+      }
+    }
   }
 
   // ── Step F: MateIndex 갱신 (best-effort, 트랜잭션 밖) ────────────────

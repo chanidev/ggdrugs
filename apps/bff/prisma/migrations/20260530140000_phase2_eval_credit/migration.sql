@@ -86,13 +86,9 @@ CREATE UNIQUE INDEX uq_credit_appt_complete_user
   ON credit_ledgers (appointment_id, user_id)
   WHERE action = 'appointment_complete';
 
--- review_complete dedup DB-level 보장:
--- TOCTOU(동시 rapid-retry / client double-tap) 경합 방지를 위한 partial unique index.
--- existingReview 조회(1차 방어)가 READ COMMITTED 하에서 경합을 뚫리더라도 이 인덱스가 P2002로 거부.
--- evaluation.ts 트랜잭션 내 try/catch(P2002) 패턴이 이 인덱스를 최종 방어선으로 사용.
-CREATE UNIQUE INDEX uq_credit_review_complete_user
-  ON credit_ledgers (appointment_id, user_id)
-  WHERE action = 'review_complete';
+-- [review_complete dedup index는 20260530150000_add_review_complete_dedup_index/migration.sql 에서 추가됨]
+-- (기존 적용 마이그레이션 파일에 인덱스를 추가하면 prisma migrate deploy 체크섬 불일치로 재실행 불가.
+--  신규 마이그레이션 파일로 분리 — ADR 0007 review_complete dedup 결정 참조.)
 
 -- [리뷰 medium] mate_eval 알림 DB-level dedup:
 -- TOCTOU(findFirst+create) 경합 방지를 위한 partial unique index.

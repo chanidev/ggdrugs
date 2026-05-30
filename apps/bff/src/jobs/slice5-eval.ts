@@ -242,6 +242,71 @@ async function main() {
       return f;
     });
 
+    // ── CASE 7c: [리뷰 critical] review_complete TOCTOU 시뮬레이션 ──────────
+    // 사전에 review_complete 크레딧 행을 수동 삽입 후 submitEvaluation 호출.
+    // → review_complete는 uq_credit_review_complete_user 위반(P2002) → idempotent 무시.
+    // → 응답 201 && reviewCreditCount === 1 (중복 삽입 없음) 검증.
+    //
+    // 별도 채팅방/약속 픽스처를 사용해 CASE 1~2의 상태와 격리.
+    await check('credit.review_complete.toctou_idempotent', async () => {
+      const toctouRoom = await prisma.chatRoom.create({
+        data: { roomType: '1:1', status: 'active', maxMembers: 2 },
+        select: { chatRoomId: true },
+      });
+      await prisma.groupMembership.createMany({ data: [
+        { chatRoomId: toctouRoom.chatRoomId, userId: u1.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: toctouRoom.chatRoomId, userId: u2.userId, role: 'member', memberStatus: 'active' },
+      ]});
+      const toctouAppt = await prisma.appointment.create({
+        data: {
+          chatRoomId: toctouRoom.chatRoomId,
+          proposerUserId: u1.userId,
+          status: 'confirmed',
+          eventId: event.eventId,
+          appointedAt: new Date(Date.now() - 60 * 60 * 1000), // 과거
+          expiresAt: new Date(Date.now() + 36 * 3600 * 1000),
+        },
+        select: { appointmentId: true },
+      });
+
+      // TOCTOU 시뮬레이션: submitEvaluation 호출 전에 review_complete 크레딧을 수동 선행 삽입.
+      // (실제 TOCTOU 시나리오: 동시 rapid-retry에서 첫 요청이 커밋 직후 두 번째 요청의
+      //  review_complete insert가 이미 행을 만든 상황)
+      await prisma.creditLedger.create({
+        data: {
+          userId: auth1.userId,
+          action: 'review_complete',
+          pointsAmount: 10, // CREDIT_REVIEW 상수 값 (evaluation.ts 내부 상수)
+          appointmentId: toctouAppt.appointmentId,
+        },
+      });
+
+      const res = mockRes();
+      await submitEvaluation(
+        mockReq({ auth: auth1, params: { appointmentId: toctouAppt.appointmentId.toString() }, body: { ...BASE_EVAL_BODY, evaluatedUserId: u2.userId.toString() } }),
+        res,
+      );
+
+      const f: string[] = [];
+      // 201 응답 (review_complete P2002는 idempotent 처리돼야 함 — 500 반환 금지)
+      if (res._c.status !== 201) f.push(`status ${res._c.status} != 201 (TOCTOU: review_complete P2002 should be swallowed, not 500)`);
+      // review_complete 크레딧 행은 정확히 1개 (중복 삽입 없음)
+      const reviewCreditCount = await prisma.creditLedger.count({
+        where: { userId: auth1.userId, action: 'review_complete', appointmentId: toctouAppt.appointmentId },
+      });
+      if (reviewCreditCount !== 1) f.push(`review_complete credit count ${reviewCreditCount} != 1 (expected exactly 1, TOCTOU dedup violated)`);
+
+      // 클린업
+      await prisma.creditLedger.deleteMany({ where: { appointmentId: toctouAppt.appointmentId } });
+      await prisma.festivalReview.deleteMany({ where: { appointmentId: toctouAppt.appointmentId } });
+      await prisma.festivalSurvey.deleteMany({ where: { appointmentId: toctouAppt.appointmentId } });
+      await prisma.mateEvaluation.deleteMany({ where: { appointmentId: toctouAppt.appointmentId } });
+      await prisma.appointment.delete({ where: { appointmentId: toctouAppt.appointmentId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: toctouRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: toctouRoom.chatRoomId } });
+      return f;
+    });
+
     // ── CASE 8: GET /me/credits 잔액 반영 ────────────────────────────────
     await check('credit.balance.ok', async () => {
       const res = mockRes();
