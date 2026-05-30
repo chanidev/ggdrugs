@@ -80,22 +80,26 @@
 기본 전략은 Pretendard 단일 패밀리이나, 6개국어 서비스(Slice 7~)에서 zh/ja/vi 렌더 시
 Han unification 글리프 왜곡·tofu 방지를 위해 언어별 fallback을 추가한다.
 
-구현: `index.css`의 `--font-sans` 커스텀 프로퍼티 체인에 추가.
+구현: `index.css`의 `--font-sans` 커스텀 프로퍼티 체인에서 **기존 OS/한국어 fallback을 유지한 채** `sans-serif` 직전에 삽입(extend, 교체 아님).
+
+실제 index.css 전체 체인:
 
 ```css
---font-sans: 'Pretendard Variable', 'Noto Sans JP', 'Noto Sans SC',
-             'Noto Sans', sans-serif;
+--font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+  system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo',
+  'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji',
+  'Noto Sans JP', 'Noto Sans SC', 'Noto Sans', sans-serif;
 ```
 
 로딩: Google Fonts CDN에서 `display=swap`으로 비동기 로드. Pretendard 이후 fallback이므로
 한국어/영어/프랑스어는 영향 없음.
 
 ```css
-/* 참고 @import 예시 (index.css 구현 기준) */
+/* @import (index.css 최상단) */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap');
 ```
 
-금지: Pretendard 자체를 제거하거나 언어별 완전히 다른 패밀리로 교체하는 것.
+금지: Pretendard 자체를 제거하거나 언어별 완전히 다른 패밀리로 교체하는 것. 기존 OS/한국어 fallback 체인(-apple-system, Noto Sans KR 등)을 제거하는 것.
 
 **Modular scale** (8px base, 1.250 Major Third):
 
