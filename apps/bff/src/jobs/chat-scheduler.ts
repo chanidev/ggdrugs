@@ -474,13 +474,12 @@ export interface NotifyMateEvalResult {
  * @param now        기준 시각 (기본: 현재)
  * @param appointmentIds  처리할 약속 ID 목록 (테스트 격리용 필터). 미지정 시 전체 DB 대상.
  *
- * [이슈review:important] N+1 완화:
- *   - 약속별로 groupMembership을 개별 조회하는 구조는 유지하되,
- *     알림/크레딧 dedup은 INSERT … ON CONFLICT DO NOTHING (raw SQL) 방식을 사용한다.
- *     이로써 per-member findFirst 2건(TOCTOU 경합 포함)을 각 1건의 upsert로 대체.
- * [이슈review:important] 처리 완료 표시:
- *   - DB 유니크 제약(uq_credit_appt_complete_user, Notification의 unique_notification_per_entity)에
- *     의해 중복 행 삽입이 DB 차원에서 차단된다. 처음 insert 성공 = 새로 생성, conflict = 이미 처리.
+ * [이슈review:important] dedup 신뢰 수준:
+ *   - DB-level unique 제약 없음 — credit_ledgers 및 notifications 테이블에 현재
+ *     관련 UNIQUE 제약이 존재하지 않는다. 아래 findFirst+create 패턴은 TOCTOU 경합이
+ *     가능하며, 단일 프로세스 순차 실행에서만 안전하다.
+ *   - 향후 uq_credit_appt_complete_user(credit_ledgers) 및
+ *     notifications unique 제약 추가 시 upsert/skipDuplicates 패턴으로 교체 권장.
  */
 export async function notifyMateEval(
   now: Date = new Date(),

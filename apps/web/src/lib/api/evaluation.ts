@@ -32,7 +32,13 @@ export async function submitEvaluation(appointmentId: string, body: EvalSubmitBo
     withCredentials({ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
   );
   if (res.status === 401) throw new Error('UNAUTHENTICATED');
-  if (res.status === 409) throw new Error('ALREADY_SUBMITTED');
+  if (res.status === 409) {
+    // 409 응답 body를 읽어 에러 종류를 구분한다.
+    // BFF는 { error: 'not_attended_yet' } 또는 { error: 'already_submitted' } 형태로 응답.
+    const body = await res.json().catch(() => ({})) as { error?: string };
+    if (body.error === 'not_attended_yet') throw new Error('NOT_ATTENDED_YET');
+    throw new Error('ALREADY_SUBMITTED');
+  }
   if (res.status === 400) throw new Error(`VALIDATION: ${await res.text().catch(() => '')}`);
   if (!res.ok) throw new Error(`POST evaluate ${res.status}`);
   return (await res.json()) as EvalResult;

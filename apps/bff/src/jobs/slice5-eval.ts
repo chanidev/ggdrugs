@@ -271,10 +271,11 @@ async function main() {
       if (appointmentCredit && appointmentCredit.pointsAmount !== 10) f.push(`appointment_complete pointsAmount ${appointmentCredit.pointsAmount} != 10`);
 
       // dedup: 두 번 실행해도 알림/크레딧 중복 없음
+      // [리뷰 지적] 두 번째 호출도 픽스처 범위([appt.appointmentId])로 격리 — DB 전체 오염 방지.
       const before = await prisma.notification.count({
         where: { notificationType: 'mate_eval', relatedEntityId: appt.appointmentId, relatedEntityType: 'appointment' },
       });
-      await notifyMateEval(new Date());
+      await notifyMateEval(new Date(), [appt.appointmentId]);
       const after = await prisma.notification.count({
         where: { notificationType: 'mate_eval', relatedEntityId: appt.appointmentId, relatedEntityType: 'appointment' },
       });

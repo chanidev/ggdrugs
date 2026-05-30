@@ -86,7 +86,7 @@ export function EvaluationPage() {
       const msg = e instanceof Error ? e.message : String(e);
       if (msg === 'ALREADY_SUBMITTED') {
         setError('이미 평가를 완료했어요.');
-      } else if (msg.includes('not_attended_yet')) {
+      } else if (msg === 'NOT_ATTENDED_YET') {
         setError('약속 날짜가 지나지 않아 평가할 수 없어요.');
       } else {
         setError('제출 중 오류가 발생했어요. 다시 시도해 주세요.');
