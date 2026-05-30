@@ -673,12 +673,16 @@ export async function leaveRoom(req: Request, res: Response) {
 
   const now = new Date();
 
-  await prisma.$transaction(async (tx) => {
-    // 내 멤버십 left 처리
-    await tx.groupMembership.update({
-      where: { membershipId: membership.membershipId },
-      data: { memberStatus: 'left', leftAt: now },
-    });
+  // 스케줄러(handleInactiveMembers 등)가 group_memberships 를 동시 갱신해
+  // write conflict/deadlock(P2034) 가 날 수 있어 짧게 재시도한다 (REST+스케줄러 동시성).
+  for (let attempt = 0; ; attempt++) {
+    try {
+      await prisma.$transaction(async (tx) => {
+        // 내 멤버십 left 처리 (lastSeenAt 도 갱신 — 나가기는 활동)
+        await tx.groupMembership.update({
+          where: { membershipId: membership.membershipId },
+          data: { memberStatus: 'left', leftAt: now, lastSeenAt: now },
+        });
 
     await tx.chatRoomMessage.create({
       data: {
@@ -766,7 +770,21 @@ export async function leaveRoom(req: Request, res: Response) {
         }
       }
     }
-  });
+      });
+      break;
+    } catch (e) {
+      const pe = e as { code?: string; message?: string };
+      const conflict =
+        pe.code === 'P2034' ||
+        (pe.message ?? '').includes('write conflict') ||
+        (pe.message ?? '').includes('deadlock');
+      if (conflict && attempt < 3) {
+        await new Promise((r) => setTimeout(r, 20 * (attempt + 1)));
+        continue;
+      }
+      throw e;
+    }
+  }
 
   logger.info(
     { action: 'chat_room_leave', chatRoomId: chatRoomId.toString(), userId: maskId(auth.userId), roomType: room.roomType },

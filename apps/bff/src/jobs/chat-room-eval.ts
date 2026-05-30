@@ -1918,6 +1918,8 @@ async function main() {
       await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: lsRoom.chatRoomId } });
       await prisma.groupMembership.deleteMany({ where: { chatRoomId: lsRoom.chatRoomId } });
       await prisma.chatRoom.delete({ where: { chatRoomId: lsRoom.chatRoomId } });
+      // leaveRoom 이 방장 이전 시 생성하는 notification 을 user 삭제 전에 정리 (FK)
+      await prisma.notification.deleteMany({ where: { userId: { in: [synLsU1.userId, synLsU2.userId] } } });
       await prisma.user.deleteMany({ where: { userId: { in: [synLsU1.userId, synLsU2.userId] } } });
       return f;
     });
