@@ -101,7 +101,7 @@ export function MobileShell({
 
       <MobileFloatingHeader />
 
-      <BottomSheet snap={snap} onSnapChange={setSnap} ariaLabel="이벤트 시트">
+      <BottomSheet snap={snap} onSnapChange={setSnap}>
         {selectedEventId ? (
           <SelectedEventView
             key={selectedEventId}
@@ -229,7 +229,7 @@ function TabbedView({
   return (
     <>
       <nav
-        aria-label="시트 탭"
+        aria-label={t('mobile.sheetTabsLabel')}
         className="grid shrink-0 grid-cols-3 border-b border-(--color-border) bg-(--color-surface) px-3"
       >
         {TAB_ORDER.map((tabItem) => {

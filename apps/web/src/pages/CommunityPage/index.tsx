@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { CommunityShell } from './parts/CommunityShell.js';
 import { CategoryGrid, type CategoryFilter } from './parts/CategoryGrid.js';
 import { PostList } from './parts/PostList.js';
@@ -18,6 +19,7 @@ import { ActionButton } from 'seed-design/ui/action-button';
  * GG-COMM-005: 목록 → 상세 진입 (Link to /community/posts/:id)
  */
 export function CommunityPage() {
+  const { t } = useTranslation('common');
   const { user } = useCurrentUser();
   const [cat, setCat] = useState<CategoryFilter>('all');
   const [items, setItems] = useState<PostListItem[]>([]);
@@ -58,7 +60,7 @@ export function CommunityPage() {
               - 스크린리더는 description '로그인이 필요해요'도 추가 안내함
             disabled 시 브라우저 title이 억제되므로 visually-hidden span으로 보완. */}
         {!user && (
-          <span id="write-btn-hint" className="sr-only">로그인이 필요해요</span>
+          <span id="write-btn-hint" className="sr-only">{t('error.loginRequired')}</span>
         )}
         <ActionButton
           variant="brandSolid"
@@ -69,7 +71,7 @@ export function CommunityPage() {
           disabled={!user}
           aria-describedby={user ? undefined : 'write-btn-hint'}
         >
-          글쓰기
+          {t('button.write')}
         </ActionButton>
       </div>
       <PostList items={items} loading={loading} error={error} {...(user?.userId ? { currentUserId: user.userId } : {})} />

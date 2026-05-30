@@ -30,17 +30,18 @@ export function EventSummaryPanel({
   eventId: string;
   onClose: () => void;
 }) {
+  const { t } = useTranslation('navigation');
   return (
     <aside
-      aria-label="선택된 이벤트 요약"
+      aria-label={t('eventSummary.asideAriaLabel')}
       className="absolute bottom-0 left-[616px] top-0 z-10 hidden w-[380px] flex-col border-r border-(--color-border) bg-(--color-surface) shadow-(--shadow-lg) motion-safe:animate-[alle-panel-in_280ms_cubic-bezier(0,0,0.2,1)] md:flex"
     >
       <header className="flex shrink-0 items-center justify-between border-b border-(--color-border) px-5 pb-4 pt-5">
-        <h3 className="m-0 text-[16px] font-bold tracking-[-0.015em]">이벤트 요약</h3>
+        <h3 className="m-0 text-[16px] font-bold tracking-[-0.015em]">{t('eventSummary.title')}</h3>
         <button
           type="button"
           onClick={onClose}
-          aria-label="요약 패널 닫기"
+          aria-label={t('eventSummary.closeAriaLabel')}
           className="flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
         >
           <Icon name="close" size={18} />
@@ -58,7 +59,8 @@ export function EventSummaryPanel({
  * 모바일은 BottomSheet 내부 `<section>`.
  */
 export function EventSummaryContent({ eventId }: { eventId: string }) {
-  const { t } = useTranslation('common');
+  const { t: tc } = useTranslation('common');
+  const { t } = useTranslation('navigation');
   const navigate = useNavigate();
   const [state, setState] = useState<{
     loading: boolean;
@@ -87,10 +89,10 @@ export function EventSummaryContent({ eventId }: { eventId: string }) {
       <div className="min-h-0 flex-1 overflow-y-auto">
         {state.loading && <SummarySkeleton />}
         {state.error === 'NOT_FOUND' && (
-          <EmptyBox label={t('label.notFound')} hint={t('error.networkError')} />
+          <EmptyBox label={tc('label.notFound')} hint={tc('error.networkError')} />
         )}
         {state.error === 'ERROR' && (
-          <EmptyBox label={t('error.loadFailed')} hint={t('error.networkError')} />
+          <EmptyBox label={tc('error.loadFailed')} hint={tc('error.networkError')} />
         )}
         {state.data && <SummaryBody detail={state.data} />}
       </div>
@@ -106,7 +108,7 @@ export function EventSummaryContent({ eventId }: { eventId: string }) {
             onClick={() => navigate(`/events/${eventId}`)}
             className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
           >
-            상세 페이지로 <Icon name="arrow" size={14} />
+            {t('eventSummary.detailPage')} <Icon name="arrow" size={14} />
           </button>
         </footer>
       )}
@@ -115,6 +117,7 @@ export function EventSummaryContent({ eventId }: { eventId: string }) {
 }
 
 function SummaryBody({ detail }: { detail: BffEventDetail }) {
+  const { t } = useTranslation('navigation');
   const location = detail.addressDetail ?? detail.region.fullAddress;
   const dateLabel =
     detail.startDate === detail.endDate
@@ -136,7 +139,7 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[12px] text-(--color-text-subtle)">
-            포스터 없음
+            {t('eventSummary.noPoster')}
           </div>
         )}
       </div>
@@ -150,27 +153,27 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
         </div>
 
         <dl className="grid grid-cols-[52px_1fr] gap-x-3 gap-y-2 text-[13px]">
-          <dt className="text-(--color-text-subtle)">분류</dt>
+          <dt className="text-(--color-text-subtle)">{t('eventSummary.label.category')}</dt>
           <dd className="m-0 text-(--color-text)">{detail.category.name}</dd>
-          <dt className="text-(--color-text-subtle)">장소</dt>
+          <dt className="text-(--color-text-subtle)">{t('eventSummary.label.place')}</dt>
           <dd className="m-0 text-(--color-text)">{location}</dd>
-          <dt className="text-(--color-text-subtle)">기간</dt>
+          <dt className="text-(--color-text-subtle)">{t('eventSummary.label.period')}</dt>
           <dd className="tabular m-0 text-(--color-text)">{dateLabel}</dd>
           {detail.operatingHours && (
             <>
-              <dt className="text-(--color-text-subtle)">시간</dt>
+              <dt className="text-(--color-text-subtle)">{t('eventSummary.label.time')}</dt>
               <dd className="m-0 text-(--color-text)">{detail.operatingHours}</dd>
             </>
           )}
           {detail.admissionFee && (
             <>
-              <dt className="text-(--color-text-subtle)">가격</dt>
+              <dt className="text-(--color-text-subtle)">{t('eventSummary.label.price')}</dt>
               <dd className="m-0 text-(--color-text)">{detail.admissionFee}</dd>
             </>
           )}
           {detail.targetAudience && (
             <>
-              <dt className="text-(--color-text-subtle)">대상</dt>
+              <dt className="text-(--color-text-subtle)">{t('eventSummary.label.target')}</dt>
               <dd className="m-0 text-(--color-text)">{detail.targetAudience}</dd>
             </>
           )}
@@ -189,10 +192,10 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
             {detail.articleCount > 0 && (
               <span
                 className="ml-auto inline-flex items-center gap-1 rounded-full bg-(--color-accent-bg) px-2 py-0.5 text-[11px] font-medium text-(--color-accent)"
-                title={`관련 기사 ${detail.articleCount}건 — 아래 상위 3건, 전체는 상세 페이지`}
+                title={`${t('eventSummary.relatedArticlesCount')} ${detail.articleCount}건 — 아래 상위 3건, 전체는 상세 페이지`}
               >
                 <span className="tabular">{detail.articleCount}</span>
-                <span>관련 기사</span>
+                <span>{t('eventSummary.relatedArticlesCount')}</span>
               </span>
             )}
           </div>
@@ -201,7 +204,7 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
         {(detail.aiSummary || detail.description) && (
           <section className="flex flex-col gap-1.5">
             <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-              {detail.aiSummary ? 'AI 요약' : '내용 요약'}
+              {detail.aiSummary ? t('eventSummary.aiSummaryLabel') : t('eventSummary.descSummaryLabel')}
             </p>
             <p className="m-0 whitespace-pre-wrap rounded-(--radius-md) bg-(--color-surface-alt) p-3 text-[13px] leading-[1.6] text-(--color-text)">
               {detail.aiSummary ?? clampText(detail.description ?? '', 320)}
@@ -222,6 +225,7 @@ function SummaryBody({ detail }: { detail: BffEventDetail }) {
  * 전체 리스트는 EventDetailPage 의 ArticlesSection.
  */
 function ArticlesMiniList({ eventId, total }: { eventId: string; total: number }) {
+  const { t } = useTranslation('navigation');
   const [items, setItems] = useState<EventArticleItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -244,7 +248,7 @@ function ArticlesMiniList({ eventId, total }: { eventId: string; total: number }
     return (
       <section className="flex flex-col gap-1.5">
         <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-          관련 기사
+          {t('eventSummary.articles.title')}
         </p>
         <div className="flex flex-col gap-2">
           {[0, 1, 2].map((i) => (
@@ -262,9 +266,9 @@ function ArticlesMiniList({ eventId, total }: { eventId: string; total: number }
     return (
       <section className="flex flex-col gap-1.5">
         <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-          관련 기사
+          {t('eventSummary.articles.title')}
         </p>
-        <p className="m-0 text-[12px] text-(--color-error)">기사를 불러오지 못했어요.</p>
+        <p className="m-0 text-[12px] text-(--color-error)">{t('eventSummary.articles.loadError')}</p>
       </section>
     );
   }
@@ -274,10 +278,10 @@ function ArticlesMiniList({ eventId, total }: { eventId: string; total: number }
   return (
     <section className="flex flex-col gap-1.5">
       <p className="m-0 flex items-baseline justify-between text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-        <span>관련 기사</span>
+        <span>{t('eventSummary.articles.title')}</span>
         {total > items.length && (
           <span className="font-normal normal-case tracking-normal">
-            상위 {items.length}건 · 총 {total}건
+            {t('eventSummary.articles.topItems', { shown: items.length, total })}
           </span>
         )}
       </p>
@@ -294,7 +298,7 @@ function ArticlesMiniList({ eventId, total }: { eventId: string; total: number }
                 <span className="font-semibold uppercase tracking-[0.04em]">{a.sourceName}</span>
                 {a.publishedAt && <span className="tabular">{a.publishedAt.slice(0, 10)}</span>}
                 <span className="ml-auto text-(--color-text-subtle) group-hover:text-(--color-accent)">
-                  원문 ↗
+                  {t('eventSummary.articles.originalLink')}
                 </span>
               </div>
               <h4 className="m-0 line-clamp-2 text-[13px] font-semibold leading-[1.35] text-(--color-text) group-hover:text-(--color-accent)">
