@@ -234,12 +234,17 @@ export async function resolveExpiredKickVotes(now: Date = new Date()): Promise<R
       }
     }
 
-    // 전원 agree 여부 재확인 (기존 응답 포함)
+    // 전원 agree 여부 재확인 (기존 응답 포함).
+    // 초기 쿼리와 동일한 sentAt 범위를 적용해 스코프 불일치로 인한 false-positive kick 방지.
+    // (e.g. 초기 쿼리가 7d 내 alerted notifs 만 로드했는데 재확인 쿼리가 7d 이전 notif 까지 포함하면
+    //  이전 라운드의 stale agree 가 전원 동의로 잘못 집계될 수 있음)
     const updatedNotifs = await prisma.notification.findMany({
       where: {
         notificationType: 'kick_vote',
         relatedEntityId: chatRoomId,
         relatedEntityType: 'kick_vote',
+        isSent: true,
+        sentAt: { gte: sevenDaysAgo },
         message: { contains: `"targetUserId":"${targetUserId.toString()}"` },
       },
       select: { message: true },
@@ -471,6 +476,28 @@ export function startChatScheduler(): void {
   setInterval(wrapHandler(resolveExpiredKickVotes), VOTE_EXPIRE_INTERVAL);
   setInterval(wrapHandler(expireAppointments),      APPT_EXPIRE_INTERVAL);
   setInterval(wrapHandler(handleInactiveMembers),   INACTIVITY_INTERVAL);
+
+  // 스케줄러 기동 시점: 7일 이전 미처리 kick_vote 알림이 있으면 운영자 경고.
+  // 스케줄러가 7일 이상 정지됐을 경우 자동 처리 불가 행이 남을 수 있음 — 수동 조정 필요.
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  prisma.notification.count({
+    where: {
+      notificationType: 'kick_vote',
+      relatedEntityType: 'kick_vote',
+      isSent: true,
+      sentAt: { lt: sevenDaysAgo },
+      message: { not: { contains: '"voteResult"' } },
+    },
+  }).then((staleCount) => {
+    if (staleCount > 0) {
+      logger.warn(
+        { staleKickVoteCount: staleCount, sentBefore: sevenDaysAgo.toISOString() },
+        'chat scheduler startup: stale unresolved kick_vote notifications older than 7 days found — manual reconciliation required',
+      );
+    }
+  }).catch((err: unknown) => {
+    logger.warn({ err }, 'chat scheduler startup: stale kick_vote check failed');
+  });
 
   logger.info(
     {
