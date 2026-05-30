@@ -35,6 +35,7 @@ import {
   resolveExpiredKickVotes,
   expireAppointments,
   handleInactiveMembers,
+  wrapHandler,
 } from './chat-scheduler.js';
 
 interface MockReq {
@@ -1441,7 +1442,7 @@ async function main() {
         data: { socialUid: `t6_b_${t6Suffix}`, authProvider: 'dev', nickname: `T6B_${t6Suffix}`, activeRole: 'user' },
       });
 
-      // 이미 만료된 pending 1:1 신청 생성
+      // 이미 만료된 pending 1:1 신청 생성 (createdAt=25h 전 → 24h 타임아웃 기준 초과)
       const mr1 = await prisma.matchRequest.create({
         data: {
           requesterId: synT6A.userId,
@@ -1449,10 +1450,11 @@ async function main() {
           requestType: '1:1',
           status: 'pending',
           expiresAt: new Date(Date.now() - 60 * 1000), // 1분 전 만료
+          createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000), // createdAt=25h 전
         },
         select: { matchRequestId: true },
       });
-      // 아직 만료 안 된 pending 신청 (나중을 위해)
+      // 아직 만료 안 된 pending 신청 (expiresAt=미래)
       const mr2 = await prisma.matchRequest.create({
         data: {
           requesterId: synT6B.userId,
@@ -1460,6 +1462,7 @@ async function main() {
           requestType: '1:1',
           status: 'pending',
           expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1시간 후 만료
+          createdAt: new Date(Date.now() - 23 * 60 * 60 * 1000), // createdAt=23h 전 (24h 미달)
         },
         select: { matchRequestId: true },
       });
@@ -1499,6 +1502,11 @@ async function main() {
     });
 
     // ── CASE T6-2: scheduler.expire_group_invite.ok — group 6h 초과 → expired ──
+    // [high-fix] requestType 별 타임아웃 분기를 스케줄러 내에서 검증:
+    //   - group 7h 전 만료: expired (6h 기준 초과)
+    //   - group 5h 전 생성(expiresAt=과거지만 createdAt < 6h): 만료 안 됨 (경계값)
+    //   - 1:1 25h 전 만료: expired (24h 기준 초과)
+    //   - 1:1 23h 전 생성(expiresAt=과거지만 createdAt < 24h): 만료 안 됨 (경계값)
     await check('scheduler.expire_group_invite.ok', async () => {
       const f: string[] = [];
       const t6Suffix2 = Date.now() + 6100;
@@ -1509,7 +1517,7 @@ async function main() {
         data: { socialUid: `t6_d_${t6Suffix2}`, authProvider: 'dev', nickname: `T6D_${t6Suffix2}`, activeRole: 'user' },
       });
 
-      // 6h 이상 지난 그룹 신청
+      // [A] group 7h 전 만료 → expired 되어야 함
       const mrG = await prisma.matchRequest.create({
         data: {
           requesterId: synT6C.userId,
@@ -1517,21 +1525,86 @@ async function main() {
           requestType: 'group',
           status: 'pending',
           expiresAt: new Date(Date.now() - 7 * 60 * 60 * 1000), // 7h 전 만료
+          createdAt: new Date(Date.now() - 7 * 60 * 60 * 1000), // createdAt = 7h 전
+        },
+        select: { matchRequestId: true },
+      });
+
+      // [B] group expiresAt=과거이지만 createdAt=5h 전 → 스케줄러가 만료시키면 안 됨
+      // (5h < 6h 기준: 아직 그룹 타임아웃 미도달)
+      const mrGNotYet = await prisma.matchRequest.create({
+        data: {
+          requesterId: synT6D.userId,
+          receiverId: synT6C.userId,
+          requestType: 'group',
+          status: 'pending',
+          expiresAt: new Date(Date.now() - 60 * 1000), // expiresAt=1분 전(과거)
+          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000), // createdAt=5h 전
+        },
+        select: { matchRequestId: true },
+      });
+
+      // [C] 1:1 25h 전 → expired 되어야 함
+      const mr1to1 = await prisma.matchRequest.create({
+        data: {
+          requesterId: synT6C.userId,
+          receiverId: synT6D.userId,
+          requestType: '1:1',
+          status: 'pending',
+          expiresAt: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25h 전 만료
+          createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000),
+        },
+        select: { matchRequestId: true },
+      });
+
+      // [D] 1:1 expiresAt=과거이지만 createdAt=23h 전 → 만료 안 됨 (23h < 24h 기준)
+      const mr1to1NotYet = await prisma.matchRequest.create({
+        data: {
+          requesterId: synT6D.userId,
+          receiverId: synT6C.userId,
+          requestType: '1:1',
+          status: 'pending',
+          expiresAt: new Date(Date.now() - 60 * 1000), // expiresAt=1분 전(과거)
+          createdAt: new Date(Date.now() - 23 * 60 * 60 * 1000), // createdAt=23h 전
         },
         select: { matchRequestId: true },
       });
 
       await expireMatchRequests(new Date());
 
-      const updated = await prisma.matchRequest.findUnique({
+      // [A] group 7h → expired
+      const updatedG = await prisma.matchRequest.findUnique({
         where: { matchRequestId: mrG.matchRequestId },
         select: { status: true },
       });
-      if (updated?.status !== 'expired') f.push(`group invite status '${updated?.status}' != 'expired'`);
+      if (updatedG?.status !== 'expired') f.push(`[A] group 7h invite status '${updatedG?.status}' != 'expired'`);
+
+      // [B] group 5h → still pending (경계값: 스케줄러가 만료시키지 않아야 함)
+      const updatedGNotYet = await prisma.matchRequest.findUnique({
+        where: { matchRequestId: mrGNotYet.matchRequestId },
+        select: { status: true },
+      });
+      if (updatedGNotYet?.status !== 'pending') f.push(`[B] group 5h invite status '${updatedGNotYet?.status}' != 'pending' (should not expire yet — 5h < 6h threshold)`);
+
+      // [C] 1:1 25h → expired
+      const updated1to1 = await prisma.matchRequest.findUnique({
+        where: { matchRequestId: mr1to1.matchRequestId },
+        select: { status: true },
+      });
+      if (updated1to1?.status !== 'expired') f.push(`[C] 1:1 25h status '${updated1to1?.status}' != 'expired'`);
+
+      // [D] 1:1 23h → still pending (경계값: 스케줄러가 만료시키지 않아야 함)
+      const updated1to1NotYet = await prisma.matchRequest.findUnique({
+        where: { matchRequestId: mr1to1NotYet.matchRequestId },
+        select: { status: true },
+      });
+      if (updated1to1NotYet?.status !== 'pending') f.push(`[D] 1:1 23h status '${updated1to1NotYet?.status}' != 'pending' (should not expire yet — 23h < 24h threshold)`);
 
       // 클린업
       await prisma.notification.deleteMany({ where: { userId: { in: [synT6C.userId, synT6D.userId] } } });
-      await prisma.matchRequest.deleteMany({ where: { matchRequestId: mrG.matchRequestId } });
+      await prisma.matchRequest.deleteMany({
+        where: { matchRequestId: { in: [mrG.matchRequestId, mrGNotYet.matchRequestId, mr1to1.matchRequestId, mr1to1NotYet.matchRequestId] } },
+      });
       await prisma.user.deleteMany({ where: { userId: { in: [synT6C.userId, synT6D.userId] } } });
 
       return f;
@@ -1686,11 +1759,27 @@ async function main() {
 
     // ── CASE T6-5: scheduler.timeout.no_reschedule_corruption ────────
     // handler 에러가 다음 interval 을 막지 않는지 검증:
-    // wrapHandler 를 직접 호출해 throw 해도 다음 호출이 성공함을 확인
+    // (a) wrapHandler 가 핸들러 예외를 catch 해 outer 함수가 throw 하지 않음
+    // (b) 각 핸들러 자체가 throw 하지 않음 (정상 경로)
     await check('scheduler.timeout.no_reschedule_corruption', async () => {
       const f: string[] = [];
 
-      // 정상 호출 — 아무 만료 건이 없어도 결과가 반환되어야 함 (에러 없음)
+      // ─── (a) wrapHandler 에러 격리 검증 ─────────────────────────────
+      // wrapHandler 가 반환하는 함수를 직접 호출했을 때 핸들러가 throw 해도
+      // outer 함수는 throw 하지 않아야 함 → interval 계속 실행 보장
+      const wrapped = wrapHandler(() => Promise.reject(new Error('injected test error')));
+      let wrapHandlerPropagated = false;
+      try {
+        // wrapped() 는 sync 함수이므로 내부 Promise 거절은 catch 로 처리됨
+        wrapped();
+        // 내부 비동기 에러가 settle 될 시간 부여 (이 코드가 await 없이 진행됨을 확인)
+        await new Promise<void>((resolve) => setTimeout(resolve, 50));
+      } catch {
+        wrapHandlerPropagated = true;
+      }
+      if (wrapHandlerPropagated) f.push('wrapHandler propagated error — interval would stop');
+
+      // ─── (b) 각 핸들러 정상 경로 — throw 없음 ────────────────────────
       let result1: Awaited<ReturnType<typeof expireMatchRequests>> | null = null;
       let threw1 = false;
       try {

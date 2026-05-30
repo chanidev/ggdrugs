@@ -15,6 +15,12 @@
  *   - wrapHandler: 개별 잡 실패가 interval을 멈추거나 다른 잡에 전파되지 않음.
  *   - startChatScheduler(): NODE_ENV=test 시 early-return.
  *   - server.ts 에서 직접 호출 (startScheduler() 와 독립).
+ *
+ * 타임아웃 상수:
+ *   - ONE_TO_ONE_TIMEOUT_MS: 1:1 신청 만료 기준 (24h). expireMatchRequests 내부에서
+ *     requestType='1:1' 건에 방어 조건으로 적용.
+ *   - GROUP_INVITE_TIMEOUT_MS: 그룹 초대 만료 기준 (6h). requestType='group' 건 방어 조건.
+ *   두 값 모두 신청 생성 시 expiresAt 에 이미 반영되나, 스케줄러가 타입별로 독립 검증함.
  */
 
 import { logger } from '../logger.js';
@@ -29,7 +35,9 @@ const INACTIVITY_INTERVAL    = 30 * 60 * 1000;  // 30분
 const APPT_EXPIRE_INTERVAL   = 10 * 60 * 1000;  // 10분
 
 // ─── 타임아웃 상수 ───────────────────────────────────────────
-const INACTIVITY_THRESHOLD_MS = 48 * 60 * 60 * 1000; // 48h
+const INACTIVITY_THRESHOLD_MS    = 48 * 60 * 60 * 1000; // 48h
+const ONE_TO_ONE_TIMEOUT_MS      = 24 * 60 * 60 * 1000; // 1:1 신청 24h
+const GROUP_INVITE_TIMEOUT_MS    =  6 * 60 * 60 * 1000; // 그룹 초대 6h
 
 // ─── 결과 타입 ───────────────────────────────────────────────
 export interface ExpireMatchResult {
@@ -51,20 +59,42 @@ export interface InactivityKickResult {
 
 // ============================================================
 // expireMatchRequests — pending AND expiresAt < now → expired
+//
+// 타입별 타임아웃 강제:
+//   - 1:1 신청: expiresAt < now AND createdAt <= now - 24h (방어적 하한)
+//   - 그룹 초대: expiresAt < now AND createdAt <= now - 6h  (방어적 하한)
+//
+// expiresAt 은 신청 생성 시 올바르게 세팅되는 것이 1차 기준이나,
+// 스케줄러가 requestType 별로 독립 쿼리를 실행해 타임아웃 의도를 이중 검증한다.
 // ============================================================
 export async function expireMatchRequests(now: Date = new Date()): Promise<ExpireMatchResult> {
-  const expired = await prisma.matchRequest.findMany({
-    where: {
-      status: 'pending',
-      expiresAt: { lt: now },
-    },
-    select: {
-      matchRequestId: true,
-      requesterId: true,
-      requestType: true,
-    },
-  });
+  // 1:1 신청: expiresAt < now AND (created_at 기준 24h 이상 경과 — 방어적 하한)
+  const oneToOneDeadline = new Date(now.getTime() - ONE_TO_ONE_TIMEOUT_MS);
+  // 그룹 초대: expiresAt < now AND (created_at 기준 6h 이상 경과 — 방어적 하한)
+  const groupDeadline = new Date(now.getTime() - GROUP_INVITE_TIMEOUT_MS);
 
+  const [expiredOneToOne, expiredGroup] = await Promise.all([
+    prisma.matchRequest.findMany({
+      where: {
+        status: 'pending',
+        requestType: '1:1',
+        expiresAt: { lt: now },
+        createdAt: { lte: oneToOneDeadline },
+      },
+      select: { matchRequestId: true, requesterId: true, requestType: true },
+    }),
+    prisma.matchRequest.findMany({
+      where: {
+        status: 'pending',
+        requestType: 'group',
+        expiresAt: { lt: now },
+        createdAt: { lte: groupDeadline },
+      },
+      select: { matchRequestId: true, requesterId: true, requestType: true },
+    }),
+  ]);
+
+  const expired = [...expiredOneToOne, ...expiredGroup];
   if (expired.length === 0) return { expired: 0 };
 
   const ids = expired.map((r) => r.matchRequestId);
@@ -115,12 +145,18 @@ export async function expireMatchRequests(now: Date = new Date()): Promise<Expir
 // 미응답자를 agree 로 간주 → 전원 agree 이면 kicked 처리.
 // ============================================================
 export async function resolveExpiredKickVotes(now: Date = new Date()): Promise<ResolveKickResult> {
-  // kick_vote 알림 전체 조회 (voteResult 없는 것이 남아 있을 수 있는 알림)
-  // 처리 완료된 라운드(전원 voteResult 기록됨)는 skip.
+  // kick_vote 알림 조회 — 미처리(voteResult 없음) 건만 로드해 풀스캔 방지.
+  // 완료된 라운드(message에 "voteResult" 키 포함)는 사전 필터링.
+  // 추가로 최근 7일 이내 isSent=true 알림만 대상으로 삼아 누적 행 스캔 최소화.
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
   const pendingVoteNotifs = await prisma.notification.findMany({
     where: {
       notificationType: 'kick_vote',
       relatedEntityType: 'kick_vote',
+      isSent: true,
+      sentAt: { gte: sevenDaysAgo },
+      // voteResult 가 이미 기록된 알림 제외 — 처리 완료 라운드 사전 필터
+      message: { not: { contains: '"voteResult"' } },
     },
     select: {
       notificationId: true,
@@ -355,14 +391,16 @@ export async function handleInactiveMembers(now: Date = new Date()): Promise<Ina
 
   for (const member of inactiveMembers) {
     try {
-      await prisma.$transaction(async (tx) => {
+      // 트랜잭션은 kick 여부(boolean)를 반환 — kicked++ 는 트랜잭션 밖에서 처리.
+      // (Prisma interactive transaction 재시도 시 콜백 내부 side-effect 중복 방지)
+      const wasKicked = await prisma.$transaction(async (tx) => {
         // 재확인 (동시 처리 방지)
         const current = await tx.groupMembership.findUnique({
           where: { membershipId: member.membershipId },
           select: { memberStatus: true, lastSeenAt: true },
         });
-        if (!current || current.memberStatus !== 'active') return;
-        if (current.lastSeenAt && current.lastSeenAt >= threshold) return; // 재접속 했음
+        if (!current || current.memberStatus !== 'active') return false;
+        if (current.lastSeenAt && current.lastSeenAt >= threshold) return false; // 재접속 했음
 
         await tx.groupMembership.update({
           where: { membershipId: member.membershipId },
@@ -398,8 +436,10 @@ export async function handleInactiveMembers(now: Date = new Date()): Promise<Ina
             })),
           });
         }
-        kicked++;
+        return true;
       });
+      // kicked++ 는 트랜잭션 성공 후 외부에서 단 한 번만 실행
+      if (wasKicked) kicked++;
     } catch (err) {
       logger.warn({ err, membershipId: member.membershipId.toString() }, 'inactivity kick error');
     }
@@ -413,7 +453,10 @@ export async function handleInactiveMembers(now: Date = new Date()): Promise<Ina
 
 // ─── wrapHandler ─────────────────────────────────────────────
 // 핸들러 오류가 interval 을 멈추거나 다른 잡에 전파되지 않도록 보호.
-function wrapHandler(fn: () => Promise<void>): () => void {
+// fn 의 반환 타입을 Promise<unknown> 으로 받아 각 핸들러를 직접 전달 가능.
+// setInterval 은 fn 이 throw 해도 다음 tick 에 재실행 보장되지 않으므로,
+// catch 를 여기서 명시적으로 처리해 uncaughtPromiseRejection 을 방지한다.
+export function wrapHandler(fn: () => Promise<unknown>): () => void {
   return () => {
     fn().catch((err: unknown) => logger.error({ err }, 'chat scheduler error'));
   };
@@ -423,10 +466,11 @@ function wrapHandler(fn: () => Promise<void>): () => void {
 export function startChatScheduler(): void {
   if (env.NODE_ENV === 'test') return;
 
-  setInterval(wrapHandler(() => expireMatchRequests().then(() => {})), MATCH_EXPIRE_INTERVAL);
-  setInterval(wrapHandler(() => resolveExpiredKickVotes().then(() => {})), VOTE_EXPIRE_INTERVAL);
-  setInterval(wrapHandler(() => expireAppointments().then(() => {})), APPT_EXPIRE_INTERVAL);
-  setInterval(wrapHandler(() => handleInactiveMembers().then(() => {})), INACTIVITY_INTERVAL);
+  // 각 핸들러를 직접 전달 — .then(() => {}) 래퍼 불필요 (wrapHandler 가 반환값 무시)
+  setInterval(wrapHandler(expireMatchRequests),     MATCH_EXPIRE_INTERVAL);
+  setInterval(wrapHandler(resolveExpiredKickVotes), VOTE_EXPIRE_INTERVAL);
+  setInterval(wrapHandler(expireAppointments),      APPT_EXPIRE_INTERVAL);
+  setInterval(wrapHandler(handleInactiveMembers),   INACTIVITY_INTERVAL);
 
   logger.info(
     {
