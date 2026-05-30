@@ -43,7 +43,7 @@ export function EvaluationPage() {
       <div className="flex h-screen flex-col bg-(--color-bg)">
         <Header />
         <main className="flex flex-1 items-center justify-center">
-          <p className="text-(--color-danger)">잘못된 접근입니다.</p>
+          <p className="text-(--color-danger)">{t('evaluation.invalidAccess')}</p>
         </main>
       </div>
     );
@@ -55,15 +55,15 @@ export function EvaluationPage() {
     // lib/api/reports.ts blockUser() 를 사용한다 — raw fetch 대신 withCredentials 보장.
     try {
       await blockUser(evaluatedUserId);
-      alert('차단되었습니다.');
+      alert(t('evaluation.blockSuccess'));
     } catch (e) {
       const msg = e instanceof Error ? e.message : '';
       if (msg === 'ALREADY_BLOCKED' || msg === 'already_blocked') {
-        alert('이미 차단한 사용자입니다.');
+        alert(t('evaluation.alreadyBlocked'));
       } else if (msg === 'UNAUTHENTICATED') {
-        alert('로그인이 필요합니다.');
+        alert(t('block.loginRequired'));
       } else {
-        alert('차단 처리 중 오류가 발생했어요.');
+        alert(t('block.error'));
       }
     }
   }
@@ -121,9 +121,9 @@ export function EvaluationPage() {
       if (msg === 'ALREADY_SUBMITTED') {
         setError(t('evaluation.alreadyEvaluated'));
       } else if (msg === 'NOT_ATTENDED_YET') {
-        setError('약속 날짜가 지나지 않아 평가할 수 없어요.');
+        setError(t('evaluation.notAfterDate'));
       } else if (msg === 'NOT_CONFIRMED') {
-        setError('아직 확정되지 않은 약속은 평가할 수 없어요.');
+        setError(t('evaluation.notConfirmed'));
       } else {
         setError(t('evaluation.submitError'));
       }
@@ -156,13 +156,13 @@ export function EvaluationPage() {
           <div className="flex flex-col items-center gap-4 py-12 text-center">
             <p className="text-[40px]">✓</p>
             <h2 className="text-(length:--text-h3) font-semibold">{t('evaluation.submitSuccess')}</h2>
-            <p className="text-[14px] text-(--color-text-muted)">크레딧 10개가 적립되었어요.</p>
+            <p className="text-[14px] text-(--color-text-muted)">{t('evaluation.creditEarned')}</p>
             <button
               type="button"
               onClick={() => void navigate('/community')}
               className="mt-2 rounded-(--radius-md) bg-(--color-brand) px-6 py-2 text-[14px] font-medium text-white"
             >
-              커뮤니티로
+              {t('evaluation.toCommunity')}
             </button>
           </div>
         )}

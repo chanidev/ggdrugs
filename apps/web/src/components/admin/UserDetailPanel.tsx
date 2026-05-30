@@ -141,7 +141,7 @@ export function UserDetailPanel({
                   : 'bg-(--color-warning)/10 text-(--color-warning)'
               }`}
             >
-              업로더 · {t(`member.uploaderStatus.${uploader.approvalStatus}`)}
+              {t('member.uploaderBadge', { status: t(`member.uploaderStatus.${uploader.approvalStatus}`) })}
             </span>
           )}
         </div>
@@ -324,17 +324,17 @@ export function UserDetailPanel({
           {openAction === 'revoke' && (
             <ActionForm
               title={`${t('member.revokeSession')} (D-6)`}
-              hint="활성 세션 모두 끊김. scope='full' 또는 'security' admin 만 가능."
+              hint={t('member.hintRevoke')}
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
               cancelLabel={t('member.cancel')}
               executeLabel={t('member.execute')}
               executingLabel={t('member.executing')}
-              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
+              charCountLabel={(len) => t('member.charCount', { count: len })}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await revokeUserSessionsByAdmin(userId, reason);
-                window.alert(`${r.deletedSessions}개 세션 폐기 (audit ${r.auditId})`);
+                window.alert(t('member.alertRevoke', { count: r.deletedSessions, auditId: r.auditId }));
                 onActionDone();
               }}
             />
@@ -342,7 +342,7 @@ export function UserDetailPanel({
           {openAction === 'promote' && (
             <ActionForm
               title={`${t('member.promoteAdmin')} (E-2)`}
-              hint="scope='full' admin 만 호출 가능. 대상 user 가 admin_profiles 행을 갖게 됨."
+              hint={t('member.hintPromote')}
               withScope
               scopeLabels={{
                 full: t('member.scopeLabel.full'),
@@ -355,11 +355,11 @@ export function UserDetailPanel({
               cancelLabel={t('member.cancel')}
               executeLabel={t('member.execute')}
               executingLabel={t('member.executing')}
-              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
+              charCountLabel={(len) => t('member.charCount', { count: len })}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason, scope) => {
                 const r = await promoteUserToAdmin(userId, scope!, reason);
-                window.alert(`승급 완료 — adminId=${r.adminId}, scope=${r.scope} (audit ${r.auditId})`);
+                window.alert(t('member.alertPromote', { adminId: r.adminId, scope: r.scope, auditId: r.auditId }));
                 onActionDone();
               }}
             />
@@ -367,7 +367,7 @@ export function UserDetailPanel({
           {openAction === 'scope' && admin && (
             <ActionForm
               title={`${t('member.changeScope')} (E-4)`}
-              hint={`현재 scope='${admin.scope}'. 동일 값 재요청은 거부.`}
+              hint={t('member.hintScopeChange', { scope: admin.scope })}
               withScope
               defaultScope={admin.scope}
               scopeLabels={{
@@ -381,11 +381,11 @@ export function UserDetailPanel({
               cancelLabel={t('member.cancel')}
               executeLabel={t('member.execute')}
               executingLabel={t('member.executing')}
-              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
+              charCountLabel={(len) => t('member.charCount', { count: len })}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason, scope) => {
                 const r = await changeUserAdminScope(userId, scope!, reason);
-                window.alert(`scope=${r.scope} (audit ${r.auditId})`);
+                window.alert(t('member.alertScopeChange', { scope: r.scope, auditId: r.auditId }));
                 onActionDone();
               }}
             />
@@ -393,17 +393,17 @@ export function UserDetailPanel({
           {openAction === 'demote' && (
             <ActionForm
               title={`${t('member.demoteAdmin')} (E-4)`}
-              hint="is_active=false 토글. user 행 자체는 유지."
+              hint={t('member.hintDemote')}
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
               cancelLabel={t('member.cancel')}
               executeLabel={t('member.execute')}
               executingLabel={t('member.executing')}
-              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
+              charCountLabel={(len) => t('member.charCount', { count: len })}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await demoteUserAdmin(userId, reason);
-                window.alert(`박탈 완료 (audit ${r.auditId})`);
+                window.alert(t('member.alertDemote', { auditId: r.auditId }));
                 onActionDone();
               }}
             />
@@ -411,18 +411,18 @@ export function UserDetailPanel({
           {openAction === 'soft-delete' && (
             <ActionForm
               title={`${t('member.softDelete')} (E-5)`}
-              hint="users.is_deleted=true + 모든 세션 폐기. admin 활성 상태면 거부 (E-5c)."
+              hint={t('member.hintSoftDelete')}
               danger
               reasonLabel={t('member.reasonLabel')}
               reasonPlaceholder={t('member.reasonPlaceholder')}
               cancelLabel={t('member.cancel')}
               executeLabel={t('member.execute')}
               executingLabel={t('member.executing')}
-              charCountLabel={(len) => `${len} / 500 (최소 10자)`}
+              charCountLabel={(len) => t('member.charCount', { count: len })}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await softDeleteUserAccount(userId, reason);
-                window.alert(`삭제 완료 — 폐기 세션 ${r.deletedSessionCount}개 (audit ${r.auditId})`);
+                window.alert(t('member.alertSoftDelete', { count: r.deletedSessionCount, auditId: r.auditId }));
                 onActionDone();
               }}
             />

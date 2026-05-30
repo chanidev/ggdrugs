@@ -22,6 +22,7 @@
     "loading": "加载中…",
     "error": "发生了错误。",
     "notFound": "该项目不存在或已过期。",
+    "eventNotFound": "找不到活动",
     "empty": "暂无内容。",
     "credits": "积分",
     "notifications": "通知",
@@ -31,7 +32,11 @@
     "myPage": "我的页面",
     "login_kakao": "Kakao",
     "login_google": "用 Google 登录",
-    "login_google_short": "Google"
+    "login_google_short": "Google",
+    "category": "分类",
+    "location": "地点",
+    "period": "时间段",
+    "vibe": "氛围"
   },
   "aria": {
     "adminConsole": "管理员控制台",
@@ -54,5 +59,62 @@
     "deleteFailed": "删除失败。",
     "networkError": "未收到响应，请稍后再试。",
     "llmUnreachable": "无法连接 LLM 服务。"
+  },
+  "report": {
+    "reasons": {
+      "spam": "垃圾信息/广告",
+      "abuse": "辱骂/仇恨言论",
+      "harassment": "骚扰",
+      "obscene": "色情内容",
+      "no_show": "失约",
+      "etc": "其他"
+    },
+    "error": {
+      "duplicate": "您已经举报过此内容。",
+      "unauthenticated": "需要登录。",
+      "generic": "提交举报时发生错误，请重试。"
+    },
+    "reasonLabel": "举报原因",
+    "detailLabel": "详细原因",
+    "detailLabelFull": "详细原因（可选，最多 500 字）",
+    "placeholder": "提供具体信息有助于我们更快处理您的举报。",
+    "submitting": "举报中…",
+    "success": "您的举报已提交。",
+    "ariaLabel": "举报"
+  },
+  "articles": {
+    "title": "相关文章",
+    "loadError": "无法加载相关文章。",
+    "openOriginal": "打开原文 ↗",
+    "prev": "上一页",
+    "next": "下一页",
+    "ariaLabel": "相关文章页"
+  },
+  "overview": {
+    "title": "摘要",
+    "showOriginal": "查看原始描述"
+  },
+  "posterHeader": {
+    "noPoster": "无海报",
+    "bookmarkCount": "{{count}} 个收藏"
+  },
+  "provenance": {
+    "title": "来源",
+    "firstCollected": "首次收集",
+    "lastUpdated": "最近更新"
+  },
+  "loginGate": {
+    "reviewHint": "需要登录才能留下评价。",
+    "googleLogin": "用 Google 登录"
+  },
+  "sentiment": {
+    "positive": "正面",
+    "negative": "负面",
+    "neutral": "中性"
+  },
+  "pagination": {
+    "prev": "上一页",
+    "next": "下一页",
+    "page": "{{page}} / {{lastPage}}"
   }
 }

@@ -22,6 +22,7 @@
     "loading": "読み込み中…",
     "error": "エラーが発生しました。",
     "notFound": "このアイテムは存在しないか、期限切れです。",
+    "eventNotFound": "イベントが見つかりません",
     "empty": "項目がありません。",
     "credits": "クレジット",
     "notifications": "通知",
@@ -31,7 +32,11 @@
     "myPage": "マイページ",
     "login_kakao": "Kakao",
     "login_google": "Google でログイン",
-    "login_google_short": "Google"
+    "login_google_short": "Google",
+    "category": "カテゴリ",
+    "location": "場所",
+    "period": "期間",
+    "vibe": "雰囲気"
   },
   "aria": {
     "adminConsole": "管理者コンソール",
@@ -54,5 +59,62 @@
     "deleteFailed": "削除に失敗しました。",
     "networkError": "応答がありませんでした。しばらくしてから再試行してください。",
     "llmUnreachable": "LLM サービスに接続できませんでした。"
+  },
+  "report": {
+    "reasons": {
+      "spam": "スパム/広告",
+      "abuse": "暴言/ヘイト",
+      "harassment": "嫌がらせ",
+      "obscene": "猥褻コンテンツ",
+      "no_show": "無断欠席",
+      "etc": "その他"
+    },
+    "error": {
+      "duplicate": "すでにこのコンテンツを通報しています。",
+      "unauthenticated": "ログインが必要です。",
+      "generic": "通報の送信中にエラーが発生しました。もう一度お試しください。"
+    },
+    "reasonLabel": "通報の理由",
+    "detailLabel": "詳細な理由",
+    "detailLabelFull": "詳細な理由（任意、最大 500 文字）",
+    "placeholder": "具体的な内容を入力すると、より早く処理できます。",
+    "submitting": "通報中…",
+    "success": "通報が受け付けられました。",
+    "ariaLabel": "通報する"
+  },
+  "articles": {
+    "title": "関連記事",
+    "loadError": "関連記事を読み込めませんでした。",
+    "openOriginal": "原文を開く ↗",
+    "prev": "前へ",
+    "next": "次へ",
+    "ariaLabel": "関連記事ページ"
+  },
+  "overview": {
+    "title": "概要",
+    "showOriginal": "元の説明を表示"
+  },
+  "posterHeader": {
+    "noPoster": "ポスターなし",
+    "bookmarkCount": "{{count}} ブックマーク"
+  },
+  "provenance": {
+    "title": "出典",
+    "firstCollected": "初回収集",
+    "lastUpdated": "最終更新"
+  },
+  "loginGate": {
+    "reviewHint": "レビューを書くにはログインが必要です。",
+    "googleLogin": "Google でログイン"
+  },
+  "sentiment": {
+    "positive": "ポジティブ",
+    "negative": "ネガティブ",
+    "neutral": "普通"
+  },
+  "pagination": {
+    "prev": "前へ",
+    "next": "次へ",
+    "page": "{{page}} / {{lastPage}}"
   }
 }

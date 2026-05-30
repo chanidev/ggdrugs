@@ -22,6 +22,7 @@
     "loading": "Đang tải…",
     "error": "Đã xảy ra lỗi.",
     "notFound": "Mục này không tồn tại hoặc đã hết hạn.",
+    "eventNotFound": "Không tìm thấy sự kiện",
     "empty": "Không có mục nào.",
     "credits": "Tín dụng",
     "notifications": "Thông báo",
@@ -31,7 +32,11 @@
     "myPage": "Trang của tôi",
     "login_kakao": "Kakao",
     "login_google": "Đăng nhập bằng Google",
-    "login_google_short": "Google"
+    "login_google_short": "Google",
+    "category": "Danh mục",
+    "location": "Địa điểm",
+    "period": "Thời gian",
+    "vibe": "Không khí"
   },
   "aria": {
     "adminConsole": "Bảng quản trị",
@@ -54,5 +59,62 @@
     "deleteFailed": "Không xóa được.",
     "networkError": "Không nhận được phản hồi. Vui lòng thử lại sau.",
     "llmUnreachable": "Không kết nối được dịch vụ LLM."
+  },
+  "report": {
+    "reasons": {
+      "spam": "Spam/Quảng cáo",
+      "abuse": "Tục tĩu/Thù ghét",
+      "harassment": "Quấy rối",
+      "obscene": "Nội dung khiêu dâm",
+      "no_show": "Vắng mặt",
+      "etc": "Khác"
+    },
+    "error": {
+      "duplicate": "Bạn đã báo cáo nội dung này rồi.",
+      "unauthenticated": "Cần đăng nhập.",
+      "generic": "Đã xảy ra lỗi khi gửi báo cáo. Vui lòng thử lại."
+    },
+    "reasonLabel": "Lý do báo cáo",
+    "detailLabel": "Lý do chi tiết",
+    "detailLabelFull": "Lý do chi tiết (tùy chọn, tối đa 500 ký tự)",
+    "placeholder": "Cung cấp thông tin cụ thể giúp chúng tôi xử lý báo cáo của bạn nhanh hơn.",
+    "submitting": "Đang báo cáo…",
+    "success": "Báo cáo của bạn đã được gửi.",
+    "ariaLabel": "Báo cáo"
+  },
+  "articles": {
+    "title": "Bài viết liên quan",
+    "loadError": "Không tải được bài viết liên quan.",
+    "openOriginal": "Mở bản gốc ↗",
+    "prev": "Trước",
+    "next": "Tiếp",
+    "ariaLabel": "Trang bài viết liên quan"
+  },
+  "overview": {
+    "title": "Tóm tắt",
+    "showOriginal": "Xem mô tả gốc"
+  },
+  "posterHeader": {
+    "noPoster": "Không có poster",
+    "bookmarkCount": "{{count}} lượt lưu"
+  },
+  "provenance": {
+    "title": "Nguồn",
+    "firstCollected": "Thu thập lần đầu",
+    "lastUpdated": "Cập nhật gần nhất"
+  },
+  "loginGate": {
+    "reviewHint": "Cần đăng nhập để viết đánh giá.",
+    "googleLogin": "Đăng nhập bằng Google"
+  },
+  "sentiment": {
+    "positive": "Tích cực",
+    "negative": "Tiêu cực",
+    "neutral": "Bình thường"
+  },
+  "pagination": {
+    "prev": "Trước",
+    "next": "Tiếp",
+    "page": "{{page}} / {{lastPage}}"
   }
 }

@@ -78,7 +78,7 @@ export function UploadReviewPanel({
         <div className="mb-2 flex items-baseline justify-between">
           <h3 className="m-0 text-[13px] font-semibold">{t('uploadReview.documents')}</h3>
           <span className="text-[11px] text-(--color-text-subtle)">
-            {docs.length}건 · 5분 TTL
+            {t('uploadReview.docCount', { count: docs.length })}
           </span>
         </div>
         {docsLoading && (

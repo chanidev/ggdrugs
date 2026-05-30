@@ -364,7 +364,7 @@ function ReportDetailPanel({
             )}
             {detail.targetType === 'mate_eval' && (
               <>
-                <p>{t('report.ratingLabel')}: {String(detail.targetContent.ratingStars ?? '')}점</p>
+                <p>{t('report.ratingLabel')}: {t('report.ratingValue', { stars: detail.targetContent.ratingStars ?? '' })}</p>
                 {detail.targetContent.comment && (
                   <p className="mt-1">{String(detail.targetContent.comment)}</p>
                 )}

@@ -72,21 +72,21 @@ export function MateEvalStep({ onNext, onBlock }: Props) {
 
       <section>
         <label className="mb-1 block text-[13px] font-medium" htmlFor="comment">
-          {t('evaluation.comment')} <span className="text-(--color-text-muted)">(선택, 최대 30바이트)</span>
+          {t('evaluation.comment')} <span className="text-(--color-text-muted)">{t('evaluation.commentOptionalHint')}</span>
         </label>
         <input
           id="comment"
           type="text"
           value={comment}
           onChange={(e) => handleCommentChange(e.target.value)}
-          placeholder="짧게 한 마디"
+          placeholder={t('evaluation.commentPlaceholder')}
           className="w-full rounded-(--radius-md) border border-(--color-border) px-3 py-2 text-[14px] focus:outline-none focus:border-(--color-brand)"
         />
         {commentError && <p className="mt-1 text-[12px] text-(--color-danger)">{commentError}</p>}
       </section>
 
       <section>
-        <p className="mb-1 text-[13px] font-medium">{t('evaluation.reportReason')} <span className="text-(--color-text-muted)">(선택)</span></p>
+        <p className="mb-1 text-[13px] font-medium">{t('evaluation.reportReason')} <span className="text-(--color-text-muted)">{t('evaluation.optional')}</span></p>
         <div className="flex flex-wrap gap-2">
           {REPORT_OPTION_KEYS.map((key) => (
             <button
