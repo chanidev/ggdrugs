@@ -530,11 +530,34 @@ export async function voteAppointment(req: Request, res: Response) {
           })),
         });
       }
+    } else if (vote === 'reject') {
+      // [high] 단일 거절 → 즉시 약속 파기. 36h 스케줄러는 무응답(pending) 만료 처리 전담.
+      finalStatus = 'rejected';
+      await tx.appointment.update({
+        where: { appointmentId },
+        data: { status: 'rejected' },
+      });
+
+      await tx.chatRoomMessage.create({
+        data: {
+          chatRoomId,
+          senderUserId: null,
+          messageType: 'system',
+          body: '약속이 거절되었습니다',
+        },
+      });
     } else if (vote === 'counter') {
       finalStatus = 'counter_proposed';
       await tx.appointment.update({
         where: { appointmentId },
         data: { status: 'counter_proposed' },
+      });
+
+      // [medium] 역제안 시 역제안자 본인을 제외한 나머지 투표를 'pending'으로 초기화.
+      // counter_proposed 는 새로운 제안 라운드이므로 이전 표는 무효화해야 함.
+      await tx.appointmentVote.updateMany({
+        where: { appointmentId, userId: { not: auth.userId } },
+        data: { vote: 'pending', counterAt: null, counterTime: null },
       });
 
       await tx.chatRoomMessage.create({
@@ -659,7 +682,12 @@ export async function leaveRoom(req: Request, res: Response) {
     });
 
     if (room.roomType === '1:1') {
-      // 1:1: 채팅방 종료
+      // 1:1: 채팅방 종료 + 모든 멤버십 일괄 left 처리
+      // [medium] 상대방(u2) 멤버십도 stale 'active' 로 남지 않도록 일괄 업데이트
+      await tx.groupMembership.updateMany({
+        where: { chatRoomId, memberStatus: 'active' },
+        data: { memberStatus: 'left', leftAt: now },
+      });
       await tx.chatRoom.update({
         where: { chatRoomId },
         data: { status: 'ended', endedAt: now },
@@ -711,6 +739,18 @@ export async function leaveRoom(req: Request, res: Response) {
           }
         } else {
           // 남은 멤버 없으면 채팅방 종료
+          await tx.chatRoom.update({
+            where: { chatRoomId },
+            data: { status: 'ended', endedAt: now },
+          });
+        }
+      } else {
+        // [low] 비방장 멤버가 나간 후 남은 active 멤버 수 확인
+        // active 멤버가 0명이면 채팅방을 종료 처리 (고아 방 방지)
+        const remainingActiveCount = await tx.groupMembership.count({
+          where: { chatRoomId, memberStatus: 'active' },
+        });
+        if (remainingActiveCount === 0) {
           await tx.chatRoom.update({
             where: { chatRoomId },
             data: { status: 'ended', endedAt: now },
