@@ -86,7 +86,8 @@ import {
   getMateIndex,
   getRecommendations,
 } from './routes/mate.js';
-import { updateMyProfile } from './routes/me.js';
+import { updateMyProfile, listMyCredits } from './routes/me.js';
+import { submitEvaluation, getMyEvaluation } from './routes/evaluation.js';
 import {
   sendOneToOneRequest,
   sendGroupRequest,
@@ -402,6 +403,26 @@ export function createApp(): Express {
     '/community/chat-rooms/:chatRoomId/kick/vote/:voteNotifId',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => castKickVote(req, res).catch(next),
+  );
+
+  // A_900/A_901 메이트평가 + 축제설문/후기 단일 제출 (Slice 5)
+  // [오버라이드] 그룹 포함 전체 지원, "다녀온 후" 게이트(appointedAt <= now)
+  app.post(
+    '/community/appointments/:appointmentId/evaluate',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => submitEvaluation(req, res).catch(next),
+  );
+  app.get(
+    '/community/appointments/:appointmentId/evaluation',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getMyEvaluation(req, res).catch(next),
+  );
+
+  // GG-MY-008 + GG-COMM-017 크레딧 내역 + 잔액 (Slice 5)
+  app.get(
+    '/me/credits',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyCredits(req, res).catch(next),
   );
 
   app.post(
