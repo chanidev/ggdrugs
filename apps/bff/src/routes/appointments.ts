@@ -50,11 +50,11 @@ export async function listMyAppointments(req: Request, res: Response) {
   //  - from 또는 to가 있으면 gte/lte 범위를 적용한다.
   //    단, Prisma의 날짜 비교 동작상 appointedAt IS NULL인 행은 범위 내에서 자동 제외된다.
   const hasDateFilter = from !== null || to !== null;
-  const effectiveFrom = from ?? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const effectiveTo = to ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
-
   const appointedAtFilter = hasDateFilter
-    ? { gte: effectiveFrom, lte: effectiveTo }
+    ? {
+        gte: from ?? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+        lte: to ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000),
+      }
     : undefined;
 
   const appointments = await prisma.appointment.findMany({

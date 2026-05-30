@@ -170,6 +170,46 @@ async function main() {
     return res._c.status === 404 ? [] : [`status ${res._c.status} != 404`];
   });
 
+  // ── CASE 7b: markNotificationRead kick_vote → readAt 미변경 ──
+  // 플랜 Task3 스펙: "kick_vote 타입은 readAt 미변경".
+  // notifications.ts의 kick_vote early-return 경로가 DB를 수정하지 않음을 검증한다.
+  const kickVoteNotif = await prisma.notification.findFirst({
+    where: { userId: u.userId, notificationType: 'kick_vote' },
+    select: { notificationId: true, readAt: true },
+  });
+  if (kickVoteNotif) {
+    await check('notif.read.kick_vote_no_readAt_change', async () => {
+      const preReadAt = kickVoteNotif.readAt;
+      const res = mockRes();
+      await markNotificationRead(
+        mockReq({ auth, params: { id: kickVoteNotif.notificationId.toString() } }),
+        res,
+      );
+      // 200 반환인지 확인
+      if (res._c.status !== 200) {
+        return [`status ${res._c.status} != 200 for kick_vote markRead`];
+      }
+      // DB에서 readAt을 다시 읽어 변경되지 않았음을 검증
+      const after = await prisma.notification.findUnique({
+        where: { notificationId: kickVoteNotif.notificationId },
+        select: { readAt: true },
+      });
+      const f: string[] = [];
+      if (after?.readAt?.getTime() !== preReadAt?.getTime()) {
+        f.push(
+          `kick_vote readAt changed: before=${preReadAt?.toISOString() ?? 'null'} after=${after?.readAt?.toISOString() ?? 'null'}`,
+        );
+      }
+      return f;
+    });
+  } else {
+    results.push({
+      id: 'notif.read.kick_vote_no_readAt_change',
+      pass: true,
+      failures: ['skipped — no kick_vote notification fixture'],
+    });
+  }
+
   // ── CASE 8: listMyAppointments 응답 shape ─────────────────
   await check('appointments.list.shape', async () => {
     const res = mockRes();
