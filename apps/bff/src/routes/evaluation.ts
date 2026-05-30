@@ -194,7 +194,25 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
       });
 
       // [오버라이드] 크레딧 적립: mate_eval_complete +10
-      // appointment_complete는 스케줄러 잡(notifyMateEval)에서 별도 적립
+      // appointment_complete는 스케줄러 잡(notifyMateEval)에서 별도 적립.
+      //
+      // [리뷰 medium] mate_eval_complete dedup 분석:
+      //   dedup 단위 = (appointmentId, evaluatorUserId, evaluatedUserId) — 평가 1건당 1크레딧.
+      //   credit_ledgers에 evaluated_user_id 컬럼이 없어 DB-level partial unique index로
+      //   이 세 컬럼 단위를 표현할 수 없다 (스키마 변경 금지 제약).
+      //
+      //   findFirst({ where: { userId, action, appointmentId } }) 로 1차 방어를 추가하면
+      //   그룹 N-1에서 u1→u2 크레딧 삽입 후 u1→u3 요청 시 findFirst가 기존 행을 감지해
+      //   두 번째 +10을 차단하게 된다 — 의도된 설계(Case 11: N-1 각 +10)를 깨뜨린다.
+      //
+      //   따라서 단독 dedup 방어선으로 uq_mate_eval_pair UNIQUE 제약을 사용한다:
+      //     - HTTP 재전송(동일 evaluatedUserId): ev.create → P2002 → catch(P2002) → 409.
+      //       credit insert에 도달하지 않으므로 중복 크레딧 발생 불가.
+      //     - Prisma interactive transaction은 기본 auto-retry 없음.
+      //       커밋 후 응답 유실 시 클라이언트 재전송 → ev.create P2002 → 409 (위와 동일).
+      //     - 그룹 N-1: evaluatedUserId가 다른 별도 요청 → 각 트랜잭션에서 ev.create 성공
+      //       → 각각 +10 적립 (의도됨).
+      //   결론: uq_mate_eval_pair가 유일한 필요충분 dedup 방어선.
       await tx.creditLedger.create({
         data: {
           userId: auth.userId,

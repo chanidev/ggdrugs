@@ -853,8 +853,9 @@ model Appointment {
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  chatRoom ChatRoom          @relation(fields: [chatRoomId], references: [chatRoomId])
-  votes    AppointmentVote[]
+  chatRoom        ChatRoom          @relation(fields: [chatRoomId], references: [chatRoomId])
+  votes           AppointmentVote[]
+  mateEvaluations MateEvaluation[]  // [리뷰 medium] FK 관계 — 삭제된 약속 ID로 평가 행 잠김 방지
 
   @@index([chatRoomId, status], map: "idx_appointment_room_status")
   @@index([expiresAt, status], map: "idx_appointment_expires")
@@ -900,8 +901,10 @@ model Block {
 // GG-REVIEW-003은 요구사항 원문(_p2_req_text.txt)에서 결번(002→004 점프).
 // reportedFor: null=신고없음 | 'inappropriate'|'harassing'|'no_show'|'etc'
 // 1 evaluator → 1 evaluation per (appointment, evaluated) — uq_mate_eval_pair
-// [이슈3] 1:1 약속 한정 (ChatRoom.roomType='1:1' 게이트는 BFF 라우트에서 확인).
+// [오버라이드] 그룹 포함 전체 지원 (roomType 게이트 삭제됨).
 // [이슈13] 신고 별도 Report 모델 없음 — Slice 8 범위. 관리자는 reported_for IS NOT NULL 직접 조회.
+// [리뷰 medium] appointmentId → Appointment FK 추가 (참조 무결성 보장).
+// [리뷰 low]    comment: DB-level byte 제약은 CHECK(octet_length) — migration.sql 참조.
 // ============================================================
 model MateEvaluation {
   evalId          BigInt   @id @default(autoincrement()) @map("eval_id")
@@ -913,12 +916,13 @@ model MateEvaluation {
   q2              Int      @db.SmallInt // 의사소통 1~5
   q3              Int      @db.SmallInt // 분위기/유쾌함 1~5
   q4              Int      @db.SmallInt // 재방문의향 1~5
-  comment         String?  @db.VarChar(30) // ≤30 UTF-8 byte (GG-REVIEW-005)
+  comment         String?  @db.VarChar(30) // ≤30 UTF-8 byte (GG-REVIEW-005); DB-level: CHECK(octet_length(comment)<=30)
   reportedFor     String?  @map("reported_for") @db.VarChar(20)
   createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  evaluator     User @relation("EvalGiver", fields: [evaluatorUserId], references: [userId])
-  evaluatedUser User @relation("EvalReceiver", fields: [evaluatedUserId], references: [userId])
+  appointment   Appointment @relation(fields: [appointmentId], references: [appointmentId])
+  evaluator     User        @relation("EvalGiver",    fields: [evaluatorUserId], references: [userId])
+  evaluatedUser User        @relation("EvalReceiver", fields: [evaluatedUserId], references: [userId])
 
   @@unique([appointmentId, evaluatorUserId, evaluatedUserId], map: "uq_mate_eval_pair")
   @@index([evaluatedUserId, createdAt(sort: Desc)], map: "idx_mate_eval_evaluated")

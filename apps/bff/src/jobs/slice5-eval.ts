@@ -284,15 +284,24 @@ async function main() {
       if (appointmentCredit && appointmentCredit.pointsAmount !== 10) f.push(`appointment_complete pointsAmount ${appointmentCredit.pointsAmount} != 10`);
 
       // dedup: 두 번 실행해도 알림/크레딧 중복 없음
+      // [리뷰 low] 두 번째 notifyMateEval 호출 전후 appointment_complete 크레딧 카운트도 검증.
       // [리뷰 지적] 두 번째 호출도 픽스처 범위([appt.appointmentId])로 격리 — DB 전체 오염 방지.
-      const before = await prisma.notification.count({
+      const beforeNotif = await prisma.notification.count({
         where: { notificationType: 'mate_eval', relatedEntityId: appt.appointmentId, relatedEntityType: 'appointment' },
+      });
+      const beforeCredit = await prisma.creditLedger.count({
+        where: { action: 'appointment_complete', appointmentId: appt.appointmentId },
       });
       await notifyMateEval(new Date(), [appt.appointmentId]);
-      const after = await prisma.notification.count({
+      const afterNotif = await prisma.notification.count({
         where: { notificationType: 'mate_eval', relatedEntityId: appt.appointmentId, relatedEntityType: 'appointment' },
       });
-      if (after !== before) f.push(`dedup failed: notification count ${before} → ${after} (should be unchanged)`);
+      const afterCredit = await prisma.creditLedger.count({
+        where: { action: 'appointment_complete', appointmentId: appt.appointmentId },
+      });
+      if (afterNotif !== beforeNotif) f.push(`dedup failed: notification count ${beforeNotif} → ${afterNotif} (should be unchanged)`);
+      // [리뷰 low] appointment_complete 크레딧 dedup 검증: 두 번째 실행 후 카운트 증가 없어야 함.
+      if (afterCredit !== beforeCredit) f.push(`dedup failed: appointment_complete credit count ${beforeCredit} → ${afterCredit} (should be unchanged)`);
 
       return f;
     });

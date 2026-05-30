@@ -10,7 +10,8 @@
 
 CREATE TABLE mate_evaluations (
   eval_id           BIGSERIAL PRIMARY KEY,
-  appointment_id    BIGINT NOT NULL,
+  -- [리뷰 medium] appointment_id FK 추가 — 삭제된 약속 ID로 평가 행이 잠기는 참조 무결성 버그 수정.
+  appointment_id    BIGINT NOT NULL REFERENCES appointments(appointment_id),
   evaluator_user_id BIGINT NOT NULL REFERENCES users(user_id),
   evaluated_user_id BIGINT NOT NULL REFERENCES users(user_id),
   rating_stars      SMALLINT NOT NULL CHECK (rating_stars BETWEEN 1 AND 5),
@@ -18,7 +19,9 @@ CREATE TABLE mate_evaluations (
   q2                SMALLINT NOT NULL CHECK (q2 BETWEEN 1 AND 5),
   q3                SMALLINT NOT NULL CHECK (q3 BETWEEN 1 AND 5),
   q4                SMALLINT NOT NULL CHECK (q4 BETWEEN 1 AND 5),
-  comment           VARCHAR(30),
+  -- [리뷰 low] VARCHAR(30)은 문자 수 기준이므로 byte 제약은 CHECK로 별도 강제.
+  --            스펙(GG-REVIEW-005): ≤30 UTF-8 byte. 앱 레이어(Buffer.byteLength)와 이중 방어.
+  comment           VARCHAR(30) CONSTRAINT check_comment_byte_len CHECK (comment IS NULL OR octet_length(comment) <= 30),
   reported_for      VARCHAR(20) CHECK (reported_for IN ('inappropriate','harassing','no_show','etc')),
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT uq_mate_eval_pair UNIQUE (appointment_id, evaluator_user_id, evaluated_user_id)
