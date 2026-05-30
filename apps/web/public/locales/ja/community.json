@@ -30,6 +30,7 @@
     "translateTitle": "翻訳結果",
     "translateLoading": "翻訳中…",
     "translateError": "翻訳に失敗しました。",
+    "translateUnavailable": "翻訳サービスは利用できません。（OpenAI キーが未設定）",
     "translateClose": "閉じる",
     "translateSelectLang": "翻訳する言語を選択してください",
     "translateOriginal": "原文",
@@ -83,7 +84,9 @@
   },
   "mateReco": {
     "title": "仲間のおすすめ",
-    "placeholder": "ログインして仲間のおすすめを受け取りましょう。"
+    "placeholder": "条件に合った仲間をご紹介します。",
+    "viewRecommendations": "おすすめ一覧を見る",
+    "editConditions": "条件を入力・修正"
   },
   "postList": {
     "empty": "投稿がありません。",

@@ -1,1 +1,58 @@
-{}
+{
+  "button": {
+    "login": "Log in",
+    "logout": "Log out",
+    "write": "Write",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "submit": "Submit",
+    "save": "Save",
+    "report": "Report",
+    "translate": "Translate",
+    "translateAnother": "Translate to another language",
+    "copy": "Copy",
+    "retry": "Retry",
+    "back": "Back",
+    "backToList": "Back to list"
+  },
+  "label": {
+    "loading": "Loading…",
+    "error": "An error occurred.",
+    "notFound": "This item does not exist or has expired.",
+    "empty": "No items.",
+    "credits": "Credits",
+    "notifications": "Notifications",
+    "chatRoom": "Chat room",
+    "admin": "Admin",
+    "uploader": "Uploader",
+    "myPage": "My Page",
+    "login_kakao": "Kakao",
+    "login_google": "Log in with Google",
+    "login_google_short": "Google"
+  },
+  "aria": {
+    "adminConsole": "Admin console",
+    "uploaderConsole": "Uploader console",
+    "myPage": "My Page",
+    "quickSearch": "Quick search (⌘K) — coming soon",
+    "quickSearchLabel": "Quick search (⌘K) — coming soon",
+    "eventSheet": "Event sheet",
+    "sheetCollapse": "Collapse sheet to half",
+    "sheetExpandFull": "Expand sheet fully",
+    "sheetExpand": "Expand sheet"
+  },
+  "search": {
+    "placeholder": "Search events & places"
+  },
+  "error": {
+    "loginRequired": "Login required.",
+    "forbidden": "You do not have permission.",
+    "loadFailed": "Failed to load.",
+    "deleteFailed": "Failed to delete.",
+    "networkError": "No response received. Please try again later.",
+    "llmUnreachable": "Could not connect to LLM service."
+  }
+}

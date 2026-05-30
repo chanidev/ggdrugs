@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { ActionButton } from 'seed-design/ui/action-button';
 
 /**
@@ -8,12 +9,13 @@ import { ActionButton } from 'seed-design/ui/action-button';
  * Task 5: /mate/recommendations 실링크 연결 (MateRecommendationsPage).
  */
 export function MateRecoPlaceholder() {
+  const { t } = useTranslation('community');
   return (
     <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-4">
-      <h2 className="mb-2 text-[15px] font-semibold">메이트 추천</h2>
+      <h2 className="mb-2 text-[15px] font-semibold">{t('mateReco.title')}</h2>
       {/* GG-COMM-007/008: 정보 미입력 = 블라인드 + 입력 유도. MateRecommendationsPage가 상태 분기 담당. */}
       <p className="mb-3 text-[13px] text-(--color-text-muted)">
-        매칭 조건에 맞는 메이트를 추천해 드려요.
+        {t('mateReco.placeholder')}
       </p>
       <div className="flex flex-col gap-2">
         <ActionButton
@@ -22,7 +24,7 @@ export function MateRecoPlaceholder() {
           asChild
           className="w-full"
         >
-          <Link to="/mate/recommendations">추천 목록 보기</Link>
+          <Link to="/mate/recommendations">{t('mateReco.viewRecommendations')}</Link>
         </ActionButton>
         <ActionButton
           variant="neutralOutline"
@@ -30,7 +32,7 @@ export function MateRecoPlaceholder() {
           asChild
           className="w-full"
         >
-          <Link to="/mate/form">조건 입력 · 수정</Link>
+          <Link to="/mate/form">{t('mateReco.editConditions')}</Link>
         </ActionButton>
       </div>
     </div>

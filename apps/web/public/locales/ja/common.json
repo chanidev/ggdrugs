@@ -1,1 +1,58 @@
-{}
+{
+  "button": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "write": "投稿",
+    "edit": "編集",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "close": "閉じる",
+    "submit": "送信",
+    "save": "保存",
+    "report": "通報",
+    "translate": "翻訳する",
+    "translateAnother": "別の言語に翻訳",
+    "copy": "コピー",
+    "retry": "再試行",
+    "back": "戻る",
+    "backToList": "一覧へ戻る"
+  },
+  "label": {
+    "loading": "読み込み中…",
+    "error": "エラーが発生しました。",
+    "notFound": "このアイテムは存在しないか、期限切れです。",
+    "empty": "項目がありません。",
+    "credits": "クレジット",
+    "notifications": "通知",
+    "chatRoom": "チャットルーム",
+    "admin": "管理者",
+    "uploader": "アップロード者",
+    "myPage": "マイページ",
+    "login_kakao": "Kakao",
+    "login_google": "Google でログイン",
+    "login_google_short": "Google"
+  },
+  "aria": {
+    "adminConsole": "管理者コンソール",
+    "uploaderConsole": "アップロード者コンソール",
+    "myPage": "マイページ",
+    "quickSearch": "クイック検索 (⌘K) — 準備中",
+    "quickSearchLabel": "クイック検索 (⌘K) — 準備中",
+    "eventSheet": "イベントシート",
+    "sheetCollapse": "シートを半分に折りたたむ",
+    "sheetExpandFull": "シートを完全に展開",
+    "sheetExpand": "シートを展開"
+  },
+  "search": {
+    "placeholder": "イベント・場所を検索"
+  },
+  "error": {
+    "loginRequired": "ログインが必要です。",
+    "forbidden": "権限がありません。",
+    "loadFailed": "読み込みに失敗しました。",
+    "deleteFailed": "削除に失敗しました。",
+    "networkError": "応答がありませんでした。しばらくしてから再試行してください。",
+    "llmUnreachable": "LLM サービスに接続できませんでした。"
+  }
+}

@@ -107,7 +107,7 @@ export function PostDetailPage() {
     } catch (e) {
       setTranslateError(
         (e as Error).message === 'LLM_UNAVAILABLE'
-          ? t('post.translateError')
+          ? t('post.translateUnavailable')
           : t('post.translateError'),
       );
     } finally {

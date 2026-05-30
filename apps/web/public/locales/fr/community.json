@@ -30,6 +30,7 @@
     "translateTitle": "Résultat de la traduction",
     "translateLoading": "Traduction en cours…",
     "translateError": "Échec de la traduction.",
+    "translateUnavailable": "Service de traduction indisponible. (Clé OpenAI non configurée)",
     "translateClose": "Fermer",
     "translateSelectLang": "Choisissez la langue de traduction",
     "translateOriginal": "Original",
@@ -83,7 +84,9 @@
   },
   "mateReco": {
     "title": "Compagnons recommandés",
-    "placeholder": "Connectez-vous pour recevoir des recommandations."
+    "placeholder": "Nous vous recommanderons des compagnons correspondant à vos critères.",
+    "viewRecommendations": "Voir les recommandations",
+    "editConditions": "Saisir / modifier les critères"
   },
   "postList": {
     "empty": "Aucune publication.",

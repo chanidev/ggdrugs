@@ -30,6 +30,7 @@
     "translateTitle": "Kết quả dịch",
     "translateLoading": "Đang dịch…",
     "translateError": "Không dịch được.",
+    "translateUnavailable": "Dịch vụ dịch thuật không khả dụng. (Chưa cấu hình khóa OpenAI)",
     "translateClose": "Đóng",
     "translateSelectLang": "Chọn ngôn ngữ để dịch",
     "translateOriginal": "Bản gốc",
@@ -83,7 +84,9 @@
   },
   "mateReco": {
     "title": "Gợi ý bạn đồng hành",
-    "placeholder": "Đăng nhập để nhận gợi ý."
+    "placeholder": "Chúng tôi sẽ gợi ý bạn đồng hành phù hợp với điều kiện của bạn.",
+    "viewRecommendations": "Xem danh sách gợi ý",
+    "editConditions": "Nhập / chỉnh sửa điều kiện"
   },
   "postList": {
     "empty": "Chưa có bài viết.",

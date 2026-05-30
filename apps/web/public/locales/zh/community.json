@@ -30,6 +30,7 @@
     "translateTitle": "翻译结果",
     "translateLoading": "翻译中…",
     "translateError": "翻译失败。",
+    "translateUnavailable": "翻译服务不可用。（未配置 OpenAI 密钥）",
     "translateClose": "关闭",
     "translateSelectLang": "请选择翻译语言",
     "translateOriginal": "原文",
@@ -83,7 +84,9 @@
   },
   "mateReco": {
     "title": "同伴推荐",
-    "placeholder": "登录后获取同伴推荐。"
+    "placeholder": "我们将为您推荐符合条件的同伴。",
+    "viewRecommendations": "查看推荐列表",
+    "editConditions": "填写 / 修改条件"
   },
   "postList": {
     "empty": "暂无帖子。",

@@ -1,1 +1,58 @@
-{}
+{
+  "button": {
+    "login": "Đăng nhập",
+    "logout": "Đăng xuất",
+    "write": "Viết",
+    "edit": "Chỉnh sửa",
+    "delete": "Xóa",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận",
+    "close": "Đóng",
+    "submit": "Gửi",
+    "save": "Lưu",
+    "report": "Báo cáo",
+    "translate": "Dịch",
+    "translateAnother": "Dịch sang ngôn ngữ khác",
+    "copy": "Sao chép",
+    "retry": "Thử lại",
+    "back": "Quay lại",
+    "backToList": "Về danh sách"
+  },
+  "label": {
+    "loading": "Đang tải…",
+    "error": "Đã xảy ra lỗi.",
+    "notFound": "Mục này không tồn tại hoặc đã hết hạn.",
+    "empty": "Không có mục nào.",
+    "credits": "Tín dụng",
+    "notifications": "Thông báo",
+    "chatRoom": "Phòng chat",
+    "admin": "Quản trị viên",
+    "uploader": "Người tải lên",
+    "myPage": "Trang của tôi",
+    "login_kakao": "Kakao",
+    "login_google": "Đăng nhập bằng Google",
+    "login_google_short": "Google"
+  },
+  "aria": {
+    "adminConsole": "Bảng quản trị",
+    "uploaderConsole": "Bảng người tải lên",
+    "myPage": "Trang của tôi",
+    "quickSearch": "Tìm kiếm nhanh (⌘K) — sắp ra mắt",
+    "quickSearchLabel": "Tìm kiếm nhanh (⌘K) — sắp ra mắt",
+    "eventSheet": "Trang sự kiện",
+    "sheetCollapse": "Thu gọn trang còn một nửa",
+    "sheetExpandFull": "Mở rộng trang hoàn toàn",
+    "sheetExpand": "Mở rộng trang"
+  },
+  "search": {
+    "placeholder": "Tìm sự kiện & địa điểm"
+  },
+  "error": {
+    "loginRequired": "Cần đăng nhập.",
+    "forbidden": "Bạn không có quyền.",
+    "loadFailed": "Không tải được.",
+    "deleteFailed": "Không xóa được.",
+    "networkError": "Không nhận được phản hồi. Vui lòng thử lại sau.",
+    "llmUnreachable": "Không kết nối được dịch vụ LLM."
+  }
+}

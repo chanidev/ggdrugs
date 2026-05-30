@@ -30,6 +30,7 @@
     "translateTitle": "Translation Result",
     "translateLoading": "Translating…",
     "translateError": "Translation failed.",
+    "translateUnavailable": "Translation service unavailable. (OpenAI key not configured)",
     "translateClose": "Close",
     "translateSelectLang": "Select a language to translate into",
     "translateOriginal": "Original",
@@ -83,7 +84,9 @@
   },
   "mateReco": {
     "title": "Mate Recommendations",
-    "placeholder": "Log in to get mate recommendations."
+    "placeholder": "We'll recommend mates that match your criteria.",
+    "viewRecommendations": "View recommendations",
+    "editConditions": "Enter / edit criteria"
   },
   "postList": {
     "empty": "No posts yet.",

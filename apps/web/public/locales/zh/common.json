@@ -1,1 +1,58 @@
-{}
+{
+  "button": {
+    "login": "登录",
+    "logout": "退出登录",
+    "write": "写帖",
+    "edit": "编辑",
+    "delete": "删除",
+    "cancel": "取消",
+    "confirm": "确认",
+    "close": "关闭",
+    "submit": "提交",
+    "save": "保存",
+    "report": "举报",
+    "translate": "翻译",
+    "translateAnother": "翻译成其他语言",
+    "copy": "复制",
+    "retry": "重试",
+    "back": "返回",
+    "backToList": "返回列表"
+  },
+  "label": {
+    "loading": "加载中…",
+    "error": "发生了错误。",
+    "notFound": "该项目不存在或已过期。",
+    "empty": "暂无内容。",
+    "credits": "积分",
+    "notifications": "通知",
+    "chatRoom": "聊天室",
+    "admin": "管理员",
+    "uploader": "上传者",
+    "myPage": "我的页面",
+    "login_kakao": "Kakao",
+    "login_google": "用 Google 登录",
+    "login_google_short": "Google"
+  },
+  "aria": {
+    "adminConsole": "管理员控制台",
+    "uploaderConsole": "上传者控制台",
+    "myPage": "我的页面",
+    "quickSearch": "快速搜索 (⌘K) — 即将推出",
+    "quickSearchLabel": "快速搜索 (⌘K) — 即将推出",
+    "eventSheet": "活动面板",
+    "sheetCollapse": "将面板折叠至一半",
+    "sheetExpandFull": "完全展开面板",
+    "sheetExpand": "展开面板"
+  },
+  "search": {
+    "placeholder": "搜索活动和地点"
+  },
+  "error": {
+    "loginRequired": "需要登录。",
+    "forbidden": "您没有权限。",
+    "loadFailed": "加载失败。",
+    "deleteFailed": "删除失败。",
+    "networkError": "未收到响应，请稍后再试。",
+    "llmUnreachable": "无法连接 LLM 服务。"
+  }
+}
