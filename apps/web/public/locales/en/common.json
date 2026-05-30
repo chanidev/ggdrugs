@@ -53,7 +53,8 @@
     "bookmarkLoginRequired": "Login to bookmark",
     "notifications": "Notifications",
     "notificationsPlus": "Notifications 9+",
-    "notificationsCount": "Notifications {{count}}"
+    "notificationsCount": "Notifications {{count}}",
+    "languageSelect": "Language selection"
   },
   "search": {
     "placeholder": "Search events & places"

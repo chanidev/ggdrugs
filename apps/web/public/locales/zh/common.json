@@ -53,7 +53,8 @@
     "bookmarkLoginRequired": "登录后书签",
     "notifications": "通知",
     "notificationsPlus": "通知 9+",
-    "notificationsCount": "通知 {{count}}"
+    "notificationsCount": "通知 {{count}}",
+    "languageSelect": "选择语言"
   },
   "search": {
     "placeholder": "搜索活动和地点"

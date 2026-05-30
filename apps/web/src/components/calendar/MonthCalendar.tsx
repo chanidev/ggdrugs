@@ -230,13 +230,13 @@ export function MonthCalendar({
       {/* 범례 */}
       <footer className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-(--color-text-subtle)">
         <span className="inline-flex items-center gap-1">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-info)" /> 예정
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-info)" /> {t('calendar.legend.upcoming')}
         </span>
         <span className="inline-flex items-center gap-1">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" /> 진행중
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" /> {t('calendar.legend.ongoing')}
         </span>
         <span className="inline-flex items-center gap-1">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-text-subtle)" /> 종료
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-text-subtle)" /> {t('calendar.legend.ended')}
         </span>
       </footer>
     </section>

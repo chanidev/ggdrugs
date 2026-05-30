@@ -5,6 +5,7 @@ import { Icon } from '../components/Icon';
 import { NotificationBell } from '../components/notifications/NotificationBell';
 import { useCurrentUser } from '../lib/auth-context';
 import { loginUrl } from '../lib/auth-redirect';
+import { LanguageToggle } from '../components/LanguageToggle';
 
 /**
  * Header — 상단 바 (60px).
@@ -21,6 +22,7 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <SearchMini />
+        <LanguageToggle />
         <AuthArea />
       </div>
     </header>

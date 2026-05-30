@@ -25,4 +25,24 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    // Windows Node.js 24 + rollup 번들링 크래시 완화: esbuild minifier + 청크 분할
+    minify: 'esbuild',
+    cssMinify: 'esbuild',
+    sourcemap: false,
+    rollupOptions: {
+      treeshake: false,
+      maxParallelFileOps: 1,
+      output: {
+        manualChunks: (id) => {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) return 'react-vendor';
+          if (id.includes('node_modules/react-router') || id.includes('node_modules/@remix-run')) return 'router-vendor';
+          if (id.includes('node_modules/i18next') || id.includes('node_modules/react-i18next')) return 'i18n-vendor';
+          if (id.includes('node_modules/@seed-design') || id.includes('node_modules/@radix-ui')) return 'ui-vendor';
+          if (id.includes('node_modules/')) return 'vendor';
+        },
+      },
+    },
+  },
 });

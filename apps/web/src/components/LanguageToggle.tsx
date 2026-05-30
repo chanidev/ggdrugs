@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useLanguage } from '../lib/useLanguage.js';
 import type { SupportedLanguage } from '../lib/i18n.js';
 
@@ -9,6 +10,7 @@ import type { SupportedLanguage } from '../lib/i18n.js';
  */
 export function LanguageToggle() {
   const { current, setLanguage, languages } = useLanguage();
+  const { t } = useTranslation('common');
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -43,7 +45,7 @@ export function LanguageToggle() {
       {open && (
         <ul
           role="listbox"
-          aria-label="언어 선택"
+          aria-label={t('aria.languageSelect')}
           className="absolute right-0 top-full z-50 mt-1 min-w-[120px] rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) shadow-(--shadow-md)"
         >
           {languages.map((lang) => (

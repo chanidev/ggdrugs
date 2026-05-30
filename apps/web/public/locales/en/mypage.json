@@ -42,6 +42,7 @@
     "submit": "Submit",
     "ratingAria": "Rating 1–5",
     "notEndedNotice": "Reviews can only be written after the event has ended.",
+    "notEndedDate": "Opens after {{date}}.",
     "firstReview": "Be the first to review!",
     "photoViewAria": "View original review photo",
     "aiVibeTitle": "AI Emotion Classification: {{label}}",
@@ -125,7 +126,12 @@
     "today": "Today",
     "prevMonth": "Previous Month",
     "nextMonth": "Next Month",
-    "calendarAriaLabel": "{{label}} Calendar"
+    "calendarAriaLabel": "{{label}} Calendar",
+    "legend": {
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "ended": "Ended"
+    }
   },
   "credit": {
     "title": "Credit History",
@@ -240,6 +246,8 @@
     "reportReason": "Report reason",
     "block": "Block",
     "nextFestival": "Next — Write festival review",
+    "starRatingLabel": "Select star rating",
+    "starLabel": "{{star}} star",
     "qLabels": {
       "punctuality": "Punctuality",
       "communication": "Communication",

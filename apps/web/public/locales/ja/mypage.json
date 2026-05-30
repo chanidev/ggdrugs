@@ -42,6 +42,7 @@
     "submit": "投稿",
     "ratingAria": "評価 1〜5",
     "notEndedNotice": "レビューはイベント終了後に書けます。",
+    "notEndedDate": "{{date}} 以降にオープン。",
     "firstReview": "最初のレビュアーになりましょう！",
     "photoViewAria": "レビュー写真の原本を見る",
     "aiVibeTitle": "AI感情分類: {{label}}",
@@ -125,7 +126,12 @@
     "today": "今日",
     "prevMonth": "前の月",
     "nextMonth": "次の月",
-    "calendarAriaLabel": "{{label}}カレンダー"
+    "calendarAriaLabel": "{{label}}カレンダー",
+    "legend": {
+      "upcoming": "予定",
+      "ongoing": "進行中",
+      "ended": "終了"
+    }
   },
   "credit": {
     "title": "クレジット履歴",
@@ -240,6 +246,8 @@
     "reportReason": "通報理由",
     "block": "ブロック",
     "nextFestival": "次へ — フェスレビューを書く",
+    "starRatingLabel": "星評価を選択",
+    "starLabel": "{{star}} 点",
     "qLabels": {
       "punctuality": "時間厳守",
       "communication": "コミュニケーション",

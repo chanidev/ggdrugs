@@ -55,13 +55,17 @@ export async function translatePost(req: Request, res: Response): Promise<void> 
     target_lang: targetLanguage,
   }).catch(() => null);
 
-  const translatedBody = llmResult?.translated ?? post.body;
-  const wasTranslated = !!llmResult?.translated;
+  // LLM 실패 시 503 반환 (graceful degradation이 아닌 명시적 실패 신호).
+  // 클라이언트(web translate.ts)는 503을 받아 translateUnavailable i18n 키를 표시.
+  if (!llmResult?.translated) {
+    res.status(503).json({ error: 'translation service unavailable' });
+    return;
+  }
+
+  const translatedBody = llmResult.translated;
 
   // 번역 성공 시에만 캐시 저장
-  if (wasTranslated) {
-    await setTranslationCache(postIdStr, targetLanguage, translatedBody).catch(() => undefined);
-  }
+  await setTranslationCache(postIdStr, targetLanguage, translatedBody).catch(() => undefined);
 
   res.json({ postId: postIdStr, originalBody: post.body, translatedBody, targetLanguage, cached: false });
 }

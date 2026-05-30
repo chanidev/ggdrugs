@@ -42,6 +42,7 @@
     "submit": "Envoyer",
     "ratingAria": "Note 1–5",
     "notEndedNotice": "Les avis ne peuvent être rédigés qu'après la fin de l'événement.",
+    "notEndedDate": "Ouverture après le {{date}}.",
     "firstReview": "Soyez le premier à donner votre avis !",
     "photoViewAria": "Voir la photo de la critique en haute résolution",
     "aiVibeTitle": "Classification de l'émotion AI : {{label}}",
@@ -125,7 +126,12 @@
     "today": "Aujourd'hui",
     "prevMonth": "Mois précédent",
     "nextMonth": "Mois suivant",
-    "calendarAriaLabel": "Calendrier {{label}}"
+    "calendarAriaLabel": "Calendrier {{label}}",
+    "legend": {
+      "upcoming": "À venir",
+      "ongoing": "En cours",
+      "ended": "Terminé"
+    }
   },
   "credit": {
     "title": "Historique des crédits",
@@ -240,6 +246,8 @@
     "reportReason": "Motif de signalement",
     "block": "Bloquer",
     "nextFestival": "Suivant — Rédiger un avis festival",
+    "starRatingLabel": "Sélectionner la note en étoiles",
+    "starLabel": "{{star}} étoile",
     "qLabels": {
       "punctuality": "Ponctualité",
       "communication": "Communication",

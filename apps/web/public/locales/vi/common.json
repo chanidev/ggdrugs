@@ -53,7 +53,8 @@
     "bookmarkLoginRequired": "Cần đăng nhập để đánh dấu",
     "notifications": "Thông báo",
     "notificationsPlus": "Thông báo 9+",
-    "notificationsCount": "Thông báo {{count}}"
+    "notificationsCount": "Thông báo {{count}}",
+    "languageSelect": "Chọn ngôn ngữ"
   },
   "search": {
     "placeholder": "Tìm sự kiện & địa điểm"

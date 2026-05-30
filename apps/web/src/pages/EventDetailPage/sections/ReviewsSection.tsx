@@ -293,7 +293,7 @@ function NotEndedNotice({ endDate }: { endDate: string }) {
   return (
     <div className="rounded-(--radius-md) border border-dashed border-(--color-border) bg-(--color-surface-alt) px-4 py-3 text-[13px] text-(--color-text-muted)">
       {t('review.notEndedNotice')}
-      <span className="tabular ml-1 text-(--color-text)">{endDate}</span> 이후 오픈.
+      <span className="tabular ml-1 text-(--color-text)">{t('review.notEndedDate', { date: endDate })}</span>
     </div>
   );
 }

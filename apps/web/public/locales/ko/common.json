@@ -53,7 +53,8 @@
     "bookmarkLoginRequired": "로그인 후 북마크",
     "notifications": "알림",
     "notificationsPlus": "알림 9+",
-    "notificationsCount": "알림 {{count}}"
+    "notificationsCount": "알림 {{count}}",
+    "languageSelect": "언어 선택"
   },
   "search": {
     "placeholder": "이벤트·장소 검색"

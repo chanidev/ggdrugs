@@ -53,7 +53,8 @@
     "bookmarkLoginRequired": "Connexion requise pour ajouter aux favoris",
     "notifications": "Notifications",
     "notificationsPlus": "Notifications 9+",
-    "notificationsCount": "Notifications {{count}}"
+    "notificationsCount": "Notifications {{count}}",
+    "languageSelect": "Sélection de langue"
   },
   "search": {
     "placeholder": "Rechercher des événements et lieux"

@@ -42,6 +42,7 @@
     "submit": "提交",
     "ratingAria": "评分 1–5",
     "notEndedNotice": "活动结束后才能写评价。",
+    "notEndedDate": "{{date}} 后开放。",
     "firstReview": "成为第一个评价者！",
     "photoViewAria": "查看评论照片原图",
     "aiVibeTitle": "AI情感分类: {{label}}",
@@ -125,7 +126,12 @@
     "today": "今天",
     "prevMonth": "上个月",
     "nextMonth": "下个月",
-    "calendarAriaLabel": "{{label}}日历"
+    "calendarAriaLabel": "{{label}}日历",
+    "legend": {
+      "upcoming": "即将开始",
+      "ongoing": "进行中",
+      "ended": "已结束"
+    }
   },
   "credit": {
     "title": "积分历史",
@@ -240,6 +246,8 @@
     "reportReason": "举报原因",
     "block": "屏蔽",
     "nextFestival": "下一步 — 写节庆评价",
+    "starRatingLabel": "选择星级",
+    "starLabel": "{{star}} 星",
     "qLabels": {
       "punctuality": "守时",
       "communication": "沟通",

@@ -42,6 +42,7 @@
     "submit": "Gửi",
     "ratingAria": "Điểm 1–5",
     "notEndedNotice": "Đánh giá chỉ có thể viết sau khi sự kiện kết thúc.",
+    "notEndedDate": "Mở sau {{date}}.",
     "firstReview": "Hãy là người đầu tiên đánh giá!",
     "photoViewAria": "Xem ảnh đánh giá gốc",
     "aiVibeTitle": "Phân loại cảm xúc AI: {{label}}",
@@ -125,7 +126,12 @@
     "today": "Hôm nay",
     "prevMonth": "Tháng trước",
     "nextMonth": "Tháng sau",
-    "calendarAriaLabel": "Lịch {{label}}"
+    "calendarAriaLabel": "Lịch {{label}}",
+    "legend": {
+      "upcoming": "Sắp diễn ra",
+      "ongoing": "Đang diễn ra",
+      "ended": "Đã kết thúc"
+    }
   },
   "credit": {
     "title": "Lịch sử tín dụng",
@@ -240,6 +246,8 @@
     "reportReason": "Lý do báo cáo",
     "block": "Chặn",
     "nextFestival": "Tiếp — Viết đánh giá lễ hội",
+    "starRatingLabel": "Chọn số sao",
+    "starLabel": "{{star}} sao",
     "qLabels": {
       "punctuality": "Đúng giờ",
       "communication": "Giao tiếp",

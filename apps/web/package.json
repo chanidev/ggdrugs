@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && cross-env NAPI_RS_FORCE_WASI=1 TAILWIND_OXIDE_FORCE_WASI_PATCH=1 NODE_OPTIONS=--max-old-space-size=8192 vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty",
     "test": "vitest run"
@@ -26,6 +26,7 @@
     "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
+    "@rollup/wasm-node": "^4.60.4",
     "@seed-design/vite-plugin": "^1.1.1",
     "@tailwindcss/vite": "^4.1.14",
     "@types/node": "^24",
@@ -33,6 +34,7 @@
     "@types/react-dom": "^19.0.2",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^4.1.7",
+    "cross-env": "^10.1.0",
     "msw": "^2.14.6",
     "playwright": "1.59.1",
     "tailwindcss": "^4.1.14",

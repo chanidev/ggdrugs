@@ -53,7 +53,8 @@
     "bookmarkLoginRequired": "ログイン後にブックマーク",
     "notifications": "通知",
     "notificationsPlus": "通知 9+",
-    "notificationsCount": "通知 {{count}}"
+    "notificationsCount": "通知 {{count}}",
+    "languageSelect": "言語選択"
   },
   "search": {
     "placeholder": "イベント・場所を検索"

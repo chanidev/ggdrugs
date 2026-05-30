@@ -10,5 +10,10 @@
   },
   "devDependencies": {
     "typescript": "^5.6.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": "npm:@rollup/wasm-node@4.60.4"
+    }
   }
 }

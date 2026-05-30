@@ -200,6 +200,19 @@
     "ended": "종료"
   },
   "mobile": {
+    "tabs": {
+      "list": "목록",
+      "filter": "필터",
+      "chat": "채팅"
+    },
+    "backToList": "목록으로",
+    "eventSummary": "이벤트 요약",
+    "chatHint": "자연어로 질문하면 5개 필터 + AI 의미 검색 후보를 함께 드려요.",
+    "chatPlaceholder": "\"이번 주말 가족이랑 볼만한 축제\"",
+    "chatAriaInput": "자연어로 이벤트 검색",
+    "chatAriaSend": "검색 전송",
+    "aiCandidates": "AI 후보 {{count}}건 · 의미 기반",
+    "sheetTabsLabel": "시트 탭",
     "homeAria": "Alle 홈"
   }
 }
