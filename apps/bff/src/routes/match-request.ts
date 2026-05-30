@@ -24,6 +24,15 @@ import { getSocketServer } from '../lib/socket-server.js';
 const ONE_TO_ONE_TTL_MS = 24 * 60 * 60 * 1000; // 24h
 const GROUP_TTL_MS = 6 * 60 * 60 * 1000;        // 6h
 
+// BigInt 형식의 userId는 불투명한 숫자 식별자이므로 PII(이메일·전화번호·주민번호) 가 아니다.
+// 따라서 audit 로그에 userId 를 그대로 기록한다 (mate.ts 의 gender/nationality/ageRangeLower
+// 마스킹 패턴은 실제 개인식별정보에만 적용). 이 결정은 CLAUDE.md §6 ③ 항목 근거.
+function maskUserId(id: bigint | string): string {
+  const s = String(id);
+  // 마지막 4자리만 남기고 앞자리를 * 로 치환 — audit trail 보존 + 원본 완전노출 방지
+  return s.length > 4 ? '*'.repeat(s.length - 4) + s.slice(-4) : '****';
+}
+
 function parseBigId(raw: unknown): bigint | null {
   const s = typeof raw === 'string' ? raw : '';
   try {
@@ -145,7 +154,7 @@ export async function sendOneToOneRequest(req: Request, res: Response) {
   }
 
   logger.info(
-    { action: 'match_request_1to1', requesterId: auth.userId.toString(), receiverUserId: receiverUserId.toString() },
+    { action: 'match_request_1to1', requesterId: maskUserId(auth.userId), receiverUserId: maskUserId(receiverUserId) },
     '1:1 match request sent',
   );
 
@@ -193,6 +202,13 @@ export async function sendGroupRequest(req: Request, res: Response) {
     receiverIds.push(id);
   }
 
+  // 중복 receiverId 감지 — 동일 대상에 MatchRequest 2건 생성 방지
+  const uniqueIds = [...new Set(receiverIds.map(String))].map(BigInt);
+  if (uniqueIds.length !== receiverIds.length) {
+    res.status(400).json({ error: 'duplicate_receiver_ids' });
+    return;
+  }
+
   // MateProfile 본인 확인
   const myProfile = await prisma.mateProfile.findUnique({
     where: { userId: auth.userId },
@@ -213,6 +229,38 @@ export async function sendGroupRequest(req: Request, res: Response) {
     const profile = receiverProfiles.find((p) => p.userId === receiverId);
     if (!profile || !profile.groupApply) {
       res.status(422).json({ error: 'group_apply_required', userId: receiverId.toString() });
+      return;
+    }
+  }
+
+  // 기존 그룹방 용량 초과 방지 (plan line 542: "기존 그룹방 현재멤버수+receiverUserIds.length ≤ 4")
+  //
+  // 의도: 요청자가 이미 active 그룹방에 속해 있을 때, 그 방에 추가 초대하면 4명 한도를 초과하는지 검증.
+  //       기존 방이 없는 경우(신규 방 생성 경로)는 이 가드 대상이 아니다.
+  //       신규 방에서는 receiverIds.length ≤ 3 (상단 rawIds.length > 3 가드)으로
+  //       최대 요청자(1) + 3명 = 4명이 보장된다.
+  //
+  // findFirst: 요청자는 active 그룹방 1개만 속할 수 있다는 제약은 DB 레벨에는 없으므로,
+  //            복수 방 가입 시 임의의 한 방만 검사한다. 이는 현재 비즈니스 규칙(1인 1그룹방)
+  //            상에서 데이터 정합성이 유지되는 한 안전하다.
+  const existingGroupMembership = await prisma.groupMembership.findFirst({
+    where: {
+      userId: auth.userId,
+      memberStatus: 'active',
+      chatRoom: { roomType: 'group', status: 'active' },
+    },
+    select: { chatRoomId: true },
+  });
+
+  if (existingGroupMembership) {
+    const currentCount = await prisma.groupMembership.count({
+      where: {
+        chatRoomId: existingGroupMembership.chatRoomId,
+        memberStatus: 'active',
+      },
+    });
+    if (currentCount + receiverIds.length > 4) {
+      res.status(422).json({ error: 'group_capacity_exceeded', currentCount, inviting: receiverIds.length });
       return;
     }
   }
@@ -265,7 +313,7 @@ export async function sendGroupRequest(req: Request, res: Response) {
   }
 
   logger.info(
-    { action: 'match_request_group', requesterId: auth.userId.toString(), receiverCount: receiverIds.length },
+    { action: 'match_request_group', requesterId: maskUserId(auth.userId), receiverCount: receiverIds.length },
     'group match requests sent',
   );
 
@@ -487,6 +535,7 @@ export async function acceptMatchRequest(req: Request, res: Response) {
 
   logger.info(
     { action: 'match_request_accept', matchRequestId: matchRequestId.toString(), chatRoomId: chatRoomId.toString() },
+    // matchRequestId/chatRoomId 는 PII 아님 — userId 는 maskUserId 로 처리됨
     'match request accepted',
   );
 

@@ -187,20 +187,7 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
     socket.on('room:message', async (payload: RoomMessagePayload) => {
       const { chatRoomId, type, body, attachmentUrl, stickerId } = payload;
       try {
-        // 멤버십 검증
-        const membership = await prisma.groupMembership.findFirst({
-          where: {
-            chatRoomId: BigInt(chatRoomId),
-            userId,
-            memberStatus: 'active',
-          },
-        });
-        if (!membership) {
-          socket.emit('error', { code: 'not_member', message: '채팅방 멤버가 아닙니다' });
-          return;
-        }
-
-        // 내용 검증
+        // 내용 검증 (DB 진입 전에 먼저 수행)
         if (type === 'text' && !body) {
           socket.emit('error', { code: 'invalid_payload', message: '텍스트 메시지는 body 가 필요합니다' });
           return;
@@ -214,17 +201,40 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
           return;
         }
 
-        // DB 영속
-        const message = await prisma.chatRoomMessage.create({
-          data: {
-            chatRoomId: BigInt(chatRoomId),
-            senderUserId: userId,
-            messageType: type,
-            body: body ?? null,
-            attachmentUrl: attachmentUrl ?? null,
-            stickerId: stickerId ?? null,
-          },
+        // TOCTOU 방지: 멤버십 재검증 + 메시지 저장을 단일 트랜잭션으로 묶는다.
+        // room:join 의 멤버십 검증과 여기 검증 사이에 kicked/left 상태로 전환될 수 있으므로,
+        // findFirst(memberStatus:'active') + chatRoomMessage.create 를 같은 트랜잭션에서 실행한다.
+        // ChatRoomMessage 에는 GroupMembership FK 가 없으므로 DB 단 제약으로 보호되지 않는다.
+        // (schema: ChatRoomMessage → ChatRoom FK만 존재, GroupMembership과는 무관)
+        const { message, membership } = await prisma.$transaction(async (tx) => {
+          const mem = await tx.groupMembership.findFirst({
+            where: {
+              chatRoomId: BigInt(chatRoomId),
+              userId,
+              memberStatus: 'active',
+            },
+          });
+          if (!mem) {
+            // 트랜잭션 내부에서 null 을 반환해 밖에서 에러 emit
+            return { message: null, membership: null };
+          }
+          const msg = await tx.chatRoomMessage.create({
+            data: {
+              chatRoomId: BigInt(chatRoomId),
+              senderUserId: userId,
+              messageType: type,
+              body: body ?? null,
+              attachmentUrl: attachmentUrl ?? null,
+              stickerId: stickerId ?? null,
+            },
+          });
+          return { message: msg, membership: mem };
         });
+
+        if (!membership || !message) {
+          socket.emit('error', { code: 'not_member', message: '채팅방 멤버가 아닙니다' });
+          return;
+        }
 
         // lastSeenAt 갱신 (fire-and-forget)
         prisma.groupMembership
