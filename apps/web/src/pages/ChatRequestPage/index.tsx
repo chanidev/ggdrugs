@@ -17,11 +17,11 @@ import { getMateIndex } from '../../lib/api/mate.js';
  * 7-2 스펙: 상대 닉네임 + 메이트지수 표시
  */
 export function ChatRequestPage() {
-  const { t } = useTranslation('chat');
+  const { t, i18n } = useTranslation('chat');
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const receiverUserId = params.get('to') ?? '';
-  const nickname = params.get('nickname') ?? '상대방';
+  const nickname = params.get('nickname') ?? t('request.unknownNickname');
 
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -76,7 +76,7 @@ export function ChatRequestPage() {
 
   const formatExpiry = (iso: string) => {
     const d = new Date(iso);
-    return d.toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleString(i18n.language, { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
   return (
@@ -99,7 +99,7 @@ export function ChatRequestPage() {
               <Avatar
                 fallback={nickname.slice(0, 1)}
                 size="64"
-                aria-label={`${nickname}의 프로필 아바타`}
+                aria-label={t('request.avatarAriaLabel', { nickname })}
               />
               <div className="flex items-center gap-1.5 text-[13px]">
                 <span className="text-(--color-text-muted)">{t('request.mateScore')}</span>

@@ -40,7 +40,9 @@
     "success": "신청 완료!",
     "successDetail": "{{nickname}}님이 수락하면 채팅이 시작돼요.",
     "checkNotifications": "알림에서 확인하기",
-    "backToCommunity": "커뮤니티로 돌아가기"
+    "backToCommunity": "커뮤니티로 돌아가기",
+    "unknownNickname": "상대방",
+    "avatarAriaLabel": "{{nickname}}의 프로필 아바타"
   },
   "room": {
     "loading": "불러오는 중…",

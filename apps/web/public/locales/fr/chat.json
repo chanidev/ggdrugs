@@ -40,7 +40,9 @@
     "success": "Demande envoyée !",
     "successDetail": "Le chat commencera une fois que {{nickname}} aura accepté.",
     "checkNotifications": "Vérifier dans les notifications",
-    "backToCommunity": "Retour à la communauté"
+    "backToCommunity": "Retour à la communauté",
+    "unknownNickname": "Interlocuteur",
+    "avatarAriaLabel": "Avatar de {{nickname}}"
   },
   "room": {
     "loading": "Chargement…",

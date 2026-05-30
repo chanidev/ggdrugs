@@ -40,7 +40,9 @@
     "success": "Request sent!",
     "successDetail": "A chat will start once {{nickname}} accepts.",
     "checkNotifications": "Check in notifications",
-    "backToCommunity": "Back to Community"
+    "backToCommunity": "Back to Community",
+    "unknownNickname": "Unknown",
+    "avatarAriaLabel": "{{nickname}}'s profile avatar"
   },
   "room": {
     "loading": "Loading…",

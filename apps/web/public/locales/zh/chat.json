@@ -40,7 +40,9 @@
     "success": "请求已发送！",
     "successDetail": "{{nickname}}接受后聊天将开始。",
     "checkNotifications": "在通知中查看",
-    "backToCommunity": "返回社区"
+    "backToCommunity": "返回社区",
+    "unknownNickname": "对方",
+    "avatarAriaLabel": "{{nickname}}的个人头像"
   },
   "room": {
     "loading": "加载中…",

@@ -353,7 +353,7 @@ export function MateFormPage() {
                     disabled={form.prefRegionDontCare}
                     className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] text-(--color-text) focus:border-(--color-accent) focus:outline-none disabled:opacity-40"
                   >
-                    <option value="">{t('form.nationalityPlaceholder')}</option>
+                    <option value="">{t('form.regionNone')}</option>
                     {sidoRegions.map((r) => (
                       <option key={r.regionId} value={r.regionId}>
                         {r.sido}

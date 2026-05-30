@@ -36,7 +36,7 @@ import { blockUser as blockUserGeneral } from '../../lib/api/reports.js';
  * GG-MATE-017/018: 방장 즉시강퇴 + 강퇴투표
  */
 export function ChatRoomPage() {
-  const { t } = useTranslation('chat');
+  const { t, i18n } = useTranslation('chat');
   const { chatRoomId } = useParams<{ chatRoomId: string }>();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
@@ -229,7 +229,7 @@ export function ChatRoomPage() {
               <span>
                 {t('room.appointmentConfirmed')}{' '}
                 {appointment?.appointedAt
-                  ? new Date(appointment.appointedAt).toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  ? new Date(appointment.appointedAt).toLocaleString(i18n.language, { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })
                   : ''}
               </span>
             </div>
@@ -411,7 +411,7 @@ function MessageBubble({
   /** 신고 버튼 클릭 시 ChatRoomPage 최상위 상태에 타깃을 전달 */
   onReport: (target: { messageId: string; senderUserId: string }) => void;
 }) {
-  const { t } = useTranslation('chat');
+  const { t, i18n } = useTranslation('chat');
   if (msg.messageType === 'system') {
     return (
       <div className="my-1 text-center">
@@ -455,7 +455,7 @@ function MessageBubble({
           <span className="text-[32px]" aria-label={t('room.sticker')}>&#128512;</span>
         )}
         <span className="mt-0.5 block text-[10px] opacity-60">
-          {new Date(msg.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
+          {new Date(msg.createdAt).toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
     </div>
@@ -920,7 +920,7 @@ function AppointmentDialog({
   onClose: () => void;
   onProposed: (appt: AppointmentOut) => void;
 }) {
-  const { t } = useTranslation('chat');
+  const { t, i18n } = useTranslation('chat');
   const [dateStr, setDateStr] = useState('');
   const [timeStr, setTimeStr] = useState('');
   const [eventName, setEventName] = useState('');
@@ -1014,7 +1014,7 @@ function AppointmentDialog({
                 <p className="text-[13px] font-medium">{t('room.proposedAppointment')}</p>
                 <p className="mt-1 text-[14px]">
                   {currentAppointment.appointedAt
-                    ? new Date(currentAppointment.appointedAt).toLocaleString('ko-KR')
+                    ? new Date(currentAppointment.appointedAt).toLocaleString(i18n.language)
                     : '-'}
                 </p>
                 {currentAppointment.eventName && (

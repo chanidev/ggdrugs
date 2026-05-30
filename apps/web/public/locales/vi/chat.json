@@ -40,7 +40,9 @@
     "success": "Đã gửi yêu cầu!",
     "successDetail": "Trò chuyện sẽ bắt đầu khi {{nickname}} chấp nhận.",
     "checkNotifications": "Kiểm tra trong thông báo",
-    "backToCommunity": "Quay lại Cộng đồng"
+    "backToCommunity": "Quay lại Cộng đồng",
+    "unknownNickname": "Đối phương",
+    "avatarAriaLabel": "Ảnh đại diện của {{nickname}}"
   },
   "room": {
     "loading": "Đang tải…",

@@ -40,7 +40,9 @@
     "success": "申請完了！",
     "successDetail": "{{nickname}}さんが承認するとチャットが始まります。",
     "checkNotifications": "通知で確認する",
-    "backToCommunity": "コミュニティに戻る"
+    "backToCommunity": "コミュニティに戻る",
+    "unknownNickname": "相手",
+    "avatarAriaLabel": "{{nickname}}さんのプロフィールアバター"
   },
   "room": {
     "loading": "読み込み中…",
