@@ -88,6 +88,8 @@ export function EvaluationPage() {
         setError('이미 평가를 완료했어요.');
       } else if (msg === 'NOT_ATTENDED_YET') {
         setError('약속 날짜가 지나지 않아 평가할 수 없어요.');
+      } else if (msg === 'NOT_CONFIRMED') {
+        setError('아직 확정되지 않은 약속은 평가할 수 없어요.');
       } else {
         setError('제출 중 오류가 발생했어요. 다시 시도해 주세요.');
       }

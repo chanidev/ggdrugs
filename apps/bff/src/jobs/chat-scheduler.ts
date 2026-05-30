@@ -549,12 +549,10 @@ export async function notifyMateEval(
       }
 
       // ── 2. appointment_complete 크레딧 dedup:
-      // [알려진 한계] credit_ledgers 테이블에 (appointment_id, user_id) 조합에 대한 DB-level
-      // UNIQUE 제약이 현재 스키마에 존재하지 않는다. 아래 P2002 catch 블록은 실제로는
-      // 발동되지 않는 방어 코드다(DB가 P2002를 raise하지 않으므로). 스케줄러 재시작이나
-      // 동시 실행 시 findFirst와 create 사이 TOCTOU 경합으로 중복 크레딧 행이 삽입될 수 있다.
-      // DB-level partial unique index (uq_credit_appt_complete_user)를 추가하기 전까지
-      // 이 코드는 단일 프로세스 순차 실행에서만 안전하다.
+      // migration uq_credit_appt_complete_user: UNIQUE INDEX ON credit_ledgers
+      //   (appointment_id, user_id) WHERE action = 'appointment_complete'
+      // → DB-level 중복 방지 보장. P2002 catch가 실제로 발동되어 TOCTOU 경합 방어.
+      // findFirst는 불필요한 INSERT를 줄이는 1차 방어선(성능). DB UNIQUE가 최종 방어선.
       const existingCredit = await prisma.creditLedger.findFirst({
         where: {
           userId: member.userId,
@@ -576,9 +574,8 @@ export async function notifyMateEval(
           });
           creditsCreated++;
         } catch (e) {
-          // P2002: 향후 DB-level unique 제약이 추가될 경우를 대비한 방어 코드.
-          // 현재 스키마에는 credit_ledgers에 관련 UNIQUE 제약이 없으므로 이 분기는
-          // 실제로 실행되지 않는다. evaluation.ts의 instanceof 패턴과 동일하게 유지.
+          // P2002: uq_credit_appt_complete_user partial unique index 위반.
+          // TOCTOU 경합(스케줄러 재시작·다중 프로세스)에서 실제로 발동됨 — 정상 dedup.
           if (!(e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002')) {
             throw e;
           }

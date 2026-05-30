@@ -73,3 +73,9 @@ CREATE TABLE credit_ledgers (
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX idx_credit_ledger_user ON credit_ledgers (user_id, created_at DESC);
+-- [리뷰 low] appointment_complete dedup DB-level 보장:
+-- TOCTOU(findFirst+create) 경합 방지를 위한 partial unique index.
+-- 스케줄러 재시작·다중 프로세스 환경에서도 중복 크레딧 행 삽입 불가.
+CREATE UNIQUE INDEX uq_credit_appt_complete_user
+  ON credit_ledgers (appointment_id, user_id)
+  WHERE action = 'appointment_complete';

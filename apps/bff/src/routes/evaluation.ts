@@ -114,12 +114,14 @@ export async function submitEvaluation(req: Request, res: Response): Promise<voi
   const q4 = parseLikert(body['q4']);
   if (!q1 || !q2 || !q3 || !q4) { res.status(400).json({ error: 'q1~q4 1~5 required' }); return; }
 
-  // [이슈23] trim 전 raw에 대해 byte 검증, trim 후 빈 문자열이면 null
-  const commentRaw = typeof body['comment'] === 'string' ? body['comment'].trim() : '';
-  if (commentRaw && Buffer.byteLength(commentRaw, 'utf8') > 30) {
+  // [이슈23] trim 전 raw에 대해 byte 검증, trim 후 빈 문자열이면 null.
+  // 스펙: 공백 포함 원본 문자열 기준 30 UTF-8 byte 초과 시 거부.
+  // '  가나다라마바사아자차  '(앞뒤 공백 포함 36 bytes)는 trim 전 검증 → 400.
+  const commentInput = typeof body['comment'] === 'string' ? body['comment'] : '';
+  if (commentInput && Buffer.byteLength(commentInput, 'utf8') > 30) {
     res.status(400).json({ error: 'comment_too_long' }); return;
   }
-  const comment = commentRaw || null;
+  const comment = commentInput.trim() || null;
 
   const reportedFor =
     typeof body['reportedFor'] === 'string' && REPORTED_FOR_VALUES.has(body['reportedFor'])

@@ -161,6 +161,19 @@ async function main() {
       return res._c.status === 400 ? [] : [`status ${res._c.status} != 400 (comment_too_long)`];
     });
 
+    // ── CASE 3b: comment raw 검증 (이슈23 스펙) — 공백 포함 >30 bytes raw → 400 ──────
+    // '가나다라마바사아자차' = 30 bytes. 앞에 공백 1바이트 추가 = 31 bytes (raw) → 400.
+    // trim 후는 30 bytes (PASS 조건)이지만 raw 기준 거부 — 스펙(이슈23) 정합성 검증.
+    await check('eval.comment.raw_byte_check', async () => {
+      const rawOverLimit = ' 가나다라마바사아자차'; // 1 + 30 = 31 bytes raw → 400
+      const res = mockRes();
+      await submitEvaluation(
+        mockReq({ auth: { userId: u2.userId, nickname: u2.nickname, activeRole: u2.activeRole }, params: { appointmentId: appt.appointmentId.toString() }, body: { ...BASE_EVAL_BODY, evaluatedUserId: u1.userId.toString(), comment: rawOverLimit } }),
+        res,
+      );
+      return res._c.status === 400 ? [] : [`status ${res._c.status} != 400 (raw byte 31 > 30 should be rejected even if trimmed is 30 bytes)`];
+    });
+
     // ── CASE 4: [오버라이드] "다녀온 후" 게이트 — appointedAt 미래 → 409 not_attended_yet ──
     await check('eval.gate.not_attended_yet', async () => {
       const res = mockRes();
