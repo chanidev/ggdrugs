@@ -8,6 +8,12 @@
  *
  * 참고: Appointment.eventId 또는 ChatRoom.eventId 중 하나로 이벤트 정보를 조인한다.
  * ChatRoom에는 Prisma event 관계가 없으므로 eventId를 직접 수집해 Event 별도 조회한다.
+ *
+ * 응답 필드 노트:
+ *  - event.price: DB 컬럼 admissionFee(String|null) 를 price 이름으로 노출.
+ *    DB 컬럼명은 변경하지 않는다.
+ *  - event.operatingHours / event.targetAudience: GG-MY-002 AppointmentCard 6항목 충족.
+ *  - appointedAt null 처리: 날짜 필터가 없으면 appointedAt IS NULL인 confirmed 약속도 포함.
  */
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
@@ -22,8 +28,8 @@ function parseDate(raw: unknown): Date | null {
 export async function listMyAppointments(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;
 
-  const from = parseDate(req.query.from) ?? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-  const to = parseDate(req.query.to) ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+  const from = parseDate(req.query.from);
+  const to = parseDate(req.query.to);
 
   // 사용자가 active member인 채팅방 ID 목록
   const memberships = await prisma.groupMembership.findMany({
@@ -37,11 +43,26 @@ export async function listMyAppointments(req: Request, res: Response) {
     return;
   }
 
+  // appointedAt 필터:
+  //  - from/to가 모두 없으면 기본 범위(과거 90일~미래 180일)를 사용하되,
+  //    appointedAt IS NULL인 confirmed 약속도 포함한다(일시 미정 케이스).
+  //  - from 또는 to가 있으면 해당 날짜 범위를 적용.
+  //    단, appointedAt IS NULL인 경우는 날짜 비교 불가이므로 범위 내에서 제외한다.
+  const hasDateFilter = from !== null || to !== null;
+  const effectiveFrom = from ?? new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+  const effectiveTo = to ?? new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+
+  const appointedAtFilter = hasDateFilter
+    ? { gte: effectiveFrom, lte: effectiveTo }
+    : undefined;
+
   const appointments = await prisma.appointment.findMany({
     where: {
       chatRoomId: { in: chatRoomIds },
       status: 'confirmed',
-      appointedAt: { gte: from, lte: to },
+      // 날짜 필터 없음: appointedAt 제약 없이 모든 confirmed 반환(null 포함)
+      // 날짜 필터 있음: gte/lte 범위 적용(null 제외됨 — Prisma 동작)
+      ...(appointedAtFilter !== undefined ? { appointedAt: appointedAtFilter } : {}),
     },
     orderBy: { appointedAt: 'asc' },
     select: {
@@ -75,7 +96,10 @@ export async function listMyAppointments(req: Request, res: Response) {
       startDate: string;
       endDate: string;
       region: string | null;
-      admissionFee: string | null;
+      /** DB 컬럼명은 admissionFee(String). 응답 필드명은 price로 노출. */
+      price: string | null;
+      operatingHours: string | null;
+      targetAudience: string | null;
     }
   >();
 
@@ -87,21 +111,27 @@ export async function listMyAppointments(req: Request, res: Response) {
         title: true,
         startDate: true,
         endDate: true,
-        admissionFee: true,
+        admissionFee: true,   // → 응답에서 price로 노출
+        operatingHours: true,
+        targetAudience: true,
         region: {
           select: { sidoName: true, sigunguName: true, fullAddress: true },
         },
       },
     });
     for (const e of events) {
-      const regionStr = e.region.fullAddress.trim() || [e.region.sidoName, e.region.sigunguName].filter(Boolean).join(' ');
+      const regionStr =
+        e.region.fullAddress.trim() ||
+        [e.region.sidoName, e.region.sigunguName].filter(Boolean).join(' ');
       eventMap.set(e.eventId.toString(), {
         eventId: e.eventId.toString(),
         title: e.title,
         startDate: e.startDate.toISOString().slice(0, 10),
         endDate: e.endDate.toISOString().slice(0, 10),
         region: regionStr || null,
-        admissionFee: e.admissionFee ?? null,
+        price: e.admissionFee ?? null,
+        operatingHours: e.operatingHours ?? null,
+        targetAudience: e.targetAudience ?? null,
       });
     }
   }
@@ -124,7 +154,9 @@ export async function listMyAppointments(req: Request, res: Response) {
               startDate: event.startDate,
               endDate: event.endDate,
               region: event.region,
-              admissionFee: event.admissionFee,
+              price: event.price,
+              operatingHours: event.operatingHours,
+              targetAudience: event.targetAudience,
             }
           : null,
       };

@@ -7,7 +7,8 @@
  *   - listMyNotifications unreadOnly=true: kick_vote 제외 확인
  *   - listMyNotifications: appointment 타입에 relatedChatRoomId 필드 존재
  *   - markNotificationRead: 정상 200; kick_vote 타입은 readAt 미변경
- *   - listMyAppointments: confirmed 약속만 반환, from/to 필터 동작
+ *   - listMyAppointments: confirmed 약속만 반환
+ *   - listMyAppointments: from/to 필터 — 과거 날짜 to 지정 시 빈 목록 반환
  */
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
@@ -101,19 +102,23 @@ async function main() {
     return f;
   });
 
-  // ── CASE 4: appointment 타입 알림에 relatedChatRoomId 조인 ──
+  // ── CASE 4: appointment/appointment_update/mate_eval 타입 알림에 relatedChatRoomId 조인 ──
+  // appointmentEntityTypes 3종 모두 커버 (GG-NOTI-012/013/014)
   await check('notif.list.appointment_has_chatRoomId', async () => {
     const res = mockRes();
     await listMyNotifications(mockReq({ auth, query: { limit: '100' } }), res);
     const b = res._c.json as { items?: Array<Record<string, unknown>> };
     const apptNotifs = (b.items ?? []).filter(
-      (i) => i.notificationType === 'appointment' || i.notificationType === 'appointment_update',
+      (i) =>
+        i.notificationType === 'appointment' ||
+        i.notificationType === 'appointment_update' ||
+        i.notificationType === 'mate_eval',
     );
     if (apptNotifs.length === 0) return []; // skip — no fixture
     const f: string[] = [];
     for (const n of apptNotifs) {
       if (!('relatedChatRoomId' in n)) {
-        f.push(`appointment notif missing relatedChatRoomId field`);
+        f.push(`appointment-entity notif missing relatedChatRoomId field`);
         break;
       }
     }
@@ -184,6 +189,23 @@ async function main() {
     const f: string[] = [];
     if (b.items?.some((i) => i.status !== 'confirmed')) {
       f.push('non-confirmed appointment in response');
+    }
+    return f;
+  });
+
+  // ── CASE 10: listMyAppointments 과거 날짜 to 필터 → 빈 목록 ──
+  // to='2000-01-01' 이전에 약속이 존재할 수 없으므로 items=[] 를 기대.
+  // from/to 필터 및 parseDate 로직의 회귀를 방지한다.
+  await check('appointments.list.past_to_filter_empty', async () => {
+    const res = mockRes();
+    await listMyAppointments(mockReq({ auth, query: { to: '2000-01-01' } }), res);
+    const f: string[] = [];
+    if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+    const b = res._c.json as { items?: unknown[] };
+    if (!Array.isArray(b.items)) {
+      f.push('items not array');
+    } else if (b.items.length > 0) {
+      f.push(`expected 0 items for to=2000-01-01, got ${b.items.length}`);
     }
     return f;
   });
