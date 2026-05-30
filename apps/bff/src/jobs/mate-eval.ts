@@ -255,6 +255,25 @@ async function main() {
       // 클린업
       await prisma.mateIndex.deleteMany({ where: { userId: auth2.userId } });
       await prisma.mateProfile.deleteMany({ where: { userId: auth2.userId } });
+      // GG-REPORT-009 회귀: report-eval 이 남긴 block 레코드가 추천 제외를 유발할 수 있으므로
+      // 테스트 전에 u1↔u2 양방향 block 을 정리하고 finally 에서 복원한다.
+      const preExistingBlocks = await prisma.block.findMany({
+        where: {
+          OR: [
+            { blockerId: auth.userId, blockedUserId: auth2.userId },
+            { blockerId: auth2.userId, blockedUserId: auth.userId },
+          ],
+        },
+        select: { blockId: true, blockerId: true, blockedUserId: true, createdAt: true },
+      });
+      await prisma.block.deleteMany({
+        where: {
+          OR: [
+            { blockerId: auth.userId, blockedUserId: auth2.userId },
+            { blockerId: auth2.userId, blockedUserId: auth.userId },
+          ],
+        },
+      });
 
       try {
         // 테스트 환경: 둘 다 같은 지역(regionId 없음 = null → 지역 필터 통과 조건 확인).
@@ -301,6 +320,18 @@ async function main() {
       } finally {
         await prisma.mateIndex.deleteMany({ where: { userId: auth2.userId } });
         await prisma.mateProfile.deleteMany({ where: { userId: auth2.userId } });
+        // 정리했던 block 레코드 복원 (다른 테스트 영향 없도록)
+        if (preExistingBlocks.length > 0) {
+          await prisma.block.createMany({
+            data: preExistingBlocks.map((b) => ({
+              blockId: b.blockId,
+              blockerId: b.blockerId,
+              blockedUserId: b.blockedUserId,
+              createdAt: b.createdAt,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
       return f;
     });
