@@ -14,6 +14,11 @@
  *   PATCH  /community/chat-rooms/:chatRoomId/appointment/:appointmentId/vote  voteAppointment
  *   POST   /community/chat-rooms/:chatRoomId/leave                          leaveRoom
  *   POST   /community/chat-rooms/:chatRoomId/block/:targetUserId            blockMember
+ *
+ * Task 5 — 방장 권한 REST (GG-MATE-017~021):
+ *   POST   /community/chat-rooms/:chatRoomId/kick/instant/:targetUserId     instantKick
+ *   POST   /community/chat-rooms/:chatRoomId/kick/vote                      startKickVote
+ *   PATCH  /community/chat-rooms/:chatRoomId/kick/vote/:voteNotifId         castKickVote
  */
 
 import type { Request, Response } from 'express';
@@ -860,4 +865,412 @@ export async function blockMember(req: Request, res: Response) {
   );
 
   res.status(200).json({ ok: true });
+}
+
+// ============================================================
+// POST /community/chat-rooms/:chatRoomId/kick/instant/:targetUserId
+// GG-MATE-017: 방장만 가능. 방 전체 1회 소진(instantKickUsed 플래그).
+// 트랜잭션 SERIALIZABLE: 동시 요청 중 1건만 성공.
+// ============================================================
+export async function instantKick(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) {
+    res.status(401).json({ error: 'unauthenticated' });
+    return;
+  }
+
+  const chatRoomId = parseBigId(req.params.chatRoomId);
+  const targetUserId = parseBigId(req.params.targetUserId);
+  if (!chatRoomId || !targetUserId) {
+    res.status(400).json({ error: 'invalid chatRoomId or targetUserId' });
+    return;
+  }
+
+  if (targetUserId === auth.userId) {
+    res.status(400).json({ error: 'cannot kick yourself' });
+    return;
+  }
+
+  const now = new Date();
+
+  try {
+    await prisma.$transaction(
+      async (tx) => {
+        // 1. 방장 멤버십 조회 (동시성 보호: SERIALIZABLE isolation)
+        const ownerMembership = await tx.groupMembership.findFirst({
+          where: { chatRoomId, userId: auth.userId, role: 'owner', memberStatus: 'active' },
+          select: { membershipId: true, instantKickUsed: true },
+        });
+        if (!ownerMembership) {
+          const err = new Error('not_owner');
+          (err as Error & { code?: string }).code = 'NOT_OWNER';
+          throw err;
+        }
+
+        // 2. 즉시강퇴 1회 소진 여부 확인
+        if (ownerMembership.instantKickUsed) {
+          const err = new Error('instant_kick_used');
+          (err as Error & { code?: string }).code = 'KICK_USED';
+          throw err;
+        }
+
+        // 3. 대상 멤버십 확인
+        const targetMembership = await tx.groupMembership.findFirst({
+          where: { chatRoomId, userId: targetUserId, memberStatus: 'active' },
+          select: { membershipId: true },
+        });
+        if (!targetMembership) {
+          const err = new Error('target_not_in_room');
+          (err as Error & { code?: string }).code = 'TARGET_NOT_FOUND';
+          throw err;
+        }
+
+        // 4. 방장 행에서 instantKickUsed = true 소진
+        await tx.groupMembership.update({
+          where: { membershipId: ownerMembership.membershipId },
+          data: { instantKickUsed: true },
+        });
+
+        // 5. 대상 멤버십 kicked 처리
+        await tx.groupMembership.update({
+          where: { membershipId: targetMembership.membershipId },
+          data: { memberStatus: 'kicked', leftAt: now },
+        });
+
+        // 6. 시스템 메시지
+        await tx.chatRoomMessage.create({
+          data: {
+            chatRoomId,
+            senderUserId: null,
+            messageType: 'system',
+            body: '멤버가 강퇴되었습니다',
+          },
+        });
+
+        // 7. 결원 충원 알림 — 남은 active 멤버에게 (대상 제외)
+        const remainingMembers = await tx.groupMembership.findMany({
+          where: { chatRoomId, memberStatus: 'active' },
+          select: { userId: true },
+        });
+        if (remainingMembers.length > 0) {
+          await tx.notification.createMany({
+            data: remainingMembers.map((m) => ({
+              userId: m.userId,
+              title: '멤버가 강퇴되었습니다',
+              message: '채팅방에서 멤버가 강퇴되어 자리가 생겼습니다.',
+              scheduledAt: new Date(),
+              isSent: true,
+              sentAt: new Date(),
+              notificationType: 'chat_message',
+              relatedEntityId: chatRoomId,
+              relatedEntityType: 'chat_room',
+            })),
+          });
+        }
+      },
+      { isolationLevel: 'Serializable' },
+    );
+  } catch (err: unknown) {
+    const e = err as Error & { code?: string };
+    if (e.code === 'NOT_OWNER' || e.message === 'not_owner') {
+      res.status(403).json({ error: 'not_owner' });
+      return;
+    }
+    if (e.code === 'KICK_USED' || e.message === 'instant_kick_used') {
+      res.status(422).json({ error: 'instant_kick_used' });
+      return;
+    }
+    if (e.code === 'TARGET_NOT_FOUND' || e.message === 'target_not_in_room') {
+      res.status(404).json({ error: 'target_not_in_room' });
+      return;
+    }
+    // Prisma P2034: SERIALIZABLE 트랜잭션 충돌 (write conflict / deadlock)
+    // 동시 즉시강퇴 중 나중에 도착한 요청 — 선착순 1건이 이미 성공
+    // instantKickUsed=true 로 DB 상태가 확정됐으므로 422 반환
+    const pe = err as { code?: string; message?: string };
+    if (pe.code === 'P2034' || (pe.message && pe.message.includes('write conflict'))) {
+      res.status(422).json({ error: 'instant_kick_used' });
+      return;
+    }
+    throw err;
+  }
+
+  // 실시간 emit (fire-and-forget)
+  try {
+    const io = getSocketServer();
+    const updatedMembers = await prisma.groupMembership.findMany({
+      where: { chatRoomId, memberStatus: 'active' },
+      select: { userId: true, role: true, user: { select: { nickname: true } } },
+    });
+    io.to(`room:${chatRoomId.toString()}`).emit('room:member_update', {
+      members: updatedMembers.map((m) => ({
+        userId: m.userId.toString(),
+        nickname: m.user.nickname,
+        role: m.role,
+      })),
+    });
+  } catch {
+    // Socket.IO 미초기화 — 무시
+  }
+
+  logger.info(
+    { action: 'instant_kick', chatRoomId: chatRoomId.toString(), kickerId: maskId(auth.userId), targetUserId: maskId(targetUserId) },
+    'instant kick executed',
+  );
+
+  res.status(200).json({ ok: true });
+}
+
+// ============================================================
+// POST /community/chat-rooms/:chatRoomId/kick/vote
+// body: { targetUserId: string }
+// GG-MATE-018: 방장만 투표 시작 가능. 36h 기한 kick_vote Notification 생성.
+// ============================================================
+export async function startKickVote(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) {
+    res.status(401).json({ error: 'unauthenticated' });
+    return;
+  }
+
+  const chatRoomId = parseBigId(req.params.chatRoomId);
+  if (!chatRoomId) {
+    res.status(400).json({ error: 'invalid chatRoomId' });
+    return;
+  }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const targetUserId = parseBigId(body.targetUserId);
+  if (!targetUserId) {
+    res.status(400).json({ error: 'targetUserId (string) is required' });
+    return;
+  }
+
+  if (targetUserId === auth.userId) {
+    res.status(400).json({ error: 'cannot vote kick yourself' });
+    return;
+  }
+
+  // 방장 검증
+  const ownerMembership = await prisma.groupMembership.findFirst({
+    where: { chatRoomId, userId: auth.userId, role: 'owner', memberStatus: 'active' },
+    select: { membershipId: true },
+  });
+  if (!ownerMembership) {
+    res.status(403).json({ error: 'not_owner' });
+    return;
+  }
+
+  // 대상 검증
+  const targetMembership = await prisma.groupMembership.findFirst({
+    where: { chatRoomId, userId: targetUserId, memberStatus: 'active' },
+    select: { membershipId: true },
+  });
+  if (!targetMembership) {
+    res.status(404).json({ error: 'target_not_in_room' });
+    return;
+  }
+
+  // active 멤버 조회 (대상 제외)
+  const activeMembers = await prisma.groupMembership.findMany({
+    where: { chatRoomId, memberStatus: 'active', userId: { not: targetUserId } },
+    select: { userId: true },
+  });
+
+  const now = new Date();
+  const expiresAt = new Date(now.getTime() + 36 * 60 * 60 * 1000); // +36h
+
+  const notifData = activeMembers.map((m) => ({
+    userId: m.userId,
+    title: '강퇴 투표가 시작되었습니다',
+    message: JSON.stringify({ chatRoomId: chatRoomId.toString(), targetUserId: targetUserId.toString(), expiresAt: expiresAt.toISOString() }),
+    scheduledAt: now,
+    isSent: true,
+    sentAt: now,
+    notificationType: 'kick_vote',
+    relatedEntityId: chatRoomId,
+    relatedEntityType: 'kick_vote',
+    // expiresAt 은 Notification 모델에 없으므로 message JSON 에 포함
+  }));
+
+  await prisma.notification.createMany({ data: notifData });
+
+  logger.info(
+    { action: 'kick_vote_start', chatRoomId: chatRoomId.toString(), initiatorId: maskId(auth.userId), targetUserId: maskId(targetUserId) },
+    'kick vote started',
+  );
+
+  res.status(201).json({
+    ok: true,
+    chatRoomId: chatRoomId.toString(),
+    targetUserId: targetUserId.toString(),
+    expiresAt: expiresAt.toISOString(),
+    voterCount: activeMembers.length,
+  });
+}
+
+// ============================================================
+// PATCH /community/chat-rooms/:chatRoomId/kick/vote/:voteNotifId
+// body: { vote: 'agree' | 'reject' }
+// GG-MATE-019~020: 응답 기록. 전원(대상 제외) agree → 즉시 kicked.
+// 미응답은 스케줄러(chat-scheduler.ts resolveExpiredKickVotes)가 agree로 처리.
+// ============================================================
+export async function castKickVote(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) {
+    res.status(401).json({ error: 'unauthenticated' });
+    return;
+  }
+
+  const chatRoomId = parseBigId(req.params.chatRoomId);
+  const voteNotifId = parseBigId(req.params.voteNotifId);
+  if (!chatRoomId || !voteNotifId) {
+    res.status(400).json({ error: 'invalid chatRoomId or voteNotifId' });
+    return;
+  }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const vote = body.vote;
+  if (vote !== 'agree' && vote !== 'reject') {
+    res.status(400).json({ error: 'vote must be agree | reject' });
+    return;
+  }
+
+  // 멤버십 검증
+  const membership = await prisma.groupMembership.findFirst({
+    where: { chatRoomId, userId: auth.userId, memberStatus: 'active' },
+    select: { membershipId: true },
+  });
+  if (!membership) {
+    res.status(403).json({ error: 'not_member' });
+    return;
+  }
+
+  // 해당 kick_vote 알림 조회 — 내 알림이어야 하고 chatRoomId 일치
+  const notif = await prisma.notification.findFirst({
+    where: {
+      notificationId: voteNotifId,
+      userId: auth.userId,
+      notificationType: 'kick_vote',
+      relatedEntityId: chatRoomId,
+      relatedEntityType: 'kick_vote',
+    },
+    select: { notificationId: true, message: true, readAt: true },
+  });
+  if (!notif) {
+    res.status(404).json({ error: 'kick_vote_not_found' });
+    return;
+  }
+
+  // 이미 응답했는지 확인 (readAt 재활용: 응답 시 readAt 기록)
+  if (notif.readAt) {
+    res.status(409).json({ error: 'already_voted' });
+    return;
+  }
+
+  // message JSON 에서 targetUserId 파싱
+  let targetUserId: bigint | null = null;
+  let expiresAt: Date | null = null;
+  try {
+    const meta = JSON.parse(notif.message) as { targetUserId?: string; expiresAt?: string };
+    targetUserId = meta.targetUserId ? parseBigId(meta.targetUserId) : null;
+    expiresAt = meta.expiresAt ? new Date(meta.expiresAt) : null;
+  } catch {
+    res.status(500).json({ error: 'vote_meta_corrupt' });
+    return;
+  }
+
+  if (!targetUserId) {
+    res.status(500).json({ error: 'vote_meta_missing_target' });
+    return;
+  }
+
+  // 만료 확인
+  if (expiresAt && expiresAt <= new Date()) {
+    res.status(410).json({ error: 'kick_vote_expired' });
+    return;
+  }
+
+  const now = new Date();
+
+  // 내 응답 기록 (readAt = 응답 시각)
+  await prisma.notification.update({
+    where: { notificationId: voteNotifId },
+    data: { readAt: now },
+  });
+
+  let kicked = false;
+
+  if (vote === 'agree') {
+    // 같은 투표 건에 대한 모든 알림 조회 — 같은 chatRoomId + notificationType='kick_vote' + targetUserId 일치
+    // 모든 알림이 응답됐는지 확인 (readAt IS NOT NULL)
+    const allVoteNotifs = await prisma.notification.findMany({
+      where: {
+        notificationType: 'kick_vote',
+        relatedEntityId: chatRoomId,
+        relatedEntityType: 'kick_vote',
+        message: { contains: `"targetUserId":"${targetUserId.toString()}"` },
+      },
+      select: { notificationId: true, readAt: true },
+    });
+
+    // 전원 응답(readAt NOT NULL) + 현재 투표는 방금 기록했으므로 포함돼야 함
+    // 미응답 = readAt NULL → 스케줄러 처리 대상
+    const allResponded = allVoteNotifs.length > 0 && allVoteNotifs.every((n) => n.readAt !== null);
+
+    if (allResponded) {
+      // 전원 동의 처리
+      await prisma.$transaction(async (tx) => {
+        // 대상 멤버십 kicked
+        const target = await tx.groupMembership.findFirst({
+          where: { chatRoomId, userId: targetUserId!, memberStatus: 'active' },
+          select: { membershipId: true },
+        });
+        if (target) {
+          await tx.groupMembership.update({
+            where: { membershipId: target.membershipId },
+            data: { memberStatus: 'kicked', leftAt: now },
+          });
+        }
+
+        await tx.chatRoomMessage.create({
+          data: {
+            chatRoomId,
+            senderUserId: null,
+            messageType: 'system',
+            body: '강퇴 투표가 가결되었습니다',
+          },
+        });
+
+        // 결원 충원 알림
+        const remainingMembers = await tx.groupMembership.findMany({
+          where: { chatRoomId, memberStatus: 'active' },
+          select: { userId: true },
+        });
+        if (remainingMembers.length > 0) {
+          await tx.notification.createMany({
+            data: remainingMembers.map((m) => ({
+              userId: m.userId,
+              title: '강퇴 투표가 가결되었습니다',
+              message: '투표 결과 멤버가 강퇴되었습니다.',
+              scheduledAt: now,
+              isSent: true,
+              sentAt: now,
+              notificationType: 'chat_message',
+              relatedEntityId: chatRoomId,
+              relatedEntityType: 'chat_room',
+            })),
+          });
+        }
+      });
+      kicked = true;
+    }
+  }
+
+  logger.info(
+    { action: 'kick_vote_cast', chatRoomId: chatRoomId.toString(), voterId: maskId(auth.userId), vote, kicked },
+    'kick vote cast',
+  );
+
+  res.status(200).json({ ok: true, vote, kicked });
 }

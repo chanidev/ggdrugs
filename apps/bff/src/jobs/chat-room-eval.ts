@@ -2,6 +2,7 @@
  * chat-room-eval.ts — in-process 검증 하니스 (PASS/FAIL)
  * Task 3: 신청 REST (1:1 A_803 / 그룹 A_804 / 수락·거절·목록)
  * Task 4: 채팅방 REST (메시지이력/약속/이벤트선택/나가기/차단 A_805)
+ * Task 5: 방장 권한 REST (즉시강퇴/투표강퇴 GG-MATE-017~021)
  * 실행: npm run chatroom:eval (apps/bff 에서)
  *
  * WARNING: ChatSession / prisma.chatMessage 를 절대 사용하지 않는다.
@@ -25,6 +26,9 @@ import {
   voteAppointment,
   leaveRoom,
   blockMember,
+  instantKick,
+  startKickVote,
+  castKickVote,
 } from '../routes/chat-room.js';
 
 interface MockReq {
@@ -940,6 +944,291 @@ async function main() {
     await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t4Room.chatRoomId } });
     await prisma.groupMembership.deleteMany({ where: { chatRoomId: t4Room.chatRoomId } });
     await prisma.chatRoom.delete({ where: { chatRoomId: t4Room.chatRoomId } });
+
+    // ─────────────────────────────────────────────────────────────────
+    // TASK 5 — 방장 권한 REST (GG-MATE-017~021)
+    // 별도 그룹방 생성: u1=owner, u2=member, u3=member
+    // ─────────────────────────────────────────────────────────────────
+
+    // Task 5 전용 그룹방 + 유저3 생성
+    const t5Suffix = Date.now() + 100;
+    const synU5 = await prisma.user.create({
+      data: { socialUid: `t5_u3_${t5Suffix}`, authProvider: 'dev', nickname: `T5U3_${t5Suffix}`, activeRole: 'user' },
+    });
+
+    const t5Room = await prisma.chatRoom.create({
+      data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: u1.userId },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t5Room.chatRoomId, userId: u1.userId, role: 'owner', memberStatus: 'active', instantKickUsed: false },
+        { chatRoomId: t5Room.chatRoomId, userId: u2.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: t5Room.chatRoomId, userId: synU5.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+
+    // ── CASE T5-1: kick.instant.ok ──────────────────────────────────
+    // u1(owner) 이 u2 를 즉시강퇴 → instantKickUsed=true, u2 memberStatus='kicked'
+    await check('kick.instant.ok', async () => {
+      const res = mockRes();
+      await instantKick(
+        mockReq({
+          auth: auth1,
+          params: { chatRoomId: t5Room.chatRoomId.toString(), targetUserId: u2.userId.toString() },
+        }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+
+      // DB 검증: 방장 행 instantKickUsed=true
+      const ownerMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t5Room.chatRoomId, userId: u1.userId },
+        select: { instantKickUsed: true },
+      });
+      if (!ownerMem?.instantKickUsed) f.push('owner instantKickUsed should be true');
+
+      // 대상 멤버십 kicked
+      const targetMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t5Room.chatRoomId, userId: u2.userId },
+        select: { memberStatus: true },
+      });
+      if (targetMem?.memberStatus !== 'kicked') f.push(`u2 memberStatus '${targetMem?.memberStatus}' != 'kicked'`);
+
+      // 시스템 메시지
+      const sysMsg = await prisma.chatRoomMessage.findFirst({
+        where: { chatRoomId: t5Room.chatRoomId, messageType: 'system', body: '멤버가 강퇴되었습니다' },
+        select: { messageId: true },
+      });
+      if (!sysMsg) f.push('system message "멤버가 강퇴되었습니다" not found');
+
+      return f;
+    });
+
+    // ── CASE T5-2: kick.instant.second_fails ───────────────────────
+    // 두 번째 즉시강퇴 시도 → 422('instant_kick_used')
+    await check('kick.instant.second_fails', async () => {
+      const res = mockRes();
+      await instantKick(
+        mockReq({
+          auth: auth1,
+          params: { chatRoomId: t5Room.chatRoomId.toString(), targetUserId: synU5.userId.toString() },
+        }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 422) f.push(`status ${res._c.status} != 422`);
+      const b = res._c.json as { error?: string };
+      if (b?.error !== 'instant_kick_used') f.push(`error '${b?.error}' != 'instant_kick_used'`);
+      return f;
+    });
+
+    // ── CASE T5-3: kick.vote.non_owner_fails ───────────────────────
+    // 방장이 아닌 synU5 가 투표강퇴 시도 → 403
+    await check('kick.vote.non_owner_fails', async () => {
+      const res = mockRes();
+      await startKickVote(
+        mockReq({
+          auth: { userId: synU5.userId, nickname: synU5.nickname, activeRole: synU5.activeRole },
+          params: { chatRoomId: t5Room.chatRoomId.toString() },
+          body: { targetUserId: u2.userId.toString() },
+        }),
+        res,
+      );
+      const f: string[] = [];
+      if (res._c.status !== 403) f.push(`status ${res._c.status} != 403`);
+      const b = res._c.json as { error?: string };
+      if (b?.error !== 'not_owner') f.push(`error '${b?.error}' != 'not_owner'`);
+      return f;
+    });
+
+    // ── CASE T5-4: kick.vote.all_agree_kicks ───────────────────────
+    // 새 그룹방 만들어서 투표 전원 동의 → kicked 처리
+    const t5Suffix2 = Date.now() + 200;
+    const synVoteOwner = await prisma.user.create({
+      data: { socialUid: `t5_vote_owner_${t5Suffix2}`, authProvider: 'dev', nickname: `VoteOwner${t5Suffix2}`, activeRole: 'user' },
+    });
+    const synVoteMember = await prisma.user.create({
+      data: { socialUid: `t5_vote_member_${t5Suffix2}`, authProvider: 'dev', nickname: `VoteMember${t5Suffix2}`, activeRole: 'user' },
+    });
+    const synVoteTarget = await prisma.user.create({
+      data: { socialUid: `t5_vote_target_${t5Suffix2}`, authProvider: 'dev', nickname: `VoteTarget${t5Suffix2}`, activeRole: 'user' },
+    });
+
+    const t5VoteRoom = await prisma.chatRoom.create({
+      data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: synVoteOwner.userId },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t5VoteRoom.chatRoomId, userId: synVoteOwner.userId, role: 'owner', memberStatus: 'active' },
+        { chatRoomId: t5VoteRoom.chatRoomId, userId: synVoteMember.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: t5VoteRoom.chatRoomId, userId: synVoteTarget.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+
+    await check('kick.vote.all_agree_kicks', async () => {
+      const f: string[] = [];
+
+      // 방장이 투표 시작
+      const startRes = mockRes();
+      await startKickVote(
+        mockReq({
+          auth: { userId: synVoteOwner.userId, nickname: synVoteOwner.nickname, activeRole: synVoteOwner.activeRole },
+          params: { chatRoomId: t5VoteRoom.chatRoomId.toString() },
+          body: { targetUserId: synVoteTarget.userId.toString() },
+        }),
+        startRes,
+      );
+      if (startRes._c.status !== 201) {
+        f.push(`startKickVote status ${startRes._c.status} != 201`);
+        return f;
+      }
+      const sb = startRes._c.json as { voterCount?: number };
+      // 대상 제외 → 방장 + 멤버 = 2명이 투표자
+      if (sb?.voterCount !== 2) f.push(`voterCount ${sb?.voterCount} != 2`);
+
+      // DB: kick_vote 알림 2건 생성 확인
+      const notifs = await prisma.notification.findMany({
+        where: {
+          notificationType: 'kick_vote',
+          relatedEntityId: t5VoteRoom.chatRoomId,
+        },
+        select: { notificationId: true, userId: true, readAt: true },
+      });
+      if (notifs.length !== 2) f.push(`${notifs.length} kick_vote notifs != 2`);
+
+      // 방장 알림 찾기
+      const ownerNotif = notifs.find((n) => n.userId === synVoteOwner.userId);
+      const memberNotif = notifs.find((n) => n.userId === synVoteMember.userId);
+      if (!ownerNotif) { f.push('owner kick_vote notif not found'); return f; }
+      if (!memberNotif) { f.push('member kick_vote notif not found'); return f; }
+
+      // 방장 agree
+      const voteRes1 = mockRes();
+      await castKickVote(
+        mockReq({
+          auth: { userId: synVoteOwner.userId, nickname: synVoteOwner.nickname, activeRole: synVoteOwner.activeRole },
+          params: { chatRoomId: t5VoteRoom.chatRoomId.toString(), voteNotifId: ownerNotif.notificationId.toString() },
+          body: { vote: 'agree' },
+        }),
+        voteRes1,
+      );
+      if (voteRes1._c.status !== 200) f.push(`owner castKickVote status ${voteRes1._c.status} != 200`);
+      // 아직 전원 동의 아님 → kicked=false
+      const vb1 = voteRes1._c.json as { kicked?: boolean };
+      if (vb1?.kicked !== false) f.push(`after owner agree, kicked=${vb1?.kicked} should be false`);
+
+      // 멤버 agree → 전원 동의 → kicked
+      const voteRes2 = mockRes();
+      await castKickVote(
+        mockReq({
+          auth: { userId: synVoteMember.userId, nickname: synVoteMember.nickname, activeRole: synVoteMember.activeRole },
+          params: { chatRoomId: t5VoteRoom.chatRoomId.toString(), voteNotifId: memberNotif.notificationId.toString() },
+          body: { vote: 'agree' },
+        }),
+        voteRes2,
+      );
+      if (voteRes2._c.status !== 200) f.push(`member castKickVote status ${voteRes2._c.status} != 200`);
+      const vb2 = voteRes2._c.json as { kicked?: boolean };
+      if (vb2?.kicked !== true) f.push(`after all agree, kicked=${vb2?.kicked} should be true`);
+
+      // DB: 대상 멤버십 kicked
+      const targetMem = await prisma.groupMembership.findFirst({
+        where: { chatRoomId: t5VoteRoom.chatRoomId, userId: synVoteTarget.userId },
+        select: { memberStatus: true },
+      });
+      if (targetMem?.memberStatus !== 'kicked') f.push(`target memberStatus '${targetMem?.memberStatus}' != 'kicked'`);
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { relatedEntityId: t5VoteRoom.chatRoomId } });
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t5VoteRoom.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t5VoteRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t5VoteRoom.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synVoteOwner.userId, synVoteMember.userId, synVoteTarget.userId] } } });
+
+      return f;
+    });
+
+    // ── CASE T5-5: kick.concurrent.race_conditions_prevented ───────
+    // 동시 즉시강퇴 2건 시도 → SERIALIZABLE 트랜잭션으로 1건만 성공 (나머지 422)
+    // 참고: 이미 t5Room 에서 instantKickUsed=true (T5-1에서 소진), synU5 는 아직 active
+    // 새 방 만들어서 경쟁 조건 재현
+    const t5Suffix3 = Date.now() + 300;
+    const synRaceOwner = await prisma.user.create({
+      data: { socialUid: `t5_race_owner_${t5Suffix3}`, authProvider: 'dev', nickname: `RaceOwner${t5Suffix3}`, activeRole: 'user' },
+    });
+    const synRaceT1 = await prisma.user.create({
+      data: { socialUid: `t5_race_t1_${t5Suffix3}`, authProvider: 'dev', nickname: `RaceT1${t5Suffix3}`, activeRole: 'user' },
+    });
+    const synRaceT2 = await prisma.user.create({
+      data: { socialUid: `t5_race_t2_${t5Suffix3}`, authProvider: 'dev', nickname: `RaceT2${t5Suffix3}`, activeRole: 'user' },
+    });
+
+    const t5RaceRoom = await prisma.chatRoom.create({
+      data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: synRaceOwner.userId },
+      select: { chatRoomId: true },
+    });
+    await prisma.groupMembership.createMany({
+      data: [
+        { chatRoomId: t5RaceRoom.chatRoomId, userId: synRaceOwner.userId, role: 'owner', memberStatus: 'active', instantKickUsed: false },
+        { chatRoomId: t5RaceRoom.chatRoomId, userId: synRaceT1.userId, role: 'member', memberStatus: 'active' },
+        { chatRoomId: t5RaceRoom.chatRoomId, userId: synRaceT2.userId, role: 'member', memberStatus: 'active' },
+      ],
+    });
+
+    await check('kick.concurrent.race_conditions_prevented', async () => {
+      const f: string[] = [];
+
+      const raceAuth = { userId: synRaceOwner.userId, nickname: synRaceOwner.nickname, activeRole: synRaceOwner.activeRole };
+      // 두 요청 동시 실행 (Promise.all)
+      const [res1, res2] = await Promise.all([
+        (async () => {
+          const r = mockRes();
+          await instantKick(
+            mockReq({ auth: raceAuth, params: { chatRoomId: t5RaceRoom.chatRoomId.toString(), targetUserId: synRaceT1.userId.toString() } }),
+            r,
+          );
+          return r;
+        })(),
+        (async () => {
+          const r = mockRes();
+          await instantKick(
+            mockReq({ auth: raceAuth, params: { chatRoomId: t5RaceRoom.chatRoomId.toString(), targetUserId: synRaceT2.userId.toString() } }),
+            r,
+          );
+          return r;
+        })(),
+      ]);
+
+      const statuses = [res1._c.status, res2._c.status].sort();
+      // 정확히 1건 성공(200), 1건 실패(422)
+      if (!statuses.includes(200)) f.push('no successful instant kick (expected 1 success)');
+      if (!statuses.includes(422)) f.push('no failed instant kick (expected 1 failure with 422)');
+
+      // DB: 정확히 1명만 kicked
+      const kickedCount = await prisma.groupMembership.count({
+        where: { chatRoomId: t5RaceRoom.chatRoomId, memberStatus: 'kicked' },
+      });
+      if (kickedCount !== 1) f.push(`${kickedCount} kicked members != 1`);
+
+      // 클린업
+      await prisma.notification.deleteMany({ where: { relatedEntityId: t5RaceRoom.chatRoomId, relatedEntityType: 'chat_room' } });
+      await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t5RaceRoom.chatRoomId } });
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: t5RaceRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: t5RaceRoom.chatRoomId } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synRaceOwner.userId, synRaceT1.userId, synRaceT2.userId] } } });
+
+      return f;
+    });
+
+    // Task 5 클린업 (t5Room)
+    await prisma.notification.deleteMany({ where: { relatedEntityId: t5Room.chatRoomId, relatedEntityType: 'chat_room' } });
+    await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: t5Room.chatRoomId } });
+    await prisma.groupMembership.deleteMany({ where: { chatRoomId: t5Room.chatRoomId } });
+    await prisma.chatRoom.delete({ where: { chatRoomId: t5Room.chatRoomId } });
+    await prisma.user.delete({ where: { userId: synU5.userId } });
 
   } finally {
     // 클린업

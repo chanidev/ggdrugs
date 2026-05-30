@@ -102,6 +102,9 @@ import {
   voteAppointment,
   leaveRoom,
   blockMember,
+  instantKick,
+  startKickVote,
+  castKickVote,
 } from './routes/chat-room.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
@@ -381,6 +384,24 @@ export function createApp(): Express {
     '/community/chat-rooms/:chatRoomId/block/:targetUserId',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => blockMember(req, res).catch(next),
+  );
+
+  // Task 5 — 방장 권한 REST (GG-MATE-017~021)
+  // NOTE: /kick/instant/:targetUserId 보다 /kick/vote/:voteNotifId 가 뒤에 등록 — Express는 등록 순서대로 매칭
+  app.post(
+    '/community/chat-rooms/:chatRoomId/kick/instant/:targetUserId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => instantKick(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/kick/vote',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => startKickVote(req, res).catch(next),
+  );
+  app.patch(
+    '/community/chat-rooms/:chatRoomId/kick/vote/:voteNotifId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => castKickVote(req, res).catch(next),
   );
 
   app.post(
