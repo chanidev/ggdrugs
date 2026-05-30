@@ -383,6 +383,79 @@ async function main() {
       return f;
     });
 
+    // ── CASE 12: match.group.capacity_guard — 기존 그룹방 멤버수+초대수 > 4 시 422 ──
+    await check('match.group.capacity_guard', async () => {
+      // 합성 유저 3명 생성: 그룹방을 4명으로 채우기 위해 (u1 + syn_a + syn_b + syn_c)
+      // 이후 auth1(u1) 이 u2 에게 초대 시도 → 4+1=5 > 4 → 422
+      const suffix = Date.now();
+      const [synA, synB, synC, synInvitee] = await Promise.all([
+        prisma.user.create({ data: { socialUid: `cap_guard_a_${suffix}`, authProvider: 'dev', nickname: `CapA${suffix}`, activeRole: 'user' } }),
+        prisma.user.create({ data: { socialUid: `cap_guard_b_${suffix}`, authProvider: 'dev', nickname: `CapB${suffix}`, activeRole: 'user' } }),
+        prisma.user.create({ data: { socialUid: `cap_guard_c_${suffix}`, authProvider: 'dev', nickname: `CapC${suffix}`, activeRole: 'user' } }),
+        // 초대 대상: MateProfile(groupApply=true) 필요
+        prisma.user.create({ data: { socialUid: `cap_guard_inv_${suffix}`, authProvider: 'dev', nickname: `CapInv${suffix}`, activeRole: 'user' } }),
+      ]);
+
+      // 초대 대상에게 MateProfile 생성 (groupApply 검증 통과용)
+      await prisma.mateProfile.create({
+        data: {
+          userId: synInvitee.userId,
+          gender: 'M',
+          ageRangeLower: 25,
+          nationality: 'KR',
+          koreanOk: true,
+          hasCar: false,
+          consentedAt: new Date(),
+          autoRecommend: true,
+          groupApply: true,
+        },
+      });
+
+      // active 그룹방 생성 후 4명 꽉 채움: u1 + synA + synB + synC
+      const fullRoom = await prisma.chatRoom.create({
+        data: {
+          roomType: 'group',
+          maxMembers: 4,
+          status: 'active',
+          ownerUserId: u1.userId,
+        },
+        select: { chatRoomId: true },
+      });
+      await prisma.groupMembership.createMany({
+        data: [
+          { chatRoomId: fullRoom.chatRoomId, userId: u1.userId,    role: 'owner',  memberStatus: 'active' },
+          { chatRoomId: fullRoom.chatRoomId, userId: synA.userId,  role: 'member', memberStatus: 'active' },
+          { chatRoomId: fullRoom.chatRoomId, userId: synB.userId,  role: 'member', memberStatus: 'active' },
+          { chatRoomId: fullRoom.chatRoomId, userId: synC.userId,  role: 'member', memberStatus: 'active' },
+        ],
+      });
+
+      const f: string[] = [];
+
+      // auth1(u1) 이 synInvitee(1명) 에게 그룹 초대 → currentCount(4)+1 = 5 > 4 → 422
+      const res = mockRes();
+      await sendGroupRequest(
+        mockReq({
+          auth: auth1,
+          body: { receiverUserIds: [synInvitee.userId.toString()] },
+        }),
+        res,
+      );
+      if (res._c.status !== 422) f.push(`status ${res._c.status} != 422`);
+      const b = res._c.json as { error?: string };
+      if (b?.error !== 'group_capacity_exceeded') {
+        f.push(`error '${b?.error}' != 'group_capacity_exceeded'`);
+      }
+
+      // 클린업: 멤버십 → 방 → 합성 유저 순
+      await prisma.groupMembership.deleteMany({ where: { chatRoomId: fullRoom.chatRoomId } });
+      await prisma.chatRoom.delete({ where: { chatRoomId: fullRoom.chatRoomId } });
+      await prisma.mateProfile.deleteMany({ where: { userId: { in: [synA.userId, synB.userId, synC.userId, synInvitee.userId] } } });
+      await prisma.user.deleteMany({ where: { userId: { in: [synA.userId, synB.userId, synC.userId, synInvitee.userId] } } });
+
+      return f;
+    });
+
   } finally {
     // 클린업
     await prisma.notification.deleteMany({
