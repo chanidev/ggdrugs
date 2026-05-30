@@ -1376,3 +1376,33 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
     # data 는 입력 순서를 보존 — index 기반 정렬 불필요. 그래도 안전하게 index 로 sort.
     items = sorted(resp.data, key=lambda d: d.index)
     return [list(d.embedding) for d in items]
+
+
+def translate_text(text: str, target_language: str) -> str:
+    """
+    텍스트를 target_language 로 번역. 게시글 제목·본문에 사용.
+
+    - 원문이 한국어인 경우가 대부분이나 다른 언어도 투명하게 번역.
+    - 홍보·과장·마크다운 추가 금지 지침 포함 (원문 그대로).
+    - 실패 시 OpenAIError 계열 예외 → 호출자(app.py /translate)가 502 반환.
+    """
+    client = OpenAI()
+    sys_prompt = (
+        f"You are a professional translator. Translate the following text to {target_language}.\n"
+        "Rules:\n"
+        "- Output only the translated text. No preamble, no explanations.\n"
+        "- Preserve the original meaning and tone. Do not add or remove information.\n"
+        "- Do not add markdown, emojis, or promotional language.\n"
+        "- If the text is already in the target language, return it as-is."
+    )
+    resp = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": sys_prompt},
+            {"role": "user", "content": text[:5000]},
+        ],
+        temperature=0.1,
+        max_tokens=1500,
+    )
+    _track_usage("translate", resp)
+    return (resp.choices[0].message.content or "").strip()

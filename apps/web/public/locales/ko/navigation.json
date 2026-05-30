@@ -42,11 +42,7 @@
       "today": "오늘",
       "weekend": "이번 주말",
       "week": "이번 주",
-      "month": "이번 달",
-      "3m": "3개월",
-      "6m": "6개월",
-      "all": "전체",
-      "custom": "직접 설정"
+      "month": "이번 달"
     },
     "companion": {
       "label": "인원구성",
@@ -171,5 +167,12 @@
     "scriptLoadFail": "스크립트 로드 실패",
     "mapLoadFail": "지도 로드 실패",
     "allowedDomainHint": "허용 도메인에 http://localhost:5173 등록 확인"
+  },
+  "eventList": {
+    "emptyHint": "다른 카테고리를 선택해보세요.",
+    "defaultTotalSuffix": "개의 이벤트",
+    "sortHint": "진행중·예정 우선",
+    "sortHintTitle": "진행중·예정 이벤트가 먼저, 종료는 뒤로",
+    "distanceAriaLabel": "거리 {{distance}}"
   }
 }

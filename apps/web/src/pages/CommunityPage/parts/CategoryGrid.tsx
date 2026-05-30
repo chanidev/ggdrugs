@@ -30,7 +30,7 @@ export function CategoryGrid({
   return (
     <div className="mb-4">
       <SegmentedControl
-        aria-label="게시판 카테고리"
+        aria-label={t('category.ariaLabel')}
         value={active}
         onValueChange={(v) => onSelect(v as CategoryFilter)}
       >

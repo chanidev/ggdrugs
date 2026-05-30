@@ -3,7 +3,6 @@ import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ReportModal } from '../../../components/ReportModal.js';
 import type { PostListItem } from '../../../lib/api/posts.js';
-import { CATEGORY_LABELS } from './CommunityShell.js';
 
 /**
  * PostList — GG-COMM-004/005 게시글 목록 + 상세 진입.
@@ -61,11 +60,11 @@ export function PostList({
               >
                 <div className="min-w-0">
                   <span className="mr-2 rounded-(--radius-sm) bg-(--color-bg) px-1.5 py-0.5 text-[11px] text-(--color-text-muted)">
-                    {CATEGORY_LABELS[p.category] ?? p.category}
+                    {t(`category.${p.category}`, { defaultValue: p.category })}
                   </span>
                   <span className="text-[15px]">{p.title}</span>
                   <div className="mt-1 truncate text-[12px] text-(--color-text-muted)">
-                    {p.authorNickname} · 댓글 {p.commentCount} · 하트 {p.likeCount}
+                    {p.authorNickname} · {t('postList.commentCount', { count: p.commentCount })} · {t('postList.likeCount', { count: p.likeCount })}
                   </div>
                 </div>
               </Link>
@@ -74,14 +73,14 @@ export function PostList({
               {currentUserId && !isMyPost && (
                 <button
                   type="button"
-                  aria-label={`${p.title} 게시글 신고`}
+                  aria-label={t('postList.reportAria', { title: p.title })}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     setReportTarget({ postId: p.postId, authorUserId: p.authorUserId });
                   }}
                   className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-(--radius-sm) text-[16px] text-(--color-text-subtle) hover:bg-(--color-surface-alt) hover:text-(--color-text-muted)"
-                  title="신고"
+                  title={t('common:button.report')}
                 >
                   ⋯
                 </button>

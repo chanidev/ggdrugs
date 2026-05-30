@@ -179,3 +179,25 @@ export async function deleteComment(id: string): Promise<void> {
   if (res.status === 403) throw new Error('FORBIDDEN');
   if (!res.ok) throw new Error(`DELETE /community/comments/${id} ${res.status}`);
 }
+
+export type TranslateLang = 'en' | 'vi' | 'zh' | 'ja' | 'fr';
+
+export interface TranslatePostResult {
+  translatedTitle: string;
+  translatedBody: string;
+  lang: TranslateLang;
+}
+
+export async function translatePost(id: string, lang: TranslateLang): Promise<TranslatePostResult> {
+  const res = await fetch(
+    `${BFF_URL}/community/posts/${encodeURIComponent(id)}/translate`,
+    withCredentials({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lang }),
+    }),
+  );
+  if (res.status === 503) throw new Error('LLM_UNAVAILABLE');
+  if (!res.ok) throw new Error(`POST /community/posts/${id}/translate ${res.status}`);
+  return (await res.json()) as TranslatePostResult;
+}

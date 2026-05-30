@@ -708,6 +708,41 @@ def events_personalized(req: PersonalizedRequest) -> PersonalizedResponse:
     )
 
 
+class TranslateRequest(BaseModel):
+    title: str = Field(max_length=200)
+    body: str = Field(max_length=5000)
+    lang: str = Field(pattern="^(en|vi|zh|ja|fr)$")
+
+
+class TranslateResponse(BaseModel):
+    translatedTitle: str
+    translatedBody: str
+
+
+@app.post("/translate", response_model=TranslateResponse)
+def translate_post(req: TranslateRequest) -> TranslateResponse:
+    """
+    게시글 제목+본문을 지정 언어로 번역.
+    LLM 비활성 → 503 (BFF 가 캐시 없을 때만 호출하므로 503 은 BFF 가 그대로 중계).
+    """
+    from fastapi import HTTPException
+
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="translate unavailable (no key or over budget)")
+
+    lang_names = {"en": "English", "vi": "Vietnamese", "zh": "Chinese (Simplified)", "ja": "Japanese", "fr": "French"}
+    target = lang_names.get(req.lang, req.lang)
+
+    try:
+        from openai_chain import translate_text
+        translated_title = translate_text(req.title, target)
+        translated_body = translate_text(req.body, target)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"translate failed: {e.__class__.__name__}")
+
+    return TranslateResponse(translatedTitle=translated_title, translatedBody=translated_body)
+
+
 @app.post("/events/upsert", response_model=EventUpsertResponse)
 def events_upsert(req: EventUpsertRequest) -> EventUpsertResponse:
     """

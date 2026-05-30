@@ -1,1 +1,178 @@
-{}
+{
+  "sidebar": {
+    "eyebrow": "在首尔\n寻找活动的方式",
+    "description": "通过地图图钉、聊天和筛选探索节日、博览会、研讨会和会议。",
+    "filter": { "title": "筛选搜索", "description": "按 5 个维度缩小范围" },
+    "list":   { "title": "全部列表", "description": "按分类浏览" },
+    "chat":   { "title": "聊天搜索", "description": "用自然语言提问" },
+    "ariaLabel": "活动导航菜单",
+    "navLabel": "导航区域"
+  },
+  "stats": {
+    "label": "当前开放活动",
+    "total": "全部",
+    "ongoing": "进行中",
+    "upcoming": "即将开始"
+  },
+  "mobile": {
+    "tabs": {
+      "list":   "列表",
+      "filter": "筛选",
+      "chat":   "聊天"
+    },
+    "backToList": "返回列表",
+    "eventSummary": "活动摘要",
+    "chatHint": "用自然语言提问，获取 5 个筛选条件 + AI 语义搜索结果。",
+    "chatPlaceholder": "\"这个周末适合家庭的节日\"",
+    "chatAriaInput": "用自然语言搜索活动",
+    "chatAriaSend": "发送搜索",
+    "aiCandidates": "{{count}} 个 AI 候选 · 语义",
+    "sheetTabsLabel": "工作表选项卡"
+  },
+  "filter": {
+    "region": {
+      "label": "地区",
+      "seoul": "首尔",
+      "all": "全部",
+      "loadError": "地区加载失败：{{msg}}",
+      "loading": "加载中…"
+    },
+    "period": {
+      "label": "时间段",
+      "today": "今天",
+      "weekend": "本周末",
+      "week": "本周",
+      "month": "本月"
+    },
+    "companion": {
+      "label": "同行人数",
+      "solo": "独自",
+      "couple": "情侣",
+      "family": "家庭",
+      "friend": "朋友"
+    },
+    "eventType": {
+      "label": "活动类型",
+      "festival": "节日",
+      "expo": "博览会",
+      "symposium": "研讨会",
+      "conference": "会议",
+      "exhibition": "展览",
+      "performance": "演出",
+      "education": "教育/体验",
+      "movie": "电影"
+    },
+    "vibe": {
+      "label": "活动氛围",
+      "loading": "加载中…"
+    },
+    "action": {
+      "hintPrefix": "选择筛选条件以",
+      "hintApply": "应用",
+      "hintSuffix": "",
+      "selectedSuffix": "个条件已选",
+      "reset": "重置",
+      "subscribe": "订阅此条件",
+      "subscribeTitle": "有符合条件的新活动时通知",
+      "apply": "应用",
+      "resultCount": "{{count}} 个结果"
+    },
+    "subscribe": {
+      "maxReached": "最多 20 个订阅 — 在我的主页中管理",
+      "failed": "失败：{{msg}}"
+    }
+  },
+  "subscription": {
+    "created": "已创建订阅 — 在我的主页 > 订阅标签中管理",
+    "deleted": "已取消订阅。",
+    "loginRequired": "订阅需要登录。"
+  },
+  "fullList": {
+    "phase": {
+      "tabsLabel": "活动阶段",
+      "all": "全部",
+      "upcoming": "即将开始",
+      "ongoing": "进行中",
+      "ended": "已结束"
+    },
+    "sort": {
+      "label": "排序",
+      "ariaLabel": "排序依据",
+      "ending": "即将结束",
+      "recent": "最新",
+      "popular": "热门",
+      "distance": "距离",
+      "distanceDisabledTitle": "启用地图或使用我的位置以激活"
+    },
+    "anchor": {
+      "label": "基准点",
+      "clear": "清除",
+      "clearTitle": "清除基准点",
+      "placeholder": "地点或地址（如：江南站、北首尔美术馆）",
+      "searchAriaLabel": "通过地点搜索设置距离排序基准点",
+      "searching": "搜索中…",
+      "noResults": "无结果"
+    },
+    "gps": {
+      "requesting": "获取位置中…",
+      "on": "我的位置 已开启",
+      "onClearTitle": "清除我的位置锚点",
+      "idle": "我的位置",
+      "denied": "权限被拒绝",
+      "retrying": "重试",
+      "unsupported": "不支持",
+      "deniedTitle": "权限被拒绝 — 在浏览器设置中允许后重试",
+      "errorTitle": "获取位置失败 — 重试",
+      "unsupportedTitle": "浏览器不支持位置服务",
+      "idleTitle": "使用我的位置作为距离排序基准点"
+    },
+    "chips": {
+      "all": "全部"
+    },
+    "statsError": "统计加载失败",
+    "totalLabel": "{{count}} 个活动"
+  },
+  "eventSummary": {
+    "title": "活动摘要",
+    "closeAriaLabel": "关闭摘要面板",
+    "asideAriaLabel": "已选活动摘要",
+    "detailPage": "前往详情页",
+    "noPoster": "无海报",
+    "label": {
+      "category": "分类",
+      "place": "场地",
+      "period": "时间",
+      "time": "时间",
+      "price": "价格",
+      "target": "对象"
+    },
+    "articles": {
+      "title": "相关文章",
+      "loadError": "文章加载失败。",
+      "topItems": "前 {{shown}} 条 · 共 {{total}} 条",
+      "originalLink": "原文 ↗"
+    },
+    "aiSummaryLabel": "AI 摘要",
+    "descSummaryLabel": "内容摘要",
+    "relatedArticlesCount": "相关文章"
+  },
+  "map": {
+    "ariaLabel": "活动地图",
+    "pinCount": "显示 {{count}} 个活动",
+    "pinCountSuffix": " 个活动已显示",
+    "missingKey": {
+      "title": "缺少 Kakao Maps 密钥",
+      "body": "在 .env 中设置 VITE_KAKAO_MAP_JS_KEY 并重启开发服务器。"
+    },
+    "scriptLoadFail": "脚本加载失败",
+    "mapLoadFail": "地图加载失败",
+    "allowedDomainHint": "确保 http://localhost:5173 在允许的域名列表中"
+  },
+  "eventList": {
+    "emptyHint": "请尝试其他分类。",
+    "defaultTotalSuffix": " 个活动",
+    "sortHint": "进行中和即将开始的优先",
+    "sortHintTitle": "进行中和即将开始的活动优先显示；已结束的排在后面",
+    "distanceAriaLabel": "距离 {{distance}}"
+  }
+}

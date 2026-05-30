@@ -1,1 +1,95 @@
-{}
+{
+  "shell": {
+    "title": "社区",
+    "creditsLabel": "{{count}} 积分",
+    "creditsPlaceholder": "积分",
+    "languageToggle": "切换语言",
+    "chatRoomBtn": "聊天室"
+  },
+  "category": {
+    "festival_story": "节日故事",
+    "mate_finder": "寻找同伴",
+    "free": "自由讨论",
+    "all": "全部",
+    "ariaLabel": "帖子分类"
+  },
+  "post": {
+    "loading": "加载中…",
+    "notFound": "该帖子不存在或已过期。",
+    "loadError": "加载失败。",
+    "likeAriaPressed": "取消点赞",
+    "likeAriaUnpressed": "点赞",
+    "likeButton": "♥ {{count}}",
+    "commentCount": "评论 ({{count}})",
+    "commentSection": "评论",
+    "loginToComment": "请登录后留言。",
+    "deleteConfirm": "确认删除此帖子？",
+    "deleteSuccess": "已删除。",
+    "deleteForbidden": "这不是您的帖子。",
+    "deleteFail": "删除失败。",
+    "translateTitle": "翻译结果",
+    "translateLoading": "翻译中…",
+    "translateError": "翻译失败。",
+    "translateClose": "关闭",
+    "translateSelectLang": "请选择翻译语言",
+    "translateOriginal": "原文",
+    "translateResult": "译文",
+    "translateAnother": "翻译成其他语言"
+  },
+  "compose": {
+    "newPost": "发布新帖",
+    "editPost": "编辑帖子",
+    "titlePlaceholder": "请输入标题",
+    "bodyPlaceholder": "请输入内容",
+    "titleLabel": "标题",
+    "bodyLabel": "内容",
+    "categoryLabel": "分类",
+    "categorySelectLabel": "选择分类",
+    "submit": "发布",
+    "save": "保存",
+    "cancel": "取消",
+    "titleRequired": "标题需在 2–200 个字符之间。",
+    "bodyRequired": "内容需在 2–5000 个字符之间。",
+    "categoryRequired": "请选择分类。",
+    "loginRequired": "需要登录。",
+    "submitError": "发布失败。"
+  },
+  "comment": {
+    "placeholder": "留下评论…",
+    "replyPlaceholder": "留下回复…",
+    "submit": "发布",
+    "reply": "回复",
+    "edit": "编辑",
+    "editAriaLabel": "编辑评论",
+    "delete": "删除",
+    "deleteConfirm": "确认删除此评论？",
+    "deleteForbidden": "这不是您的评论。",
+    "deleteFail": "删除失败。",
+    "replyNotAllowed": "无法回复回复。",
+    "bodyLength": "评论需在 1–1000 个字符之间。",
+    "authorProfileAria": "查看 {{nickname}} 的主页"
+  },
+  "authorModal": {
+    "title": "{{nickname}}",
+    "mateScore": "同伴评分",
+    "chatRequest": "发起聊天",
+    "close": "关闭",
+    "blockConfirm": "屏蔽 {{nickname}}？",
+    "blocked": "已屏蔽。",
+    "alreadyBlocked": "已经屏蔽过了。",
+    "blockFailed": "屏蔽失败。",
+    "blockBtn": "屏蔽",
+    "blockAriaLabel": "屏蔽 {{nickname}}"
+  },
+  "mateReco": {
+    "title": "同伴推荐",
+    "placeholder": "登录后获取同伴推荐。"
+  },
+  "postList": {
+    "empty": "暂无帖子。",
+    "loadError": "加载帖子失败。",
+    "commentCount": "评论 {{count}}",
+    "likeCount": "♥ {{count}}",
+    "reportAria": "举报帖子：{{title}}"
+  }
+}

@@ -31,18 +31,18 @@ export function AuthorProfileModal({
   const [blocking, setBlocking] = useState(false);
 
   const handleBlock = async () => {
-    if (!confirm(`${nickname}님을 차단하시겠어요?`)) return;
+    if (!confirm(t('authorModal.blockConfirm', { nickname }))) return;
     setBlocking(true);
     setBlockMsg(null);
     try {
       await blockUser(authorUserId);
-      setBlockMsg('차단되었습니다.');
+      setBlockMsg(t('authorModal.blocked'));
     } catch (e) {
       const msg = (e as Error).message;
       if (msg === 'already_blocked' || msg === 'ALREADY_BLOCKED') {
-        setBlockMsg('이미 차단된 사용자입니다.');
+        setBlockMsg(t('authorModal.alreadyBlocked'));
       } else {
-        setBlockMsg('차단하지 못했어요.');
+        setBlockMsg(t('authorModal.blockFailed'));
       }
     } finally {
       setBlocking(false);
@@ -124,9 +124,9 @@ export function AuthorProfileModal({
               size="medium"
               onClick={() => { void handleBlock(); }}
               disabled={blocking}
-              aria-label={`${nickname} 차단하기`}
+              aria-label={t('authorModal.blockAriaLabel', { nickname })}
             >
-              차단하기
+              {t('authorModal.blockBtn')}
             </ActionButton>
             {/* GG-POST-008: 채팅신청 — 슬라이스3 실구현 */}
             <ActionButton

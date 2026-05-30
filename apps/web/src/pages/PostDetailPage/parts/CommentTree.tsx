@@ -72,7 +72,7 @@ function CommentItem({
             type="button"
             onClick={() => onAuthorClick(node.authorNickname, node.authorUserId)}
             className="flex items-center gap-1.5 text-[12px] font-medium text-(--color-text) hover:underline"
-            aria-label={`${node.authorNickname} 프로필 보기`}
+            aria-label={t('comment.authorProfileAria', { nickname: node.authorNickname })}
           >
             <Avatar
               fallback={node.authorNickname.slice(0, 1)}
@@ -91,7 +91,7 @@ function CommentItem({
           <div className="flex items-end gap-2">
             <div className="min-w-0 flex-1">
               <TextField value={editText} onValueChange={(v) => setEditText(v.value)}>
-                <TextFieldInput aria-label="댓글 수정" maxLength={1000} />
+                <TextFieldInput aria-label={t('comment.editAriaLabel')} maxLength={1000} />
               </TextField>
             </div>
             <ActionButton variant="brandSolid" size="xsmall" onClick={saveEdit}>

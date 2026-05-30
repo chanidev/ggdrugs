@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ActionButton } from 'seed-design/ui/action-button';
-import { CommunityShell, CATEGORY_LABELS } from '../CommunityPage/parts/CommunityShell.js';
+import * as Dialog from 'seed-design/ui/dialog';
+import { SegmentedControl, SegmentedControlItem } from 'seed-design/ui/segmented-control';
+import { CommunityShell } from '../CommunityPage/parts/CommunityShell.js';
 import { MateRecoPlaceholder } from '../CommunityPage/parts/MateRecoPlaceholder.js';
 import { ComposeModal } from '../CommunityPage/parts/ComposeModal.js';
 import { CommentTree } from './parts/CommentTree.js';
@@ -13,7 +15,10 @@ import {
   fetchPostDetail,
   togglePostLike,
   deletePost,
+  translatePost,
   type PostDetail,
+  type TranslateLang,
+  type TranslatePostResult,
 } from '../../lib/api/posts.js';
 import { useCurrentUser } from '../../lib/auth-context';
 
@@ -35,6 +40,11 @@ export function PostDetailPage() {
   const [modalAuthor, setModalAuthor] = useState<{ nickname: string; userId: string } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
+  const [translateOpen, setTranslateOpen] = useState(false);
+  const [translateLang, setTranslateLang] = useState<TranslateLang>('en');
+  const [translateResult, setTranslateResult] = useState<TranslatePostResult | null>(null);
+  const [translateLoading, setTranslateLoading] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
 
   const reload = useCallback(
     (signal?: AbortSignal) => {
@@ -85,6 +95,26 @@ export function PostDetailPage() {
     }
   };
 
+  /** GG-COMM-013: 게시글 번역 (LLM + BFF Redis 24h 캐시) */
+  const onTranslate = async (lang: TranslateLang) => {
+    if (!detail) return;
+    setTranslateLoading(true);
+    setTranslateError(null);
+    setTranslateResult(null);
+    try {
+      const result = await translatePost(detail.postId, lang);
+      setTranslateResult(result);
+    } catch (e) {
+      setTranslateError(
+        (e as Error).message === 'LLM_UNAVAILABLE'
+          ? t('post.translateError')
+          : t('post.translateError'),
+      );
+    } finally {
+      setTranslateLoading(false);
+    }
+  };
+
   return (
     <CommunityShell rightRail={<MateRecoPlaceholder />}>
       {/* 로딩 상태 */}
@@ -109,7 +139,7 @@ export function PostDetailPage() {
         <article className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-5">
           {/* 카테고리 뱃지 */}
           <span className="mb-2 inline-block rounded-(--radius-sm) bg-(--color-bg) px-2 py-0.5 text-[11px] text-(--color-text-muted)">
-            {CATEGORY_LABELS[detail.category] ?? detail.category}
+            {t(`category.${detail.category}`, { defaultValue: detail.category })}
           </span>
 
           {/* 제목 */}
@@ -175,6 +205,18 @@ export function PostDetailPage() {
                 {t('common:button.report')}
               </ActionButton>
             )}
+            {/* GG-COMM-013: 번역하기 */}
+            <ActionButton
+              variant="neutralOutline"
+              size="small"
+              onClick={() => {
+                setTranslateResult(null);
+                setTranslateError(null);
+                setTranslateOpen(true);
+              }}
+            >
+              {t('common:button.translate')}
+            </ActionButton>
           </div>
 
           {/* 댓글 섹션 */}
@@ -235,6 +277,89 @@ export function PostDetailPage() {
           targetUserId={detail.authorUserId}
           onSuccess={() => setReportOpen(false)}
         />
+      )}
+
+      {/* GG-COMM-013: 번역 모달 */}
+      {translateOpen && detail && (
+        <Dialog.Root open onOpenChange={(open) => { if (!open) setTranslateOpen(false); }}>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content className="w-[520px] max-w-[92vw]">
+              <Dialog.Header>
+                <Dialog.Title>{t('post.translateTitle')}</Dialog.Title>
+              </Dialog.Header>
+              <div className="flex flex-col gap-4 px-5 pb-2">
+                {/* 언어 선택 */}
+                {!translateResult && (
+                  <>
+                    <p className="text-[13px] text-(--color-text-muted)">{t('post.translateSelectLang')}</p>
+                    <SegmentedControl
+                      value={translateLang}
+                      onValueChange={(v) => setTranslateLang(v as TranslateLang)}
+                    >
+                      {(['en', 'vi', 'zh', 'ja', 'fr'] as TranslateLang[]).map((l) => (
+                        <SegmentedControlItem key={l} value={l}>
+                          {l.toUpperCase()}
+                        </SegmentedControlItem>
+                      ))}
+                    </SegmentedControl>
+                  </>
+                )}
+                {/* 번역 결과 */}
+                {translateResult && (
+                  <div className="flex flex-col gap-3">
+                    <div>
+                      <p className="mb-1 text-[11px] font-medium text-(--color-text-subtle)">{t('post.translateOriginal')}</p>
+                      <p className="text-[14px] font-semibold">{detail.title}</p>
+                      <p className="mt-1 text-[13px] text-(--color-text-muted)">{detail.body}</p>
+                    </div>
+                    <div className="border-t border-(--color-border) pt-3">
+                      <p className="mb-1 text-[11px] font-medium text-(--color-text-subtle)">{t('post.translateResult')}</p>
+                      <p className="text-[14px] font-semibold">{translateResult.translatedTitle}</p>
+                      <p className="mt-1 whitespace-pre-wrap text-[13px] text-(--color-text-muted)">{translateResult.translatedBody}</p>
+                    </div>
+                  </div>
+                )}
+                {/* 오류 */}
+                {translateError && (
+                  <p role="alert" className="text-[13px] text-(--color-error)">{translateError}</p>
+                )}
+                {/* 로딩 */}
+                {translateLoading && (
+                  <p className="text-[13px] text-(--color-text-muted)">{t('post.translateLoading')}</p>
+                )}
+              </div>
+              <Dialog.Footer>
+                <ActionButton
+                  variant="neutralOutline"
+                  size="medium"
+                  onClick={() => setTranslateOpen(false)}
+                >
+                  {t('post.translateClose')}
+                </ActionButton>
+                {translateResult ? (
+                  <ActionButton
+                    variant="neutralOutline"
+                    size="medium"
+                    onClick={() => { setTranslateResult(null); setTranslateError(null); }}
+                  >
+                    {t('post.translateAnother')}
+                  </ActionButton>
+                ) : (
+                  <ActionButton
+                    variant="brandSolid"
+                    size="medium"
+                    loading={translateLoading}
+                    disabled={translateLoading}
+                    onClick={() => { void onTranslate(translateLang); }}
+                  >
+                    {t('common:button.translate')}
+                  </ActionButton>
+                )}
+              </Dialog.Footer>
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Dialog.Root>
       )}
     </CommunityShell>
   );

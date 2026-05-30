@@ -2,6 +2,9 @@ import type { Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
+import { env } from '../env.js';
+import { getRedisClient } from '../lib/redis-client.js';
+import { logger } from '../logger.js';
 
 const CATEGORIES = new Set(['festival_story', 'mate_finder', 'free']);
 export const POST_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7d (GG-POST-010)
@@ -367,4 +370,83 @@ export async function createPost(req: Request, res: Response) {
     commentCount: 0,
     createdAt: created.createdAt.toISOString(),
   });
+}
+
+/**
+ * POST /community/posts/:id/translate
+ * 게시글 본문을 지정 언어로 번역 (LLM + Redis 24h 캐시).
+ * GG-COMM-013 "번역하기" 기능 — 인증 불필요, 게시글 공개 조건과 동일.
+ *
+ * body: { lang: 'en' | 'vi' | 'zh' | 'ja' | 'fr' }
+ * response: { translatedTitle: string, translatedBody: string, lang: string }
+ */
+const SUPPORTED_LANGS = new Set(['en', 'vi', 'zh', 'ja', 'fr']);
+const TRANSLATE_CACHE_TTL = 60 * 60 * 24; // 24h
+
+export async function translatePost(req: Request, res: Response) {
+  const postId = parseBigId(req.params.id);
+  if (!postId) { res.status(400).json({ error: 'invalid id' }); return; }
+
+  const body = (req.body ?? {}) as Record<string, unknown>;
+  const lang = typeof body.lang === 'string' ? body.lang.toLowerCase() : '';
+  if (!SUPPORTED_LANGS.has(lang)) {
+    res.status(400).json({ error: `lang must be one of: ${[...SUPPORTED_LANGS].join(', ')}` });
+    return;
+  }
+
+  const post = await prisma.post.findFirst({
+    where: { postId, isDeleted: false, expiresAt: { gt: new Date() } },
+    select: { postId: true, title: true, body: true },
+  });
+  if (!post) { res.status(404).json({ error: 'post not found' }); return; }
+
+  const cacheKey = `post-translate:${postId}:${lang}`;
+  const redis = getRedisClient();
+
+  // 캐시 히트 — LLM 호출 없이 즉시 반환.
+  try {
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      res.json(JSON.parse(cached));
+      return;
+    }
+  } catch (err) {
+    logger.warn({ err }, 'redis get failed — proceeding without cache');
+  }
+
+  // LLM 번역 호출 (OpenAI 없으면 503).
+  const LLM_URL = env.LLM_SERVICE_URL;
+  let translated: { translatedTitle: string; translatedBody: string };
+  try {
+    const llmRes = await fetch(`${LLM_URL}/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: post.title, body: post.body, lang }),
+      signal: AbortSignal.timeout(30_000),
+    });
+    if (!llmRes.ok) {
+      const text = await llmRes.text().catch(() => '');
+      if (llmRes.status === 503) {
+        res.status(503).json({ error: 'LLM 번역 서비스 미활성 (OPENAI_API_KEY 없음)' });
+        return;
+      }
+      throw new Error(`LLM /translate ${llmRes.status}: ${text.slice(0, 200)}`);
+    }
+    translated = (await llmRes.json()) as { translatedTitle: string; translatedBody: string };
+  } catch (err) {
+    logger.error({ err }, 'post translate LLM call failed');
+    res.status(502).json({ error: '번역 서비스에 연결하지 못했어요.' });
+    return;
+  }
+
+  const payload = { ...translated, lang };
+
+  // 캐시 저장 (실패해도 응답은 정상 반환).
+  try {
+    await redis.set(cacheKey, JSON.stringify(payload), 'EX', TRANSLATE_CACHE_TTL);
+  } catch (err) {
+    logger.warn({ err }, 'redis set failed — translation not cached');
+  }
+
+  res.json(payload);
 }

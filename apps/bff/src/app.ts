@@ -22,7 +22,7 @@ import {
 } from './routes/auth.js';
 import { requireAuth, resolveAuth } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
-import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment } from './routes/posts.js';
+import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment, translatePost } from './routes/posts.js';
 import { listMyRecommendations } from './routes/me-recommendations.js';
 import { postChat, postChatStream } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
@@ -297,6 +297,7 @@ export function createApp(): Express {
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => toggleLike(req, res).catch(next),
   );
+  app.post('/community/posts/:id/translate', (req, res, next) => translatePost(req, res).catch(next));
 
   // A_801 메이트 프로필 저장/조회 + A_807 메이트지수 (Phase 2 / ADR 0007)
   // NOTE: /profile/me 를 /profile/:id 보다 먼저 등록해야 충돌 없음.

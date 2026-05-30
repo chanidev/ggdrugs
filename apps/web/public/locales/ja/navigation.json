@@ -1,1 +1,178 @@
-{}
+{
+  "sidebar": {
+    "eyebrow": "ソウルで\nイベントを探す方法",
+    "description": "地図のピン、チャット、フィルターでフェスティバル・博覧会・シンポジウム・カンファレンスを探索しましょう。",
+    "filter": { "title": "フィルター検索", "description": "5つの軸で絞り込む" },
+    "list":   { "title": "一覧を見る", "description": "カテゴリー別に閲覧" },
+    "chat":   { "title": "チャット検索", "description": "自然言語で質問" },
+    "ariaLabel": "イベントナビゲーションメニュー",
+    "navLabel": "ナビゲーションセクション"
+  },
+  "stats": {
+    "label": "現在公開中のイベント",
+    "total": "全て",
+    "ongoing": "開催中",
+    "upcoming": "開催予定"
+  },
+  "mobile": {
+    "tabs": {
+      "list":   "リスト",
+      "filter": "フィルター",
+      "chat":   "チャット"
+    },
+    "backToList": "リストへ戻る",
+    "eventSummary": "イベント概要",
+    "chatHint": "自然言語で質問して、5つのフィルター + AI意味検索の結果を受け取りましょう。",
+    "chatPlaceholder": "「今週末に家族で楽しめるフェスティバル」",
+    "chatAriaInput": "自然言語でイベントを検索",
+    "chatAriaSend": "検索を送信",
+    "aiCandidates": "AI候補 {{count}} 件 · 意味ベース",
+    "sheetTabsLabel": "シートタブ"
+  },
+  "filter": {
+    "region": {
+      "label": "地域",
+      "seoul": "ソウル",
+      "all": "全て",
+      "loadError": "地域の読み込み失敗：{{msg}}",
+      "loading": "読み込み中…"
+    },
+    "period": {
+      "label": "期間",
+      "today": "今日",
+      "weekend": "今週末",
+      "week": "今週",
+      "month": "今月"
+    },
+    "companion": {
+      "label": "同行者",
+      "solo": "一人",
+      "couple": "カップル",
+      "family": "家族",
+      "friend": "友達"
+    },
+    "eventType": {
+      "label": "イベント種類",
+      "festival": "フェスティバル",
+      "expo": "博覧会",
+      "symposium": "シンポジウム",
+      "conference": "カンファレンス",
+      "exhibition": "展示会",
+      "performance": "パフォーマンス",
+      "education": "教育/体験",
+      "movie": "映画"
+    },
+    "vibe": {
+      "label": "イベントの雰囲気",
+      "loading": "読み込み中…"
+    },
+    "action": {
+      "hintPrefix": "フィルターを選択して",
+      "hintApply": "適用",
+      "hintSuffix": "できます",
+      "selectedSuffix": "件の条件が選択済み",
+      "reset": "リセット",
+      "subscribe": "この条件を購読",
+      "subscribeTitle": "条件に合う新しいイベントがあれば通知",
+      "apply": "適用",
+      "resultCount": "{{count}} 件の結果"
+    },
+    "subscribe": {
+      "maxReached": "購読は最大20件 — マイページで管理",
+      "failed": "失敗：{{msg}}"
+    }
+  },
+  "subscription": {
+    "created": "購読を作成しました — マイページ > 購読タブで管理",
+    "deleted": "購読をキャンセルしました。",
+    "loginRequired": "購読にはログインが必要です。"
+  },
+  "fullList": {
+    "phase": {
+      "tabsLabel": "イベントの進行状況",
+      "all": "全て",
+      "upcoming": "開催予定",
+      "ongoing": "開催中",
+      "ended": "終了"
+    },
+    "sort": {
+      "label": "並び替え",
+      "ariaLabel": "並び替え基準",
+      "ending": "終了間近",
+      "recent": "最新",
+      "popular": "人気",
+      "distance": "距離",
+      "distanceDisabledTitle": "地図を有効にするか、現在地を使用して有効化"
+    },
+    "anchor": {
+      "label": "基準点",
+      "clear": "解除",
+      "clearTitle": "基準点を解除",
+      "placeholder": "場所または住所（例：江南駅、北ソウル美術館）",
+      "searchAriaLabel": "場所検索で距離並び替えの基準点を設定",
+      "searching": "検索中…",
+      "noResults": "結果なし"
+    },
+    "gps": {
+      "requesting": "位置を確認中…",
+      "on": "現在地 ON",
+      "onClearTitle": "現在地アンカーを解除",
+      "idle": "現在地",
+      "denied": "権限が拒否されました",
+      "retrying": "再試行",
+      "unsupported": "非対応",
+      "deniedTitle": "権限が拒否されました — ブラウザ設定で許可してから再試行",
+      "errorTitle": "位置の取得に失敗 — 再試行",
+      "unsupportedTitle": "ブラウザが位置情報サービスをサポートしていません",
+      "idleTitle": "現在地を距離並び替えの基準点として使用"
+    },
+    "chips": {
+      "all": "全て"
+    },
+    "statsError": "統計の読み込みに失敗",
+    "totalLabel": "{{count}} 件のイベント"
+  },
+  "eventSummary": {
+    "title": "イベント概要",
+    "closeAriaLabel": "概要パネルを閉じる",
+    "asideAriaLabel": "選択されたイベントの概要",
+    "detailPage": "詳細ページへ",
+    "noPoster": "ポスターなし",
+    "label": {
+      "category": "分類",
+      "place": "会場",
+      "period": "期間",
+      "time": "時間",
+      "price": "価格",
+      "target": "対象"
+    },
+    "articles": {
+      "title": "関連記事",
+      "loadError": "記事の読み込みに失敗しました。",
+      "topItems": "上位 {{shown}} 件 · 全 {{total}} 件",
+      "originalLink": "原文 ↗"
+    },
+    "aiSummaryLabel": "AI要約",
+    "descSummaryLabel": "内容要約",
+    "relatedArticlesCount": "関連記事"
+  },
+  "map": {
+    "ariaLabel": "イベントマップ",
+    "pinCount": "{{count}} 件のイベントを表示",
+    "pinCountSuffix": " 件のイベントを表示",
+    "missingKey": {
+      "title": "Kakao Maps キーがありません",
+      "body": ".env に VITE_KAKAO_MAP_JS_KEY を設定して dev サーバーを再起動してください。"
+    },
+    "scriptLoadFail": "スクリプトの読み込み失敗",
+    "mapLoadFail": "マップの読み込み失敗",
+    "allowedDomainHint": "http://localhost:5173 が許可ドメインに登録されているか確認"
+  },
+  "eventList": {
+    "emptyHint": "別のカテゴリーを試してください。",
+    "defaultTotalSuffix": " 件のイベント",
+    "sortHint": "開催中・予定を優先",
+    "sortHintTitle": "開催中・予定のイベントが先に表示され、終了は後に表示されます",
+    "distanceAriaLabel": "距離 {{distance}}"
+  }
+}

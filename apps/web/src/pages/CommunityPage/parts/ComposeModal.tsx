@@ -5,7 +5,6 @@ import { ActionButton } from 'seed-design/ui/action-button';
 import { SegmentedControl, SegmentedControlItem } from 'seed-design/ui/segmented-control';
 import { TextField, TextFieldInput, TextFieldTextarea } from 'seed-design/ui/text-field';
 import * as Dialog from 'seed-design/ui/dialog';
-import { CATEGORY_LABELS } from './CommunityShell.js';
 
 const CATS: PostCategory[] = ['festival_story', 'mate_finder', 'free'];
 
@@ -70,13 +69,13 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
             {/* 카테고리 선택 — 수정 시 숨김 */}
             {!editPost && (
               <SegmentedControl
-                aria-label="카테고리 선택"
+                aria-label={t('compose.categorySelectLabel')}
                 value={category}
                 onValueChange={(v) => setCategory(v as PostCategory)}
               >
                 {CATS.map((c) => (
                   <SegmentedControlItem key={c} value={c}>
-                    {CATEGORY_LABELS[c]}
+                    {t(`category.${c}`)}
                   </SegmentedControlItem>
                 ))}
               </SegmentedControl>
@@ -87,7 +86,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
                 [접근성] invalid+errorMessage 동시 전달 → SeedField.ErrorMessage가
                          aria-describedby로 input에 연결됨 */}
             <TextField
-              label="제목"
+              label={t('compose.titleLabel')}
               value={title}
               onValueChange={(v) => setTitle(v.value)}
               invalid={titleInvalid}
@@ -104,7 +103,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
                 [접근성] invalid+errorMessage 동시 전달 → SeedField.ErrorMessage가
                          aria-describedby로 textarea에 연결됨 */}
             <TextField
-              label="내용"
+              label={t('compose.bodyLabel')}
               value={body}
               onValueChange={(v) => setBody(v.value)}
               invalid={bodyInvalid}

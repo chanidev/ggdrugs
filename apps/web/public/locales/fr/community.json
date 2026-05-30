@@ -1,1 +1,95 @@
-{}
+{
+  "shell": {
+    "title": "Communauté",
+    "creditsLabel": "{{count}} crédits",
+    "creditsPlaceholder": "Crédits",
+    "languageToggle": "Changer de langue",
+    "chatRoomBtn": "Salon de chat"
+  },
+  "category": {
+    "festival_story": "Histoires de festival",
+    "mate_finder": "Trouver un compagnon",
+    "free": "Discussion libre",
+    "all": "Tout",
+    "ariaLabel": "Catégorie du tableau"
+  },
+  "post": {
+    "loading": "Chargement…",
+    "notFound": "Cette publication n'existe pas ou a expiré.",
+    "loadError": "Échec du chargement.",
+    "likeAriaPressed": "Retirer le like",
+    "likeAriaUnpressed": "J'aime",
+    "likeButton": "♥ {{count}}",
+    "commentCount": "Commentaires ({{count}})",
+    "commentSection": "Commentaires",
+    "loginToComment": "Veuillez vous connecter pour laisser un commentaire.",
+    "deleteConfirm": "Supprimer cette publication ?",
+    "deleteSuccess": "Supprimé.",
+    "deleteForbidden": "Ce n'est pas votre publication.",
+    "deleteFail": "Échec de la suppression.",
+    "translateTitle": "Résultat de la traduction",
+    "translateLoading": "Traduction en cours…",
+    "translateError": "Échec de la traduction.",
+    "translateClose": "Fermer",
+    "translateSelectLang": "Choisissez la langue de traduction",
+    "translateOriginal": "Original",
+    "translateResult": "Traduction",
+    "translateAnother": "Traduire dans une autre langue"
+  },
+  "compose": {
+    "newPost": "Nouvelle publication",
+    "editPost": "Modifier la publication",
+    "titlePlaceholder": "Saisissez un titre",
+    "bodyPlaceholder": "Saisissez le contenu",
+    "titleLabel": "Titre",
+    "bodyLabel": "Contenu",
+    "categoryLabel": "Catégorie",
+    "categorySelectLabel": "Choisir une catégorie",
+    "submit": "Publier",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "titleRequired": "Le titre doit comporter entre 2 et 200 caractères.",
+    "bodyRequired": "Le contenu doit comporter entre 2 et 5000 caractères.",
+    "categoryRequired": "Veuillez choisir une catégorie.",
+    "loginRequired": "Connexion requise.",
+    "submitError": "Échec de la publication."
+  },
+  "comment": {
+    "placeholder": "Laisser un commentaire…",
+    "replyPlaceholder": "Laisser une réponse…",
+    "submit": "Publier",
+    "reply": "Répondre",
+    "edit": "Modifier",
+    "editAriaLabel": "Modifier le commentaire",
+    "delete": "Supprimer",
+    "deleteConfirm": "Supprimer ce commentaire ?",
+    "deleteForbidden": "Ce n'est pas votre commentaire.",
+    "deleteFail": "Échec de la suppression.",
+    "replyNotAllowed": "Impossible de répondre à une réponse.",
+    "bodyLength": "Le commentaire doit comporter entre 1 et 1000 caractères.",
+    "authorProfileAria": "Voir le profil de {{nickname}}"
+  },
+  "authorModal": {
+    "title": "{{nickname}}",
+    "mateScore": "Score compagnon",
+    "chatRequest": "Demander un chat",
+    "close": "Fermer",
+    "blockConfirm": "Bloquer {{nickname}} ?",
+    "blocked": "Bloqué.",
+    "alreadyBlocked": "Déjà bloqué.",
+    "blockFailed": "Échec du blocage.",
+    "blockBtn": "Bloquer",
+    "blockAriaLabel": "Bloquer {{nickname}}"
+  },
+  "mateReco": {
+    "title": "Compagnons recommandés",
+    "placeholder": "Connectez-vous pour recevoir des recommandations."
+  },
+  "postList": {
+    "empty": "Aucune publication.",
+    "loadError": "Échec du chargement des publications.",
+    "commentCount": "Commentaires {{count}}",
+    "likeCount": "♥ {{count}}",
+    "reportAria": "Signaler la publication : {{title}}"
+  }
+}

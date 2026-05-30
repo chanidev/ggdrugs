@@ -1,1 +1,95 @@
-{}
+{
+  "shell": {
+    "title": "Cộng đồng",
+    "creditsLabel": "{{count}} tín dụng",
+    "creditsPlaceholder": "Tín dụng",
+    "languageToggle": "Đổi ngôn ngữ",
+    "chatRoomBtn": "Phòng chat"
+  },
+  "category": {
+    "festival_story": "Câu chuyện lễ hội",
+    "mate_finder": "Tìm bạn đồng hành",
+    "free": "Bảng tự do",
+    "all": "Tất cả",
+    "ariaLabel": "Danh mục bảng"
+  },
+  "post": {
+    "loading": "Đang tải…",
+    "notFound": "Bài viết không tồn tại hoặc đã hết hạn.",
+    "loadError": "Không tải được.",
+    "likeAriaPressed": "Bỏ thích",
+    "likeAriaUnpressed": "Thích",
+    "likeButton": "♥ {{count}}",
+    "commentCount": "Bình luận ({{count}})",
+    "commentSection": "Bình luận",
+    "loginToComment": "Vui lòng đăng nhập để bình luận.",
+    "deleteConfirm": "Xóa bài viết này?",
+    "deleteSuccess": "Đã xóa.",
+    "deleteForbidden": "Đây không phải bài của bạn.",
+    "deleteFail": "Không xóa được.",
+    "translateTitle": "Kết quả dịch",
+    "translateLoading": "Đang dịch…",
+    "translateError": "Không dịch được.",
+    "translateClose": "Đóng",
+    "translateSelectLang": "Chọn ngôn ngữ để dịch",
+    "translateOriginal": "Bản gốc",
+    "translateResult": "Bản dịch",
+    "translateAnother": "Dịch sang ngôn ngữ khác"
+  },
+  "compose": {
+    "newPost": "Viết bài mới",
+    "editPost": "Chỉnh sửa bài",
+    "titlePlaceholder": "Nhập tiêu đề",
+    "bodyPlaceholder": "Nhập nội dung",
+    "titleLabel": "Tiêu đề",
+    "bodyLabel": "Nội dung",
+    "categoryLabel": "Danh mục",
+    "categorySelectLabel": "Chọn danh mục",
+    "submit": "Đăng",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "titleRequired": "Tiêu đề phải từ 2–200 ký tự.",
+    "bodyRequired": "Nội dung phải từ 2–5000 ký tự.",
+    "categoryRequired": "Vui lòng chọn danh mục.",
+    "loginRequired": "Cần đăng nhập.",
+    "submitError": "Không đăng được."
+  },
+  "comment": {
+    "placeholder": "Để lại bình luận…",
+    "replyPlaceholder": "Để lại phản hồi…",
+    "submit": "Đăng",
+    "reply": "Trả lời",
+    "edit": "Sửa",
+    "editAriaLabel": "Chỉnh sửa bình luận",
+    "delete": "Xóa",
+    "deleteConfirm": "Xóa bình luận này?",
+    "deleteForbidden": "Đây không phải bình luận của bạn.",
+    "deleteFail": "Không xóa được.",
+    "replyNotAllowed": "Không thể trả lời một phản hồi.",
+    "bodyLength": "Bình luận phải từ 1–1000 ký tự.",
+    "authorProfileAria": "Xem hồ sơ của {{nickname}}"
+  },
+  "authorModal": {
+    "title": "{{nickname}}",
+    "mateScore": "Điểm bạn đồng hành",
+    "chatRequest": "Yêu cầu chat",
+    "close": "Đóng",
+    "blockConfirm": "Chặn {{nickname}}?",
+    "blocked": "Đã chặn.",
+    "alreadyBlocked": "Đã chặn trước đó.",
+    "blockFailed": "Không chặn được.",
+    "blockBtn": "Chặn",
+    "blockAriaLabel": "Chặn {{nickname}}"
+  },
+  "mateReco": {
+    "title": "Gợi ý bạn đồng hành",
+    "placeholder": "Đăng nhập để nhận gợi ý."
+  },
+  "postList": {
+    "empty": "Chưa có bài viết.",
+    "loadError": "Không tải được bài viết.",
+    "commentCount": "Bình luận {{count}}",
+    "likeCount": "♥ {{count}}",
+    "reportAria": "Báo cáo bài: {{title}}"
+  }
+}
