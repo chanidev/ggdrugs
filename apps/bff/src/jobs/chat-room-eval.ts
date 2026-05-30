@@ -130,6 +130,30 @@ async function main() {
       ],
     },
   });
+  // appointment FK 해소: 멤버십 없는 방의 appointments 먼저 삭제 (slice5-eval 잔재 포함)
+  {
+    const orphanRooms = await prisma.chatRoom.findMany({
+      where: { memberships: { none: {} } },
+      select: { chatRoomId: true },
+    });
+    const orphanIds = orphanRooms.map((r) => r.chatRoomId);
+    if (orphanIds.length > 0) {
+      // 역순 FK: slice5 테이블 포함 — appointmentId 먼저 수집 후 삭제
+      const appts = await prisma.appointment.findMany({
+        where: { chatRoomId: { in: orphanIds } },
+        select: { appointmentId: true },
+      });
+      const apptIds = appts.map((a) => a.appointmentId);
+      if (apptIds.length > 0) {
+        await prisma.creditLedger.deleteMany({ where: { appointmentId: { in: apptIds } } });
+        await prisma.festivalSurvey.deleteMany({ where: { appointmentId: { in: apptIds } } });
+        await prisma.festivalReview.deleteMany({ where: { appointmentId: { in: apptIds } } });
+        await prisma.mateEvaluation.deleteMany({ where: { appointmentId: { in: apptIds } } });
+        await prisma.appointmentVote.deleteMany({ where: { appointmentId: { in: apptIds } } });
+      }
+      await prisma.appointment.deleteMany({ where: { chatRoomId: { in: orphanIds } } });
+    }
+  }
   await prisma.chatRoom.deleteMany({
     where: { memberships: { none: {} } },
   });
@@ -1949,6 +1973,30 @@ async function main() {
         ],
       },
     });
+    // appointment FK 해소: 멤버십 없는 방의 appointments 먼저 삭제 (slice5 테이블 포함)
+    {
+      const orphanRooms = await prisma.chatRoom.findMany({
+        where: { memberships: { none: {} } },
+        select: { chatRoomId: true },
+      });
+      const orphanIds = orphanRooms.map((r) => r.chatRoomId);
+      if (orphanIds.length > 0) {
+        // 역순 FK: slice5 테이블 포함 — appointmentId 먼저 수집 후 삭제
+        const appts = await prisma.appointment.findMany({
+          where: { chatRoomId: { in: orphanIds } },
+          select: { appointmentId: true },
+        });
+        const apptIds = appts.map((a) => a.appointmentId);
+        if (apptIds.length > 0) {
+          await prisma.creditLedger.deleteMany({ where: { appointmentId: { in: apptIds } } });
+          await prisma.festivalSurvey.deleteMany({ where: { appointmentId: { in: apptIds } } });
+          await prisma.festivalReview.deleteMany({ where: { appointmentId: { in: apptIds } } });
+          await prisma.mateEvaluation.deleteMany({ where: { appointmentId: { in: apptIds } } });
+          await prisma.appointmentVote.deleteMany({ where: { appointmentId: { in: apptIds } } });
+        }
+        await prisma.appointment.deleteMany({ where: { chatRoomId: { in: orphanIds } } });
+      }
+    }
     await prisma.chatRoom.deleteMany({
       where: { memberships: { none: {} } },
     });

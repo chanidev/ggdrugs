@@ -1,8 +1,10 @@
-import type { ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Header } from '../../../layout/Header';
 import type { PostCategory } from '../../../lib/api/posts.js';
 import { ActionButton } from 'seed-design/ui/action-button';
+import { getMyCredits } from '../../../lib/api/credits.js';
+import { useCurrentUser } from '../../../lib/auth-context.js';
 
 /** GG-POST-004: 카테고리 레이블 — ComposeModal, PostListPage, CategoryGrid 등에서 참조 */
 export const CATEGORY_LABELS: Record<PostCategory, string> = {
@@ -24,6 +26,16 @@ export function CommunityShell({
   children: ReactNode;
   rightRail: ReactNode;
 }) {
+  const { user } = useCurrentUser();
+  const [creditBalance, setCreditBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    getMyCredits(1, 1)
+      .then((r) => setCreditBalance(r.balance))
+      .catch(() => { /* silent — 크레딧 조회 실패 시 placeholder 유지 */ });
+  }, [user]);
+
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-(--color-bg) text-(--color-text)">
       <Header />
@@ -33,13 +45,19 @@ export function CommunityShell({
             <div className="mb-5 flex items-center justify-between">
               <h1 className="text-(length:--text-h2) font-semibold">커뮤니티</h1>
               <div className="flex items-center gap-2">
-                {/* GG-COMM-017 크레딧 placeholder — 슬라이스 6에서 실구현 */}
-                <span
-                  className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] text-(--color-text-muted)"
-                  title="크레딧 (준비 중)"
-                >
-                  크레딧 0개
-                </span>
+                {/* GG-COMM-017 크레딧 실연결 (slice5) */}
+                {user ? (
+                  <Link
+                    to="/credits"
+                    className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] text-(--color-text-muted) hover:border-(--color-border-hover)"
+                  >
+                    크레딧 {creditBalance !== null ? creditBalance.toLocaleString() : '...'}개
+                  </Link>
+                ) : (
+                  <span className="rounded-(--radius-md) border border-(--color-border) px-3 py-1.5 text-[13px] text-(--color-text-muted)">
+                    크레딧
+                  </span>
+                )}
                 {/* GG-COMM-013 언어토글 placeholder — 실 i18n 미도입(슬라이스 7) */}
                 <ActionButton
                   variant="neutralOutline"

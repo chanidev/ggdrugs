@@ -15,6 +15,8 @@ import { MateRecommendationsPage } from './pages/MateRecommendationsPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { ChatRequestPage } from './pages/ChatRequestPage';
 import { ChatRoomPage } from './pages/ChatRoomPage';
+import { EvaluationPage } from './pages/EvaluationPage/index.js';
+import { CreditPage } from './pages/CreditPage/index.js';
 import { AuthProvider } from './lib/auth-context';
 import '@seed-design/css/all.css';
 import './styles/index.css';
@@ -48,6 +50,9 @@ createRoot(rootEl).render(
         {/* 슬라이스3: 채팅 신청 + 채팅방 (A_803/A_804/A_805) */}
         <Route path="/chat/request" element={<ChatRequestPage />} />
         <Route path="/chat/rooms/:chatRoomId" element={<ChatRoomPage />} />
+        {/* 슬라이스5: 평가 (A_900+A_901) + 크레딧 내역 (GG-MY-008/GG-COMM-017) */}
+        <Route path="/evaluate/:appointmentId" element={<EvaluationPage />} />
+        <Route path="/credits" element={<CreditPage />} />
       </Routes>
     </BrowserRouter>
   </AuthProvider>,
