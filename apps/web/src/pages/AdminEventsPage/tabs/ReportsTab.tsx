@@ -6,6 +6,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchAdminReports,
   fetchAdminReport,
@@ -44,17 +45,18 @@ const REPORTED_FOR_LABELS: Record<string, string> = {
 // ─── StatusBadge ───────────────────────────────────────────────────────────────
 
 function StatusBadge({ status, adminAction }: { status: ReportStatus; adminAction: ReportAdminAction | null }) {
+  const { t } = useTranslation('admin');
   if (status === 'pending') {
     return (
       <span className="inline-block rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-700">
-        대기
+        {t('event.status.pending')}
       </span>
     );
   }
   if (status === 'dismissed') {
     return (
       <span className="inline-block rounded-full bg-(--color-surface-alt) px-2 py-0.5 text-[11px] font-semibold text-(--color-text-muted)">
-        기각
+        {t('report.dismiss')}
       </span>
     );
   }
@@ -62,14 +64,14 @@ function StatusBadge({ status, adminAction }: { status: ReportStatus; adminActio
   if (adminAction === 'warned') {
     return (
       <span className="inline-block rounded-full bg-yellow-100 px-2 py-0.5 text-[11px] font-semibold text-yellow-700">
-        경고
+        {t('report.warn')}
       </span>
     );
   }
   if (adminAction === 'suspended') {
     return (
       <span className="inline-block rounded-full bg-red-100 px-2 py-0.5 text-[11px] font-semibold text-red-700">
-        정지
+        {t('report.suspend')}
       </span>
     );
   }
@@ -98,6 +100,7 @@ function ReportsListPanel({
   onSelect: (id: string) => void;
   onRefreshSignal: number;
 }) {
+  const { t } = useTranslation('admin');
   const [statusFilter, setStatusFilter] = useState<string>('pending');
   const [targetTypeFilter, setTargetTypeFilter] = useState<string>('any');
   const [page, setPage] = useState(1);
@@ -124,11 +127,11 @@ function ReportsListPanel({
         })
         .catch((e: unknown) => {
           if ((e as Error).name === 'AbortError') return;
-          setError('신고 목록을 불러오지 못했어요.');
+          setError(t('report.loadError'));
         })
         .finally(() => setLoading(false));
     },
-    [statusFilter, targetTypeFilter, page],
+    [statusFilter, targetTypeFilter, page, t],
   );
 
   useEffect(() => {
@@ -138,28 +141,28 @@ function ReportsListPanel({
   }, [load, onRefreshSignal]);
 
   const STATUS_TABS: { key: string; label: string }[] = [
-    { key: 'pending', label: `대기 (${byStatus.pending ?? 0})` },
-    { key: 'reviewed', label: `검토됨 (${byStatus.reviewed ?? 0})` },
-    { key: 'dismissed', label: `기각 (${byStatus.dismissed ?? 0})` },
-    { key: 'any', label: '전체' },
+    { key: 'pending',   label: `${t('event.status.pending')} (${byStatus.pending ?? 0})` },
+    { key: 'reviewed',  label: `검토됨 (${byStatus.reviewed ?? 0})` },
+    { key: 'dismissed', label: `${t('report.dismiss')} (${byStatus.dismissed ?? 0})` },
+    { key: 'any',       label: '전체' },
   ];
 
   return (
     <div className="flex flex-col gap-3">
       {/* 상태 탭 */}
       <div className="flex flex-wrap gap-1">
-        {STATUS_TABS.map((t) => (
+        {STATUS_TABS.map((tabItem) => (
           <button
-            key={t.key}
+            key={tabItem.key}
             type="button"
-            onClick={() => { setStatusFilter(t.key); setPage(1); }}
+            onClick={() => { setStatusFilter(tabItem.key); setPage(1); }}
             className={`rounded-(--radius-sm) px-3 py-1 text-[13px] transition-colors ${
-              statusFilter === t.key
+              statusFilter === tabItem.key
                 ? 'bg-(--color-accent) text-white font-semibold'
                 : 'border border-(--color-border) text-(--color-text-muted) hover:text-(--color-text)'
             }`}
           >
-            {t.label}
+            {tabItem.label}
           </button>
         ))}
       </div>
@@ -177,10 +180,10 @@ function ReportsListPanel({
       </select>
 
       {/* 목록 */}
-      {loading && <p className="text-[13px] text-(--color-text-muted)">불러오는 중…</p>}
+      {loading && <p className="text-[13px] text-(--color-text-muted)">{t('uploader.loading')}</p>}
       {error && <p className="text-[13px] text-(--color-danger)">{error}</p>}
       {!loading && !error && items.length === 0 && (
-        <p className="py-6 text-center text-[13px] text-(--color-text-muted)">신고 없음</p>
+        <p className="py-6 text-center text-[13px] text-(--color-text-muted)">{t('report.empty')}</p>
       )}
       {!loading && items.length > 0 && (
         <div className="overflow-x-auto rounded-(--radius-lg) border border-(--color-border)">
@@ -262,6 +265,7 @@ function ReportDetailPanel({
   reportId: string;
   onActionDone: () => void;
 }) {
+  const { t } = useTranslation('admin');
   const [detail, setDetail] = useState<ReportDetail | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -317,7 +321,7 @@ function ReportDetailPanel({
   };
 
   if (loading) {
-    return <div className="py-8 text-center text-[13px] text-(--color-text-muted)">불러오는 중…</div>;
+    return <div className="py-8 text-center text-[13px] text-(--color-text-muted)">{t('uploader.loading')}</div>;
   }
   if (error) {
     return <div className="py-8 text-center text-[13px] text-(--color-danger)">{error}</div>;
@@ -403,7 +407,7 @@ function ReportDetailPanel({
       {/* 조치 결정 폼 (pending 상태만) */}
       {detail.status === 'pending' ? (
         <div>
-          <h4 className="mb-3 text-[14px] font-semibold">조치 결정</h4>
+          <h4 className="mb-3 text-[14px] font-semibold">{t('report.action')}</h4>
           <div className="flex flex-col gap-3">
             {/* 조치 선택 */}
             <select
@@ -411,10 +415,10 @@ function ReportDetailPanel({
               onChange={(e) => setActionSelect(e.target.value as ReportAdminAction)}
               className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-1.5 text-[14px] focus:outline-none focus:border-(--color-accent)"
             >
-              <option value="warned">경고</option>
-              <option value="suspended">이용정지</option>
+              <option value="warned">{t('report.warn')}</option>
+              <option value="suspended">{t('report.suspend')}</option>
               <option value="false_report">허위신고</option>
-              <option value="dismissed">기각</option>
+              <option value="dismissed">{t('report.dismiss')}</option>
             </select>
 
             {/* 이용정지 일수 (suspended 선택 시) */}
@@ -492,6 +496,7 @@ function ReportDetailPanel({
 // ─── ReportsTab ────────────────────────────────────────────────────────────────
 
 export function ReportsTab() {
+  const { t } = useTranslation('admin');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [refreshSignal, setRefreshSignal] = useState(0);
 
@@ -504,7 +509,7 @@ export function ReportsTab() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_400px]">
       {/* 좌: 신고 목록 */}
       <div>
-        <h2 className="mb-3 text-[16px] font-semibold">신고 목록</h2>
+        <h2 className="mb-3 text-[16px] font-semibold">{t('tabs.reports')}</h2>
         <ReportsListPanel
           selectedId={selectedId}
           onSelect={setSelectedId}

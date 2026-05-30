@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchEventReviews,
   createEventReview,
@@ -25,6 +26,7 @@ export function ReviewsSection({
   phase: BffEventDetail['phase'];
   endDate: string;
 }) {
+  const { t } = useTranslation('mypage');
   const { user } = useCurrentUser();
   const [state, setState] = useState<{
     loading: boolean;
@@ -110,7 +112,7 @@ export function ReviewsSection({
       <div className="mt-4 flex flex-col gap-3">
         {state.loading && <SkeletonReview />}
         {state.error && (
-          <div className="text-[13px] text-(--color-error)">리뷰를 불러오지 못했어요.</div>
+          <div className="text-[13px] text-(--color-error)">{t('review.loadError')}</div>
         )}
         {!state.loading && !state.error && items.length === 0 && <EmptyReviews />}
         {items.map((r) => (
@@ -128,6 +130,7 @@ function ReviewComposer({
   eventId: string;
   onCreated: (r: BffReviewItem) => void;
 }) {
+  const { t } = useTranslation('mypage');
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState<number>(0);
   const [body, setBody] = useState('');
@@ -165,7 +168,7 @@ function ReviewComposer({
       setPhotos([]);
     } catch (err) {
       const msg = (err as Error).message;
-      if (msg === 'ALREADY_REVIEWED') setError('이미 이 이벤트에 리뷰를 남겼어요.');
+      if (msg === 'ALREADY_REVIEWED') setError(t('evaluation.alreadyEvaluated'));
       else if (msg === 'UNAUTHENTICATED') setError('세션이 만료됐어요. 다시 로그인해 주세요.');
       else if (msg.startsWith('POST /reviews/photos/upload-url')) setError('사진 업로드에 실패했어요.');
       else setError('리뷰 작성에 실패했어요. 잠시 후 다시 시도해 주세요.');

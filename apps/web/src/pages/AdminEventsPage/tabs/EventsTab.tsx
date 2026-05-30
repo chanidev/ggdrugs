@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PhaseBadge } from '../../../components/PhaseBadge';
 import {
   fetchAdminEvents,
@@ -11,6 +12,7 @@ import {
 type HasVibesMode = 'false' | 'true' | 'any';
 
 export function EventsTab() {
+  const { t } = useTranslation('admin');
   const [hasVibesMode, setHasVibesMode] = useState<HasVibesMode>('false');
   const [q, setQ] = useState('');
   const [qDraft, setQDraft] = useState('');
@@ -139,15 +141,15 @@ export function EventsTab() {
 
         {error && (
           <div className="mb-3 rounded-(--radius-md) border border-(--color-danger)/30 bg-(--color-danger)/5 p-3 text-[13px] text-(--color-danger)">
-            불러오기 실패: {error}
+            {t('event.loadError')}: {error}
           </div>
         )}
 
         <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) overflow-hidden">
           {loading && events.length === 0 ? (
-            <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+            <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
           ) : events.length === 0 ? (
-            <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">결과 없음</div>
+            <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">{t('event.empty')}</div>
           ) : (
             <ul className="divide-y divide-(--color-border)">
               {events.map((ev) => (
@@ -245,6 +247,7 @@ function VibeEditor({
   allVibes: VibeItem[];
   onSaved: (next: AdminEventItem['vibes']) => void;
 }) {
+  const { t } = useTranslation('admin');
   const initialIds = useMemo(() => new Set(event.vibes.map((v) => v.vibeId)), [event.vibes]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initialIds));
   const [saving, setSaving] = useState(false);
@@ -365,7 +368,7 @@ function VibeEditor({
           disabled={!dirty || saving || selected.size > 10}
           className="h-8 rounded-(--radius-md) bg-(--color-accent) px-4 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {saving ? '저장 중…' : '저장'}
+          {saving ? '저장 중…' : t('event.assignVibes')}
         </button>
       </div>
     </div>

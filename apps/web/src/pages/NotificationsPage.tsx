@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../layout/Header';
 import { Icon } from '../components/Icon';
 import { useCurrentUser } from '../lib/auth-context';
@@ -128,6 +129,7 @@ function hasInlineAction(n: MyNotification): boolean {
 }
 
 export function NotificationsPage() {
+  const { t } = useTranslation('mypage');
   const { user, loading: authLoading } = useCurrentUser();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
@@ -264,7 +266,7 @@ export function NotificationsPage() {
           disabled={markAllBusy || items.every((i) => i.readAt)}
           className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
         >
-          {markAllBusy ? '처리 중…' : '모두 읽음'}
+          {markAllBusy ? '처리 중…' : t('notification.markAllRead')}
         </button>
       </header>
 
@@ -299,10 +301,10 @@ export function NotificationsPage() {
 
       <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
         {loading && items.length === 0 ? (
-          <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+          <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('notification.loadError')}</div>
         ) : items.length === 0 ? (
           <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-            {filter === 'unread' ? '미읽음 알림이 없어요.' : '아직 알림이 없어요.'}
+            {filter === 'unread' ? '미읽음 알림이 없어요.' : t('notification.empty')}
           </div>
         ) : (
           <ul className="divide-y divide-(--color-border)">

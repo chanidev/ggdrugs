@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   deleteMyReview,
   fetchMyReviews,
@@ -9,6 +10,7 @@ import { ReviewCard } from '../parts/ReviewCard.js';
 import { SkeletonList } from '../parts/SkeletonList.js';
 
 export function ReviewsList() {
+  const { t } = useTranslation('mypage');
   const [state, setState] = useState<{
     loading: boolean;
     error: string | null;
@@ -29,17 +31,17 @@ export function ReviewsList() {
   }, []);
 
   if (state.loading) return <SkeletonList />;
-  if (state.error) return <EmptyBox label="불러오지 못했어요" hint={state.error} />;
+  if (state.error) return <EmptyBox label={t('review.loadError')} hint={state.error} />;
   if (state.items.length === 0)
     return (
       <EmptyBox
-        label="아직 작성한 리뷰가 없어요"
+        label={t('review.empty')}
         hint="상세 페이지에서 별점과 짧은 후기를 남겨 보세요."
       />
     );
 
   const handleDelete = async (reviewId: string) => {
-    if (!window.confirm('리뷰를 삭제할까요? 되돌릴 수 없어요.')) return;
+    if (!window.confirm(t('review.deleteConfirm'))) return;
     try {
       await deleteMyReview(reviewId);
       setState((prev) => ({

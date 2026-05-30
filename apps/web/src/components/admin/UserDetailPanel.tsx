@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchAdminUser,
   promoteUserToAdmin,
@@ -25,29 +26,6 @@ import {
 
 const SCOPE_DOMAIN: AdminScope[] = ['full', 'content_only', 'uploader_review_only', 'security'];
 
-const SCOPE_LABEL: Record<AdminScope, string> = {
-  full: 'full (전체 권한)',
-  content_only: 'content_only',
-  uploader_review_only: 'uploader_review_only',
-  security: 'security (세션 폐기 전용)',
-};
-
-const UPLOADER_STATUS_KO: Record<string, string> = {
-  pending: '대기',
-  approved: '승인됨',
-  revision_requested: '보완요청',
-  rejected: '반려',
-};
-
-const ACTION_LABEL_KO: Record<string, string> = {
-  revoke_sessions: '세션 강제 폐기',
-  admin_promote: 'admin 승급',
-  admin_demote: 'admin 박탈',
-  admin_scope_change: 'admin scope 변경',
-  user_soft_delete: '계정 비활성화',
-  uploader_decision: '업로더 심사',
-};
-
 /**
  * audit_logs.payload 를 사람 친화 한 줄 요약으로. action 별 표준 payload 키 가정 (ADR 0005 §E-6).
  * 모르는 action 이거나 payload shape 가 다르면 fallback (raw JSON 한 줄).
@@ -73,8 +51,13 @@ function summarizeAuditPayload(action: string, payload: unknown): string {
       return `세션 ${p.deletedSessionCount ?? '?'}개 같이 폐기`;
     case 'uploader_decision': {
       const dec = String(p.action ?? '?');
-      const ko = UPLOADER_STATUS_KO[dec] ?? dec;
-      return `결정: ${ko}`;
+      const koMap: Record<string, string> = {
+        pending: '대기',
+        approved: '승인됨',
+        revision_requested: '보완요청',
+        rejected: '반려',
+      };
+      return `결정: ${koMap[dec] ?? dec}`;
     }
     default:
       // unknown action — 1 줄 raw fallback (10000 char 위험 방지 위해 자름).
@@ -89,6 +72,7 @@ export function UserDetailPanel({
   userId: string;
   onChanged: () => void;
 }) {
+  const { t } = useTranslation('admin');
   const [data, setData] = useState<AdminUserDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,12 +101,12 @@ export function UserDetailPanel({
   }, [userId]);
 
   if (loading && !data) {
-    return <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>;
+    return <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>;
   }
   if (error || !data) {
     return (
       <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-        {error ?? '조회 실패'}
+        {error ?? t('uploader.loadError')}
       </div>
     );
   }
@@ -144,7 +128,7 @@ export function UserDetailPanel({
         <div className="flex flex-wrap items-center gap-2">
           {user.isDeleted && (
             <span className="inline-flex items-center rounded-(--radius-sm) bg-(--color-error)/10 px-2 py-[2px] text-[11px] font-semibold text-(--color-error)">
-              삭제됨
+              {t('member.statusFilter.deleted')}
             </span>
           )}
           {isActiveAdmin && (
@@ -160,7 +144,7 @@ export function UserDetailPanel({
                   : 'bg-(--color-warning)/10 text-(--color-warning)'
               }`}
             >
-              업로더 · {UPLOADER_STATUS_KO[uploader.approvalStatus]}
+              업로더 · {t(`member.uploaderStatus.${uploader.approvalStatus}`)}
             </span>
           )}
         </div>
@@ -174,13 +158,13 @@ export function UserDetailPanel({
       <section className="mb-4">
         <h3 className="m-0 mb-2 text-[13px] font-semibold">계정 정보</h3>
         <dl className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[12px]">
-          <dt className="text-(--color-text-subtle)">가입 경로</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.joinMethod')}</dt>
           <dd className="m-0 text-(--color-text-muted)">{user.authProvider}</dd>
           <dt className="text-(--color-text-subtle)">social_uid</dt>
           <dd className="m-0 font-mono text-[11px] text-(--color-text-muted)">{user.socialUid}</dd>
           <dt className="text-(--color-text-subtle)">활성 역할</dt>
           <dd className="m-0 text-(--color-text-muted)">{user.activeRole}</dd>
-          <dt className="text-(--color-text-subtle)">가입일</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.createdAt')}</dt>
           <dd className="tabular m-0 text-(--color-text-muted)">{user.createdAt.slice(0, 10)}</dd>
           <dt className="text-(--color-text-subtle)">최근 로그인</dt>
           <dd className="tabular m-0 text-(--color-text-muted)">
@@ -209,10 +193,10 @@ export function UserDetailPanel({
             <dt className="text-(--color-text-subtle)">기관명</dt>
             <dd className="m-0 text-(--color-text)">{uploader.organizationName || '(없음)'}</dd>
             <dt className="text-(--color-text-subtle)">상태</dt>
-            <dd className="m-0 text-(--color-text-muted)">{uploader.approvalStatus}</dd>
+            <dd className="m-0 text-(--color-text-muted)">{t(`member.uploaderStatus.${uploader.approvalStatus}`)}</dd>
             {uploader.approvedAt && (
               <>
-                <dt className="text-(--color-text-subtle)">승인일</dt>
+                <dt className="text-(--color-text-subtle)">{t('uploader.approvedAt')}</dt>
                 <dd className="tabular m-0 text-(--color-text-muted)">
                   {uploader.approvedAt.slice(0, 10)}
                 </dd>
@@ -231,7 +215,7 @@ export function UserDetailPanel({
           <h3 className="m-0 mb-2 text-[13px] font-semibold">Admin 프로파일</h3>
           <dl className="grid grid-cols-[100px_1fr] gap-x-3 gap-y-1 text-[12px]">
             <dt className="text-(--color-text-subtle)">scope</dt>
-            <dd className="m-0 text-(--color-text)">{admin.scope}</dd>
+            <dd className="m-0 text-(--color-text)">{t(`member.scopeLabel.${admin.scope}`)}</dd>
             <dt className="text-(--color-text-subtle)">활성</dt>
             <dd className="m-0 text-(--color-text-muted)">{admin.isActive ? 'ACTIVE' : 'disabled'}</dd>
             <dt className="text-(--color-text-subtle)">생성일</dt>
@@ -248,7 +232,7 @@ export function UserDetailPanel({
         ) : (
           <ul className="flex flex-col gap-1.5">
             {recentAudits.map((a) => {
-              const label = ACTION_LABEL_KO[a.action] ?? a.action;
+              const label = t(`member.actionLabel.${a.action}`, { defaultValue: a.action });
               const summary = summarizeAuditPayload(a.action, a.payload);
               const reason =
                 a.payload && typeof a.payload === 'object'
@@ -273,7 +257,7 @@ export function UserDetailPanel({
                   </div>
                   {typeof reason === 'string' && reason.length > 0 && (
                     <p className="m-0 mt-1.5 rounded-(--radius-sm) bg-(--color-surface) p-2 text-[11.5px] leading-[1.55] text-(--color-text)">
-                      “{reason}”
+                      "{reason}"
                     </p>
                   )}
                 </li>
@@ -294,7 +278,7 @@ export function UserDetailPanel({
               disabled={activeSessionCount === 0}
               title={activeSessionCount === 0 ? '활성 세션 없음' : ''}
             >
-              세션 폐기
+              {t('member.revokeSession')}
             </button>
             {!admin && (
               <button
@@ -302,7 +286,7 @@ export function UserDetailPanel({
                 onClick={() => setOpenAction('promote')}
                 className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-accent)/40 bg-(--color-accent)/5 px-3 text-[12px] font-medium text-(--color-accent) hover:bg-(--color-accent)/10"
               >
-                admin 승급
+                {t('member.promoteAdmin')}
               </button>
             )}
             {admin && admin.isActive && (
@@ -312,14 +296,14 @@ export function UserDetailPanel({
                   onClick={() => setOpenAction('scope')}
                   className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text)"
                 >
-                  scope 변경
+                  {t('member.changeScope')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setOpenAction('demote')}
                   className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-warning)/40 bg-(--color-warning)/5 px-3 text-[12px] font-medium text-(--color-warning) hover:bg-(--color-warning)/10"
                 >
-                  admin 박탈
+                  {t('member.demoteAdmin')}
                 </button>
               </>
             )}
@@ -336,14 +320,16 @@ export function UserDetailPanel({
               }
               className="ml-auto inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[12px] font-medium text-(--color-error) hover:bg-(--color-error)/10 disabled:opacity-40"
             >
-              계정 비활성화
+              {t('member.softDelete')}
             </button>
           </div>
 
           {openAction === 'revoke' && (
             <ActionForm
-              title="세션 강제 폐기 (D-6)"
+              title={`${t('member.revokeSession')} (D-6)`}
               hint="활성 세션 모두 끊김. scope='full' 또는 'security' admin 만 가능."
+              reasonLabel={t('member.reasonLabel')}
+              reasonPlaceholder={t('member.reasonPlaceholder')}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await revokeUserSessionsByAdmin(userId, reason);
@@ -354,9 +340,17 @@ export function UserDetailPanel({
           )}
           {openAction === 'promote' && (
             <ActionForm
-              title="admin 승급 (E-2)"
+              title={`${t('member.promoteAdmin')} (E-2)`}
               hint="scope='full' admin 만 호출 가능. 대상 user 가 admin_profiles 행을 갖게 됨."
               withScope
+              scopeLabels={{
+                full: t('member.scopeLabel.full'),
+                content_only: t('member.scopeLabel.content_only'),
+                uploader_review_only: t('member.scopeLabel.uploader_review_only'),
+                security: t('member.scopeLabel.security'),
+              }}
+              reasonLabel={t('member.reasonLabel')}
+              reasonPlaceholder={t('member.reasonPlaceholder')}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason, scope) => {
                 const r = await promoteUserToAdmin(userId, scope!, reason);
@@ -367,10 +361,18 @@ export function UserDetailPanel({
           )}
           {openAction === 'scope' && admin && (
             <ActionForm
-              title="admin scope 변경 (E-4)"
+              title={`${t('member.changeScope')} (E-4)`}
               hint={`현재 scope='${admin.scope}'. 동일 값 재요청은 거부.`}
               withScope
               defaultScope={admin.scope}
+              scopeLabels={{
+                full: t('member.scopeLabel.full'),
+                content_only: t('member.scopeLabel.content_only'),
+                uploader_review_only: t('member.scopeLabel.uploader_review_only'),
+                security: t('member.scopeLabel.security'),
+              }}
+              reasonLabel={t('member.reasonLabel')}
+              reasonPlaceholder={t('member.reasonPlaceholder')}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason, scope) => {
                 const r = await changeUserAdminScope(userId, scope!, reason);
@@ -381,8 +383,10 @@ export function UserDetailPanel({
           )}
           {openAction === 'demote' && (
             <ActionForm
-              title="admin 박탈 (E-4)"
+              title={`${t('member.demoteAdmin')} (E-4)`}
               hint="is_active=false 토글. user 행 자체는 유지."
+              reasonLabel={t('member.reasonLabel')}
+              reasonPlaceholder={t('member.reasonPlaceholder')}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await demoteUserAdmin(userId, reason);
@@ -393,9 +397,11 @@ export function UserDetailPanel({
           )}
           {openAction === 'soft-delete' && (
             <ActionForm
-              title="계정 비활성화 (E-5)"
+              title={`${t('member.softDelete')} (E-5)`}
               hint="users.is_deleted=true + 모든 세션 폐기. admin 활성 상태면 거부 (E-5c)."
               danger
+              reasonLabel={t('member.reasonLabel')}
+              reasonPlaceholder={t('member.reasonPlaceholder')}
               onCancel={() => setOpenAction(null)}
               onSubmit={async (reason) => {
                 const r = await softDeleteUserAccount(userId, reason);
@@ -415,7 +421,10 @@ function ActionForm({
   hint,
   withScope,
   defaultScope,
+  scopeLabels,
   danger,
+  reasonLabel,
+  reasonPlaceholder,
   onCancel,
   onSubmit,
 }: {
@@ -423,7 +432,10 @@ function ActionForm({
   hint?: string;
   withScope?: boolean;
   defaultScope?: AdminScope;
+  scopeLabels?: Record<AdminScope, string>;
   danger?: boolean;
+  reasonLabel: string;
+  reasonPlaceholder: string;
   onCancel: () => void;
   onSubmit: (reason: string, scope?: AdminScope) => Promise<void>;
 }) {
@@ -456,7 +468,7 @@ function ActionForm({
           >
             {SCOPE_DOMAIN.map((s) => (
               <option key={s} value={s}>
-                {SCOPE_LABEL[s]}
+                {scopeLabels?.[s] ?? s}
               </option>
             ))}
           </select>
@@ -464,14 +476,14 @@ function ActionForm({
       )}
       <label className="block">
         <span className="m-0 mb-1 block text-[11px] font-semibold uppercase tracking-[0.05em] text-(--color-text-subtle)">
-          사유 (10~500자, audit_logs 에 기록)
+          {reasonLabel}
         </span>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value.slice(0, 500))}
           rows={3}
           maxLength={500}
-          placeholder="감사 추적용 사유 — 짧고 구체적으로"
+          placeholder={reasonPlaceholder}
           className="w-full resize-y rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface) p-2 text-[12px] text-(--color-text) focus:border-(--color-border-hover) focus:outline-none"
         />
         <span className="tabular m-0 mt-0.5 block text-right text-[10px] text-(--color-text-subtle)">

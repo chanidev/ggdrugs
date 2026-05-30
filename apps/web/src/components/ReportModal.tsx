@@ -15,6 +15,7 @@
  */
 
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createReport, type ReportReason, type ReportTargetType } from '../lib/api/reports.js';
 
 interface ReportModalProps {
@@ -43,6 +44,7 @@ export function ReportModal({
   targetEntityId,
   onSuccess,
 }: ReportModalProps) {
+  const { t } = useTranslation('common');
   const [reason, setReason] = useState<ReportReason | ''>('');
   const [detail, setDetail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -101,10 +103,10 @@ export function ReportModal({
       <div className="w-full max-w-[400px] rounded-(--radius-lg) bg-(--color-surface) p-6 shadow-lg">
         {/* 헤더 */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-[17px] font-semibold">신고하기</h2>
+          <h2 className="text-[17px] font-semibold">{t('button.report')}</h2>
           <button
             type="button"
-            aria-label="닫기"
+            aria-label={t('button.close')}
             onClick={onClose}
             className="flex h-7 w-7 items-center justify-center rounded-(--radius-sm) text-(--color-text-muted) hover:bg-(--color-surface-alt) hover:text-(--color-text)"
           >
@@ -171,7 +173,7 @@ export function ReportModal({
           onClick={() => { void handleSubmit(); }}
           className="w-full rounded-(--radius-md) bg-(--color-accent) py-2.5 text-[14px] font-semibold text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {loading ? '신고 중…' : '신고 접수'}
+          {loading ? '신고 중…' : t('button.report')}
         </button>
       </div>
     </div>

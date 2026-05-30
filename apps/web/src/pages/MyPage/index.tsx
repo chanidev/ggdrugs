@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '../../components/Icon';
 import { useCurrentUser } from '../../lib/auth-context';
 import { loginUrl } from '../../lib/auth-redirect';
@@ -26,6 +27,7 @@ import { RecommendationsList } from './tabs/RecommendationsTab.js';
 type Tab = 'calendar' | 'bookmarks' | 'reviews' | 'subscriptions' | 'recommendations';
 
 export function MyPage() {
+  const { t } = useTranslation('mypage');
   const { user, loading: authLoading } = useCurrentUser();
   const [tab, setTab] = useState<Tab>('calendar');
 
@@ -57,7 +59,7 @@ export function MyPage() {
       <header className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            마이페이지
+            {t('page.title')}
           </p>
           <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">
             <span className="text-(--color-accent)">•</span> {user.nickname} 님
@@ -76,7 +78,7 @@ export function MyPage() {
             to="/me/profile"
             className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] font-medium hover:border-(--color-border-hover)"
           >
-            프로필
+            {t('profile.title')}
           </Link>
           <RoleToggleButton />
         </div>
@@ -84,23 +86,23 @@ export function MyPage() {
 
       <div
         role="tablist"
-        aria-label="마이페이지 섹션"
+        aria-label={t('page.title')}
         className="mb-4 flex border-b border-(--color-border)"
       >
         <TabBtn active={tab === 'calendar'} onClick={() => setTab('calendar')}>
-          캘린더
+          {t('tabs.calendar')}
         </TabBtn>
         <TabBtn active={tab === 'bookmarks'} onClick={() => setTab('bookmarks')}>
-          내 북마크
+          {t('tabs.bookmarks')}
         </TabBtn>
         <TabBtn active={tab === 'reviews'} onClick={() => setTab('reviews')}>
-          내 리뷰
+          {t('tabs.reviews')}
         </TabBtn>
         <TabBtn active={tab === 'subscriptions'} onClick={() => setTab('subscriptions')}>
-          구독
+          {t('tabs.subscriptions')}
         </TabBtn>
         <TabBtn active={tab === 'recommendations'} onClick={() => setTab('recommendations')}>
-          추천
+          {t('tabs.recommendations')}
         </TabBtn>
       </div>
 

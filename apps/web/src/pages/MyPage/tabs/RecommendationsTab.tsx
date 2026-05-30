@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchMyRecommendations,
   type MyRecommendationsResponse,
@@ -8,6 +9,7 @@ import { RecommendedCard } from '../parts/RecommendedCard.js';
 import { SkeletonList } from '../parts/SkeletonList.js';
 
 export function RecommendationsList() {
+  const { t } = useTranslation('mypage');
   const [state, setState] = useState<{
     loading: boolean;
     error: string | null;
@@ -27,7 +29,7 @@ export function RecommendationsList() {
   }, []);
 
   if (state.loading) return <SkeletonList />;
-  if (state.error) return <EmptyBox label="불러오지 못했어요" hint={state.error} />;
+  if (state.error) return <EmptyBox label={t('reco.loadError')} hint={state.error} />;
   if (!state.data) return null;
 
   if (state.data.reason === 'no_taste_signals') {
@@ -41,7 +43,7 @@ export function RecommendationsList() {
   if (state.data.items.length === 0) {
     return (
       <EmptyBox
-        label="조건에 맞는 새 이벤트가 없어요"
+        label={t('reco.empty')}
         hint="며칠 내로 새 이벤트가 등록되면 다시 표시됩니다."
       />
     );

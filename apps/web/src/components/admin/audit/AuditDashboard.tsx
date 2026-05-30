@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchAdminAuditSummary,
   type AdminAuditSummary,
@@ -13,26 +14,6 @@ import {
  * - 활자 + 여백 위주 hierarchy. 아이콘 머리글 / 글래스모피즘 / 사이드 스트라이프 없음.
  * - tabular numbers, Pretendard scale, 60-30-10 색 운용.
  */
-
-const EVENT_ACTION_LABEL: Record<string, string> = {
-  approved: '승인',
-  revision_requested: '보완 요청',
-  rejected: '반려',
-};
-
-const ADMIN_ACTION_LABEL: Record<string, string> = {
-  uploader_decision: '업로더 심사',
-  admin_promote: 'admin 승급',
-  admin_scope_change: 'scope 변경',
-  admin_demote: 'admin 박탈',
-  revoke_sessions: '세션 폐기',
-  user_soft_delete: '계정 비활성화',
-};
-
-const ALL_LABEL: Record<string, string> = {
-  ...EVENT_ACTION_LABEL,
-  ...ADMIN_ACTION_LABEL,
-};
 
 const WINDOWS = [7, 30, 90] as const;
 
@@ -49,10 +30,31 @@ function relativeTime(iso: string): string {
 }
 
 export function AuditDashboard() {
+  const { t } = useTranslation('admin');
   const [windowDays, setWindowDays] = useState<number>(7);
   const [data, setData] = useState<AdminAuditSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const EVENT_ACTION_LABEL: Record<string, string> = {
+    approved:           t('audit.eventAction.approved'),
+    revision_requested: t('audit.eventAction.revision_requested'),
+    rejected:           t('audit.eventAction.rejected'),
+  };
+
+  const ADMIN_ACTION_LABEL: Record<string, string> = {
+    uploader_decision:  t('audit.adminAction.uploader_decision'),
+    admin_promote:      t('audit.adminAction.admin_promote'),
+    admin_scope_change: t('audit.adminAction.admin_scope_change'),
+    admin_demote:       t('audit.adminAction.admin_demote'),
+    revoke_sessions:    t('audit.adminAction.revoke_sessions'),
+    user_soft_delete:   t('audit.adminAction.user_soft_delete'),
+  };
+
+  const ALL_LABEL: Record<string, string> = {
+    ...EVENT_ACTION_LABEL,
+    ...ADMIN_ACTION_LABEL,
+  };
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -71,14 +73,14 @@ export function AuditDashboard() {
   if (loading && !data) {
     return (
       <div className="py-16 text-center text-[13px] text-(--color-text-subtle)">
-        불러오는 중…
+        {t('uploader.loading')}
       </div>
     );
   }
   if (error || !data) {
     return (
       <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-        {error ?? '조회 실패'}
+        {error ?? t('audit.loadError')}
       </div>
     );
   }
@@ -160,8 +162,8 @@ export function AuditDashboard() {
 
       {/* Counts — 2 column 비대칭 grid (이벤트 심사 0.9fr / Admin 작업 1.1fr) */}
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
-        <CountGroup title="이벤트 심사" entries={eventEntries} accentKey={accentKey} />
-        <CountGroup title="Admin 작업" entries={adminEntries} accentKey={accentKey} />
+        <CountGroup title={t('audit.eventSource')} entries={eventEntries} accentKey={accentKey} />
+        <CountGroup title={t('audit.adminSource')} entries={adminEntries} accentKey={accentKey} />
       </div>
 
       {/* Recent activity */}
@@ -201,7 +203,7 @@ export function AuditDashboard() {
                   </p>
                   {entry.reason && (
                     <p className="m-0 mt-1 max-w-[65ch] text-[12px] leading-[1.55] text-(--color-text-muted)">
-                      “{entry.reason}”
+                      "{entry.reason}"
                     </p>
                   )}
                 </div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   decideAdminUploader,
   fetchAdminUploaderDetail,
@@ -14,13 +15,6 @@ import {
  * 버튼은 2-col 구조 전환에서 이 패널로 이동).
  */
 
-const STATUS_LABEL: Record<UploaderApprovalStatus, string> = {
-  pending: '대기',
-  approved: '승인됨',
-  revision_requested: '보완요청',
-  rejected: '반려',
-};
-
 const STATUS_TONE: Record<UploaderApprovalStatus, string> = {
   pending: 'bg-(--color-warning)/10 text-(--color-warning)',
   approved: 'bg-(--color-success)/10 text-(--color-success)',
@@ -35,6 +29,7 @@ export function UploaderDetailPanel({
   uploaderId: string;
   onDecided: () => void;
 }) {
+  const { t } = useTranslation('admin');
   const [data, setData] = useState<AdminUploaderDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,13 +67,13 @@ export function UploaderDetailPanel({
 
   if (loading) {
     return (
-      <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+      <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
     );
   }
   if (error || !data) {
     return (
       <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-        {error ?? '조회 실패'}
+        {error ?? t('uploader.loadError')}
       </div>
     );
   }
@@ -96,7 +91,7 @@ export function UploaderDetailPanel({
               STATUS_TONE[u.approvalStatus]
             }`}
           >
-            {STATUS_LABEL[u.approvalStatus]}
+            {t(`member.uploaderStatus.${u.approvalStatus}`)}
           </span>
           <span className="text-[12px] text-(--color-text-subtle)">
             uploader_id={u.uploaderId} · user_id={u.user.userId}
@@ -104,25 +99,25 @@ export function UploaderDetailPanel({
         </div>
         <h2 className="mt-1 text-[16px] font-bold tracking-[-0.01em]">{u.organizationName}</h2>
         <dl className="mt-3 grid grid-cols-[80px_1fr] gap-x-3 gap-y-1 text-[12px]">
-          <dt className="text-(--color-text-subtle)">닉네임</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.nickname')}</dt>
           <dd className="m-0 text-(--color-text)">{u.user.nickname}</dd>
-          <dt className="text-(--color-text-subtle)">가입 경로</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.joinMethod')}</dt>
           <dd className="m-0 text-(--color-text-muted)">{u.user.authProvider}</dd>
-          <dt className="text-(--color-text-subtle)">이메일</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.email')}</dt>
           <dd className="m-0 text-(--color-text)">{u.contactEmail}</dd>
-          <dt className="text-(--color-text-subtle)">연락처</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.contact')}</dt>
           <dd className="m-0 tabular text-(--color-text)">{u.contactPhone}</dd>
-          <dt className="text-(--color-text-subtle)">계정 생성</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.createdAt')}</dt>
           <dd className="m-0 tabular text-(--color-text-muted)">
             {u.user.createdAt.slice(0, 10)}
           </dd>
-          <dt className="text-(--color-text-subtle)">신청</dt>
+          <dt className="text-(--color-text-subtle)">{t('uploader.appliedAt')}</dt>
           <dd className="m-0 tabular text-(--color-text-muted)">
             {u.createdAt.slice(0, 19).replace('T', ' ')}
           </dd>
           {u.approvedAt && (
             <>
-              <dt className="text-(--color-text-subtle)">승인</dt>
+              <dt className="text-(--color-text-subtle)">{t('uploader.approvedAt')}</dt>
               <dd className="m-0 tabular text-(--color-text-muted)">
                 {u.approvedAt.slice(0, 19).replace('T', ' ')}
               </dd>
@@ -133,25 +128,25 @@ export function UploaderDetailPanel({
 
       <section className="mb-4">
         <h3 className="m-0 mb-2 text-[13px] font-semibold">
-          신원 정보
+          {t('uploader.identity')}
           {data.adminScope !== 'full' && (
             <span className="ml-2 text-[11px] font-normal text-(--color-warning)">
-              (마스킹 · scope={data.adminScope})
+              {t('uploader.maskingNote', { scope: data.adminScope })}
             </span>
           )}
         </h3>
         <dl className="grid grid-cols-[80px_1fr] gap-x-3 gap-y-1 text-[12px]">
-          <dt className="text-(--color-text-subtle)">실명</dt>
-          <dd className="m-0 text-(--color-text)">{u.realName || '(미등록)'}</dd>
+          <dt className="text-(--color-text-subtle)">{t('uploader.realName')}</dt>
+          <dd className="m-0 text-(--color-text)">{u.realName || t('uploader.notRegistered')}</dd>
           {u.businessRegistrationNumber && (
             <>
-              <dt className="text-(--color-text-subtle)">사업자번호</dt>
+              <dt className="text-(--color-text-subtle)">{t('uploader.businessNo')}</dt>
               <dd className="m-0 tabular text-(--color-text)">{u.businessRegistrationNumber}</dd>
             </>
           )}
           {u.ciHash && (
             <>
-              <dt className="text-(--color-text-subtle)">본인인증</dt>
+              <dt className="text-(--color-text-subtle)">{t('uploader.idVerified')}</dt>
               <dd className="m-0 font-mono text-[11px] text-(--color-text)">{u.ciHash}</dd>
             </>
           )}
@@ -161,7 +156,7 @@ export function UploaderDetailPanel({
       {data.documents.length > 0 && (
         <section className="mb-4">
           <div className="mb-2 flex items-baseline justify-between">
-            <h3 className="m-0 text-[13px] font-semibold">제출 서류</h3>
+            <h3 className="m-0 text-[13px] font-semibold">{t('uploader.documents')}</h3>
             <span className="text-[11px] text-(--color-text-subtle)">
               {data.documents.length}건 · 5분 TTL
             </span>
@@ -212,22 +207,22 @@ export function UploaderDetailPanel({
       )}
 
       <section className="mb-4">
-        <h3 className="m-0 mb-2 text-[13px] font-semibold">등록 이벤트 현황</h3>
+        <h3 className="m-0 mb-2 text-[13px] font-semibold">{t('uploader.eventStats')}</h3>
         <div className="grid grid-cols-4 gap-2">
           {(
             [
-              { key: 'approved', label: '승인' },
-              { key: 'pending', label: '대기' },
-              { key: 'revision_requested', label: '보완' },
-              { key: 'rejected', label: '반려' },
+              { key: 'approved',           labelKey: 'event.approve' },
+              { key: 'pending',             labelKey: 'event.status.pending' },
+              { key: 'revision_requested',  labelKey: 'uploader.requestRevision' },
+              { key: 'rejected',            labelKey: 'event.reject' },
             ] as const
-          ).map(({ key, label }) => (
+          ).map(({ key, labelKey }) => (
             <div
               key={key}
               className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-2 text-center"
             >
               <div className="text-[10px] font-semibold uppercase tracking-[0.05em] text-(--color-text-subtle)">
-                {label}
+                {t(labelKey)}
               </div>
               <div className="tabular mt-0.5 text-[16px] font-bold text-(--color-text)">
                 {eventStats[key]}
@@ -257,7 +252,7 @@ export function UploaderDetailPanel({
                     STATUS_TONE[e.approvalStatus]
                   }`}
                 >
-                  {STATUS_LABEL[e.approvalStatus]}
+                  {t(`member.uploaderStatus.${e.approvalStatus}`)}
                 </span>
               </li>
             ))}
@@ -270,14 +265,14 @@ export function UploaderDetailPanel({
           {/* ADR 0005 E-8: 반려/보완요청은 reason 필수 (UX 강제), 승인은 optional. */}
           <label className="block">
             <span className="m-0 mb-1 block text-[11px] font-semibold uppercase tracking-[0.05em] text-(--color-text-subtle)">
-              사유 <span className="text-(--color-text-muted)">(반려·보완요청 시 필수, 승인은 선택)</span>
+              {t('uploader.reasonLabel')}
             </span>
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value.slice(0, 2000))}
               rows={3}
               maxLength={2000}
-              placeholder="감사 로그에 그대로 기록됩니다 (admin_audit_logs.payload.reason)"
+              placeholder={t('uploader.reasonPlaceholder')}
               className="w-full resize-y rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) p-2 text-[13px] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-border-hover) focus:outline-none"
             />
             <span className="tabular m-0 mt-0.5 block text-right text-[10px] text-(--color-text-subtle)">
@@ -292,7 +287,7 @@ export function UploaderDetailPanel({
               title={reason.trim().length === 0 ? '사유를 입력해 주세요' : ''}
               className="inline-flex h-9 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[13px] font-medium text-(--color-error) hover:bg-(--color-error)/10 disabled:opacity-40"
             >
-              {pending === 'rejected' ? '…' : '반려'}
+              {pending === 'rejected' ? '…' : t('uploader.reject')}
             </button>
             <button
               type="button"
@@ -301,7 +296,7 @@ export function UploaderDetailPanel({
               title={reason.trim().length === 0 ? '사유를 입력해 주세요' : ''}
               className="inline-flex h-9 w-24 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text) hover:border-(--color-border-hover) disabled:opacity-40"
             >
-              {pending === 'revision_requested' ? '…' : '보완요청'}
+              {pending === 'revision_requested' ? '…' : t('uploader.requestRevision')}
             </button>
             <button
               type="button"
@@ -309,7 +304,7 @@ export function UploaderDetailPanel({
               disabled={pending !== null}
               className="inline-flex h-9 w-24 items-center justify-center rounded-(--radius-md) bg-(--color-accent) px-4 text-[13px] font-medium text-white hover:bg-(--color-accent-hover) disabled:opacity-40"
             >
-              {pending === 'approved' ? '…' : '승인'}
+              {pending === 'approved' ? '…' : t('uploader.approve')}
             </button>
           </div>
         </section>

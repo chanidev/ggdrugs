@@ -1,6 +1,7 @@
 // apps/web/src/pages/CreditPage/index.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header.js';
 import { getMyCredits, type CreditLedgerItem } from '../../lib/api/credits.js';
 import { useCurrentUser } from '../../lib/auth-context.js';
@@ -14,6 +15,7 @@ const ACTION_LABELS: Record<string, string> = {
 };
 
 export function CreditPage() {
+  const { t } = useTranslation('mypage');
   const { user } = useCurrentUser();
   const navigate = useNavigate();
   const [balance, setBalance] = useState<number | null>(null);
@@ -27,7 +29,7 @@ export function CreditPage() {
     setLoading(true);
     getMyCredits()
       .then((r) => { setBalance(r.balance); setItems(r.items); setLoading(false); })
-      .catch(() => { setError('불러오기 실패'); setLoading(false); });
+      .catch(() => { setError(t('credit.loadError')); setLoading(false); });
   }, [user, navigate]);
 
   return (
@@ -35,16 +37,16 @@ export function CreditPage() {
       <Header />
       <main className="mx-auto w-full max-w-[480px] px-4 py-6">
         <div className="mb-5 flex items-center justify-between">
-          <h1 className="text-(length:--text-h2) font-semibold">크레딧 내역</h1>
+          <h1 className="text-(length:--text-h2) font-semibold">{t('credit.title')}</h1>
           {balance !== null && (
-            <span className="text-[16px] font-bold text-(--color-brand)">{balance.toLocaleString()}개</span>
+            <span className="text-[16px] font-bold text-(--color-brand)">{t('credit.balance', { count: balance.toLocaleString() })}</span>
           )}
         </div>
 
-        {loading && <p className="text-center text-[14px] text-(--color-text-muted)">불러오는 중...</p>}
+        {loading && <p className="text-center text-[14px] text-(--color-text-muted)">{t('calendar.loadError')}</p>}
         {error  && <p className="text-center text-[13px] text-(--color-danger)">{error}</p>}
         {!loading && !error && items.length === 0 && (
-          <p className="text-center text-[14px] text-(--color-text-muted)">크레딧 내역이 없어요.</p>
+          <p className="text-center text-[14px] text-(--color-text-muted)">{t('credit.empty')}</p>
         )}
 
         <ul className="flex flex-col divide-y divide-(--color-border)">

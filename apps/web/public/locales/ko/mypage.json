@@ -1,1 +1,74 @@
-{}
+{
+  "page": { "title": "마이페이지" },
+  "tabs": {
+    "bookmarks": "북마크",
+    "reviews": "내 리뷰",
+    "recommendations": "추천",
+    "subscriptions": "구독",
+    "calendar": "캘린더"
+  },
+  "bookmark": {
+    "empty": "북마크한 이벤트가 없어요.",
+    "loadError": "불러오지 못했어요."
+  },
+  "review": {
+    "empty": "작성한 리뷰가 없어요.",
+    "loadError": "불러오지 못했어요.",
+    "delete": "삭제",
+    "deleteConfirm": "리뷰를 삭제할까요?"
+  },
+  "reco": {
+    "empty": "추천 이벤트가 없어요.",
+    "loadError": "불러오지 못했어요."
+  },
+  "subscription": {
+    "empty": "구독한 이벤트가 없어요.",
+    "loadError": "불러오지 못했어요.",
+    "toggleOn": "알림 켜짐",
+    "toggleOff": "알림 꺼짐",
+    "delete": "구독 취소"
+  },
+  "calendar": {
+    "empty": "예정된 약속이 없어요.",
+    "loadError": "불러오지 못했어요.",
+    "evaluate": "평가하기"
+  },
+  "credit": {
+    "title": "크레딧 내역",
+    "balance": "잔액: {{count}}개",
+    "empty": "내역이 없어요.",
+    "loadError": "불러오지 못했어요."
+  },
+  "profile": {
+    "title": "프로필 수정",
+    "nickname": "닉네임",
+    "nicknamePlaceholder": "닉네임을 입력하세요",
+    "save": "저장",
+    "saveSuccess": "저장됐어요.",
+    "saveError": "저장하지 못했어요."
+  },
+  "notification": {
+    "title": "알림",
+    "empty": "알림이 없어요.",
+    "loadError": "불러오지 못했어요.",
+    "markAllRead": "모두 읽음",
+    "markRead": "읽음"
+  },
+  "evaluation": {
+    "title": "평가",
+    "mateEval": "메이트 평가",
+    "festivalEval": "축제 후기",
+    "submit": "제출",
+    "submitSuccess": "평가했어요.",
+    "submitError": "제출하지 못했어요.",
+    "alreadyEvaluated": "이미 평가했어요."
+  },
+  "role": {
+    "toggle": "역할 전환",
+    "user": "일반 사용자",
+    "uploader": "업로더",
+    "admin": "관리자",
+    "switchToUploader": "업로더 모드",
+    "switchToUser": "사용자 모드"
+  }
+}

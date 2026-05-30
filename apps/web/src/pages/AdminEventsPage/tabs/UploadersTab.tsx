@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UploaderDetailPanel } from '../../../components/admin/UploaderDetailPanel';
 import {
   fetchAdminUploaders,
@@ -10,13 +11,6 @@ import {
 // Uploaders Tab — A_700 part 2
 // =============================================================
 
-const UPLOADER_STATUS_LABEL: Record<UploaderApprovalStatus, string> = {
-  pending: '대기',
-  approved: '승인됨',
-  revision_requested: '보완요청',
-  rejected: '반려',
-};
-
 const STATUS_TONE: Record<UploaderApprovalStatus, string> = {
   pending: 'bg-(--color-warning)/10 text-(--color-warning)',
   approved: 'bg-(--color-success)/10 text-(--color-success)',
@@ -25,6 +19,7 @@ const STATUS_TONE: Record<UploaderApprovalStatus, string> = {
 };
 
 export function UploadersTab() {
+  const { t } = useTranslation('admin');
   const [statusFilter, setStatusFilter] = useState<UploaderApprovalStatus | 'any'>('pending');
   const [page, setPage] = useState(1);
   const [limit] = useState(20);
@@ -69,11 +64,11 @@ export function UploadersTab() {
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
   const FILTERS: { key: UploaderApprovalStatus | 'any'; label: string }[] = [
-    { key: 'pending', label: `대기 ${byStatus.pending}` },
-    { key: 'revision_requested', label: `보완요청 ${byStatus.revision_requested}` },
-    { key: 'approved', label: `승인됨 ${byStatus.approved}` },
-    { key: 'rejected', label: `반려 ${byStatus.rejected}` },
-    { key: 'any', label: '전체' },
+    { key: 'pending',            label: `${t('member.uploaderStatus.pending')} ${byStatus.pending}` },
+    { key: 'revision_requested', label: `${t('member.uploaderStatus.revision_requested')} ${byStatus.revision_requested}` },
+    { key: 'approved',           label: `${t('member.uploaderStatus.approved')} ${byStatus.approved}` },
+    { key: 'rejected',           label: `${t('member.uploaderStatus.rejected')} ${byStatus.rejected}` },
+    { key: 'any',                label: '전체' },
   ];
 
   return (
@@ -109,16 +104,16 @@ export function UploadersTab() {
 
         {error && (
           <div className="mb-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-            불러오기 실패: {error}
+            {t('uploader.loadError')}: {error}
           </div>
         )}
 
         <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
           {loading && items.length === 0 ? (
-            <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+            <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
           ) : items.length === 0 ? (
             <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-              {statusFilter === 'pending' ? '대기 중인 승급 신청이 없어요.' : '결과 없음'}
+              {statusFilter === 'pending' ? t('uploader.empty') : '결과 없음'}
             </div>
           ) : (
             <ul className="divide-y divide-(--color-border)">
@@ -138,7 +133,7 @@ export function UploadersTab() {
                             STATUS_TONE[u.approvalStatus]
                           }`}
                         >
-                          {UPLOADER_STATUS_LABEL[u.approvalStatus]}
+                          {t(`member.uploaderStatus.${u.approvalStatus}`)}
                         </span>
                         <span className="text-[12px] text-(--color-text-subtle)">
                           uploader_id={u.uploaderId} · {u.user.authProvider}
@@ -151,7 +146,7 @@ export function UploadersTab() {
                         {u.user.nickname} · {u.contactEmail}
                       </div>
                       <div className="mt-0.5 tabular text-[11px] text-(--color-text-subtle)">
-                        신청 {u.createdAt.slice(0, 10)}
+                        {t('uploader.appliedAt')} {u.createdAt.slice(0, 10)}
                       </div>
                     </div>
                   </button>

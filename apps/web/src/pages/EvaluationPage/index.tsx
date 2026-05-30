@@ -1,6 +1,7 @@
 // apps/web/src/pages/EvaluationPage/index.tsx
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header.js';
 import { MateEvalStep, type MateEvalData } from './parts/MateEvalStep.js';
 import { FestivalStep, type FestivalData } from './parts/FestivalStep.js';
@@ -17,6 +18,7 @@ type Step = 'loading' | 'mate' | 'festival' | 'done';
  * [오버라이드] "다녀온 후" 게이트: BFF에서 appointedAt <= now() 검증.
  */
 export function EvaluationPage() {
+  const { t } = useTranslation('mypage');
   const { appointmentId } = useParams<{ appointmentId: string }>();
   const [searchParams] = useSearchParams();
   const evaluatedUserId = searchParams.get('evaluatedUserId') ?? '';
@@ -117,13 +119,13 @@ export function EvaluationPage() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       if (msg === 'ALREADY_SUBMITTED') {
-        setError('이미 평가를 완료했어요.');
+        setError(t('evaluation.alreadyEvaluated'));
       } else if (msg === 'NOT_ATTENDED_YET') {
         setError('약속 날짜가 지나지 않아 평가할 수 없어요.');
       } else if (msg === 'NOT_CONFIRMED') {
         setError('아직 확정되지 않은 약속은 평가할 수 없어요.');
       } else {
-        setError('제출 중 오류가 발생했어요. 다시 시도해 주세요.');
+        setError(t('evaluation.submitError'));
       }
     } finally {
       setSubmitting(false);
@@ -135,7 +137,7 @@ export function EvaluationPage() {
       <Header />
       <main className="mx-auto w-full max-w-[480px] px-4 py-6">
         {step === 'loading' && (
-          <p className="text-center text-[14px] text-(--color-text-muted)">불러오는 중...</p>
+          <p className="text-center text-[14px] text-(--color-text-muted)">{t('calendar.loadError')}</p>
         )}
         {step === 'mate' && (
           <MateEvalStep
@@ -153,7 +155,7 @@ export function EvaluationPage() {
         {step === 'done' && (
           <div className="flex flex-col items-center gap-4 py-12 text-center">
             <p className="text-[40px]">✓</p>
-            <h2 className="text-(length:--text-h3) font-semibold">평가 완료!</h2>
+            <h2 className="text-(length:--text-h3) font-semibold">{t('evaluation.submitSuccess')}</h2>
             <p className="text-[14px] text-(--color-text-muted)">크레딧 10개가 적립되었어요.</p>
             <button
               type="button"

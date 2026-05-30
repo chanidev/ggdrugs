@@ -1,1 +1,139 @@
-{}
+{
+  "page": { "title": "관리자 콘솔" },
+  "tabs": {
+    "events": "이벤트 심사",
+    "uploaders": "업로더 심사",
+    "uploadReviews": "업로드 검토",
+    "reports": "신고 관리",
+    "members": "회원 관리",
+    "audit": "감사 로그"
+  },
+  "event": {
+    "approve": "승인",
+    "reject": "반려",
+    "requestRevision": "수정 요청",
+    "assignVibes": "성향 라벨 부여",
+    "status": {
+      "pending": "검토 중",
+      "approved": "승인됨",
+      "rejected": "반려됨",
+      "revision_requested": "수정 요청",
+      "ended": "종료됨"
+    },
+    "empty": "심사할 이벤트가 없어요.",
+    "loadError": "불러오지 못했어요."
+  },
+  "uploader": {
+    "approve": "승인",
+    "reject": "반려",
+    "requestRevision": "보완요청",
+    "loading": "불러오는 중…",
+    "loadError": "조회 실패",
+    "empty": "심사할 업로더 신청이 없어요.",
+    "nickname": "닉네임",
+    "joinMethod": "가입 경로",
+    "email": "이메일",
+    "contact": "연락처",
+    "createdAt": "계정 생성",
+    "appliedAt": "신청",
+    "approvedAt": "승인",
+    "identity": "신원 정보",
+    "realName": "실명",
+    "businessNo": "사업자번호",
+    "idVerified": "본인인증",
+    "documents": "제출 서류",
+    "eventStats": "등록 이벤트 현황",
+    "reasonLabel": "결정 사유 (선택)",
+    "reasonPlaceholder": "보완요청/반려 사유를 업로더에게 전달하려면 작성",
+    "notRegistered": "(미등록)",
+    "maskingNote": "(마스킹 · scope={{scope}})"
+  },
+  "uploadReview": {
+    "documents": "제출 서류",
+    "loading": "서류 불러오는 중…",
+    "noDocuments": "첨부된 서류가 없어요.",
+    "reasonLabel": "결정 사유 (선택)",
+    "reasonPlaceholder": "보완요청/반려 사유를 업로더에게 전달하려면 작성",
+    "reject": "반려",
+    "requestRevision": "보완요청",
+    "approve": "승인"
+  },
+  "report": {
+    "action": "조치",
+    "dismiss": "기각",
+    "warn": "경고",
+    "suspend": "정지",
+    "empty": "신고가 없어요.",
+    "loadError": "불러오지 못했어요."
+  },
+  "member": {
+    "searchPlaceholder": "닉네임 검색",
+    "roleFilter": {
+      "all": "전체",
+      "general": "일반",
+      "uploader": "업로더",
+      "admin": "admin"
+    },
+    "statusFilter": {
+      "active": "활성",
+      "deleted": "삭제됨",
+      "all": "전체"
+    },
+    "empty": "회원이 없어요.",
+    "loadError": "불러오지 못했어요.",
+    "revokeSession": "세션 강제 폐기",
+    "softDelete": "계정 비활성화",
+    "promoteAdmin": "admin 승급",
+    "demoteAdmin": "admin 박탈",
+    "changeScope": "admin scope 변경",
+    "uploaderDecision": "업로더 심사",
+    "actionLabel": {
+      "revoke_sessions": "세션 강제 폐기",
+      "admin_promote": "admin 승급",
+      "admin_demote": "admin 박탈",
+      "admin_scope_change": "admin scope 변경",
+      "user_soft_delete": "계정 비활성화",
+      "uploader_decision": "업로더 심사"
+    },
+    "scopeLabel": {
+      "full": "full (전체 권한)",
+      "content_only": "content_only",
+      "uploader_review_only": "uploader_review_only",
+      "security": "security (세션 폐기 전용)"
+    },
+    "uploaderStatus": {
+      "pending": "대기",
+      "approved": "승인됨",
+      "revision_requested": "보완요청",
+      "rejected": "반려"
+    },
+    "reasonLabel": "사유 (10~500자)",
+    "reasonPlaceholder": "액션 사유를 입력하세요",
+    "confirmRevoke": "세션을 강제 폐기할까요?",
+    "confirmSoftDelete": "계정을 비활성화할까요? 복구 불가.",
+    "confirmPromote": "admin으로 승급할까요?",
+    "confirmDemote": "admin을 박탈할까요?",
+    "confirmScopeChange": "scope를 변경할까요?"
+  },
+  "audit": {
+    "overview": "개요",
+    "eventSource": "이벤트 심사",
+    "adminSource": "admin 액션",
+    "empty": "로그가 없어요.",
+    "loadError": "불러오지 못했어요.",
+    "eventAction": {
+      "any": "전체",
+      "approved": "승인",
+      "revision_requested": "보완 요청",
+      "rejected": "반려"
+    },
+    "adminAction": {
+      "revoke_sessions": "세션 폐기",
+      "admin_promote": "admin 승급",
+      "admin_demote": "admin 박탈",
+      "admin_scope_change": "scope 변경",
+      "user_soft_delete": "계정 비활성화",
+      "uploader_decision": "업로더 심사"
+    }
+  }
+}

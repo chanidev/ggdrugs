@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { UserDetailPanel } from './UserDetailPanel';
 import {
   fetchAdminUsers,
@@ -14,20 +15,8 @@ import {
  * 필터: role (all/general/uploader/admin) × status (active/deleted) + nickname 검색.
  */
 
-const ROLE_FILTERS: { key: MemberRoleFilter; label: string }[] = [
-  { key: 'all', label: '전체' },
-  { key: 'general', label: '일반' },
-  { key: 'uploader', label: '업로더' },
-  { key: 'admin', label: 'admin' },
-];
-
-const STATUS_FILTERS: { key: MemberStatusFilter; label: string }[] = [
-  { key: 'active', label: '활성' },
-  { key: 'deleted', label: '삭제됨' },
-  { key: 'all', label: '전체' },
-];
-
 export function MembersTab() {
+  const { t } = useTranslation('admin');
   const [roleFilter, setRoleFilter] = useState<MemberRoleFilter>('all');
   const [statusFilter, setStatusFilter] = useState<MemberStatusFilter>('active');
   const [q, setQ] = useState('');
@@ -51,13 +40,26 @@ export function MembersTab() {
   const [error, setError] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  const ROLE_FILTERS: { key: MemberRoleFilter; label: string }[] = [
+    { key: 'all',      label: t('member.roleFilter.all') },
+    { key: 'general',  label: t('member.roleFilter.general') },
+    { key: 'uploader', label: t('member.roleFilter.uploader') },
+    { key: 'admin',    label: t('member.roleFilter.admin') },
+  ];
+
+  const STATUS_FILTERS: { key: MemberStatusFilter; label: string }[] = [
+    { key: 'active',  label: t('member.statusFilter.active') },
+    { key: 'deleted', label: t('member.statusFilter.deleted') },
+    { key: 'all',     label: t('member.statusFilter.all') },
+  ];
+
   // q 디바운스 (250ms).
   useEffect(() => {
-    const t = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setDebouncedQ(q);
       setPage(1);
     }, 250);
-    return () => window.clearTimeout(t);
+    return () => window.clearTimeout(timer);
   }, [q]);
 
   const reload = useCallback(() => {
@@ -152,24 +154,24 @@ export function MembersTab() {
             type="search"
             value={q}
             onChange={(e) => setQ(e.target.value.slice(0, 100))}
-            placeholder="닉네임 검색 (대소문자 무시)"
+            placeholder={t('member.searchPlaceholder')}
             className="h-9 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] focus:border-(--color-border-hover) focus:outline-none"
           />
         </div>
 
         {error && (
           <div className="mb-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-            불러오기 실패: {error}
+            {t('member.loadError')}: {error}
           </div>
         )}
 
         <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
           {loading && items.length === 0 ? (
             <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-              불러오는 중…
+              {t('uploader.loading')}
             </div>
           ) : items.length === 0 ? (
-            <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">결과 없음</div>
+            <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">{t('member.empty')}</div>
           ) : (
             <ul className="divide-y divide-(--color-border)">
               {items.map((u) => (
@@ -204,7 +206,7 @@ export function MembersTab() {
                         )}
                         {u.isDeleted && (
                           <span className="inline-flex items-center rounded-(--radius-sm) bg-(--color-error)/10 px-1.5 py-[1px] text-[10px] font-semibold text-(--color-error)">
-                            삭제됨
+                            {t('member.statusFilter.deleted')}
                           </span>
                         )}
                       </div>

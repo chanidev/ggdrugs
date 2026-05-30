@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { Avatar } from 'seed-design/ui/avatar';
@@ -17,6 +18,7 @@ import { updateMyProfile } from '../../lib/api/me.js';
  * 사진: 슬라이스 미정의 → placeholder.
  */
 export function ProfilePage() {
+  const { t } = useTranslation('mypage');
   const { user, refresh } = useCurrentUser();
   const navigate = useNavigate();
 
@@ -71,7 +73,7 @@ export function ProfilePage() {
       await refresh();
       setEditingNickname(false);
     } catch {
-      setNicknameError('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      setNicknameError(t('profile.saveError'));
     } finally {
       setSavingNickname(false);
     }
@@ -102,7 +104,7 @@ export function ProfilePage() {
             ← 마이페이지
           </button>
 
-          <h1 className="mb-8 text-(length:--text-h2) font-semibold">내 프로필</h1>
+          <h1 className="mb-8 text-(length:--text-h2) font-semibold">{t('profile.title')}</h1>
 
           {/* 아바타 (사진 미지원 — 슬라이스 미정의) */}
           <div className="mb-8 flex justify-center">
@@ -133,7 +135,7 @@ export function ProfilePage() {
                   htmlFor="profile-nickname-input"
                   className="text-[12px] font-semibold uppercase tracking-[0.06em] text-(--color-text-subtle)"
                 >
-                  닉네임
+                  {t('profile.nickname')}
                 </label>
                 {!editingNickname && (
                   <button
@@ -186,7 +188,7 @@ export function ProfilePage() {
                       loading={savingNickname}
                       disabled={savingNickname}
                     >
-                      저장
+                      {t('profile.save')}
                     </ActionButton>
                   </div>
                 </div>
