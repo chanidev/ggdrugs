@@ -10,6 +10,21 @@ import { bidirectionalScore } from '../lib/mate-score.js';
 const AGE_RANGE_VALID = new Set([10, 15, 20, 25, 30, 35, 40, 45, 50]);
 const GENDER_VALID = new Set(['M', 'F']);
 
+// GG-MATCH-003: 메이트와 함께 갈 축제는 "2주 이내 개최 예정" 목록에서 선택.
+export const MATE_EVENT_WINDOW_DAYS = 14;
+
+/** 날짜 D를 자정(00:00:00)으로 절삭한 UTC Date — startDate(@db.Date) 비교용. */
+function startOfDay(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
+
+/** [오늘, 오늘+14일] 개최 예정 축제 윈도우. selector / 저장검증 / 추천 stale 체크에서 공유. */
+export function upcomingMateEventWindow(now: Date): { from: Date; to: Date } {
+  const from = startOfDay(now);
+  const to = startOfDay(new Date(from.getTime() + MATE_EVENT_WINDOW_DAYS * 24 * 60 * 60 * 1000));
+  return { from, to };
+}
+
 function parseBigId(raw: unknown): bigint | null {
   const s = typeof raw === 'string' ? raw : '';
   try {
@@ -126,6 +141,31 @@ export async function saveMateProfile(req: Request, res: Response) {
   const autoRecommend = typeof body.autoRecommend === 'boolean' ? body.autoRecommend : false;
   const groupApply = typeof body.groupApply === 'boolean' ? body.groupApply : false;
 
+  // ── 선택 축제 (GG-MATCH-003) — null=미선택 허용. 제공 시 "approved + 2주내 개최" 검증 ──
+  let selectedEventId: bigint | null = null;
+  if (body.selectedEventId !== undefined && body.selectedEventId !== null && body.selectedEventId !== '') {
+    selectedEventId = parseBigId(String(body.selectedEventId));
+    if (selectedEventId === null) {
+      res.status(400).json({ error: 'selectedEventId must be a positive id' });
+      return;
+    }
+    const { from, to } = upcomingMateEventWindow(new Date());
+    const ev = await prisma.event.findFirst({
+      where: {
+        eventId: selectedEventId,
+        isDeleted: false,
+        approvalStatus: 'approved',
+        startDate: { gte: from, lte: to },
+      },
+      select: { eventId: true },
+    });
+    if (!ev) {
+      // 미승인·삭제·2주 윈도우 밖(과거/먼미래) 축제는 선택 불가 (selector 가 보여주는 집합과 동일).
+      res.status(400).json({ error: 'selected_event_not_selectable' });
+      return;
+    }
+  }
+
   // ── upsert — MateIndex 없으면 create{50}, 있으면 update:{} (불변) ──
   const saved = await prisma.$transaction(async (tx) => {
     const profile = await tx.mateProfile.upsert({
@@ -146,6 +186,7 @@ export async function saveMateProfile(req: Request, res: Response) {
         prefKoreanOk,
         autoRecommend,
         groupApply,
+        selectedEventId,
         consentedAt,
       },
       update: {
@@ -163,6 +204,7 @@ export async function saveMateProfile(req: Request, res: Response) {
         prefKoreanOk,
         autoRecommend,
         groupApply,
+        selectedEventId,
         consentedAt,
         isDeleted: false,
         deletedAt: null,
@@ -220,6 +262,8 @@ export async function getMyMateProfile(req: Request, res: Response) {
       prefKoreanOk: true,
       autoRecommend: true,
       groupApply: true,
+      selectedEventId: true,
+      selectedEvent: { select: { eventId: true, title: true, startDate: true } },
       consentedAt: true,
       isDeleted: true,
       updatedAt: true,
@@ -247,9 +291,22 @@ export async function getMyMateProfile(req: Request, res: Response) {
     prefKoreanOk: profile.prefKoreanOk,
     autoRecommend: profile.autoRecommend,
     groupApply: profile.groupApply,
+    selectedEvent: serializeSelectedEvent(profile.selectedEvent),
     consentedAt: profile.consentedAt ? profile.consentedAt.toISOString() : null,
     updatedAt: profile.updatedAt.toISOString(),
   });
+}
+
+/** 선택 축제 직렬화 — 프로필 응답 공통. null 이면 null. */
+function serializeSelectedEvent(
+  ev: { eventId: bigint; title: string; startDate: Date } | null | undefined,
+): { eventId: string; title: string; startDate: string } | null {
+  if (!ev) return null;
+  return {
+    eventId: ev.eventId.toString(),
+    title: ev.title,
+    startDate: ev.startDate.toISOString().slice(0, 10),
+  };
 }
 
 // ============================================================
@@ -281,6 +338,8 @@ export async function getMyMateProfileWithIndex(req: Request, res: Response) {
         prefKoreanOk: true,
         autoRecommend: true,
         groupApply: true,
+        selectedEventId: true,
+        selectedEvent: { select: { eventId: true, title: true, startDate: true } },
         consentedAt: true,
         isDeleted: true,
         updatedAt: true,
@@ -313,9 +372,52 @@ export async function getMyMateProfileWithIndex(req: Request, res: Response) {
     prefKoreanOk: profile.prefKoreanOk,
     autoRecommend: profile.autoRecommend,
     groupApply: profile.groupApply,
+    selectedEvent: serializeSelectedEvent(profile.selectedEvent),
     consentedAt: profile.consentedAt ? profile.consentedAt.toISOString() : null,
     updatedAt: profile.updatedAt.toISOString(),
     mateIndex: mateIndex ? mateIndex.indexValue : 50,
+  });
+}
+
+// ============================================================
+// GET /community/mate/events  — 선택 가능 축제 목록 (GG-MATCH-003, requireAuth)
+// ============================================================
+/** 2주 이내 개최 예정 + approved 축제. 메이트 추천 받기 페이지 "축제 선택" 드롭다운 소스. */
+export async function listUpcomingMateEvents(req: Request, res: Response) {
+  const auth = (req as AuthenticatedRequest).auth;
+  if (!auth) {
+    res.status(401).json({ error: 'unauthenticated' });
+    return;
+  }
+
+  const { from, to } = upcomingMateEventWindow(new Date());
+  const events = await prisma.event.findMany({
+    where: {
+      isDeleted: false,
+      approvalStatus: 'approved',
+      startDate: { gte: from, lte: to },
+    },
+    select: {
+      eventId: true,
+      title: true,
+      startDate: true,
+      endDate: true,
+      posterImageUrl: true,
+      region: { select: { sidoName: true, sigunguName: true } },
+    },
+    orderBy: { startDate: 'asc' },
+    take: 200,
+  });
+
+  res.json({
+    events: events.map((e) => ({
+      eventId: e.eventId.toString(),
+      title: e.title,
+      startDate: e.startDate.toISOString().slice(0, 10),
+      endDate: e.endDate.toISOString().slice(0, 10),
+      posterImageUrl: e.posterImageUrl,
+      regionName: [e.region?.sidoName, e.region?.sigunguName].filter(Boolean).join(' ') || null,
+    })),
   });
 }
 
@@ -353,6 +455,8 @@ export async function getRecommendations(req: Request, res: Response) {
       prefNationality: true,
       prefKoreanOk: true,
       autoRecommend: true, // 요청자 opt-out 게이트 (GG-COMM-007/008)
+      selectedEventId: true,
+      selectedEvent: { select: { startDate: true, approvalStatus: true, isDeleted: true } },
       consentedAt: true,
       isDeleted: true,
     },
@@ -361,6 +465,26 @@ export async function getRecommendations(req: Request, res: Response) {
   // 요청자 opt-out(autoRecommend=false) 도 blind — 매칭 기능 사용 의사 없음
   if (!myProfile || myProfile.isDeleted || !myProfile.consentedAt || !myProfile.autoRecommend) {
     res.json({ state: 'blind' });
+    return;
+  }
+
+  // GG-MATCH-003 / ADR 0007 #3: 후보풀의 hard 경계 = "같은 축제(2주내 개최)".
+  // 축제 미선택, 또는 선택 축제가 삭제·미승인·윈도우 이탈(과거 시작 / 관리자가 +14일 밖으로 이동)
+  // → stale 로 보고 축제 (재)선택 유도. 윈도우 상·하한 모두 검사해 selector/save 검증과 패리티.
+  // [TZ note] upcomingMateEventWindow 는 events.ts parsePeriod 와 동일하게 UTC 기준 날짜 경계를
+  //   쓴다(앱 전역 컨벤션, @db.Date 는 TZ-naive). KST 정합이 필요하면 parsePeriod 포함 전역 수정.
+  const recoNow = new Date();
+  const { from: evFrom, to: evTo } = upcomingMateEventWindow(recoNow);
+  const myEvent = myProfile.selectedEvent;
+  const eventUsable =
+    myProfile.selectedEventId !== null &&
+    myEvent != null &&
+    !myEvent.isDeleted &&
+    myEvent.approvalStatus === 'approved' &&
+    myEvent.startDate >= evFrom &&
+    myEvent.startDate <= evTo;
+  if (!eventUsable) {
+    res.json({ state: 'no_event' });
     return;
   }
 
@@ -399,11 +523,10 @@ export async function getRecommendations(req: Request, res: Response) {
   }
   blockedSet.delete(auth.userId); // 본인 제거
 
-  // 2) 이용정지 만료 기준 타임스탬프
-  const recoNow = new Date();
+  // 2) 이용정지 만료 기준 타임스탬프 (recoNow 는 위 no_event 게이트에서 선언됨)
 
-  // 후보풀: consent 있고 본인 제외 + 같은 지역(슬라이스2 경계) + 자동추천 동의
-  // NOTE: 슬라이스3 에서 이벤트 연결(같은 축제 2주내) 추가 예정.
+  // 후보풀: consent 있고 본인 제외 + 같은 축제(GG-MATCH-003) + 자동추천 동의
+  // ADR 0007 #3: hard 경계 = 같은 selectedEventId. 지역은 mate-score 의 soft 점수로 잔존.
   // GG-REPORT-009: Block 양방향 제외 + 유효한 이용정지 사용자 제외
   const blockedSetArray = [...blockedSet];
   const candidates = await prisma.mateProfile.findMany({
@@ -427,8 +550,8 @@ export async function getRecommendations(req: Request, res: Response) {
           },
         },
       ],
-      // 슬라이스2 지역 경계: 본인 regionId 와 동일한 후보만 (null 이면 null 끼리)
-      regionId: myProfile.regionId,
+      // GG-MATCH-003: 같은 축제를 선택한 후보만 (후보풀 hard 경계).
+      selectedEventId: myProfile.selectedEventId,
     },
     select: {
       userId: true,

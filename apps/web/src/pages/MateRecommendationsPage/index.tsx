@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Header } from '../../layout/Header';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { Avatar } from 'seed-design/ui/avatar';
+import { Checkbox } from 'seed-design/ui/checkbox';
 import { getRecommendations, type RecommendationsResponse, type RecommendationItem } from '../../lib/api/mate.js';
+import { sendGroupInvite } from '../../lib/api/match.js';
 
 /**
  * MateRecommendationsPage — A_801 메이트 추천 목록 (GG-COMM-007/008).
@@ -73,6 +75,7 @@ export function MateRecommendationsPage() {
           {!loading && !error && data && (
             <>
               {data.state === 'blind' && <BlindState />}
+              {data.state === 'no_event' && <NoEventState />}
               {data.state === 'list' && <RecoList items={data.items} />}
             </>
           )}
@@ -113,10 +116,33 @@ function BlindState() {
   );
 }
 
+// ── 축제 미선택 상태 (GG-MATCH-003) ──
+
+function NoEventState() {
+  const { t } = useTranslation('mate');
+  return (
+    <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
+      <h2 className="mb-2 text-[17px] font-semibold">{t('reco.noEventTitle')}</h2>
+      <p className="mb-6 text-[13px] text-(--color-text-muted)">{t('reco.noEventSubtitle')}</p>
+      <ActionButton variant="brandSolid" size="medium" asChild>
+        <Link to="/mate/form">{t('reco.noEventCta')}</Link>
+      </ActionButton>
+    </div>
+  );
+}
+
 // ── 추천 카드 목록 ──
+
+// 그룹 초대 최대 인원(본인 제외) — 그룹 채팅방은 최대 4인 (ADR 0007 결정6).
+const GROUP_MAX = 3;
 
 function RecoList({ items }: { items: RecommendationItem[] }) {
   const { t } = useTranslation('mate');
+  const [groupMode, setGroupMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [sending, setSending] = useState(false);
+  const [msg, setMsg] = useState<{ kind: 'ok' | 'err'; text: string } | null>(null);
+
   if (items.length === 0) {
     return (
       <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
@@ -133,21 +159,115 @@ function RecoList({ items }: { items: RecommendationItem[] }) {
     );
   }
 
+  const toggle = (userId: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId);
+      else if (next.size < GROUP_MAX) next.add(userId);
+      return next;
+    });
+
+  const cancelGroup = () => {
+    setGroupMode(false);
+    setSelected(new Set());
+    setMsg(null);
+  };
+
+  const sendGroup = async () => {
+    if (selected.size === 0) return;
+    setSending(true);
+    setMsg(null);
+    try {
+      await sendGroupInvite([...selected]);
+      setMsg({ kind: 'ok', text: t('reco.groupSuccess', { count: selected.size }) });
+      setGroupMode(false);
+      setSelected(new Set());
+    } catch (e) {
+      const m = (e as Error).message;
+      setMsg({
+        kind: 'err',
+        text: m === 'PROFILE_REQUIRED' ? t('reco.groupProfileRequired') : t('reco.groupError'),
+      });
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-3">
-      {/* 슬라이스3~5 placeholder 주석: 채팅중/약속완료/사용후 상태 카드는 슬라이스3~5에서 구현. */}
+      {/* 그룹 신청 컨트롤 바 (A_804 / GG-MATE-015~016) */}
+      <div className="flex items-center justify-between gap-2">
+        {!groupMode ? (
+          <ActionButton variant="neutralOutline" size="small" onClick={() => setGroupMode(true)}>
+            {t('reco.groupStart')}
+          </ActionButton>
+        ) : (
+          <>
+            <span className="text-[13px] text-(--color-text-muted)">
+              {t('reco.groupSelected', { count: selected.size, max: GROUP_MAX })}
+            </span>
+            <div className="flex gap-2">
+              <ActionButton variant="neutralOutline" size="small" onClick={cancelGroup} disabled={sending}>
+                {t('reco.groupCancel')}
+              </ActionButton>
+              <ActionButton
+                variant="brandSolid"
+                size="small"
+                onClick={() => { void sendGroup(); }}
+                loading={sending}
+                disabled={sending || selected.size === 0}
+              >
+                {t('reco.groupSend')}
+              </ActionButton>
+            </div>
+          </>
+        )}
+      </div>
+
+      {msg && (
+        <p
+          role="status"
+          className={msg.kind === 'ok' ? 'text-[13px] text-(--color-accent)' : 'text-[13px] text-(--color-error)'}
+        >
+          {msg.text}
+        </p>
+      )}
+
       {items.map((item) => (
-        <RecoCard key={item.userId} item={item} />
+        <RecoCard
+          key={item.userId}
+          item={item}
+          groupMode={groupMode}
+          selected={selected.has(item.userId)}
+          disabled={!selected.has(item.userId) && selected.size >= GROUP_MAX}
+          onToggle={() => toggle(item.userId)}
+        />
       ))}
     </div>
   );
 }
 
-function RecoCard({ item }: { item: RecommendationItem }) {
+function RecoCard({
+  item,
+  groupMode,
+  selected,
+  disabled,
+  onToggle,
+}: {
+  item: RecommendationItem;
+  groupMode: boolean;
+  selected: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
   const { t } = useTranslation('mate');
   const navigate = useNavigate();
   return (
-    <div className="flex items-center gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) px-4 py-3">
+    <div
+      className={`flex items-center gap-4 rounded-(--radius-lg) border bg-(--color-surface) px-4 py-3 ${
+        selected ? 'border-(--color-accent)' : 'border-(--color-border)'
+      }`}
+    >
       {/* 아바타 */}
       <Avatar
         fallback={item.nickname.slice(0, 1)}
@@ -164,19 +284,29 @@ function RecoCard({ item }: { item: RecommendationItem }) {
           <span className="font-semibold text-(--color-accent)">{item.mateIndex}</span>
         </p>
       </div>
-      {/* 채팅 신청 — 슬라이스3 실구현 (GG-POST-008) */}
-      <ActionButton
-        variant="neutralOutline"
-        size="small"
-        onClick={() => {
-          void navigate(
-            `/chat/request?to=${encodeURIComponent(item.userId)}&nickname=${encodeURIComponent(item.nickname)}`,
-          );
-        }}
-        aria-label={t('reco.chatRequestAriaLabel', { nickname: item.nickname })}
-      >
-        {t('reco.chatRequest')}
-      </ActionButton>
+      {groupMode ? (
+        /* 그룹 다중 선택 (A_804) */
+        <Checkbox
+          checked={selected}
+          onCheckedChange={() => onToggle()}
+          disabled={disabled}
+          aria-label={t('reco.groupSelectAriaLabel', { nickname: item.nickname })}
+        />
+      ) : (
+        /* 1:1 채팅 신청 (A_803 / GG-MATE-007/008) */
+        <ActionButton
+          variant="neutralOutline"
+          size="small"
+          onClick={() => {
+            void navigate(
+              `/chat/request?to=${encodeURIComponent(item.userId)}&nickname=${encodeURIComponent(item.nickname)}`,
+            );
+          }}
+          aria-label={t('reco.chatRequestAriaLabel', { nickname: item.nickname })}
+        >
+          {t('reco.chatRequest')}
+        </ActionButton>
+      )}
     </div>
   );
 }

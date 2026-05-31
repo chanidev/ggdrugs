@@ -19,7 +19,25 @@ export interface MateProfileBody {
   prefKoreanOk: boolean | null;
   autoRecommend: boolean;
   groupApply: boolean;
+  selectedEventId: string | null; // GG-MATCH-003: 함께 갈 축제(2주내). null=미선택
   consentedAt: string; // ISO 8601, 약관동의 시각
+}
+
+/** 메이트용 선택 가능 축제 (2주내 개최 예정 + approved). GG-MATCH-003 */
+export interface MateEvent {
+  eventId: string;
+  title: string;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+  posterImageUrl: string | null;
+  regionName: string | null;
+}
+
+/** 프로필에 담긴 현재 선택 축제 요약. */
+export interface SelectedEventSummary {
+  eventId: string;
+  title: string;
+  startDate: string;
 }
 
 export interface MateProfile {
@@ -38,6 +56,7 @@ export interface MateProfile {
   prefKoreanOk: boolean | null;
   autoRecommend: boolean;
   groupApply: boolean;
+  selectedEvent: SelectedEventSummary | null; // GG-MATCH-003 현재 선택 축제
   consentedAt: string | null;
   updatedAt: string;
 }
@@ -57,12 +76,20 @@ export interface RecommendationsBlind {
   state: 'blind';
 }
 
+/** GG-MATCH-003: 축제 미선택(또는 선택 축제 만료) → 축제 선택 유도. */
+export interface RecommendationsNoEvent {
+  state: 'no_event';
+}
+
 export interface RecommendationsList {
   state: 'list';
   items: RecommendationItem[];
 }
 
-export type RecommendationsResponse = RecommendationsBlind | RecommendationsList;
+export type RecommendationsResponse =
+  | RecommendationsBlind
+  | RecommendationsNoEvent
+  | RecommendationsList;
 
 export interface MateIndexResult {
   userId: string;
@@ -89,8 +116,10 @@ export async function saveMateProfile(body: MateProfileBody): Promise<MateProfil
   if (res.status === 401) throw new Error('UNAUTHENTICATED');
   if (res.status === 422) throw new Error('CONSENT_REQUIRED');
   if (res.status === 400) {
-    const t = await res.text().catch(() => '');
-    throw new Error(`VALIDATION: ${t.slice(0, 200)}`);
+    const b = (await res.json().catch(() => ({}))) as { error?: string };
+    // GG-MATCH-003: 선택 축제가 로드 후 만료/미승인/삭제된 경우 전용 코드 → 폼이 재선택 안내.
+    if (b.error === 'selected_event_not_selectable') throw new Error('EVENT_NOT_SELECTABLE');
+    throw new Error(`VALIDATION: ${(b.error ?? '').slice(0, 200)}`);
   }
   if (!res.ok) {
     const t = await res.text().catch(() => '');
@@ -139,6 +168,20 @@ export async function getRecommendations(): Promise<RecommendationsResponse> {
   if (res.status === 401) throw new Error('UNAUTHENTICATED');
   if (!res.ok) throw new Error(`GET /community/mate/recommendations ${res.status}`);
   return (await res.json()) as RecommendationsResponse;
+}
+
+/**
+ * GET /community/mate/events — 2주내 개최 예정 approved 축제 (GG-MATCH-003 "축제 선택").
+ */
+export async function fetchUpcomingMateEvents(): Promise<MateEvent[]> {
+  const res = await fetch(
+    `${BFF_URL}/community/mate/events`,
+    withCredentials(),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (!res.ok) throw new Error(`GET /community/mate/events ${res.status}`);
+  const body = (await res.json()) as { events: MateEvent[] };
+  return body.events;
 }
 
 /**

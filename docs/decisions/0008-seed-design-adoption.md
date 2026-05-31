@@ -1,6 +1,6 @@
 # ADR 0008: SEED Design 채택 (Option B — SEED 컴포넌트 + Alle 테마)
 
-- **Status**: Proposed (2026-05-29, 초안) — Orchestrator 승인 대기 (CLAUDE.md §8-1 / 금지 #1)
+- **Status**: Accepted (2026-05-31) — Orchestrator 승인 (CLAUDE.md §8-1 / 금지 #1)
 - **Context**: Phase 2 소셜 레이어(커뮤니티/메이트)는 당근식 동행 매칭 UX(와이어프레임의 "당근 온도"=메이트 지수)다. 사용자가 **전체 디자인을 당근 디자인 시스템 SEED Design 으로 진행**할 것을 지시(2026-05-29). 한편 기존 `DESIGN.md`는 Phase 1 에서 다져진 성숙한 **Alle 에디토리얼 브랜드**다 — 커스텀 CSS 변수 토큰 + Tailwind v4 핸드빌드 컴포넌트, 버밀리언 단일 accent(`#E8562D`), Pretendard 단일 패밀리, "여행 가이드 종이 지도 + 편집부" 톤, **anti-bubbly**(uniform 라운드 금지). SEED 는 React 컴포넌트 라이브러리(`@seed-design/react`) + CSS 토큰(`@seed-design/css`)이며 당근(carrot) 브랜드 중심의 시맨틱 토큰(`$color.fg.brand`=carrot 등) + light/dark 색모드(data 속성) 체계를 가진다.
 - **Decision drivers**: 소셜 UI 를 검증된 컴포넌트로 빠르게 구축, 당근식 UX 친숙성, 그러나 Phase 1 Alle 브랜드 정체성(로고·버밀리언·Pretendard·에디토리얼)의 연속성 유지, CLAUDE.md 거버넌스 정합.
 

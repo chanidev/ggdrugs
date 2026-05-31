@@ -59,7 +59,16 @@
     "selectKoreanOk": "请选择韩语沟通能力。",
     "successTitle": "同伴匹配注册成功",
     "successBody": "您的信息已保存。在社区中查看推荐的同伴！",
-    "goToCommunity": "查看社区"
+    "goToCommunity": "查看社区",
+    "eventSection": "选择庆典",
+    "eventNote": "请从两周内即将举行的庆典中，选择想一起参加的庆典。",
+    "event": "庆典",
+    "eventAriaLabel": "选择要一起参加的庆典",
+    "eventPlaceholder": "请选择庆典",
+    "eventEmpty": "两周内没有即将举行的庆典",
+    "selectEvent": "请选择想一起参加的庆典。",
+    "eventNotSelectable": "你选择的庆典已不可报名，请从列表中重新选择。",
+    "eventLoadFailed": "无法加载庆典列表，请刷新后重试。"
   },
   "reco": {
     "title": "同伴推荐",
@@ -81,7 +90,18 @@
     "blindCta": "获取同伴推荐",
     "noMatch": "目前没有可匹配的同伴。",
     "noMatchSub": "尝试调整条件或地区。",
-    "adjustConditions": "调整条件"
+    "adjustConditions": "调整条件",
+    "noEventTitle": "请先选择要一起参加的庆典",
+    "noEventSubtitle": "系统会为选择同一庆典的伙伴进行匹配。请选择两周内举行的庆典。",
+    "noEventCta": "去选择庆典",
+    "groupStart": "发起组队邀请",
+    "groupSelected": "已选 {{count}}/{{max}}",
+    "groupCancel": "取消",
+    "groupSend": "发送组队邀请",
+    "groupSuccess": "已向 {{count}} 位伙伴发送组队邀请。",
+    "groupError": "无法发送组队邀请，请稍后重试。",
+    "groupProfileRequired": "请先填写你的伙伴资料。",
+    "groupSelectAriaLabel": "选择 {{nickname}} 加入组队邀请"
   },
   "safetyNotice": {
     "ariaLabel": "安全须知",

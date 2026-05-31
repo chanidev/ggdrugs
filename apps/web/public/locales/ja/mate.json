@@ -59,7 +59,16 @@
     "selectKoreanOk": "韓国語コミュニケーション可否を選択してください。",
     "successTitle": "メイトマッチング登録完了",
     "successBody": "情報が保存されました。コミュニティで推薦メイトを確認しましょう！",
-    "goToCommunity": "コミュニティを見る"
+    "goToCommunity": "コミュニティを見る",
+    "eventSection": "フェスティバルを選択",
+    "eventNote": "一緒に行くフェスティバルを、2週間以内に開催予定の一覧から選んでください。",
+    "event": "フェスティバル",
+    "eventAriaLabel": "一緒に行くフェスティバルを選択",
+    "eventPlaceholder": "フェスティバルを選択してください",
+    "eventEmpty": "2週間以内に開催予定のフェスティバルがありません",
+    "selectEvent": "一緒に行くフェスティバルを選択してください。",
+    "eventNotSelectable": "選択したフェスティバルは選べなくなりました。一覧から選び直してください。",
+    "eventLoadFailed": "フェスティバル一覧を読み込めませんでした。再読み込みしてください。"
   },
   "reco": {
     "title": "メイト推薦",
@@ -81,7 +90,18 @@
     "blindCta": "メイト推薦を受け取る",
     "noMatch": "現在マッチング可能なメイトがいません。",
     "noMatchSub": "条件や地域を調整してみてください。",
-    "adjustConditions": "条件を修正する"
+    "adjustConditions": "条件を修正する",
+    "noEventTitle": "まず一緒に行くフェスティバルを選択してください",
+    "noEventSubtitle": "同じフェスティバルを選んだメイト同士でマッチングされます。2週間以内に開催されるフェスティバルを選びましょう。",
+    "noEventCta": "フェスティバルを選びに行く",
+    "groupStart": "グループで申請",
+    "groupSelected": "{{count}}/{{max}}人選択",
+    "groupCancel": "キャンセル",
+    "groupSend": "グループ招待を送る",
+    "groupSuccess": "{{count}}人にグループ招待を送りました。",
+    "groupError": "グループ招待を送れませんでした。しばらくして再度お試しください。",
+    "groupProfileRequired": "先にメイトプロフィールを登録してください。",
+    "groupSelectAriaLabel": "{{nickname}}をグループ招待に選択"
   },
   "safetyNotice": {
     "ariaLabel": "安全ガイドライン",

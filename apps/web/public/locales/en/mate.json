@@ -59,7 +59,16 @@
     "selectKoreanOk": "Please select Korean communication ability.",
     "successTitle": "Mate Matching Registered",
     "successBody": "Your information has been saved. Check your recommended mates in the community!",
-    "goToCommunity": "View Community"
+    "goToCommunity": "View Community",
+    "eventSection": "Select a festival",
+    "eventNote": "Pick the festival you want to attend together, from those starting within 2 weeks.",
+    "event": "Festival",
+    "eventAriaLabel": "Select a festival to attend together",
+    "eventPlaceholder": "Please select a festival",
+    "eventEmpty": "No festivals starting within 2 weeks",
+    "selectEvent": "Please select a festival to attend together.",
+    "eventNotSelectable": "The festival you selected is no longer available. Please pick another from the list.",
+    "eventLoadFailed": "Couldn't load festivals. Please refresh and try again."
   },
   "reco": {
     "title": "Mate Recommendations",
@@ -81,7 +90,18 @@
     "blindCta": "Get Mate Recommendations",
     "noMatch": "No mates available for matching right now.",
     "noMatchSub": "Try adjusting your conditions or region.",
-    "adjustConditions": "Adjust Conditions"
+    "adjustConditions": "Adjust Conditions",
+    "noEventTitle": "Select a festival first",
+    "noEventSubtitle": "You're matched with mates who picked the same festival. Choose one starting within 2 weeks.",
+    "noEventCta": "Choose a festival",
+    "groupStart": "Invite as a group",
+    "groupSelected": "{{count}}/{{max}} selected",
+    "groupCancel": "Cancel",
+    "groupSend": "Send group invite",
+    "groupSuccess": "Sent a group invite to {{count}} mate(s).",
+    "groupError": "Couldn't send the group invite. Please try again.",
+    "groupProfileRequired": "Please set up your mate profile first.",
+    "groupSelectAriaLabel": "Select {{nickname}} for group invite"
   },
   "safetyNotice": {
     "ariaLabel": "Safety Guidelines",

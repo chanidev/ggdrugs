@@ -11,6 +11,8 @@ import {
   getMyMateProfileWithIndex,
   getMateIndex,
   getRecommendations,
+  listUpcomingMateEvents,
+  upcomingMateEventWindow,
 } from '../routes/mate.js';
 import { scoreOneWay } from '../lib/mate-score.js';
 
@@ -78,6 +80,18 @@ async function main() {
   // 테스트 전 클린업 — 이전 실행 잔재 제거
   await prisma.mateIndex.deleteMany({ where: { userId: auth.userId } });
   await prisma.mateProfile.deleteMany({ where: { userId: auth.userId } });
+
+  // GG-MATCH-003: 후보풀이 "같은 선택 축제" 이므로, reco 케이스용 2주내 approved 축제 확보.
+  // 없으면 축제 의존 케이스는 graceful skip (시드 환경에 따라 다름).
+  const { from: evFrom, to: evTo } = upcomingMateEventWindow(new Date());
+  const winEvents = await prisma.event.findMany({
+    where: { isDeleted: false, approvalStatus: 'approved', startDate: { gte: evFrom, lte: evTo } },
+    select: { eventId: true },
+    orderBy: { startDate: 'asc' },
+    take: 2,
+  });
+  const testEventId: string | null = winEvents[0] ? winEvents[0].eventId.toString() : null;
+  const testEventId2: string | null = winEvents[1] ? winEvents[1].eventId.toString() : null;
 
   try {
     // ── CASE 1: 프로필 저장 성공 (consent 포함) ──────────────────────────────
@@ -250,6 +264,7 @@ async function main() {
         select: { userId: true, nickname: true, activeRole: true },
       });
       if (!u2) { f.push('need 2+ users in DB for sort test — skipped'); return f; }
+      if (!testEventId) { f.push('no upcoming approved event in 2wk window — seed needed'); return f; }
       const auth2 = { userId: u2.userId, nickname: u2.nickname, activeRole: u2.activeRole };
 
       // 클린업
@@ -287,13 +302,14 @@ async function main() {
           consentedAt: new Date().toISOString(),
           autoRecommend: true,
           groupApply: false,
+          selectedEventId: testEventId, // 같은 축제 풀 (GG-MATCH-003)
         };
         const saveRes = mockRes();
         await saveMateProfile(mockReq({ auth: auth2, body: profile2Body }), saveRes);
         if (saveRes._c.status !== 200) { f.push(`u2 profile save failed: ${saveRes._c.status}`); return f; }
 
-        // u1 프로필도 autoRecommend 확인용 재저장
-        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true } }), mockRes());
+        // u1 프로필도 autoRecommend 확인용 재저장 (같은 축제 선택)
+        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true, selectedEventId: testEventId } }), mockRes());
 
         // u1 기준 추천 목록 조회
         const recoRes = mockRes();
@@ -360,6 +376,7 @@ async function main() {
         select: { userId: true, nickname: true, activeRole: true },
       });
       if (!u3) { f.push('need 2+ users in DB — skipped'); return f; }
+      if (!testEventId) { f.push('no upcoming approved event in 2wk window — seed needed'); return f; }
       const auth3 = { userId: u3.userId, nickname: u3.nickname, activeRole: u3.activeRole };
 
       // 클린업
@@ -367,7 +384,7 @@ async function main() {
       await prisma.mateProfile.deleteMany({ where: { userId: auth3.userId } });
 
       try {
-        // u3: consent 있지만 autoRecommend=false (opt-out)
+        // u3: consent + 같은 축제 선택했지만 autoRecommend=false (opt-out) → 제외돼야 함
         const optOutBody = {
           gender: 'F',
           ageRangeLower: 25,
@@ -377,13 +394,14 @@ async function main() {
           consentedAt: new Date().toISOString(),
           autoRecommend: false, // ← opt-out
           groupApply: false,
+          selectedEventId: testEventId,
         };
         const saveRes3 = mockRes();
         await saveMateProfile(mockReq({ auth: auth3, body: optOutBody }), saveRes3);
         if (saveRes3._c.status !== 200) { f.push(`u3 save failed: ${saveRes3._c.status}`); return f; }
 
-        // u1 자신도 최신 프로필(autoRecommend=true)로 재저장
-        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true } }), mockRes());
+        // u1 자신도 최신 프로필(autoRecommend=true, 같은 축제)로 재저장
+        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true, selectedEventId: testEventId } }), mockRes());
 
         // u1 기준 추천 목록 — u3 는 opt-out 이므로 미포함이어야 함
         const recoRes = mockRes();
@@ -431,6 +449,150 @@ async function main() {
 
       // 복원 — 이후 케이스에 영향 없도록 autoRecommend=true 로 되돌림
       await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true } }), mockRes());
+      return f;
+    });
+
+    // ── CASE 17: reco.no_event_when_unselected — 축제 미선택 → state:'no_event' ──
+    // GG-MATCH-003 / ADR 0007 #3: 후보풀 hard 경계 = 선택 축제. 미선택이면 추천 생성 불가.
+    await check('reco.no_event_when_unselected', async () => {
+      const f: string[] = [];
+      // autoRecommend=true, consent O, selectedEventId 없음
+      const saveRes = mockRes();
+      await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true } }), saveRes);
+      if (saveRes._c.status !== 200) { f.push(`save failed: ${saveRes._c.status}`); return f; }
+      const recoRes = mockRes();
+      await getRecommendations(mockReq({ auth }), recoRes);
+      const b = recoRes._c.json as { state?: string };
+      if (b?.state !== 'no_event') f.push(`state "${b?.state}" != "no_event"`);
+      return f;
+    });
+
+    // ── CASE 18: profile.save.invalid_event_rejected — 윈도우 밖/미존재 축제 → 400 ──
+    await check('profile.save.invalid_event_rejected', async () => {
+      const f: string[] = [];
+      const res = mockRes();
+      await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, selectedEventId: '999999999999' } }), res);
+      if (res._c.status !== 400) f.push(`status ${res._c.status} != 400`);
+      const b = res._c.json as { error?: string };
+      if (b?.error !== 'selected_event_not_selectable') f.push(`error "${b?.error}" != "selected_event_not_selectable"`);
+      return f;
+    });
+
+    // ── CASE 19: mate.events.list — 2주내 approved 축제 목록 (GG-MATCH-003) ──
+    await check('mate.events.list', async () => {
+      const f: string[] = [];
+      const res = mockRes();
+      await listUpcomingMateEvents(mockReq({ auth }), res);
+      if (res._c.status !== 200) f.push(`status ${res._c.status} != 200`);
+      const b = res._c.json as { events?: Array<{ eventId: string; title: string; startDate: string }> };
+      if (!Array.isArray(b?.events)) { f.push('events not array'); return f; }
+      if (testEventId) {
+        // 윈도우에 축제가 있다면 목록도 비어있으면 안 되고, 형태가 맞아야 함
+        if (b.events.length === 0) f.push('events empty though an in-window event exists');
+        const first = b.events[0];
+        if (first && (!first.eventId || !first.title || !/^\d{4}-\d{2}-\d{2}$/.test(first.startDate)))
+          f.push('event item shape invalid');
+      }
+      return f;
+    });
+
+    // ── CASE 20: reco.event_pool_isolation — 같은 축제 포함 / 다른 축제 제외 ──
+    // 핵심: 후보풀 hard 경계가 selectedEventId 임을 증명. 같은 축제면 포함, 다른 축제면 제외.
+    await check('reco.event_pool_isolation', async () => {
+      const f: string[] = [];
+      const u2 = await prisma.user.findFirst({
+        where: { isDeleted: false, userId: { not: auth.userId } },
+        select: { userId: true, nickname: true, activeRole: true },
+      });
+      if (!u2) { f.push('need 2+ users — skipped'); return f; }
+      if (!testEventId || !testEventId2) { f.push('need 2 upcoming approved events for isolation test — seed needed'); return f; }
+      const auth2 = { userId: u2.userId, nickname: u2.nickname, activeRole: u2.activeRole };
+
+      await prisma.mateIndex.deleteMany({ where: { userId: auth2.userId } });
+      await prisma.mateProfile.deleteMany({ where: { userId: auth2.userId } });
+      const preBlocks = await prisma.block.findMany({
+        where: {
+          OR: [
+            { blockerId: auth.userId, blockedUserId: auth2.userId },
+            { blockerId: auth2.userId, blockedUserId: auth.userId },
+          ],
+        },
+        select: { blockId: true, blockerId: true, blockedUserId: true, createdAt: true },
+      });
+      await prisma.block.deleteMany({
+        where: {
+          OR: [
+            { blockerId: auth.userId, blockedUserId: auth2.userId },
+            { blockerId: auth2.userId, blockedUserId: auth.userId },
+          ],
+        },
+      });
+
+      try {
+        const u2Body = {
+          gender: 'F', ageRangeLower: 25, nationality: 'KR', koreanOk: true, hasCar: false,
+          consentedAt: new Date().toISOString(), autoRecommend: true, groupApply: false,
+        };
+        // u1: testEventId 선택
+        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true, selectedEventId: testEventId } }), mockRes());
+
+        // (a) u2 같은 축제 → 포함
+        await saveMateProfile(mockReq({ auth: auth2, body: { ...u2Body, selectedEventId: testEventId } }), mockRes());
+        const r1 = mockRes();
+        await getRecommendations(mockReq({ auth }), r1);
+        const b1 = r1._c.json as { items?: Array<{ userId: string }> };
+        if (!Array.isArray(b1?.items)) { f.push('(same) items not array'); return f; }
+        if (!b1.items.some((i) => i.userId === auth2.userId.toString()))
+          f.push('(same event) u2 should be IN recommendations');
+
+        // (b) u2 다른 축제 → 제외
+        await saveMateProfile(mockReq({ auth: auth2, body: { ...u2Body, selectedEventId: testEventId2 } }), mockRes());
+        const r2 = mockRes();
+        await getRecommendations(mockReq({ auth }), r2);
+        const b2 = r2._c.json as { items?: Array<{ userId: string }> };
+        if (!Array.isArray(b2?.items)) { f.push('(diff) items not array'); return f; }
+        if (b2.items.some((i) => i.userId === auth2.userId.toString()))
+          f.push('(diff event) u2 must NOT be in recommendations');
+      } finally {
+        await prisma.mateIndex.deleteMany({ where: { userId: auth2.userId } });
+        await prisma.mateProfile.deleteMany({ where: { userId: auth2.userId } });
+        if (preBlocks.length > 0) {
+          await prisma.block.createMany({
+            data: preBlocks.map((b) => ({ blockId: b.blockId, blockerId: b.blockerId, blockedUserId: b.blockedUserId, createdAt: b.createdAt })),
+            skipDuplicates: true,
+          });
+        }
+      }
+      return f;
+    });
+
+    // ── CASE 21: reco.no_event_when_event_stale — 선택 후 축제가 윈도우 밖이 되면 no_event ──
+    // getRecommendations stale 게이트(startDate 범위 검사)를 검증. 축제 startDate 를 과거로
+    // 옮겼다가 finally 에서 복원(비파괴).
+    await check('reco.no_event_when_event_stale', async () => {
+      const f: string[] = [];
+      if (!testEventId) { f.push('no upcoming approved event in 2wk window — seed needed'); return f; }
+      const evId = BigInt(testEventId);
+      const orig = await prisma.event.findUnique({ where: { eventId: evId }, select: { startDate: true } });
+      if (!orig) { f.push('test event vanished'); return f; }
+      try {
+        // u1: 유효 축제 선택
+        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true, selectedEventId: testEventId } }), mockRes());
+        // 사전조건: 유효 축제이면 no_event 아님
+        const before = mockRes();
+        await getRecommendations(mockReq({ auth }), before);
+        if ((before._c.json as { state?: string }).state === 'no_event') {
+          f.push('precondition failed: valid event should not yield no_event');
+        }
+        // 축제를 과거로 이동 → stale
+        await prisma.event.update({ where: { eventId: evId }, data: { startDate: new Date('2020-01-01T00:00:00Z') } });
+        const after = mockRes();
+        await getRecommendations(mockReq({ auth }), after);
+        const st = (after._c.json as { state?: string }).state;
+        if (st !== 'no_event') f.push(`stale(past) event should yield no_event, got '${st}'`);
+      } finally {
+        await prisma.event.update({ where: { eventId: evId }, data: { startDate: orig.startDate } });
+      }
       return f;
     });
 

@@ -86,6 +86,7 @@ import {
   getMyMateProfileWithIndex,
   getMateIndex,
   getRecommendations,
+  listUpcomingMateEvents,
 } from './routes/mate.js';
 import { updateMyProfile, listMyCredits } from './routes/me.js';
 import { listMyAppointments } from './routes/appointments.js';
@@ -326,6 +327,12 @@ export function createApp(): Express {
     '/community/mate/profile',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => getMyMateProfile(req, res).catch(next),
+  );
+  // GG-MATCH-003 선택 가능 축제 목록 (2주내 개최) — "축제 선택" 드롭다운
+  app.get(
+    '/community/mate/events',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listUpcomingMateEvents(req, res).catch(next),
   );
   // A_801 메이트 추천 목록 (Task 3 / ADR 0007)
   app.get(
