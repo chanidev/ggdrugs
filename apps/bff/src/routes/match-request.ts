@@ -487,101 +487,149 @@ export async function acceptMatchRequest(req: Request, res: Response) {
     });
     chatRoomId = result.chatRoomId;
   } else {
-    // 그룹 수락: 기존 방 없으면 생성 + 최초 수락자 ownerUserId 설정
-    // 같은 requester 의 그룹 신청 중 이미 수락된 방이 있는지 확인
-    const existingAccepted = await prisma.matchRequest.findFirst({
-      where: {
-        requesterId: matchRequest.requesterId,
-        requestType: 'group',
-        status: 'accepted',
-        chatRoomId: { not: null },
-      },
-      select: { chatRoomId: true },
-    });
+    // 그룹 수락 — Serializable + P2034 재시도. 두 가지 경합을 차단:
+    //  (a) 최초 수락 경합: existingAccepted 를 tx 밖에서 읽으면 동시 첫 수락 2건이 각자 방을 만들어
+    //      한 그룹에 방이 2개 생긴다 → tx 내부 재조회 + 직렬화로 두 번째는 기존 방 합류로 수렴.
+    //  (b) 정원 초과: upsert 전 active 멤버 수를 tx 내부에서 세어 maxMembers 초과 합류를 거절(409).
+    // (voteAppointment 와 동일한 동시성 패턴 — leaveRoom/약속투표 참고.)
+    let resolvedRoomId: bigint | null = null;
+    let roomFull = false;
+    for (let attempt = 0; ; attempt++) {
+      resolvedRoomId = null;
+      roomFull = false;
+      try {
+        await prisma.$transaction(
+          async (tx) => {
+            // (a) 기존 수락 방을 tx 내부에서 재조회 (경합 차단)
+            const existingAccepted = await tx.matchRequest.findFirst({
+              where: {
+                requesterId: matchRequest.requesterId,
+                requestType: 'group',
+                status: 'accepted',
+                chatRoomId: { not: null },
+              },
+              select: { chatRoomId: true },
+            });
 
-    if (existingAccepted?.chatRoomId) {
-      // 기존 방에 합류
-      const existingRoomId = existingAccepted.chatRoomId;
+            if (existingAccepted?.chatRoomId) {
+              const existingRoomId = existingAccepted.chatRoomId;
 
-      await prisma.$transaction(async (tx) => {
-        await tx.groupMembership.upsert({
-          where: { chatRoomId_userId: { chatRoomId: existingRoomId, userId: matchRequest.receiverId } },
-          create: { chatRoomId: existingRoomId, userId: matchRequest.receiverId, role: 'member' },
-          update: { memberStatus: 'active' },
-        });
+              // (b) 정원 검사: 수신자가 이미 active 가 아닌데 정원이 찼으면 거절
+              const room = await tx.chatRoom.findUnique({
+                where: { chatRoomId: existingRoomId },
+                select: { maxMembers: true },
+              });
+              const maxMembers = room?.maxMembers ?? 4;
+              const activeCount = await tx.groupMembership.count({
+                where: { chatRoomId: existingRoomId, memberStatus: 'active' },
+              });
+              const mine = await tx.groupMembership.findUnique({
+                where: { chatRoomId_userId: { chatRoomId: existingRoomId, userId: matchRequest.receiverId } },
+                select: { memberStatus: true },
+              });
+              if (mine?.memberStatus !== 'active' && activeCount >= maxMembers) {
+                roomFull = true;
+                return; // 부수효과 없이 종료 → 409
+              }
 
-        await tx.matchRequest.update({
-          where: { matchRequestId },
-          data: { status: 'accepted', chatRoomId: existingRoomId },
-        });
+              await tx.groupMembership.upsert({
+                where: { chatRoomId_userId: { chatRoomId: existingRoomId, userId: matchRequest.receiverId } },
+                create: { chatRoomId: existingRoomId, userId: matchRequest.receiverId, role: 'member' },
+                update: { memberStatus: 'active' },
+              });
 
-        await tx.notification.create({
-          data: {
-            userId: matchRequest.requesterId,
-            title: '그룹 신청이 수락되었습니다',
-            message: '그룹 채팅 신청이 수락되었습니다.',
-            scheduledAt: new Date(),
-            isSent: true,
-            sentAt: new Date(),
-            notificationType: 'group_invite',
-            relatedEntityId: existingRoomId,
-            relatedEntityType: 'chat_room',
+              await tx.matchRequest.update({
+                where: { matchRequestId },
+                data: { status: 'accepted', chatRoomId: existingRoomId },
+              });
+
+              await tx.notification.create({
+                data: {
+                  userId: matchRequest.requesterId,
+                  title: '그룹 신청이 수락되었습니다',
+                  message: '그룹 채팅 신청이 수락되었습니다.',
+                  scheduledAt: new Date(),
+                  isSent: true,
+                  sentAt: new Date(),
+                  notificationType: 'group_invite',
+                  relatedEntityId: existingRoomId,
+                  relatedEntityType: 'chat_room',
+                },
+              });
+
+              resolvedRoomId = existingRoomId;
+            } else {
+              // 첫 수락자 → 방 생성, ownerUserId = 수락자(receiver)
+              const room = await tx.chatRoom.create({
+                data: { roomType: 'group', maxMembers: 4, ownerUserId: matchRequest.receiverId },
+                select: { chatRoomId: true },
+              });
+
+              await tx.groupMembership.createMany({
+                data: [
+                  { chatRoomId: room.chatRoomId, userId: matchRequest.requesterId, role: 'member' },
+                  { chatRoomId: room.chatRoomId, userId: matchRequest.receiverId, role: 'owner' },
+                ],
+              });
+
+              await tx.matchRequest.update({
+                where: { matchRequestId },
+                data: { status: 'accepted', chatRoomId: room.chatRoomId },
+              });
+
+              await tx.chatRoomMessage.create({
+                data: {
+                  chatRoomId: room.chatRoomId,
+                  senderUserId: null,
+                  messageType: 'system',
+                  body: '그룹 채팅방이 시작되었습니다',
+                },
+              });
+
+              await tx.notification.create({
+                data: {
+                  userId: matchRequest.requesterId,
+                  title: '그룹 신청이 수락되었습니다',
+                  message: '그룹 채팅 신청이 수락되었습니다.',
+                  scheduledAt: new Date(),
+                  isSent: true,
+                  sentAt: new Date(),
+                  notificationType: 'group_invite',
+                  relatedEntityId: room.chatRoomId,
+                  relatedEntityType: 'chat_room',
+                },
+              });
+
+              resolvedRoomId = room.chatRoomId;
+            }
           },
-        });
-      });
-
-      chatRoomId = existingRoomId;
-    } else {
-      // 첫 수락자 → 방 생성, ownerUserId = 수락자(receiver)
-      const result = await prisma.$transaction(async (tx) => {
-        const room = await tx.chatRoom.create({
-          data: {
-            roomType: 'group',
-            maxMembers: 4,
-            ownerUserId: matchRequest.receiverId,
-          },
-          select: { chatRoomId: true },
-        });
-
-        await tx.groupMembership.createMany({
-          data: [
-            { chatRoomId: room.chatRoomId, userId: matchRequest.requesterId, role: 'member' },
-            { chatRoomId: room.chatRoomId, userId: matchRequest.receiverId, role: 'owner' },
-          ],
-        });
-
-        await tx.matchRequest.update({
-          where: { matchRequestId },
-          data: { status: 'accepted', chatRoomId: room.chatRoomId },
-        });
-
-        await tx.chatRoomMessage.create({
-          data: {
-            chatRoomId: room.chatRoomId,
-            senderUserId: null,
-            messageType: 'system',
-            body: '그룹 채팅방이 시작되었습니다',
-          },
-        });
-
-        await tx.notification.create({
-          data: {
-            userId: matchRequest.requesterId,
-            title: '그룹 신청이 수락되었습니다',
-            message: '그룹 채팅 신청이 수락되었습니다.',
-            scheduledAt: new Date(),
-            isSent: true,
-            sentAt: new Date(),
-            notificationType: 'group_invite',
-            relatedEntityId: room.chatRoomId,
-            relatedEntityType: 'chat_room',
-          },
-        });
-
-        return room;
-      });
-      chatRoomId = result.chatRoomId;
+          { isolationLevel: 'Serializable' },
+        );
+        break;
+      } catch (e) {
+        const pe = e as { code?: string; message?: string };
+        const conflict =
+          pe.code === 'P2034' ||
+          (pe.message ?? '').includes('write conflict') ||
+          (pe.message ?? '').includes('deadlock');
+        if (conflict && attempt < 3) {
+          // voteAppointment 와 동일: 충돌 시 점증 백오프로 tight busy-wait 회피.
+          await new Promise((r) => setTimeout(r, 20 * (attempt + 1)));
+          continue;
+        }
+        throw e;
+      }
     }
+
+    if (roomFull) {
+      res.status(409).json({ error: 'group_full' });
+      return;
+    }
+    if (resolvedRoomId === null) {
+      res.status(500).json({ error: 'accept_failed' });
+      return;
+    }
+    chatRoomId = resolvedRoomId;
   }
 
   // 실시간 알림 (fire-and-forget)

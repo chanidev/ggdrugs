@@ -525,6 +525,63 @@ async function main() {
       return f;
     });
 
+    // ── CASE 12b: match.group.accept.full_room — 정원 4 꽉 찬 방 합류 시 409 group_full ──
+    // send-side 가드(CASE 12)와 별개로 **accept-side** 정원 검사(본 PR 신규). full room 이라
+    // sendGroupRequest 로는 pending 요청을 못 만드므로 matchRequest 를 직접 생성한다.
+    // 결정성: 잔여 그룹요청 충돌을 피하려 신규 합성 organizer(synO)를 requester 로 사용.
+    await check('match.group.accept.full_room', async () => {
+      const f: string[] = [];
+      const sfx = Date.now();
+      const [synO, synA, synB, synC, synInv] = await Promise.all([
+        prisma.user.create({ data: { socialUid: `accfull_o_${sfx}`, authProvider: 'dev', nickname: `AccO${sfx}`, activeRole: 'user' } }),
+        prisma.user.create({ data: { socialUid: `accfull_a_${sfx}`, authProvider: 'dev', nickname: `AccA${sfx}`, activeRole: 'user' } }),
+        prisma.user.create({ data: { socialUid: `accfull_b_${sfx}`, authProvider: 'dev', nickname: `AccB${sfx}`, activeRole: 'user' } }),
+        prisma.user.create({ data: { socialUid: `accfull_c_${sfx}`, authProvider: 'dev', nickname: `AccC${sfx}`, activeRole: 'user' } }),
+        prisma.user.create({ data: { socialUid: `accfull_i_${sfx}`, authProvider: 'dev', nickname: `AccI${sfx}`, activeRole: 'user' } }),
+      ]);
+      const exp = new Date(Date.now() + 6 * 60 * 60 * 1000);
+      const fullRoom = await prisma.chatRoom.create({
+        data: { roomType: 'group', maxMembers: 4, status: 'active', ownerUserId: synA.userId },
+        select: { chatRoomId: true },
+      });
+      await prisma.groupMembership.createMany({
+        data: [
+          { chatRoomId: fullRoom.chatRoomId, userId: synO.userId, role: 'member', memberStatus: 'active' },
+          { chatRoomId: fullRoom.chatRoomId, userId: synA.userId, role: 'owner',  memberStatus: 'active' },
+          { chatRoomId: fullRoom.chatRoomId, userId: synB.userId, role: 'member', memberStatus: 'active' },
+          { chatRoomId: fullRoom.chatRoomId, userId: synC.userId, role: 'member', memberStatus: 'active' },
+        ],
+      });
+      // existingAccepted 가 fullRoom 을 찾도록: synO 의 accepted 그룹 요청
+      await prisma.matchRequest.create({
+        data: { requesterId: synO.userId, receiverId: synA.userId, requestType: 'group', status: 'accepted', chatRoomId: fullRoom.chatRoomId, expiresAt: exp },
+      });
+      // synInv 에게 보낸 pending 그룹 요청 (직접 생성 — send-side 가드 우회)
+      const pending = await prisma.matchRequest.create({
+        data: { requesterId: synO.userId, receiverId: synInv.userId, requestType: 'group', status: 'pending', expiresAt: exp },
+        select: { matchRequestId: true },
+      });
+      try {
+        const res = mockRes();
+        await acceptMatchRequest(
+          mockReq({ auth: { userId: synInv.userId, nickname: `AccI${sfx}`, activeRole: 'user' }, params: { matchRequestId: pending.matchRequestId.toString() } }),
+          res,
+        );
+        if (res._c.status !== 409) f.push(`status ${res._c.status} != 409`);
+        const b = res._c.json as { error?: string };
+        if (b?.error !== 'group_full') f.push(`error '${b?.error}' != 'group_full'`);
+        const joined = await prisma.groupMembership.findFirst({ where: { chatRoomId: fullRoom.chatRoomId, userId: synInv.userId } });
+        if (joined) f.push('synInv must NOT be added to a full room');
+      } finally {
+        const ids = [synO.userId, synA.userId, synB.userId, synC.userId, synInv.userId];
+        await prisma.matchRequest.deleteMany({ where: { requesterId: synO.userId } });
+        await prisma.groupMembership.deleteMany({ where: { chatRoomId: fullRoom.chatRoomId } });
+        await prisma.chatRoom.delete({ where: { chatRoomId: fullRoom.chatRoomId } });
+        await prisma.user.deleteMany({ where: { userId: { in: ids } } });
+      }
+      return f;
+    });
+
     // ─────────────────────────────────────────────────────────────────
     // TASK 4 — 채팅방 REST (A_805)
     // 별도 1:1 채팅방 생성 (u1↔u2) 후 모든 케이스 실행
