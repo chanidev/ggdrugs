@@ -66,7 +66,9 @@
     "eventAriaLabel": "Select a festival to attend together",
     "eventPlaceholder": "Please select a festival",
     "eventEmpty": "No festivals starting within 2 weeks",
-    "selectEvent": "Please select a festival to attend together."
+    "selectEvent": "Please select a festival to attend together.",
+    "eventNotSelectable": "The festival you selected is no longer available. Please pick another from the list.",
+    "eventLoadFailed": "Couldn't load festivals. Please refresh and try again."
   },
   "reco": {
     "title": "Mate Recommendations",

@@ -116,8 +116,10 @@ export async function saveMateProfile(body: MateProfileBody): Promise<MateProfil
   if (res.status === 401) throw new Error('UNAUTHENTICATED');
   if (res.status === 422) throw new Error('CONSENT_REQUIRED');
   if (res.status === 400) {
-    const t = await res.text().catch(() => '');
-    throw new Error(`VALIDATION: ${t.slice(0, 200)}`);
+    const b = (await res.json().catch(() => ({}))) as { error?: string };
+    // GG-MATCH-003: 선택 축제가 로드 후 만료/미승인/삭제된 경우 전용 코드 → 폼이 재선택 안내.
+    if (b.error === 'selected_event_not_selectable') throw new Error('EVENT_NOT_SELECTABLE');
+    throw new Error(`VALIDATION: ${(b.error ?? '').slice(0, 200)}`);
   }
   if (!res.ok) {
     const t = await res.text().catch(() => '');

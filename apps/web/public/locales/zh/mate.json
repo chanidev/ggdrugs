@@ -66,7 +66,9 @@
     "eventAriaLabel": "选择要一起参加的庆典",
     "eventPlaceholder": "请选择庆典",
     "eventEmpty": "两周内没有即将举行的庆典",
-    "selectEvent": "请选择想一起参加的庆典。"
+    "selectEvent": "请选择想一起参加的庆典。",
+    "eventNotSelectable": "你选择的庆典已不可报名，请从列表中重新选择。",
+    "eventLoadFailed": "无法加载庆典列表，请刷新后重试。"
   },
   "reco": {
     "title": "同伴推荐",

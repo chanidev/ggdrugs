@@ -66,7 +66,9 @@
     "eventAriaLabel": "Chọn lễ hội để cùng tham gia",
     "eventPlaceholder": "Vui lòng chọn lễ hội",
     "eventEmpty": "Không có lễ hội nào diễn ra trong vòng 2 tuần",
-    "selectEvent": "Vui lòng chọn lễ hội để cùng tham gia."
+    "selectEvent": "Vui lòng chọn lễ hội để cùng tham gia.",
+    "eventNotSelectable": "Lễ hội bạn đã chọn không còn khả dụng. Vui lòng chọn lại từ danh sách.",
+    "eventLoadFailed": "Không thể tải danh sách lễ hội. Vui lòng làm mới và thử lại."
   },
   "reco": {
     "title": "Gợi ý bạn đồng hành",

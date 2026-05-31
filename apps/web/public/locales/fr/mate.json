@@ -66,7 +66,9 @@
     "eventAriaLabel": "Choisir un festival à fréquenter ensemble",
     "eventPlaceholder": "Veuillez choisir un festival",
     "eventEmpty": "Aucun festival prévu dans les 2 semaines",
-    "selectEvent": "Veuillez choisir un festival à fréquenter ensemble."
+    "selectEvent": "Veuillez choisir un festival à fréquenter ensemble.",
+    "eventNotSelectable": "Le festival choisi n'est plus disponible. Veuillez en choisir un autre dans la liste.",
+    "eventLoadFailed": "Impossible de charger les festivals. Veuillez actualiser et réessayer."
   },
   "reco": {
     "title": "Recommandations de compagnons",

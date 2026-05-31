@@ -469,16 +469,20 @@ export async function getRecommendations(req: Request, res: Response) {
   }
 
   // GG-MATCH-003 / ADR 0007 #3: 후보풀의 hard 경계 = "같은 축제(2주내 개최)".
-  // 축제 미선택, 또는 선택 축제가 삭제·미승인·이미 개최 시작됨(stale) → 축제 (재)선택 유도.
+  // 축제 미선택, 또는 선택 축제가 삭제·미승인·윈도우 이탈(과거 시작 / 관리자가 +14일 밖으로 이동)
+  // → stale 로 보고 축제 (재)선택 유도. 윈도우 상·하한 모두 검사해 selector/save 검증과 패리티.
+  // [TZ note] upcomingMateEventWindow 는 events.ts parsePeriod 와 동일하게 UTC 기준 날짜 경계를
+  //   쓴다(앱 전역 컨벤션, @db.Date 는 TZ-naive). KST 정합이 필요하면 parsePeriod 포함 전역 수정.
   const recoNow = new Date();
-  const { from: evFrom } = upcomingMateEventWindow(recoNow);
+  const { from: evFrom, to: evTo } = upcomingMateEventWindow(recoNow);
   const myEvent = myProfile.selectedEvent;
   const eventUsable =
     myProfile.selectedEventId !== null &&
     myEvent != null &&
     !myEvent.isDeleted &&
     myEvent.approvalStatus === 'approved' &&
-    myEvent.startDate >= evFrom;
+    myEvent.startDate >= evFrom &&
+    myEvent.startDate <= evTo;
   if (!eventUsable) {
     res.json({ state: 'no_event' });
     return;

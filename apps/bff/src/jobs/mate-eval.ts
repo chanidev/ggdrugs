@@ -566,6 +566,36 @@ async function main() {
       return f;
     });
 
+    // ── CASE 21: reco.no_event_when_event_stale — 선택 후 축제가 윈도우 밖이 되면 no_event ──
+    // getRecommendations stale 게이트(startDate 범위 검사)를 검증. 축제 startDate 를 과거로
+    // 옮겼다가 finally 에서 복원(비파괴).
+    await check('reco.no_event_when_event_stale', async () => {
+      const f: string[] = [];
+      if (!testEventId) { f.push('no upcoming approved event in 2wk window — seed needed'); return f; }
+      const evId = BigInt(testEventId);
+      const orig = await prisma.event.findUnique({ where: { eventId: evId }, select: { startDate: true } });
+      if (!orig) { f.push('test event vanished'); return f; }
+      try {
+        // u1: 유효 축제 선택
+        await saveMateProfile(mockReq({ auth, body: { ...BASE_PROFILE, autoRecommend: true, selectedEventId: testEventId } }), mockRes());
+        // 사전조건: 유효 축제이면 no_event 아님
+        const before = mockRes();
+        await getRecommendations(mockReq({ auth }), before);
+        if ((before._c.json as { state?: string }).state === 'no_event') {
+          f.push('precondition failed: valid event should not yield no_event');
+        }
+        // 축제를 과거로 이동 → stale
+        await prisma.event.update({ where: { eventId: evId }, data: { startDate: new Date('2020-01-01T00:00:00Z') } });
+        const after = mockRes();
+        await getRecommendations(mockReq({ auth }), after);
+        const st = (after._c.json as { state?: string }).state;
+        if (st !== 'no_event') f.push(`stale(past) event should yield no_event, got '${st}'`);
+      } finally {
+        await prisma.event.update({ where: { eventId: evId }, data: { startDate: orig.startDate } });
+      }
+      return f;
+    });
+
   } finally {
     // 픽스처 정리 — 반복 실행 시 DB 오염 방지
     await prisma.mateIndex.deleteMany({ where: { userId: auth.userId } });

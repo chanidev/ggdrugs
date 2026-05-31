@@ -66,7 +66,9 @@
     "eventAriaLabel": "함께 갈 축제 선택",
     "eventPlaceholder": "축제를 선택해 주세요",
     "eventEmpty": "2주 이내 개최 예정인 축제가 없어요",
-    "selectEvent": "함께 갈 축제를 선택해 주세요."
+    "selectEvent": "함께 갈 축제를 선택해 주세요.",
+    "eventNotSelectable": "선택한 축제를 더 이상 신청할 수 없어요. 목록에서 다시 선택해 주세요.",
+    "eventLoadFailed": "축제 목록을 불러오지 못했어요. 새로고침 후 다시 시도해 주세요."
   },
   "reco": {
     "title": "메이트 추천",

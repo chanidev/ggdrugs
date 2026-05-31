@@ -101,6 +101,7 @@ export function MateFormPage() {
   const navigate = useNavigate();
   const [regions, setRegions] = useState<RegionItem[]>([]);
   const [events, setEvents] = useState<MateEvent[]>([]);
+  const [eventsLoadFailed, setEventsLoadFailed] = useState(false);
   const [form, setForm] = useState<FormState>(INIT);
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -130,9 +131,11 @@ export function MateFormPage() {
   useEffect(() => {
     let mounted = true;
     fetchUpcomingMateEvents()
-      .then((list) => { if (mounted) setEvents(list); })
+      .then((list) => { if (mounted) { setEvents(list); setEventsLoadFailed(false); } })
       .catch((e: unknown) => {
-        // 축제 로드 실패는 UI 비차단 — select 비어 있음으로 graceful degrade.
+        // 로드 실패는 UI 비차단(저장 허용)이나, "윈도우에 축제 없음"과 구분해 사용자에게 알린다.
+        // (실패를 침묵하면 검증이 축제 필수를 건너뛰어 no_event 로 빠지는 원인 — 리뷰 지적)
+        if (mounted) setEventsLoadFailed(true);
         console.warn('[MateFormPage] 축제 목록 로드 실패', e);
       });
     return () => { mounted = false; };
@@ -187,6 +190,7 @@ export function MateFormPage() {
       const m = (e as Error).message;
       if (m === 'UNAUTHENTICATED') setErr(t('form.loginRequired'));
       else if (m === 'CONSENT_REQUIRED') setErr(t('form.consentRequired'));
+      else if (m === 'EVENT_NOT_SELECTABLE') setErr(t('form.eventNotSelectable'));
       else if (m.startsWith('VALIDATION:')) setErr(t('form.validationError'));
       else setErr(t('form.saveError'));
     } finally {
@@ -238,6 +242,11 @@ export function MateFormPage() {
                   ))}
                 </select>
               </FieldRow>
+              {eventsLoadFailed && (
+                <p role="alert" className="mt-1.5 text-[12px] text-(--color-error)">
+                  {t('form.eventLoadFailed')}
+                </p>
+              )}
             </section>
 
             {/* ── 내 정보 섹션 ── */}
