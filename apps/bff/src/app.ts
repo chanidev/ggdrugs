@@ -20,7 +20,7 @@ import {
   startKakao,
   kakaoCallback,
 } from './routes/auth.js';
-import { requireAuth, resolveAuth } from './middleware/require-auth.js';
+import { requireAuth, resolveAuth, requireNotSuspended } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
 import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment } from './routes/posts.js';
 import { translatePost } from './routes/translate.js';
@@ -266,16 +266,19 @@ export function createApp(): Express {
   app.post(
     '/community/posts',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => createPost(req, res).catch(next),
   );
   app.post(
     '/community/posts/:id/comments',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => createComment(req, res).catch(next),
   );
   app.patch(
     '/community/comments/:id',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => updateComment(req, res).catch(next),
   );
   app.delete(
@@ -286,6 +289,7 @@ export function createApp(): Express {
   app.patch(
     '/community/posts/:id',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => updatePost(req, res).catch(next),
   );
   app.delete(
@@ -296,6 +300,7 @@ export function createApp(): Express {
   app.post(
     '/community/posts/:id/like',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => toggleLike(req, res).catch(next),
   );
   // GG-COMM-013 게시글 번역 (비로그인 가능 — resolveAuth)
@@ -341,11 +346,13 @@ export function createApp(): Express {
   app.post(
     '/community/match/request/1-to-1',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => sendOneToOneRequest(req, res).catch(next),
   );
   app.post(
     '/community/match/request/group',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => sendGroupRequest(req, res).catch(next),
   );
   app.patch(
@@ -379,11 +386,13 @@ export function createApp(): Express {
   app.post(
     '/community/chat-rooms/:chatRoomId/appointment',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => proposeAppointment(req, res).catch(next),
   );
   app.patch(
     '/community/chat-rooms/:chatRoomId/appointment/:appointmentId/vote',
     (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
     (req, res, next) => voteAppointment(req, res).catch(next),
   );
   app.post(

@@ -479,102 +479,163 @@ export async function voteAppointment(req: Request, res: Response) {
   }
 
   let finalStatus = appointment.status;
+  let concurrentConflict = false;
   let apptOut: Record<string, unknown>;
 
-  await prisma.$transaction(async (tx) => {
-    // 내 투표 업데이트
-    await tx.appointmentVote.update({
-      where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
-      data: {
-        vote,
-        ...(counterAt !== null ? { counterAt } : {}),
-        ...(counterTime !== null ? { counterTime } : {}),
-      },
-    });
+  // 상태 전이 가능한(투표 진행 중) status 집합.
+  const VOTABLE = ['proposed', 'counter_proposed'];
 
-    if (vote === 'agree') {
-      // 전원 동의 여부 확인 (제안자 포함 모든 투표)
-      const allVotes = await tx.appointmentVote.findMany({
-        where: { appointmentId },
-        select: { vote: true },
-      });
-      const allAgree = allVotes.every((v) => v.vote === 'agree');
+  // 동시 투표 경합 방지 (ADR 0009): Serializable + 조건부 상태 전이 + P2034 재시도.
+  //  - 트랜잭션 시작 시 status 재확인 — 외부 check(line 462)와 tx 사이 경합 차단.
+  //  - 상태 전이는 updateMany(WHERE status IN VOTABLE) 조건부 — 동시 tx 가 이미 전이했으면
+  //    count=0 → 확정/거절 부수효과(알림·시스템 메시지) skip → reject↔confirm 뒤집힘 방지.
+  //  - 마지막 두 동의자가 서로의 표를 못 봐 confirm 을 누락하는 race 는 Serializable
+  //    직렬화 충돌(P2034)→재시도로 해소(재시도 시 상대 표 commit 반영). leaveRoom 과 동일 패턴.
+  for (let attempt = 0; ; attempt++) {
+    concurrentConflict = false;
+    finalStatus = appointment.status;
+    try {
+      await prisma.$transaction(
+        async (tx) => {
+          // 트랜잭션 내 status 재확인 (외부 check 이후 경합으로 전이됐을 수 있음)
+          const current = await tx.appointment.findUnique({
+            where: { appointmentId },
+            select: { status: true },
+          });
+          if (!current || !VOTABLE.includes(current.status)) {
+            concurrentConflict = true;
+            finalStatus = current?.status ?? appointment.status;
+            return;
+          }
 
-      if (allAgree) {
-        finalStatus = 'confirmed';
-        await tx.appointment.update({
-          where: { appointmentId },
-          data: { status: 'confirmed' },
-        });
+          // 내 투표 업데이트
+          await tx.appointmentVote.update({
+            where: { appointmentId_userId: { appointmentId, userId: auth.userId } },
+            data: {
+              vote,
+              ...(counterAt !== null ? { counterAt } : {}),
+              ...(counterTime !== null ? { counterTime } : {}),
+            },
+          });
 
-        await tx.chatRoomMessage.create({
-          data: {
-            chatRoomId,
-            senderUserId: null,
-            messageType: 'system',
-            body: '약속이 확정되었습니다',
-          },
-        });
+          if (vote === 'agree') {
+            // 전원 동의 여부 확인 (제안자 포함 모든 투표)
+            const allVotes = await tx.appointmentVote.findMany({
+              where: { appointmentId },
+              select: { vote: true },
+            });
+            const allAgree = allVotes.every((v) => v.vote === 'agree');
 
-        // 전원에게 확정 알림
-        const members = await tx.groupMembership.findMany({
-          where: { chatRoomId, memberStatus: 'active' },
-          select: { userId: true },
-        });
-        await tx.notification.createMany({
-          data: members.map((m) => ({
-            userId: m.userId,
-            title: '약속이 확정되었습니다',
-            message: '모든 멤버가 약속에 동의했습니다.',
-            scheduledAt: new Date(),
-            isSent: true,
-            sentAt: new Date(),
-            notificationType: 'appointment',
-            relatedEntityId: appointmentId,
-            relatedEntityType: 'appointment',
-          })),
-        });
+            if (allAgree) {
+              // 조건부 확정 — 동시 tx 가 이미 상태를 바꿨다면 0 row → 부수효과 skip
+              const upd = await tx.appointment.updateMany({
+                where: { appointmentId, status: { in: VOTABLE } },
+                data: { status: 'confirmed' },
+              });
+              if (upd.count === 0) {
+                concurrentConflict = true;
+                return;
+              }
+              finalStatus = 'confirmed';
+
+              await tx.chatRoomMessage.create({
+                data: {
+                  chatRoomId,
+                  senderUserId: null,
+                  messageType: 'system',
+                  body: '약속이 확정되었습니다',
+                },
+              });
+
+              // 전원에게 확정 알림
+              const members = await tx.groupMembership.findMany({
+                where: { chatRoomId, memberStatus: 'active' },
+                select: { userId: true },
+              });
+              await tx.notification.createMany({
+                data: members.map((m) => ({
+                  userId: m.userId,
+                  title: '약속이 확정되었습니다',
+                  message: '모든 멤버가 약속에 동의했습니다.',
+                  scheduledAt: new Date(),
+                  isSent: true,
+                  sentAt: new Date(),
+                  notificationType: 'appointment',
+                  relatedEntityId: appointmentId,
+                  relatedEntityType: 'appointment',
+                })),
+              });
+            }
+          } else if (vote === 'reject') {
+            // [high] 단일 거절 → 즉시 약속 파기. 36h 스케줄러는 무응답(pending) 만료 처리 전담.
+            const upd = await tx.appointment.updateMany({
+              where: { appointmentId, status: { in: VOTABLE } },
+              data: { status: 'rejected' },
+            });
+            if (upd.count === 0) {
+              concurrentConflict = true;
+              return;
+            }
+            finalStatus = 'rejected';
+
+            await tx.chatRoomMessage.create({
+              data: {
+                chatRoomId,
+                senderUserId: null,
+                messageType: 'system',
+                body: '약속이 거절되었습니다',
+              },
+            });
+          } else if (vote === 'counter') {
+            const upd = await tx.appointment.updateMany({
+              where: { appointmentId, status: { in: VOTABLE } },
+              data: { status: 'counter_proposed' },
+            });
+            if (upd.count === 0) {
+              concurrentConflict = true;
+              return;
+            }
+            finalStatus = 'counter_proposed';
+
+            // [medium] 역제안 시 역제안자 본인을 제외한 나머지 투표를 'pending'으로 초기화.
+            // counter_proposed 는 새로운 제안 라운드이므로 이전 표는 무효화해야 함.
+            await tx.appointmentVote.updateMany({
+              where: { appointmentId, userId: { not: auth.userId } },
+              data: { vote: 'pending', counterAt: null, counterTime: null },
+            });
+
+            await tx.chatRoomMessage.create({
+              data: {
+                chatRoomId,
+                senderUserId: null,
+                messageType: 'system',
+                body: '역제안이 제출되었습니다',
+              },
+            });
+          }
+        },
+        { isolationLevel: 'Serializable' },
+      );
+      break;
+    } catch (e) {
+      const pe = e as { code?: string; message?: string };
+      const conflict =
+        pe.code === 'P2034' ||
+        (pe.message ?? '').includes('write conflict') ||
+        (pe.message ?? '').includes('deadlock');
+      if (conflict && attempt < 3) {
+        await new Promise((r) => setTimeout(r, 20 * (attempt + 1)));
+        continue;
       }
-    } else if (vote === 'reject') {
-      // [high] 단일 거절 → 즉시 약속 파기. 36h 스케줄러는 무응답(pending) 만료 처리 전담.
-      finalStatus = 'rejected';
-      await tx.appointment.update({
-        where: { appointmentId },
-        data: { status: 'rejected' },
-      });
-
-      await tx.chatRoomMessage.create({
-        data: {
-          chatRoomId,
-          senderUserId: null,
-          messageType: 'system',
-          body: '약속이 거절되었습니다',
-        },
-      });
-    } else if (vote === 'counter') {
-      finalStatus = 'counter_proposed';
-      await tx.appointment.update({
-        where: { appointmentId },
-        data: { status: 'counter_proposed' },
-      });
-
-      // [medium] 역제안 시 역제안자 본인을 제외한 나머지 투표를 'pending'으로 초기화.
-      // counter_proposed 는 새로운 제안 라운드이므로 이전 표는 무효화해야 함.
-      await tx.appointmentVote.updateMany({
-        where: { appointmentId, userId: { not: auth.userId } },
-        data: { vote: 'pending', counterAt: null, counterTime: null },
-      });
-
-      await tx.chatRoomMessage.create({
-        data: {
-          chatRoomId,
-          senderUserId: null,
-          messageType: 'system',
-          body: '역제안이 제출되었습니다',
-        },
-      });
+      throw e;
     }
-  });
+  }
+
+  // 동시 전이로 내 투표가 무의미해진 경우 — 409(재시도 가능). 현재 상태 동봉.
+  if (concurrentConflict) {
+    res.status(409).json({ error: 'appointment_not_votable', retryable: true, currentStatus: finalStatus });
+    return;
+  }
 
   // 최신 상태 조회 후 응답
   const updatedAppt = await prisma.appointment.findUnique({

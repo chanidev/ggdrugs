@@ -84,3 +84,50 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   touchSession(session.sessionId, session.createdAt);
   next();
 }
+
+/**
+ * 유효한(만료 전) 이용정지 여부. (GG-REPORT-006/009)
+ *
+ * 컨벤션: actionAdminReport(admin-reports.ts)는 항상 non-null sanctionExpiresAt을 설정.
+ *   sanctionExpiresAt=null 은 "만료됨/정지 없음" → suspended + null = 정지 해제로 취급.
+ *   runSanctionExpirySweep 실행 전일 수 있어 앱 레이어에서도 만료 여부를 확인한다.
+ *   match-request.ts / getRecommendations(mate.ts) 의 수신측 판정과 동일한 술어.
+ */
+export function isActivelySuspended(
+  user: { sanctionStatus: string; sanctionExpiresAt: Date | null },
+  now = new Date(),
+): boolean {
+  return (
+    user.sanctionStatus === 'suspended' &&
+    user.sanctionExpiresAt != null &&
+    user.sanctionExpiresAt > now
+  );
+}
+
+/**
+ * requireAuth 뒤에 체이닝 — 발신측 제재 가드. (GG-REPORT-006/009)
+ *
+ * 정지된 사용자가 글/댓글/좋아요/신고/차단/매칭신청/채팅을 계속 수행하던 비대칭 갭을
+ * 막는다(수신측만 막혀 있던 문제). 유효 정지면 403 sanction_active.
+ * req.auth 가 채워져 있어야 하므로 반드시 requireAuth 다음에 배치한다.
+ */
+export async function requireNotSuspended(req: Request, res: Response, next: NextFunction) {
+  const { auth } = req as AuthenticatedRequest;
+  if (!auth) {
+    res.status(401).json({ error: 'unauthenticated' });
+    return;
+  }
+  const user = await prisma.user.findUnique({
+    where: { userId: auth.userId },
+    select: { sanctionStatus: true, sanctionExpiresAt: true },
+  });
+  if (user && isActivelySuspended(user)) {
+    res.status(403).json({
+      error: 'sanction_active',
+      detail: 'account suspended',
+      sanctionExpiresAt: user.sanctionExpiresAt?.toISOString() ?? null,
+    });
+    return;
+  }
+  next();
+}

@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
 import { callLlm } from '../llm-client.js';
-import { getTranslationCache, setTranslationCache } from '../lib/translation-cache.js';
+import { getTranslationCache, setTranslationCache, contentHash } from '../lib/translation-cache.js';
 
 const SUPPORTED_LANGS = new Set(['en', 'vi', 'zh', 'ja', 'fr']);
 
@@ -42,9 +42,11 @@ export async function translatePost(req: Request, res: Response): Promise<void> 
   if (!post) { res.status(404).json({ error: 'post not found' }); return; }
 
   const postIdStr = post.postId.toString();
+  // 본문 해시를 캐시 키에 포함 — 게시글 수정 시 stale 번역 노출 방지.
+  const bodyHash = contentHash(post.body);
 
   // Redis 캐시 확인 (에러 시 miss로 처리)
-  const cached = await getTranslationCache(postIdStr, targetLanguage).catch(() => null);
+  const cached = await getTranslationCache(postIdStr, targetLanguage, bodyHash).catch(() => null);
   if (cached !== null) {
     res.json({ postId: postIdStr, originalBody: post.body, translatedBody: cached, targetLanguage, cached: true });
     return;
@@ -66,7 +68,7 @@ export async function translatePost(req: Request, res: Response): Promise<void> 
   const translatedBody = llmResult.translated;
 
   // 번역 성공 시에만 캐시 저장
-  await setTranslationCache(postIdStr, targetLanguage, translatedBody).catch(() => undefined);
+  await setTranslationCache(postIdStr, targetLanguage, bodyHash, translatedBody).catch(() => undefined);
 
   res.json({ postId: postIdStr, originalBody: post.body, translatedBody, targetLanguage, cached: false });
 }

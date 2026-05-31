@@ -324,6 +324,10 @@ export async function getMyMateProfileWithIndex(req: Request, res: Response) {
 // ============================================================
 /** 추천 상위 N 명 반환. 프로필 없거나 동의 없으면 `{ state:'blind' }` (GG-COMM-007/008). */
 const RECO_LIMIT = 20;
+// 후보 fetch 상한 — 지역 내 opt-in 인원이 많아도 전체를 메모리로 끌어오지 않도록 캡.
+// mateIndex desc 정렬로 상위 후보를 우선 확보한 뒤 JS 양방향 스코어링 → 상위 RECO_LIMIT.
+// (지역 단위 풀에서 500은 충분히 넉넉; 초과분은 의도적으로 드롭.)
+const RECO_CANDIDATE_CAP = 500;
 
 export async function getRecommendations(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;
@@ -447,6 +451,9 @@ export async function getRecommendations(req: Request, res: Response) {
         },
       },
     },
+    // 무한 fetch 방지: mateIndex 높은 순으로 상한까지만 로드 (nulls last).
+    orderBy: { user: { mateIndex: { indexValue: 'desc' } } },
+    take: RECO_CANDIDATE_CAP,
   });
 
   // 양방향 점수 계산 → null 제외 → 점수 desc, 동점 mateIndex desc 정렬

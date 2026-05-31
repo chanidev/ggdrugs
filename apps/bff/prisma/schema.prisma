@@ -864,6 +864,8 @@ model Appointment {
   chatRoom        ChatRoom          @relation(fields: [chatRoomId], references: [chatRoomId])
   votes           AppointmentVote[]
   mateEvaluations MateEvaluation[] // [리뷰 medium] FK 관계 — 삭제된 약속 ID로 평가 행 잠김 방지
+  festivalSurveys FestivalSurvey[] // drift 제거 — DB FK(20260530140000) 와 schema 정합
+  festivalReviews FestivalReview[] // drift 제거 — DB FK(20260530140000) 와 schema 정합
 
   @@index([chatRoomId, status], map: "idx_appointment_room_status")
   @@index([expiresAt, status], map: "idx_appointment_expires")
@@ -954,7 +956,10 @@ model FestivalSurvey {
   transport     Int      @db.SmallInt
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  user User @relation(fields: [userId], references: [userId])
+  // appointment FK 는 migration(20260530140000)에서 이미 생성됨 — schema 에도 관계를 명시해
+  // drift 제거 (constraint 명 festival_surveys_appointment_id_fkey 일치).
+  appointment Appointment @relation(fields: [appointmentId], references: [appointmentId])
+  user        User        @relation(fields: [userId], references: [userId])
 
   @@unique([appointmentId, userId], map: "uq_festival_survey_pair")
   @@map("festival_surveys")
@@ -978,7 +983,10 @@ model FestivalReview {
   createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user User @relation(fields: [userId], references: [userId])
+  // appointment FK 는 migration(20260530140000)에서 이미 생성됨 — schema 에도 관계를 명시해
+  // drift 제거 (constraint 명 festival_reviews_appointment_id_fkey 일치).
+  appointment Appointment @relation(fields: [appointmentId], references: [appointmentId])
+  user        User        @relation(fields: [userId], references: [userId])
 
   @@unique([appointmentId, userId], map: "uq_festival_review_pair")
   @@index([eventId, createdAt(sort: Desc)], map: "idx_festival_review_event")

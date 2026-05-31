@@ -1,11 +1,11 @@
 # Graph Report - .  (2026-05-31)
 
 ## Corpus Check
-- 236 files · ~856,195 words
+- 236 files · ~857,095 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1448 nodes · 1828 edges · 250 communities detected
+- 1451 nodes · 1832 edges · 250 communities detected
 - Extraction: 96% EXTRACTED · 4% INFERRED · 0% AMBIGUOUS · INFERRED: 74 edges (avg confidence: 0.81)
 - Token cost: 0 input · 0 output
 
@@ -297,11 +297,11 @@
 
 ### Community 0 - "Community 0"
 Cohesion: 0.03
-Nodes (83): A_700 Dual-Tab Structure, Event Approval Queue, LLM Delegation Guardrail (CLAUDE.md §6-4), Admin Flow, Decision #1: on_hold → revision_requested, Decision #2: users.active_role column, Decision #3: admin_profiles table, Decision #4: expected_companion rename (+75 more)
+Nodes (24): listAdminEvents(), parseBigIntCsv(), parseIntClamp(), putAdminEventVibes(), adminUserMutation(), changeUserAdminScope(), demoteUserAdmin(), promoteUserToAdmin() (+16 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.03
-Nodes (21): listAdminEvents(), parseBigIntCsv(), parseIntClamp(), putAdminEventVibes(), adminUserMutation(), changeUserAdminScope(), demoteUserAdmin(), promoteUserToAdmin() (+13 more)
+Nodes (83): A_700 Dual-Tab Structure, Event Approval Queue, LLM Delegation Guardrail (CLAUDE.md §6-4), Admin Flow, Decision #1: on_hold → revision_requested, Decision #2: users.active_role column, Decision #3: admin_profiles table, Decision #4: expected_companion rename (+75 more)
 
 ### Community 2 - "Community 2"
 Cohesion: 0.05
@@ -309,7 +309,7 @@ Nodes (80): chat(), chat_compose_retreat(), chat_stream(), ChatFilters, ChatMess
 
 ### Community 3 - "Community 3"
 Cohesion: 0.04
-Nodes (52): bandLabel(), gatherDistribution(), gatherSamples(), main(), parseArgs(), renderMarkdown(), titleOverlap(), tokenize() (+44 more)
+Nodes (53): bandLabel(), gatherDistribution(), gatherSamples(), main(), parseArgs(), renderMarkdown(), titleOverlap(), tokenize() (+45 more)
 
 ### Community 4 - "Community 4"
 Cohesion: 0.04
@@ -317,7 +317,7 @@ Nodes (76): Issue #1 approval_status enum unify, Issue #2 users.active_role colu
 
 ### Community 5 - "Community 5"
 Cohesion: 0.04
-Nodes (40): getAdminAuditSummary(), listAdminAuditAdminLogs(), listAdminAuditLogs(), parseBigIntQuery(), parseIntClamp(), actionAdminReport(), getAdminReport(), listAdminReports() (+32 more)
+Nodes (39): getAdminAuditSummary(), listAdminAuditAdminLogs(), listAdminAuditLogs(), parseBigIntQuery(), parseIntClamp(), actionAdminReport(), getAdminReport(), listAdminReports() (+31 more)
 
 ### Community 6 - "Community 6"
 Cohesion: 0.1
@@ -364,12 +364,12 @@ Cohesion: 0.16
 Nodes (18): Ink Black #1A1A1A (Primary Stroke), Muted Gray #999999 (Locale Tag), Alle Orange #E8562D (Accent Crossbar), Alle Favicon (Bolder Stroke Variant), Locale Tag 'SEOUL' (JetBrains Mono 500, 14px, tracking 2), Lockup ViewBox 260x84 (horizontal composition), Alle Logo Lockup (Mark + Wordmark + Locale), A-Apex Path (M22 64 L42 22 L62 64) (+10 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.22
-Nodes (15): collection_stats(), delete_events(), ensure_collection(), _get_client(), Qdrant 클라이언트 래퍼 — alle-events collection.  Collection 스펙:   name:   alle-events, Batch upsert.     items: [{id: int|str, vector: list[float], payload: dict}], 관측용 — points 수, dim, status. 실패 시 {available: False}., Batch delete by point id. Qdrant 에 없는 id 는 조용히 no-op.     반환: 요청 id 수 (실제 삭제 확인은 (+7 more)
+Cohesion: 0.19
+Nodes (10): computeRelevance(), cosine(), embedBatch(), fetchGoogleNewsRss(), fetchNaverNews(), normalize(), probeEmbedding(), processEvent() (+2 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.22
-Nodes (11): computePhase(), existsInOtherOrigin(), extractKoreanRegion(), getCategoryId(), isForwardLooking(), resolveRegionId(), todayUtcMidnight(), todayYmd() (+3 more)
+Nodes (15): collection_stats(), delete_events(), ensure_collection(), _get_client(), Qdrant 클라이언트 래퍼 — alle-events collection.  Collection 스펙:   name:   alle-events, Batch upsert.     items: [{id: int|str, vector: list[float], payload: dict}], 관측용 — points 수, dim, status. 실패 시 {available: False}., Batch delete by point id. Qdrant 에 없는 id 는 조용히 no-op.     반환: 요청 id 수 (실제 삭제 확인은 (+7 more)
 
 ### Community 19 - "Community 19"
 Cohesion: 0.15
@@ -817,11 +817,11 @@ Nodes (0):
 
 ### Community 130 - "Community 130"
 Cohesion: 1.0
-Nodes (2): Vermilion single accent (#E8562D), 결정: 버밀리언 단색 accent 근거
+Nodes (2): Map pin component tokens, Signature — 핀 클러스터 분해 애니메이션
 
 ### Community 131 - "Community 131"
 Cohesion: 1.0
-Nodes (2): Map pin component tokens, Signature — 핀 클러스터 분해 애니메이션
+Nodes (2): Vermilion single accent (#E8562D), 결정: 버밀리언 단색 accent 근거
 
 ### Community 132 - "Community 132"
 Cohesion: 1.0
@@ -1368,9 +1368,9 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 129`** (2 nodes): `main()`, `check-coerce-date.py`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 130`** (2 nodes): `Vermilion single accent (#E8562D)`, `결정: 버밀리언 단색 accent 근거`
+- **Thin community `Community 130`** (2 nodes): `Map pin component tokens`, `Signature — 핀 클러스터 분해 애니메이션`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 131`** (2 nodes): `Map pin component tokens`, `Signature — 핀 클러스터 분해 애니메이션`
+- **Thin community `Community 131`** (2 nodes): `Vermilion single accent (#E8562D)`, `결정: 버밀리언 단색 accent 근거`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 132`** (2 nodes): `Do-not-edit: package/repo names (@ggdrugs/web, ggdrugs repo)`, `Rationale: skip repo/package rename to avoid full-repo churn`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
@@ -1612,7 +1612,7 @@ Nodes (1): Alle Logo Lockup (served, apps/web/public/)
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Tech Stack` connect `Community 0` to `Community 4`?**
+- **Why does `Tech Stack` connect `Community 1` to `Community 4`?**
   _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **What connects `BFF env schema (merged)`, `pino logger (env-aware)`, `prisma (PrismaClient singleton)` to the rest of the system?**
   _273 weakly-connected nodes found - possible documentation gaps or missing edges._

@@ -35,6 +35,7 @@ import { env } from '../env.js';
 import { logger } from '../logger.js';
 import { getRedisClient } from './redis-client.js';
 import { extractSession } from './extract-session.js';
+import { isActivelySuspended } from '../middleware/require-auth.js';
 
 // ─── 타입 ───────────────────────────────────────────────────────────────────
 
@@ -198,6 +199,17 @@ export function createSocketServer(httpServer: HttpServer): SocketServer {
         }
         if (type === 'sticker' && !stickerId) {
           socket.emit('error', { code: 'invalid_payload', message: '스티커 메시지는 stickerId 가 필요합니다' });
+          return;
+        }
+
+        // GG-REPORT-006/009: 발신측 제재 가드 — 정지된 사용자는 채팅 전송 불가.
+        // (REST 라우트의 requireNotSuspended 와 동일 술어. 채팅은 Socket.IO라 별도 검사.)
+        const sender = await prisma.user.findUnique({
+          where: { userId },
+          select: { sanctionStatus: true, sanctionExpiresAt: true },
+        });
+        if (sender && isActivelySuspended(sender)) {
+          socket.emit('error', { code: 'sanction_active', message: '이용이 정지된 계정입니다' });
           return;
         }
 
