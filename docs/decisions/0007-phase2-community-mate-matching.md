@@ -1,6 +1,6 @@
 # ADR 0007: Phase 2 — 커뮤니티 + 메이트(동행 매칭) 모듈
 
-- **Status**: Proposed (2026-05-29) — Orchestrator 승인 대기 (CLAUDE.md 금지 #1)
+- **Status**: Accepted (2026-05-31) — Orchestrator 승인 (CLAUDE.md 금지 #1)
 - **Context**: Phase 1(이벤트 검색 · 업로더 · 관리자)은 가동 중. 그 위에 **커뮤니티(게시판) + 메이트 동행 매칭(1:1/그룹 채팅 → 약속 → 평가 → 크레딧)** 소셜 레이어를 신규 추가한다. 근거 문서:
   - `llm_wiki/raw/페이즈 2 요구사항정의서.pdf` (40p, 2026-04-27) — 신규 유스케이스 15종(A_800~A_901, A_701 등), 기능요구사항 ~120건(GG-COMM / MATCH / MATE / ROOM / POST / NOTI / PROFILE / REVIEW / FEST-REVIEW / REPORT), 비기능 ~20건.
   - 와이어프레임 23종 (`llm_wiki/raw/전체 와이어 프레임.zip`).
