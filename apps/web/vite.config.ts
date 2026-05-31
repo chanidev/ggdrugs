@@ -28,6 +28,8 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1000,
     // Windows Node.js 24 + rollup 번들링 크래시 완화: esbuild minifier + 청크 분할
+    // NOTE: outDir에 한글 경로 포함 시 @rollup/wasm-node가 SIGKILL(0xC0000005)로 크래시.
+    //       pnpm build-win 스크립트로 C:\temp\web-build-tmp 에 빌드 후 dist로 복사.
     minify: 'esbuild',
     cssMinify: 'esbuild',
     sourcemap: false,

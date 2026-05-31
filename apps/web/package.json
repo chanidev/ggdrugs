@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && cross-env NAPI_RS_FORCE_WASI=1 TAILWIND_OXIDE_FORCE_WASI_PATCH=1 NODE_OPTIONS=--max-old-space-size=8192 vite build",
+    "build": "tsc -b && cross-env NODE_OPTIONS=--max-old-space-size=8192 vite build --outDir C:/temp/web-build-tmp --emptyOutDir",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty",
     "test": "vitest run"
