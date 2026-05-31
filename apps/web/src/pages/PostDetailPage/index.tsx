@@ -52,6 +52,14 @@ export function PostDetailPage() {
   const [translateLoading, setTranslateLoading] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
 
+  // [Bug fix] translateLang stale-default: currentLang이 바뀔 때 translateLang을 재동기화.
+  // 예: 앱 언어를 'en'으로 전환하면 translateLang='en' → 'vi'(첫 번째 non-en)로 재설정.
+  useEffect(() => {
+    setTranslateLang(
+      ((['en', 'vi', 'zh', 'ja', 'fr'] as TranslateLang[]).find((l) => l !== currentLang) ?? 'en') as TranslateLang,
+    );
+  }, [currentLang]);
+
   const reload = useCallback(
     (signal?: AbortSignal) => {
       if (!id) return;
@@ -293,7 +301,7 @@ export function PostDetailPage() {
             <Dialog.Content className="w-[520px] max-w-[92vw]">
               <Dialog.Header>
                 <Dialog.Title>
-                  {translateResult ? t('post.translateTitle') : t('post.translateSelectLang')}
+                  {t('post.translateTitle')}
                 </Dialog.Title>
               </Dialog.Header>
               <div className="flex flex-col gap-4 px-5 pb-2">
@@ -307,7 +315,7 @@ export function PostDetailPage() {
                     >
                       {(SUPPORTED_LANGUAGES.filter((l) => l.code !== currentLang && l.code !== 'ko') as Array<{ code: TranslateLang; label: string; nativeLabel: string }>).map((l) => (
                         <SegmentedControlItem key={l.code} value={l.code}>
-                          {l.code.toUpperCase()}
+                          {l.nativeLabel}
                         </SegmentedControlItem>
                       ))}
                     </SegmentedControl>
