@@ -80,7 +80,9 @@
     "alreadyBlocked": "Đã chặn trước đó.",
     "blockFailed": "Không chặn được.",
     "blockBtn": "Chặn",
-    "blockAriaLabel": "Chặn {{nickname}}"
+    "blockAriaLabel": "Chặn {{nickname}}",
+    "avatarAriaLabel": "Ảnh đại diện của {{nickname}}",
+    "chatRequestAriaLabel": "Yêu cầu chat với {{nickname}}"
   },
   "mateReco": {
     "title": "Gợi ý bạn đồng hành",

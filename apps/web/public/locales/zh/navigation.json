@@ -101,6 +101,7 @@
       "hintPrefix": "选择筛选条件以",
       "hintApply": "应用",
       "hintSuffix": "",
+      "_hintSuffixNote": "intentionally empty — Chinese sentence ending with '应用' is grammatically complete without a trailing particle",
       "selectedSuffix": "个条件已选",
       "reset": "重置",
       "subscribe": "订阅此条件",

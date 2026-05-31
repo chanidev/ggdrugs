@@ -84,7 +84,7 @@ export function AuthorProfileModal({
               <Avatar
                 fallback={nickname.slice(0, 1)}
                 size="64"
-                aria-label={`${nickname}의 프로필 아바타`}
+                aria-label={t('authorModal.avatarAriaLabel', { nickname })}
               />
               <Dialog.Title>{nickname}</Dialog.Title>
             </div>
@@ -138,7 +138,7 @@ export function AuthorProfileModal({
                   `/chat/request?to=${encodeURIComponent(authorUserId)}&nickname=${encodeURIComponent(nickname)}`,
                 );
               }}
-              aria-label={`${nickname}에게 채팅 신청하기`}
+              aria-label={t('authorModal.chatRequestAriaLabel', { nickname })}
             >
               {t('authorModal.chatRequest')}
             </ActionButton>

@@ -101,6 +101,7 @@
       "hintPrefix": "Chọn bộ lọc để",
       "hintApply": "áp dụng",
       "hintSuffix": "",
+      "_hintSuffixNote": "intentionally empty — Vietnamese sentence ending with the verb 'áp dụng' is grammatically complete without an additional trailing particle",
       "selectedSuffix": "điều kiện đã chọn",
       "reset": "Đặt lại",
       "subscribe": "Đăng ký bộ lọc này",

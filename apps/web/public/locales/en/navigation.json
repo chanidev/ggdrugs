@@ -101,6 +101,7 @@
       "hintPrefix": "Select filters to",
       "hintApply": "apply",
       "hintSuffix": "",
+      "_hintSuffixNote": "intentionally empty — English sentence is grammatically complete without a trailing particle",
       "selectedSuffix": "conditions selected",
       "reset": "Reset",
       "subscribe": "Subscribe to this filter",

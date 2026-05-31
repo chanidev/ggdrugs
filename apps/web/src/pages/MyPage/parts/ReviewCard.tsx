@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { type MyReviewItem } from '../../../lib/api';
 import { Stars } from './Stars.js';
 
@@ -9,6 +10,7 @@ export function ReviewCard({
   item: MyReviewItem;
   onDelete: () => void;
 }) {
+  const { t } = useTranslation('mypage');
   const ev = item.event;
   const date = item.createdAt.slice(0, 10);
   return (
@@ -32,7 +34,7 @@ export function ReviewCard({
           onClick={onDelete}
           className="inline-flex h-7 items-center rounded-(--radius-md) px-2 text-[12px] font-medium text-(--color-text-subtle) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-error)"
         >
-          삭제
+          {t('review.delete')}
         </button>
       </div>
     </article>

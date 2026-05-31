@@ -80,7 +80,9 @@
     "alreadyBlocked": "Already blocked.",
     "blockFailed": "Failed to block.",
     "blockBtn": "Block",
-    "blockAriaLabel": "Block {{nickname}}"
+    "blockAriaLabel": "Block {{nickname}}",
+    "avatarAriaLabel": "{{nickname}}'s profile avatar",
+    "chatRequestAriaLabel": "Request chat with {{nickname}}"
   },
   "mateReco": {
     "title": "Mate Recommendations",

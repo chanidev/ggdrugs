@@ -101,6 +101,7 @@
       "hintPrefix": "Sélectionnez des filtres pour",
       "hintApply": "appliquer",
       "hintSuffix": "",
+      "_hintSuffixNote": "intentionally empty — French sentence ending with 'appliquer' is grammatically complete without a trailing particle",
       "selectedSuffix": "conditions sélectionnées",
       "reset": "Réinitialiser",
       "subscribe": "S'abonner à ce filtre",

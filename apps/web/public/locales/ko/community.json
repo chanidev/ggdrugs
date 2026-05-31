@@ -80,7 +80,9 @@
     "alreadyBlocked": "이미 차단된 사용자입니다.",
     "blockFailed": "차단하지 못했어요.",
     "blockBtn": "차단하기",
-    "blockAriaLabel": "{{nickname}} 차단하기"
+    "blockAriaLabel": "{{nickname}} 차단하기",
+    "avatarAriaLabel": "{{nickname}}의 프로필 아바타",
+    "chatRequestAriaLabel": "{{nickname}}에게 채팅 신청하기"
   },
   "mateReco": {
     "title": "메이트 추천",

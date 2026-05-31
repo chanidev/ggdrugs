@@ -80,7 +80,9 @@
     "alreadyBlocked": "すでにブロック済みです。",
     "blockFailed": "ブロックに失敗しました。",
     "blockBtn": "ブロック",
-    "blockAriaLabel": "{{nickname}} をブロック"
+    "blockAriaLabel": "{{nickname}} をブロック",
+    "avatarAriaLabel": "{{nickname}} のプロフィールアバター",
+    "chatRequestAriaLabel": "{{nickname}} にチャット申請する"
   },
   "mateReco": {
     "title": "仲間のおすすめ",

@@ -80,7 +80,9 @@
     "alreadyBlocked": "Déjà bloqué.",
     "blockFailed": "Échec du blocage.",
     "blockBtn": "Bloquer",
-    "blockAriaLabel": "Bloquer {{nickname}}"
+    "blockAriaLabel": "Bloquer {{nickname}}",
+    "avatarAriaLabel": "Avatar du profil de {{nickname}}",
+    "chatRequestAriaLabel": "Demander un chat avec {{nickname}}"
   },
   "mateReco": {
     "title": "Compagnons recommandés",

@@ -80,7 +80,9 @@
     "alreadyBlocked": "已经屏蔽过了。",
     "blockFailed": "屏蔽失败。",
     "blockBtn": "屏蔽",
-    "blockAriaLabel": "屏蔽 {{nickname}}"
+    "blockAriaLabel": "屏蔽 {{nickname}}",
+    "avatarAriaLabel": "{{nickname}} 的头像",
+    "chatRequestAriaLabel": "向 {{nickname}} 发起聊天申请"
   },
   "mateReco": {
     "title": "同伴推荐",
