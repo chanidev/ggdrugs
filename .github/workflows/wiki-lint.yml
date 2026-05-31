@@ -26,9 +26,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm 버전은 package.json "packageManager"(pnpm@9.0.0)에서 읽는다.
+      # action-setup@v4 는 version 을 with 로도 받으면 "Multiple versions specified" 로 실패하므로 중복 지정 금지.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - uses: actions/setup-node@v4
         with:
