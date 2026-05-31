@@ -19,6 +19,8 @@ import {
   type TranslateLang,
 } from '../../lib/api/posts.js';
 import { translatePostContent, type PostTranslationResponse } from '../../lib/api/translate.js';
+import { SUPPORTED_LANGUAGES } from '../../lib/i18n.js';
+import { useLanguage } from '../../lib/useLanguage.js';
 import { useCurrentUser } from '../../lib/auth-context';
 
 /**
@@ -32,6 +34,7 @@ export function PostDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useCurrentUser();
+  const { current: currentLang } = useLanguage();
   const [detail, setDetail] = useState<PostDetail | null>(null);
   const [error, setError] = useState<'NOT_FOUND' | 'ERROR' | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +43,11 @@ export function PostDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [translateOpen, setTranslateOpen] = useState(false);
-  const [translateLang, setTranslateLang] = useState<TranslateLang>('en');
+  // 현재 앱 언어를 제외한 첫 번째 TranslateLang을 기본값으로 선택.
+  const defaultTranslateLang = ((['en', 'vi', 'zh', 'ja', 'fr'] as TranslateLang[]).find(
+    (l) => l !== currentLang,
+  ) ?? 'en') as TranslateLang;
+  const [translateLang, setTranslateLang] = useState<TranslateLang>(defaultTranslateLang);
   const [translateResult, setTranslateResult] = useState<PostTranslationResponse | null>(null);
   const [translateLoading, setTranslateLoading] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
@@ -94,7 +101,7 @@ export function PostDetailPage() {
     }
   };
 
-  /** GG-COMM-013: 게시글 번역 (LLM + BFF Redis 24h 캐시) */
+  /** GG-COMM-013: 게시글 번역 (LLM + BFF Redis 7d 캐시) */
   const onTranslate = async (lang: TranslateLang) => {
     if (!detail) return;
     setTranslateLoading(true);
@@ -285,7 +292,9 @@ export function PostDetailPage() {
           <Dialog.Positioner>
             <Dialog.Content className="w-[520px] max-w-[92vw]">
               <Dialog.Header>
-                <Dialog.Title>{t('post.translateTitle')}</Dialog.Title>
+                <Dialog.Title>
+                  {translateResult ? t('post.translateTitle') : t('post.translateSelectLang')}
+                </Dialog.Title>
               </Dialog.Header>
               <div className="flex flex-col gap-4 px-5 pb-2">
                 {/* 언어 선택 */}
@@ -296,9 +305,9 @@ export function PostDetailPage() {
                       value={translateLang}
                       onValueChange={(v) => setTranslateLang(v as TranslateLang)}
                     >
-                      {(['en', 'vi', 'zh', 'ja', 'fr'] as TranslateLang[]).map((l) => (
-                        <SegmentedControlItem key={l} value={l}>
-                          {l.toUpperCase()}
+                      {(SUPPORTED_LANGUAGES.filter((l) => l.code !== currentLang && l.code !== 'ko') as Array<{ code: TranslateLang; label: string; nativeLabel: string }>).map((l) => (
+                        <SegmentedControlItem key={l.code} value={l.code}>
+                          {l.code.toUpperCase()}
                         </SegmentedControlItem>
                       ))}
                     </SegmentedControl>

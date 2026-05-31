@@ -17,7 +17,8 @@ interface LlmTranslateResponse { translated: string }
  * Response: { postId, originalBody, translatedBody, targetLanguage, cached }
  *
  * 에러 처리 & 폴백 정책 (이슈 23):
- *  - LLM rate-limit/타임아웃/502 → originalBody 그대로 반환 (graceful degradation)
+ *  - LLM rate-limit/타임아웃/502 → 503 translation service unavailable 반환
+ *    (명시적 실패 신호; 클라이언트는 translateUnavailable i18n 키를 표시)
  *  - Redis 에러 → 캐시 miss로 간주, 번역 계속 진행
  *  - 게시글 없음 → 404
  *  - 인증: 비로그인도 가능 (resolveAuth 사용, requireAuth 아님)
