@@ -59,7 +59,14 @@
     "selectKoreanOk": "Veuillez indiquer votre niveau de coréen.",
     "successTitle": "Inscription au matching de compagnons réussie",
     "successBody": "Vos informations ont été enregistrées. Consultez vos compagnons recommandés dans la communauté !",
-    "goToCommunity": "Voir la communauté"
+    "goToCommunity": "Voir la communauté",
+    "eventSection": "Choisir un festival",
+    "eventNote": "Choisissez le festival auquel vous souhaitez participer ensemble, parmi ceux ayant lieu dans les 2 semaines.",
+    "event": "Festival",
+    "eventAriaLabel": "Choisir un festival à fréquenter ensemble",
+    "eventPlaceholder": "Veuillez choisir un festival",
+    "eventEmpty": "Aucun festival prévu dans les 2 semaines",
+    "selectEvent": "Veuillez choisir un festival à fréquenter ensemble."
   },
   "reco": {
     "title": "Recommandations de compagnons",
@@ -81,7 +88,18 @@
     "blindCta": "Obtenir des recommandations",
     "noMatch": "Aucun compagnon disponible pour le matching.",
     "noMatchSub": "Essayez d'ajuster vos conditions ou votre région.",
-    "adjustConditions": "Ajuster les conditions"
+    "adjustConditions": "Ajuster les conditions",
+    "noEventTitle": "Choisissez d'abord un festival",
+    "noEventSubtitle": "Vous êtes mis en relation avec des mates ayant choisi le même festival. Choisissez-en un ayant lieu dans les 2 semaines.",
+    "noEventCta": "Choisir un festival",
+    "groupStart": "Inviter en groupe",
+    "groupSelected": "{{count}}/{{max}} sélectionné(s)",
+    "groupCancel": "Annuler",
+    "groupSend": "Envoyer l'invitation de groupe",
+    "groupSuccess": "Invitation de groupe envoyée à {{count}} mate(s).",
+    "groupError": "Impossible d'envoyer l'invitation de groupe. Veuillez réessayer.",
+    "groupProfileRequired": "Veuillez d'abord configurer votre profil mate.",
+    "groupSelectAriaLabel": "Sélectionner {{nickname}} pour l'invitation de groupe"
   },
   "safetyNotice": {
     "ariaLabel": "Consignes de sécurité",

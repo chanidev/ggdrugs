@@ -8,7 +8,7 @@ import { Checkbox } from 'seed-design/ui/checkbox';
 import * as Dialog from 'seed-design/ui/dialog';
 import { ConsentGate } from './parts/ConsentGate.js';
 import { SafetyNotice } from './parts/SafetyNotice.js';
-import { saveMateProfile } from '../../lib/api/mate.js';
+import { saveMateProfile, fetchUpcomingMateEvents, type MateEvent } from '../../lib/api/mate.js';
 import { fetchRegions, type RegionItem } from '../../lib/api/events.js';
 
 /**
@@ -44,6 +44,7 @@ const NATIONALITIES = [
 ] as const;
 
 interface FormState {
+  selectedEventId: string | null; // GG-MATCH-003: 함께 갈 축제 (2주내)
   gender: 'M' | 'F' | '';
   ageRangeLower: AgeRange | null;
   regionId: string | null;
@@ -71,6 +72,7 @@ interface FormState {
 }
 
 const INIT: FormState = {
+  selectedEventId: null,
   gender: '',
   ageRangeLower: null,
   regionId: null,
@@ -98,6 +100,7 @@ export function MateFormPage() {
   const { t } = useTranslation('mate');
   const navigate = useNavigate();
   const [regions, setRegions] = useState<RegionItem[]>([]);
+  const [events, setEvents] = useState<MateEvent[]>([]);
   const [form, setForm] = useState<FormState>(INIT);
   const [pending, setPending] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -123,12 +126,26 @@ export function MateFormPage() {
     return () => ctrl.abort();
   }, []);
 
+  // 2주내 개최 예정 축제 로드 (GG-MATCH-003 "축제 선택")
+  useEffect(() => {
+    let mounted = true;
+    fetchUpcomingMateEvents()
+      .then((list) => { if (mounted) setEvents(list); })
+      .catch((e: unknown) => {
+        // 축제 로드 실패는 UI 비차단 — select 비어 있음으로 graceful degrade.
+        console.warn('[MateFormPage] 축제 목록 로드 실패', e);
+      });
+    return () => { mounted = false; };
+  }, []);
+
   const reset = useCallback(() => {
     setForm(INIT);
     setErr(null);
   }, []);
 
   const validate = (): string | null => {
+    // GG-MATCH-003: 선택 가능한 축제가 있으면 반드시 선택 (없으면 graceful 통과).
+    if (events.length > 0 && !form.selectedEventId) return t('form.selectEvent');
     if (!form.gender) return t('form.selectGender');
     if (form.ageRangeLower === null) return t('form.selectAgeRange');
     if (form.hasCar === null) return t('form.selectHasCar');
@@ -148,6 +165,7 @@ export function MateFormPage() {
     setErr(null);
     try {
       await saveMateProfile({
+        selectedEventId: form.selectedEventId,
         gender: form.gender as 'M' | 'F',
         ageRangeLower: form.ageRangeLower!,
         regionId: form.regionId,
@@ -190,6 +208,38 @@ export function MateFormPage() {
           </div>
 
           <div className="flex flex-col gap-6">
+            {/* ── 축제 선택 섹션 (GG-MATCH-003) ── */}
+            <section aria-labelledby="event-select-title">
+              <h2
+                id="event-select-title"
+                className="mb-1 text-[15px] font-semibold text-(--color-text)"
+              >
+                {t('form.eventSection')}
+                <span className="ml-0.5 text-(--color-error)" aria-hidden>*</span>
+              </h2>
+              <p className="mb-4 text-[12px] text-(--color-text-muted)">{t('form.eventNote')}</p>
+              <FieldRow label={t('form.event')} htmlFor="field-selected-event-id">
+                <select
+                  id="field-selected-event-id"
+                  aria-label={t('form.eventAriaLabel')}
+                  value={form.selectedEventId ?? ''}
+                  onChange={(e) => upd('selectedEventId', e.target.value || null)}
+                  disabled={events.length === 0}
+                  className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] text-(--color-text) focus:border-(--color-accent) focus:outline-none disabled:opacity-40"
+                >
+                  <option value="">
+                    {events.length === 0 ? t('form.eventEmpty') : t('form.eventPlaceholder')}
+                  </option>
+                  {events.map((ev) => (
+                    <option key={ev.eventId} value={ev.eventId}>
+                      {ev.startDate} · {ev.title}
+                      {ev.regionName ? ` (${ev.regionName})` : ''}
+                    </option>
+                  ))}
+                </select>
+              </FieldRow>
+            </section>
+
             {/* ── 내 정보 섹션 ── */}
             <section aria-labelledby="my-info-title">
               <h2

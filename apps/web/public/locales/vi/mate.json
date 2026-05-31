@@ -59,7 +59,14 @@
     "selectKoreanOk": "Vui lòng chọn khả năng giao tiếp tiếng Hàn.",
     "successTitle": "Đăng ký ghép đôi thành công",
     "successBody": "Thông tin đã được lưu. Hãy kiểm tra bạn đồng hành được gợi ý trong cộng đồng!",
-    "goToCommunity": "Xem Cộng đồng"
+    "goToCommunity": "Xem Cộng đồng",
+    "eventSection": "Chọn lễ hội",
+    "eventNote": "Hãy chọn lễ hội bạn muốn cùng tham gia, trong số các lễ hội diễn ra trong vòng 2 tuần.",
+    "event": "Lễ hội",
+    "eventAriaLabel": "Chọn lễ hội để cùng tham gia",
+    "eventPlaceholder": "Vui lòng chọn lễ hội",
+    "eventEmpty": "Không có lễ hội nào diễn ra trong vòng 2 tuần",
+    "selectEvent": "Vui lòng chọn lễ hội để cùng tham gia."
   },
   "reco": {
     "title": "Gợi ý bạn đồng hành",
@@ -81,7 +88,18 @@
     "blindCta": "Nhận gợi ý bạn đồng hành",
     "noMatch": "Hiện không có bạn đồng hành phù hợp.",
     "noMatchSub": "Thử điều chỉnh điều kiện hoặc khu vực.",
-    "adjustConditions": "Điều chỉnh điều kiện"
+    "adjustConditions": "Điều chỉnh điều kiện",
+    "noEventTitle": "Hãy chọn lễ hội trước",
+    "noEventSubtitle": "Bạn được ghép với những mate đã chọn cùng lễ hội. Hãy chọn một lễ hội diễn ra trong vòng 2 tuần.",
+    "noEventCta": "Đi chọn lễ hội",
+    "groupStart": "Mời theo nhóm",
+    "groupSelected": "Đã chọn {{count}}/{{max}}",
+    "groupCancel": "Hủy",
+    "groupSend": "Gửi lời mời nhóm",
+    "groupSuccess": "Đã gửi lời mời nhóm đến {{count}} mate.",
+    "groupError": "Không thể gửi lời mời nhóm. Vui lòng thử lại sau.",
+    "groupProfileRequired": "Vui lòng thiết lập hồ sơ mate trước.",
+    "groupSelectAriaLabel": "Chọn {{nickname}} để mời nhóm"
   },
   "safetyNotice": {
     "ariaLabel": "Hướng dẫn an toàn",

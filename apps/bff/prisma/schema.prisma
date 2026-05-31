@@ -247,6 +247,7 @@ model Event {
   notifications     Notification[]
   articleMappings   EventArticleMapping[]
   photoAlbums       PhotoAlbum[]
+  mateSelections    MateProfile[]         @relation("MateSelectedEvent")
 
   @@unique([crawlOrigin, externalSourceId], map: "uq_events_external")
   @@index([regionId, categoryId, startDate, phase], map: "idx_events_filter")
@@ -725,17 +726,22 @@ model MateProfile {
   prefKoreanOk    Boolean?  @map("pref_korean_ok")
   autoRecommend   Boolean   @default(false) @map("auto_recommend")
   groupApply      Boolean   @default(false) @map("group_apply")
+  // GG-MATCH-003: 함께 갈 축제(2주 이내 개최 예정 목록에서 선택). ADR 0007 #3 — 후보풀 hard 경계.
+  // null = 미선택 → 추천 생성 불가(state:'no_event'). 적용하기 시 갱신(추천 다시 받기 = 재선택).
+  selectedEventId BigInt?   @map("selected_event_id")
   consentedAt     DateTime? @map("consented_at") @db.Timestamptz // null=미동의→매칭불가
   isDeleted       Boolean   @default(false) @map("is_deleted")
   createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
   deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
 
-  user       User    @relation(fields: [userId], references: [userId])
-  region     Region? @relation("MateRegion", fields: [regionId], references: [regionId])
-  prefRegion Region? @relation("MatePrefRegion", fields: [prefRegionId], references: [regionId])
+  user          User    @relation(fields: [userId], references: [userId])
+  region        Region? @relation("MateRegion", fields: [regionId], references: [regionId])
+  prefRegion    Region? @relation("MatePrefRegion", fields: [prefRegionId], references: [regionId])
+  selectedEvent Event?  @relation("MateSelectedEvent", fields: [selectedEventId], references: [eventId])
 
   @@index([consentedAt, regionId], map: "idx_mate_profiles_pool")
+  @@index([selectedEventId, consentedAt], map: "idx_mate_profiles_event_pool")
   @@map("mate_profiles")
 }
 

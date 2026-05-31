@@ -708,6 +708,13 @@ async function main() {
       });
       if (appt?.status !== 'rejected') f.push(`DB status '${appt?.status}' != 'rejected'`);
 
+      // GG-NOTI: 거절 시 비-거절자(u1)에게 파기 알림 발행 (오프라인 멤버 인지)
+      const rejectNotif = await prisma.notification.findFirst({
+        where: { userId: u1.userId, relatedEntityId: BigInt(rejectApptId), relatedEntityType: 'appointment' },
+        select: { notificationId: true },
+      });
+      if (!rejectNotif) f.push('no reject notification for non-rejecter u1');
+
       return f;
     });
 
@@ -775,6 +782,13 @@ async function main() {
       if (u1Vote?.vote !== 'pending') {
         f.push(`u1 vote '${u1Vote?.vote}' should be reset to 'pending' after counter proposal`);
       }
+
+      // GG-NOTI-012: 역제안 시 비-역제안자(u1)에게 재투표 알림 발행
+      const counterNotif = await prisma.notification.findFirst({
+        where: { userId: u1.userId, relatedEntityId: BigInt(counterApptId), relatedEntityType: 'appointment' },
+        select: { notificationId: true },
+      });
+      if (!counterNotif) f.push('no counter notification for non-counterer u1');
 
       return f;
     });

@@ -59,7 +59,14 @@
     "selectKoreanOk": "한국어 소통 가능 여부를 선택해 주세요.",
     "successTitle": "메이트 매칭 등록 완료",
     "successBody": "정보가 저장됐어요. 이제 커뮤니티에서 추천 메이트를 확인해 보세요!",
-    "goToCommunity": "커뮤니티 보기"
+    "goToCommunity": "커뮤니티 보기",
+    "eventSection": "축제 선택",
+    "eventNote": "함께 갈 축제를 2주 이내 개최 예정 목록에서 선택하세요.",
+    "event": "축제",
+    "eventAriaLabel": "함께 갈 축제 선택",
+    "eventPlaceholder": "축제를 선택해 주세요",
+    "eventEmpty": "2주 이내 개최 예정인 축제가 없어요",
+    "selectEvent": "함께 갈 축제를 선택해 주세요."
   },
   "reco": {
     "title": "메이트 추천",
@@ -81,7 +88,18 @@
     "blindCta": "메이트 추천 받기",
     "noMatch": "현재 매칭 가능한 메이트가 없어요.",
     "noMatchSub": "조건이나 지역을 조정해 보세요.",
-    "adjustConditions": "조건 수정하기"
+    "adjustConditions": "조건 수정하기",
+    "noEventTitle": "함께 갈 축제를 먼저 선택해 주세요",
+    "noEventSubtitle": "같은 축제를 선택한 메이트끼리 매칭돼요. 2주 이내 개최 축제를 골라보세요.",
+    "noEventCta": "축제 선택하러 가기",
+    "groupStart": "그룹으로 신청하기",
+    "groupSelected": "{{count}}/{{max}}명 선택",
+    "groupCancel": "취소",
+    "groupSend": "그룹 초대 보내기",
+    "groupSuccess": "{{count}}명에게 그룹 초대를 보냈어요.",
+    "groupError": "그룹 초대를 보내지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "groupProfileRequired": "메이트 프로필을 먼저 등록해 주세요.",
+    "groupSelectAriaLabel": "{{nickname}} 그룹 초대 선택"
   },
   "safetyNotice": {
     "ariaLabel": "안전 가이드라인",

@@ -586,6 +586,27 @@ export async function voteAppointment(req: Request, res: Response) {
                 body: '약속이 거절되었습니다',
               },
             });
+
+            // 거절 알림 — 거절자 제외 나머지 active 멤버에게 파기 통지 (오프라인 멤버 인지).
+            const rejectMembers = await tx.groupMembership.findMany({
+              where: { chatRoomId, memberStatus: 'active', userId: { not: auth.userId } },
+              select: { userId: true },
+            });
+            if (rejectMembers.length > 0) {
+              await tx.notification.createMany({
+                data: rejectMembers.map((m) => ({
+                  userId: m.userId,
+                  title: '약속이 거절되었습니다',
+                  message: '제안된 약속이 취소되었습니다.',
+                  scheduledAt: new Date(),
+                  isSent: true,
+                  sentAt: new Date(),
+                  notificationType: 'appointment',
+                  relatedEntityId: appointmentId,
+                  relatedEntityType: 'appointment',
+                })),
+              });
+            }
           } else if (vote === 'counter') {
             const upd = await tx.appointment.updateMany({
               where: { appointmentId, status: { in: VOTABLE } },
@@ -612,6 +633,28 @@ export async function voteAppointment(req: Request, res: Response) {
                 body: '역제안이 제출되었습니다',
               },
             });
+
+            // GG-NOTI-012: 역제안 알림 — 역제안자 제외 나머지 멤버에게 재투표 유도.
+            // (투표가 'pending' 으로 리셋됐으므로 오프라인 멤버도 새 라운드를 인지해야 함.)
+            const counterMembers = await tx.groupMembership.findMany({
+              where: { chatRoomId, memberStatus: 'active', userId: { not: auth.userId } },
+              select: { userId: true },
+            });
+            if (counterMembers.length > 0) {
+              await tx.notification.createMany({
+                data: counterMembers.map((m) => ({
+                  userId: m.userId,
+                  title: '약속 역제안이 도착했습니다',
+                  message: '새로운 날짜·시간이 제안되었습니다. 다시 투표해 주세요.',
+                  scheduledAt: new Date(),
+                  isSent: true,
+                  sentAt: new Date(),
+                  notificationType: 'appointment',
+                  relatedEntityId: appointmentId,
+                  relatedEntityType: 'appointment',
+                })),
+              });
+            }
           }
         },
         { isolationLevel: 'Serializable' },
