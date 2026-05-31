@@ -19,11 +19,38 @@ export async function runSessionSweep(): Promise<{ deleted: number; cutoff: stri
   return { deleted: result.count, cutoff: cutoff.toISOString() };
 }
 
+/**
+ * GG-REPORT-006/007: 이용정지 만료 사용자 제재 해제 배치.
+ *
+ * sanctionStatus='suspended' + sanctionExpiresAt <= now → sanctionStatus='none' 초기화.
+ * runAll() 에서 runSessionSweep 과 같은 타이밍에 호출.
+ */
+export async function runSanctionExpirySweep(): Promise<{ reset: number }> {
+  const now = new Date();
+  const result = await prisma.user.updateMany({
+    where: {
+      sanctionStatus: 'suspended',
+      sanctionExpiresAt: { lte: now },
+    },
+    data: {
+      sanctionStatus: 'none',
+      sanctionExpiresAt: null,
+      sanctionReason: null,
+    },
+  });
+  return { reset: result.count };
+}
+
 async function main() {
   const log = logger.child({ job: 'session-sweep' });
   try {
     const out = await runSessionSweep();
     log.info(out, 'session sweep done');
+    // [review: important fix] CLI main() 도 runSanctionExpirySweep() 호출해야
+    // `pnpm sweep:sessions` 단독 실행 시 제재 해제가 동작함.
+    // (scheduler.ts runAll() 에는 이미 등록됨 — 여기도 추가해 완결)
+    const sanction = await runSanctionExpirySweep();
+    log.info(sanction, 'sanction expiry sweep done');
   } catch (err) {
     log.error({ err: err instanceof Error ? err.message : String(err) }, 'sweep failed');
     process.exitCode = 1;

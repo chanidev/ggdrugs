@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchMyBookmarks,
   type BookmarkListItem,
@@ -8,6 +9,7 @@ import { EmptyBox } from '../parts/EmptyBox.js';
 import { SkeletonList } from '../parts/SkeletonList.js';
 
 export function BookmarksList() {
+  const { t } = useTranslation('mypage');
   const [state, setState] = useState<{
     loading: boolean;
     error: string | null;
@@ -28,14 +30,14 @@ export function BookmarksList() {
   }, []);
 
   if (state.loading) return <SkeletonList />;
-  if (state.error) return <EmptyBox label="불러오지 못했어요" hint={state.error} />;
+  if (state.error) return <EmptyBox label={t('bookmark.loadError')} hint={state.error} />;
   if (state.items.length === 0)
-    return <EmptyBox label="아직 북마크한 이벤트가 없어요" hint="지도에서 마음에 드는 이벤트를 북마크해 보세요." />;
+    return <EmptyBox label={t('bookmark.empty')} hint={t('bookmark.hint')} />;
 
   return (
     <div className="flex flex-col gap-2">
       <p className="tabular m-0 mb-1 text-[12px] text-(--color-text-subtle)">
-        {state.total.toLocaleString()}개
+        {t('bookmark.totalCount', { count: state.total.toLocaleString() })}
       </p>
       <ul className="m-0 flex list-none flex-col gap-2 p-0">
         {state.items.map((b) => (

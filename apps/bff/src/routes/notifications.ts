@@ -33,8 +33,10 @@ export async function listMyNotifications(req: Request, res: Response) {
   const page = parseIntClamp(req.query.page, 1, 1, 1_000_000);
   const unreadOnly = req.query.unreadOnly === 'true';
 
+  // kick_vote 알림은 readAt 이 영구적으로 null 이라 unreadOnly 목록에서도 제외해야
+  // 배지 카운터(unreadCount)와 의미적으로 일관성을 유지할 수 있다.
   const where = unreadOnly
-    ? { userId: auth.userId, readAt: null }
+    ? { userId: auth.userId, readAt: null, NOT: { notificationType: 'kick_vote' } }
     : { userId: auth.userId };
 
   const [total, rows] = await Promise.all([
@@ -51,6 +53,9 @@ export async function listMyNotifications(req: Request, res: Response) {
         message: true,
         readAt: true,
         createdAt: true,
+        notificationType: true,
+        relatedEntityId: true,
+        relatedEntityType: true,
         event: {
           select: {
             eventId: true,
@@ -62,6 +67,29 @@ export async function listMyNotifications(req: Request, res: Response) {
       },
     }),
   ]);
+
+  // appointment / appointment_update / mate_eval 알림은 relatedEntityId = appointmentId.
+  // 채팅방 이동(GG-NOTI-012)을 위해 Appointment→chatRoomId를 조인한다.
+  const appointmentEntityTypes = new Set(['appointment', 'mate_eval', 'appointment_update']);
+  const appointmentRelatedIds = rows
+    .filter(
+      (r) =>
+        r.relatedEntityType != null &&
+        appointmentEntityTypes.has(r.relatedEntityType) &&
+        r.relatedEntityId != null,
+    )
+    .map((r) => r.relatedEntityId!);
+
+  const appointmentChatRoomMap = new Map<string, string>();
+  if (appointmentRelatedIds.length > 0) {
+    const appts = await prisma.appointment.findMany({
+      where: { appointmentId: { in: appointmentRelatedIds } },
+      select: { appointmentId: true, chatRoomId: true },
+    });
+    for (const a of appts) {
+      appointmentChatRoomMap.set(a.appointmentId.toString(), a.chatRoomId.toString());
+    }
+  }
 
   res.json({
     page,
@@ -77,14 +105,27 @@ export async function listMyNotifications(req: Request, res: Response) {
       // 이벤트가 소프트 삭제/취소됐으면 링크 비활성화.
       eventAvailable:
         r.event != null && !r.event.isDeleted && r.event.approvalStatus === 'approved',
+      notificationType: r.notificationType ?? null,
+      relatedEntityId: r.relatedEntityId?.toString() ?? null,
+      relatedEntityType: r.relatedEntityType ?? null,
+      // appointment/appointment_update/mate_eval 타입에만 chatRoomId 조인값 노출
+      relatedChatRoomId:
+        r.relatedEntityId != null &&
+        r.relatedEntityType != null &&
+        appointmentEntityTypes.has(r.relatedEntityType)
+          ? (appointmentChatRoomMap.get(r.relatedEntityId.toString()) ?? null)
+          : null,
     })),
   });
 }
 
 export async function unreadCount(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;
+  // kick_vote 알림은 readAt 을 투표 완료 마커로 사용하지 않아 readAt 이 영구적으로 null 상태.
+  // 배지 카운터가 과대계상 되지 않도록 kick_vote 를 제외한다.
+  // (markAllNotificationsRead 와 동일한 exclusion 정책)
   const count = await prisma.notification.count({
-    where: { userId: auth.userId, readAt: null },
+    where: { userId: auth.userId, readAt: null, NOT: { notificationType: 'kick_vote' } },
   });
   res.json({ count });
 }
@@ -98,10 +139,17 @@ export async function markNotificationRead(req: Request, res: Response) {
   }
   const existing = await prisma.notification.findUnique({
     where: { notificationId: id },
-    select: { userId: true, readAt: true },
+    select: { userId: true, readAt: true, notificationType: true },
   });
   if (!existing || existing.userId !== auth.userId) {
     res.status(404).json({ error: 'not_found' });
+    return;
+  }
+  // [critical-fix] kick_vote 알림은 readAt 을 '투표 완료' 마커로 쓰지 않으므로
+  // 알림센터 read 엔드포인트에서 readAt 세트를 건너뛴다.
+  // 투표 완료는 castKickVote 에서 message.voteResult 로만 기록한다.
+  if (existing.notificationType === 'kick_vote') {
+    res.json({ ok: true });
     return;
   }
   if (!existing.readAt) {
@@ -115,8 +163,10 @@ export async function markNotificationRead(req: Request, res: Response) {
 
 export async function markAllNotificationsRead(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;
+  // [critical-fix] kick_vote 알림은 readAt 이 투표 완료 마커로 dual-use 되지 않도록 제외.
+  // 투표 완료 마커는 message.voteResult 필드이며 castKickVote 에서만 기록한다.
   const result = await prisma.notification.updateMany({
-    where: { userId: auth.userId, readAt: null },
+    where: { userId: auth.userId, readAt: null, NOT: { notificationType: 'kick_vote' } },
     data: { readAt: new Date() },
   });
   res.json({ ok: true, updated: result.count });

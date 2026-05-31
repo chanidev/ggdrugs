@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchEvents,
   fetchEventsStats,
@@ -19,20 +20,7 @@ type GpsStatus = 'idle' | 'requesting' | 'granted' | 'denied' | 'unsupported' | 
 type SelectedKey = string; // 'all' | category code (ex. 'festival')
 type PhaseKey = 'all' | EventPhase;
 
-const PHASE_TABS: { key: PhaseKey; label: string }[] = [
-  { key: 'all', label: '전체' },
-  { key: 'upcoming', label: '예정' },
-  { key: 'ongoing', label: '진행중' },
-  { key: 'ended', label: '종료' },
-];
-
 /** v4.4 — 정렬 옵션 표기. 사용자 선택은 localStorage 에 persist. v4.5 — 'distance' 추가 (mapBbox 필요). */
-const SORT_OPTIONS: { key: EventSort; label: string }[] = [
-  { key: 'ending', label: '종료임박' },
-  { key: 'recent', label: '최신' },
-  { key: 'popular', label: '인기' },
-  { key: 'distance', label: '거리' },
-];
 const SORT_STORAGE_KEY = 'alle.fullList.sort';
 
 function loadSortPref(): EventSort {
@@ -64,6 +52,22 @@ export function FullListPanel({
   /** v4.5 — SeoulMap viewport bbox. distance sort 활성 시 BFF 의 anchor 로 사용 (BFF 가 center 자동 계산). null 이면 distance 옵션 disabled. */
   mapBbox?: string | null;
 }) {
+  const { t } = useTranslation(['navigation', 'common']);
+
+  // 동적 배열 — 언어 전환 시 즉시 재렌더됨
+  const PHASE_TABS: { key: PhaseKey; label: string }[] = [
+    { key: 'all',     label: t('fullList.phase.all') },
+    { key: 'upcoming', label: t('fullList.phase.upcoming') },
+    { key: 'ongoing',  label: t('fullList.phase.ongoing') },
+    { key: 'ended',    label: t('fullList.phase.ended') },
+  ];
+  const SORT_OPTIONS: { key: EventSort; label: string }[] = [
+    { key: 'ending',   label: t('fullList.sort.ending') },
+    { key: 'recent',   label: t('fullList.sort.recent') },
+    { key: 'popular',  label: t('fullList.sort.popular') },
+    { key: 'distance', label: t('fullList.sort.distance') },
+  ];
+
   const [stats, setStats] = useState<EventsStatsResponse | null>(null);
   const [statsError, setStatsError] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedKey>('all');
@@ -166,7 +170,7 @@ export function FullListPanel({
   };
 
   const chips: { key: SelectedKey; label: string; count: number | null }[] = [
-    { key: 'all', label: '전체', count: stats?.total ?? null },
+    { key: 'all', label: t('fullList.chips.all'), count: stats?.total ?? null },
     ...(stats?.categories.map((c) => ({ key: c.code, label: c.label, count: c.count })) ?? []),
   ];
 
@@ -185,7 +189,7 @@ export function FullListPanel({
           숫자는 mono tabular, active 는 버밀리언 dot. */}
       <div
         role="tablist"
-        aria-label="이벤트 진행 단계"
+        aria-label={t('fullList.phase.tabsLabel')}
         className="flex shrink-0 flex-wrap items-center gap-y-1 border-b border-(--color-border) bg-(--color-surface) px-5 py-2.5"
       >
         {PHASE_TABS.map((t, i) => {
@@ -238,7 +242,7 @@ export function FullListPanel({
       {/* v4.9 — 거리순 정렬 시 Place 검색으로 anchor 설정. distance 가 active 일 때만 노출. */}
       {sort === 'distance' && (
         <div className="flex shrink-0 items-center gap-2 border-b border-(--color-border) bg-(--color-surface-alt) px-5 py-2">
-          <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-(--color-text-subtle)">기준점</span>
+          <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-(--color-text-subtle)">{t('fullList.anchor.label')}</span>
           <PlacesSearch
             current={placeAnchor}
             onPick={(p) => {
@@ -256,7 +260,7 @@ export function FullListPanel({
       {/* v4.4 — 정렬 segmented control. localStorage persist. v4.8 — GPS opt-in 버튼 + status 라벨. */}
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-(--color-border) px-5 py-2">
         <span className="text-[11px] font-medium uppercase tracking-[0.06em] text-(--color-text-subtle)">
-          정렬
+          {t('fullList.sort.label')}
         </span>
         <div className="flex items-center gap-2">
           <GpsButton
@@ -265,7 +269,7 @@ export function FullListPanel({
             onRequest={requestGps}
             onClear={clearGps}
           />
-          <div role="radiogroup" aria-label="정렬 기준" className="inline-flex items-center gap-0.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-0.5">
+          <div role="radiogroup" aria-label={t('fullList.sort.ariaLabel')} className="inline-flex items-center gap-0.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-0.5">
             {SORT_OPTIONS.map((opt) => {
               const active = sort === opt.key;
               // v4.5 — distance 옵션은 mapBbox 또는 gpsAnchor 가 있어야 활성.
@@ -278,7 +282,7 @@ export function FullListPanel({
                   aria-checked={active}
                   aria-disabled={disabled}
                   disabled={disabled}
-                  title={disabled ? '지도 활성화 또는 내 위치 사용 시 활성' : undefined}
+                  title={disabled ? t('fullList.sort.distanceDisabledTitle') : undefined}
                   onClick={() => {
                     if (disabled) return;
                     setSort(opt.key);
@@ -328,7 +332,7 @@ export function FullListPanel({
         })}
         {statsError && (
           <span className="ml-auto self-center text-[11px] text-(--color-error)">
-            stats 로드 실패
+            {t('fullList.statsError')}
           </span>
         )}
       </div>
@@ -339,7 +343,7 @@ export function FullListPanel({
         activeId={activeEventId ?? null}
         onSelect={(id) => onSelect?.(id)}
         totalLabel={
-          listState.data ? `${listState.data.total.toLocaleString()}개의 이벤트` : undefined
+          listState.data ? t('fullList.totalLabel', { count: listState.data.total.toLocaleString() }) : undefined
         }
       />
     </div>
@@ -361,6 +365,7 @@ function PlacesSearch({
   onPick: (p: PlaceItem) => void;
   onClear: () => void;
 }) {
+  const { t } = useTranslation('navigation');
   const [q, setQ] = useState('');
   const [items, setItems] = useState<PlaceItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -417,9 +422,9 @@ function PlacesSearch({
           type="button"
           onClick={onClear}
           className="inline-flex h-7 items-center rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface) px-2 text-[11px] font-medium text-(--color-text-muted) transition-colors hover:text-(--color-text)"
-          title="기준점 해제"
+          title={t('fullList.anchor.clearTitle')}
         >
-          해제
+          {t('fullList.anchor.clear')}
         </button>
       </div>
     );
@@ -434,17 +439,17 @@ function PlacesSearch({
           setOpen(true);
         }}
         onFocus={() => setOpen(true)}
-        placeholder="장소 또는 주소 (예: 강남역, 북서울 미술관)"
+        placeholder={t('fullList.anchor.placeholder')}
         className="h-7 w-full rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface) px-2 text-[12px] text-(--color-text) placeholder:text-(--color-text-subtle) focus:border-(--color-accent) focus:outline-none"
-        aria-label="장소 검색으로 거리 정렬 기준점 설정"
+        aria-label={t('fullList.anchor.searchAriaLabel')}
       />
       {open && (q.trim().length >= 2 || loading) && (
         <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-y-auto rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) shadow-(--shadow-md)">
           {loading && (
-            <div className="px-3 py-2 text-[11px] text-(--color-text-subtle)">검색 중…</div>
+            <div className="px-3 py-2 text-[11px] text-(--color-text-subtle)">{t('fullList.anchor.searching')}</div>
           )}
           {!loading && items.length === 0 && (
-            <div className="px-3 py-2 text-[11px] text-(--color-text-subtle)">결과 없음</div>
+            <div className="px-3 py-2 text-[11px] text-(--color-text-subtle)">{t('fullList.anchor.noResults')}</div>
           )}
           {!loading &&
             items.map((p, i) => (
@@ -486,11 +491,12 @@ function GpsButton({
   onRequest: () => void;
   onClear: () => void;
 }) {
+  const { t } = useTranslation('navigation');
   if (status === 'requesting') {
     return (
       <span className="inline-flex h-7 items-center gap-1 rounded-(--radius-sm) border border-(--color-border) bg-(--color-surface-alt) px-2 text-[11px] font-medium text-(--color-text-muted)">
         <Icon name="sparkles" size={12} />
-        위치 확인 중…
+        {t('fullList.gps.requesting')}
       </span>
     );
   }
@@ -499,11 +505,11 @@ function GpsButton({
       <button
         type="button"
         onClick={onClear}
-        title="내 위치 anchor 해제"
+        title={t('fullList.gps.onClearTitle')}
         className="inline-flex h-7 items-center gap-1 rounded-(--radius-sm) border border-(--color-accent) bg-(--color-accent-bg) px-2 text-[11px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/10"
       >
         <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
-        내 위치 ON
+        {t('fullList.gps.on')}
       </button>
     );
   }
@@ -517,12 +523,12 @@ function GpsButton({
       disabled={unsupported}
       title={
         denied
-          ? '권한이 거부됨 — 브라우저 설정에서 허용 후 다시 시도'
+          ? t('fullList.gps.deniedTitle')
           : errored
-            ? '위치 가져오기 실패 — 다시 시도'
+            ? t('fullList.gps.errorTitle')
             : unsupported
-              ? '브라우저가 위치 서비스를 지원하지 않음'
-              : '내 위치를 거리 정렬의 기준점으로 사용'
+              ? t('fullList.gps.unsupportedTitle')
+              : t('fullList.gps.idleTitle')
       }
       className={`inline-flex h-7 items-center gap-1 rounded-(--radius-sm) border px-2 text-[11px] font-medium transition-colors ${
         unsupported
@@ -533,7 +539,7 @@ function GpsButton({
       }`}
     >
       <Icon name="sparkles" size={12} />
-      {denied ? '권한 거부됨' : errored ? '재시도' : unsupported ? '미지원' : '내 위치'}
+      {denied ? t('fullList.gps.denied') : errored ? t('fullList.gps.retrying') : unsupported ? t('fullList.gps.unsupported') : t('fullList.gps.idle')}
     </button>
   );
 }

@@ -1,0 +1,100 @@
+{
+  "shell": {
+    "title": "コミュニティ",
+    "creditsLabel": "{{count}} クレジット",
+    "creditsPlaceholder": "クレジット",
+    "languageToggle": "言語変更",
+    "chatRoomBtn": "チャットルーム"
+  },
+  "category": {
+    "festival_story": "フェスティバルストーリー",
+    "mate_finder": "仲間を探す",
+    "free": "自由掲示板",
+    "all": "すべて",
+    "ariaLabel": "掲示板カテゴリー"
+  },
+  "post": {
+    "loading": "読み込み中…",
+    "notFound": "この投稿は存在しないか、期限切れです。",
+    "loadError": "読み込みに失敗しました。",
+    "likeAriaPressed": "いいねを取り消す",
+    "likeAriaUnpressed": "いいね",
+    "likeButton": "♥ {{count}}",
+    "commentCount": "コメント ({{count}})",
+    "commentSection": "コメント",
+    "loginToComment": "コメントするにはログインしてください。",
+    "deleteConfirm": "この投稿を削除しますか？",
+    "deleteSuccess": "削除しました。",
+    "deleteForbidden": "あなたの投稿ではありません。",
+    "deleteFail": "削除に失敗しました。",
+    "translateTitle": "翻訳結果",
+    "translateLoading": "翻訳中…",
+    "translateError": "翻訳に失敗しました。",
+    "translateUnavailable": "翻訳サービスは利用できません。（OpenAI キーが未設定）",
+    "translateClose": "閉じる",
+    "translateSelectLang": "翻訳する言語を選択してください",
+    "translateOriginal": "原文",
+    "translateResult": "翻訳",
+    "translateAnother": "別の言語に翻訳"
+  },
+  "compose": {
+    "newPost": "新規投稿",
+    "editPost": "投稿を編集",
+    "titlePlaceholder": "タイトルを入力してください",
+    "bodyPlaceholder": "内容を入力してください",
+    "titleLabel": "タイトル",
+    "bodyLabel": "内容",
+    "categoryLabel": "カテゴリー",
+    "categorySelectLabel": "カテゴリーを選択",
+    "submit": "投稿",
+    "save": "保存",
+    "cancel": "キャンセル",
+    "titleRequired": "タイトルは 2〜200 文字で入力してください。",
+    "bodyRequired": "内容は 2〜5000 文字で入力してください。",
+    "categoryRequired": "カテゴリーを選択してください。",
+    "loginRequired": "ログインが必要です。",
+    "submitError": "投稿に失敗しました。"
+  },
+  "comment": {
+    "placeholder": "コメントを入力してください…",
+    "replyPlaceholder": "返信を入力してください…",
+    "submit": "投稿",
+    "reply": "返信",
+    "edit": "編集",
+    "editAriaLabel": "コメントを編集",
+    "delete": "削除",
+    "deleteConfirm": "このコメントを削除しますか？",
+    "deleteForbidden": "あなたのコメントではありません。",
+    "deleteFail": "削除に失敗しました。",
+    "replyNotAllowed": "返信に返信することはできません。",
+    "bodyLength": "コメントは 1〜1000 文字で入力してください。",
+    "authorProfileAria": "{{nickname}} さんのプロフィールを見る"
+  },
+  "authorModal": {
+    "title": "{{nickname}} さん",
+    "mateScore": "仲間スコア",
+    "chatRequest": "チャット申請",
+    "close": "閉じる",
+    "blockConfirm": "{{nickname}} さんをブロックしますか？",
+    "blocked": "ブロックしました。",
+    "alreadyBlocked": "すでにブロック済みです。",
+    "blockFailed": "ブロックに失敗しました。",
+    "blockBtn": "ブロック",
+    "blockAriaLabel": "{{nickname}} をブロック",
+    "avatarAriaLabel": "{{nickname}} のプロフィールアバター",
+    "chatRequestAriaLabel": "{{nickname}} にチャット申請する"
+  },
+  "mateReco": {
+    "title": "仲間のおすすめ",
+    "placeholder": "条件に合った仲間をご紹介します。",
+    "viewRecommendations": "おすすめ一覧を見る",
+    "editConditions": "条件を入力・修正"
+  },
+  "postList": {
+    "empty": "投稿がありません。",
+    "loadError": "投稿の読み込みに失敗しました。",
+    "commentCount": "コメント {{count}}",
+    "likeCount": "♥ {{count}}",
+    "reportAria": "投稿を通報：{{title}}"
+  }
+}

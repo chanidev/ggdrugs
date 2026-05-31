@@ -1,0 +1,227 @@
+{
+  "sidebar": {
+    "eyebrow": "La façon de trouver\ndes événements à Séoul",
+    "description": "Explorez festivals, expositions, symposiums et conférences grâce aux épingles sur la carte, au chat et aux filtres.",
+    "filter": {
+      "title": "Recherche par filtre",
+      "description": "Affinez selon 5 axes"
+    },
+    "list": {
+      "title": "Liste complète",
+      "description": "Parcourir par catégorie"
+    },
+    "chat": {
+      "title": "Recherche par chat",
+      "description": "Posez vos questions en langage naturel"
+    },
+    "ariaLabel": "Menu de navigation des événements",
+    "navLabel": "Section de navigation"
+  },
+  "stats": {
+    "label": "Événements actuellement ouverts",
+    "total": "Tout",
+    "ongoing": "En cours",
+    "upcoming": "À venir"
+  },
+  "mobile": {
+    "tabs": {
+      "list": "Liste",
+      "filter": "Filtre",
+      "chat": "Chat"
+    },
+    "backToList": "Retour à la liste",
+    "eventSummary": "Résumé de l'événement",
+    "chatHint": "Posez votre question en langage naturel pour obtenir des résultats avec 5 filtres + recherche sémantique IA.",
+    "chatPlaceholder": "\"Festivals en famille ce week-end\"",
+    "chatAriaInput": "Rechercher des événements en langage naturel",
+    "chatAriaSend": "Envoyer la recherche",
+    "aiCandidates": "{{count}} candidats IA · sémantique",
+    "sheetTabsLabel": "Onglets de feuille",
+    "homeAria": "Accueil Alle"
+  },
+  "region": {
+    "sido": {
+      "서울": "Séoul",
+      "부산": "Busan",
+      "인천": "Incheon",
+      "대구": "Daegu",
+      "대전": "Daejeon",
+      "광주": "Gwangju",
+      "울산": "Ulsan",
+      "세종": "Sejong",
+      "경기": "Gyeonggi",
+      "강원": "Gangwon",
+      "충북": "Chungbuk",
+      "충남": "Chungnam",
+      "전북": "Jeonbuk",
+      "전남": "Jeonnam",
+      "경북": "Gyeongbuk",
+      "경남": "Gyeongnam",
+      "제주": "Jeju"
+    }
+  },
+  "filter": {
+    "region": {
+      "label": "Région",
+      "seoul": "Séoul",
+      "all": "Tout",
+      "loadError": "Échec du chargement de la région : {{msg}}",
+      "loading": "Chargement…"
+    },
+    "period": {
+      "label": "Période",
+      "today": "Aujourd'hui",
+      "weekend": "Ce week-end",
+      "week": "Cette semaine",
+      "month": "Ce mois-ci"
+    },
+    "companion": {
+      "label": "Type de groupe",
+      "solo": "Solo",
+      "couple": "Couple",
+      "family": "Famille",
+      "friend": "Amis"
+    },
+    "eventType": {
+      "label": "Type d'événement",
+      "festival": "Festival",
+      "expo": "Exposition",
+      "symposium": "Symposium",
+      "conference": "Conférence",
+      "exhibition": "Exposition",
+      "performance": "Spectacle",
+      "education": "Éducation/Atelier",
+      "movie": "Film"
+    },
+    "vibe": {
+      "label": "Ambiance de l'événement",
+      "loading": "Chargement…"
+    },
+    "action": {
+      "hintPrefix": "Sélectionnez des filtres pour",
+      "hintApply": "appliquer",
+      "hintSuffix": "",
+      "_hintSuffixNote": "intentionally empty — French sentence ending with 'appliquer' is grammatically complete without a trailing particle",
+      "selectedSuffix": "conditions sélectionnées",
+      "reset": "Réinitialiser",
+      "subscribe": "S'abonner à ce filtre",
+      "subscribeTitle": "Soyez notifié lors de nouveaux événements correspondants",
+      "apply": "Appliquer",
+      "resultCount": "{{count}} résultats"
+    },
+    "subscribe": {
+      "maxReached": "Maximum 20 abonnements — gérez dans Mon compte",
+      "failed": "Échec : {{msg}}"
+    }
+  },
+  "subscription": {
+    "created": "Abonnement créé — gérez dans Mon compte > Abonnements",
+    "deleted": "Abonnement annulé.",
+    "loginRequired": "Connexion requise pour s'abonner."
+  },
+  "fullList": {
+    "phase": {
+      "tabsLabel": "Phase de l'événement",
+      "all": "Tout",
+      "upcoming": "À venir",
+      "ongoing": "En cours",
+      "ended": "Terminé"
+    },
+    "sort": {
+      "label": "Trier",
+      "ariaLabel": "Critère de tri",
+      "ending": "Bientôt terminé",
+      "recent": "Récent",
+      "popular": "Populaire",
+      "distance": "Distance",
+      "distanceDisabledTitle": "Activez la carte ou utilisez ma position pour activer"
+    },
+    "anchor": {
+      "label": "Point d'ancrage",
+      "clear": "Effacer",
+      "clearTitle": "Effacer le point d'ancrage",
+      "placeholder": "Lieu ou adresse (ex : Gangnam Station)",
+      "searchAriaLabel": "Définir le point d'ancrage de tri par distance via la recherche de lieu",
+      "searching": "Recherche…",
+      "noResults": "Aucun résultat"
+    },
+    "gps": {
+      "requesting": "Obtention de la position…",
+      "on": "Ma position ACTIVÉE",
+      "onClearTitle": "Effacer l'ancre de ma position",
+      "idle": "Ma position",
+      "denied": "Permission refusée",
+      "retrying": "Réessayer",
+      "unsupported": "Non supporté",
+      "deniedTitle": "Permission refusée — autorisez dans les paramètres du navigateur puis réessayez",
+      "errorTitle": "Échec de la position — réessayer",
+      "unsupportedTitle": "Le navigateur ne prend pas en charge les services de localisation",
+      "idleTitle": "Utiliser ma position comme point d'ancrage pour le tri par distance"
+    },
+    "chips": {
+      "all": "Tout"
+    },
+    "statsError": "Échec du chargement des statistiques",
+    "totalLabel": "{{count}} événements"
+  },
+  "eventSummary": {
+    "title": "Résumé de l'événement",
+    "closeAriaLabel": "Fermer le panneau de résumé",
+    "asideAriaLabel": "Résumé de l'événement sélectionné",
+    "detailPage": "Aller à la page de détail",
+    "noPoster": "Pas d'affiche",
+    "label": {
+      "category": "Catégorie",
+      "place": "Lieu",
+      "period": "Période",
+      "time": "Horaire",
+      "price": "Prix",
+      "target": "Public cible"
+    },
+    "articles": {
+      "title": "Articles liés",
+      "loadError": "Échec du chargement des articles.",
+      "topItems": "Top {{shown}} sur {{total}}",
+      "originalLink": "Source ↗"
+    },
+    "aiSummaryLabel": "Résumé IA",
+    "descSummaryLabel": "Résumé du contenu",
+    "relatedArticlesCount": "Articles liés",
+    "relatedArticlesCountTitle": "{{count}} articles liés — 3 en dessous, tous sur la page de détail"
+  },
+  "map": {
+    "ariaLabel": "Carte des événements",
+    "pinCount": "{{count}} événements affichés",
+    "pinCountSuffix": " événements affichés",
+    "missingKey": {
+      "title": "Clé Kakao Maps manquante",
+      "body": "Définissez VITE_KAKAO_MAP_JS_KEY dans .env et redémarrez le serveur dev."
+    },
+    "scriptLoadFail": "Échec du chargement du script",
+    "mapLoadFail": "Échec du chargement de la carte",
+    "allowedDomainHint": "Vérifiez que http://localhost:5173 est dans les domaines autorisés",
+    "kakaoConsoleHint": "Vérifiez que l'application dans la console développeur Kakao est une clé JavaScript (pas de clé REST API)",
+    "networkTabHint": "Vérifiez le statut de la requête sdk.js dans l'onglet Réseau du navigateur F12",
+    "eventMapAriaLabel": "Carte de localisation de l'événement",
+    "scriptLoadFailNoTarget": "Échec du chargement du script de la carte (pas de cible d'événement)"
+  },
+  "eventList": {
+    "emptyHint": "Essayez une autre catégorie.",
+    "defaultTotalSuffix": " événements",
+    "sortHint": "En cours & à venir en premier",
+    "sortHintTitle": "Les événements en cours et à venir apparaissent en premier ; les événements terminés en dernier",
+    "distanceAriaLabel": "Distance {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "Recherche par filtre",
+    "list": "Voir la liste complète",
+    "chat": "Recherche de chat",
+    "detailSuffix": "Détails de {{title}}",
+    "closeAria": "Fermer le panneau"
+  },
+  "phase": {
+    "upcoming": "À venir",
+    "ongoing": "En cours",
+    "ended": "Terminé"
+  }
+}

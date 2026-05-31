@@ -1,0 +1,227 @@
+{
+  "sidebar": {
+    "eyebrow": "Cách tìm sự kiện\nở Seoul",
+    "description": "Khám phá lễ hội, triển lãm, hội thảo và hội nghị bằng ghim bản đồ, chat và bộ lọc.",
+    "filter": {
+      "title": "Tìm kiếm bộ lọc",
+      "description": "Thu hẹp theo 5 tiêu chí"
+    },
+    "list": {
+      "title": "Xem danh sách",
+      "description": "Duyệt theo danh mục"
+    },
+    "chat": {
+      "title": "Tìm kiếm chat",
+      "description": "Hỏi bằng ngôn ngữ tự nhiên"
+    },
+    "ariaLabel": "Menu điều hướng sự kiện",
+    "navLabel": "Phần điều hướng"
+  },
+  "stats": {
+    "label": "Sự kiện đang mở",
+    "total": "Tất cả",
+    "ongoing": "Đang diễn ra",
+    "upcoming": "Sắp diễn ra"
+  },
+  "mobile": {
+    "tabs": {
+      "list": "Danh sách",
+      "filter": "Bộ lọc",
+      "chat": "Chat"
+    },
+    "backToList": "Về danh sách",
+    "eventSummary": "Tóm tắt sự kiện",
+    "chatHint": "Hỏi bằng ngôn ngữ tự nhiên để nhận kết quả lọc 5 tiêu chí + AI.",
+    "chatPlaceholder": "\"Lễ hội cho gia đình cuối tuần này\"",
+    "chatAriaInput": "Tìm sự kiện bằng ngôn ngữ tự nhiên",
+    "chatAriaSend": "Gửi tìm kiếm",
+    "aiCandidates": "{{count}} gợi ý AI · ngữ nghĩa",
+    "sheetTabsLabel": "Tab trang tính",
+    "homeAria": "Trang chủ Alle"
+  },
+  "region": {
+    "sido": {
+      "서울": "Seoul",
+      "부산": "Busan",
+      "인천": "Incheon",
+      "대구": "Daegu",
+      "대전": "Daejeon",
+      "광주": "Gwangju",
+      "울산": "Ulsan",
+      "세종": "Sejong",
+      "경기": "Gyeonggi",
+      "강원": "Gangwon",
+      "충북": "Chungbuk",
+      "충남": "Chungnam",
+      "전북": "Jeonbuk",
+      "전남": "Jeonnam",
+      "경북": "Gyeongbuk",
+      "경남": "Gyeongnam",
+      "제주": "Jeju"
+    }
+  },
+  "filter": {
+    "region": {
+      "label": "Khu vực",
+      "seoul": "Seoul",
+      "all": "Tất cả",
+      "loadError": "Tải khu vực thất bại: {{msg}}",
+      "loading": "Đang tải…"
+    },
+    "period": {
+      "label": "Thời gian",
+      "today": "Hôm nay",
+      "weekend": "Cuối tuần này",
+      "week": "Tuần này",
+      "month": "Tháng này"
+    },
+    "companion": {
+      "label": "Nhóm",
+      "solo": "Một mình",
+      "couple": "Đôi",
+      "family": "Gia đình",
+      "friend": "Bạn bè"
+    },
+    "eventType": {
+      "label": "Loại sự kiện",
+      "festival": "Lễ hội",
+      "expo": "Triển lãm thương mại",
+      "symposium": "Hội thảo",
+      "conference": "Hội nghị",
+      "exhibition": "Triển lãm",
+      "performance": "Biểu diễn",
+      "education": "Giáo dục/Workshop",
+      "movie": "Phim"
+    },
+    "vibe": {
+      "label": "Không khí sự kiện",
+      "loading": "Đang tải…"
+    },
+    "action": {
+      "hintPrefix": "Chọn bộ lọc để",
+      "hintApply": "áp dụng",
+      "hintSuffix": "",
+      "_hintSuffixNote": "intentionally empty — Vietnamese sentence ending with the verb 'áp dụng' is grammatically complete without an additional trailing particle",
+      "selectedSuffix": "điều kiện đã chọn",
+      "reset": "Đặt lại",
+      "subscribe": "Đăng ký bộ lọc này",
+      "subscribeTitle": "Nhận thông báo khi có sự kiện phù hợp",
+      "apply": "Áp dụng",
+      "resultCount": "{{count}} kết quả"
+    },
+    "subscribe": {
+      "maxReached": "Tối đa 20 đăng ký — quản lý trong Trang của tôi",
+      "failed": "Thất bại: {{msg}}"
+    }
+  },
+  "subscription": {
+    "created": "Đã tạo đăng ký — quản lý trong Trang của tôi > Đăng ký",
+    "deleted": "Đã hủy đăng ký.",
+    "loginRequired": "Cần đăng nhập để đăng ký."
+  },
+  "fullList": {
+    "phase": {
+      "tabsLabel": "Giai đoạn sự kiện",
+      "all": "Tất cả",
+      "upcoming": "Sắp diễn ra",
+      "ongoing": "Đang diễn ra",
+      "ended": "Đã kết thúc"
+    },
+    "sort": {
+      "label": "Sắp xếp",
+      "ariaLabel": "Tiêu chí sắp xếp",
+      "ending": "Sắp kết thúc",
+      "recent": "Mới nhất",
+      "popular": "Phổ biến",
+      "distance": "Khoảng cách",
+      "distanceDisabledTitle": "Bật bản đồ hoặc dùng vị trí của tôi để kích hoạt"
+    },
+    "anchor": {
+      "label": "Điểm neo",
+      "clear": "Xóa",
+      "clearTitle": "Xóa điểm neo",
+      "placeholder": "Địa điểm hoặc địa chỉ (vd: Gangnam Station)",
+      "searchAriaLabel": "Đặt điểm neo sắp xếp khoảng cách qua tìm kiếm địa điểm",
+      "searching": "Đang tìm…",
+      "noResults": "Không có kết quả"
+    },
+    "gps": {
+      "requesting": "Đang lấy vị trí…",
+      "on": "Vị trí của tôi BẬT",
+      "onClearTitle": "Xóa neo vị trí của tôi",
+      "idle": "Vị trí của tôi",
+      "denied": "Quyền bị từ chối",
+      "retrying": "Thử lại",
+      "unsupported": "Không hỗ trợ",
+      "deniedTitle": "Quyền bị từ chối — cho phép trong cài đặt trình duyệt rồi thử lại",
+      "errorTitle": "Không lấy được vị trí — thử lại",
+      "unsupportedTitle": "Trình duyệt không hỗ trợ dịch vụ vị trí",
+      "idleTitle": "Dùng vị trí của tôi làm điểm neo sắp xếp khoảng cách"
+    },
+    "chips": {
+      "all": "Tất cả"
+    },
+    "statsError": "Không tải được thống kê",
+    "totalLabel": "{{count}} sự kiện"
+  },
+  "eventSummary": {
+    "title": "Tóm tắt sự kiện",
+    "closeAriaLabel": "Đóng bảng tóm tắt",
+    "asideAriaLabel": "Tóm tắt sự kiện đã chọn",
+    "detailPage": "Đến trang chi tiết",
+    "noPoster": "Không có poster",
+    "label": {
+      "category": "Danh mục",
+      "place": "Địa điểm",
+      "period": "Thời gian",
+      "time": "Giờ",
+      "price": "Giá",
+      "target": "Đối tượng"
+    },
+    "articles": {
+      "title": "Bài viết liên quan",
+      "loadError": "Không tải được bài viết.",
+      "topItems": "Top {{shown}} / tổng {{total}}",
+      "originalLink": "Nguồn ↗"
+    },
+    "aiSummaryLabel": "Tóm tắt AI",
+    "descSummaryLabel": "Tóm tắt nội dung",
+    "relatedArticlesCount": "Bài liên quan",
+    "relatedArticlesCountTitle": "{{count}} bài liên quan — 3 bài dưới đây, tất cả ở trang chi tiết"
+  },
+  "map": {
+    "ariaLabel": "Bản đồ sự kiện",
+    "pinCount": "Hiển thị {{count}} sự kiện",
+    "pinCountSuffix": " sự kiện được hiển thị",
+    "missingKey": {
+      "title": "Thiếu khóa Kakao Maps",
+      "body": "Đặt VITE_KAKAO_MAP_JS_KEY trong .env và khởi động lại máy chủ dev."
+    },
+    "scriptLoadFail": "Tải script thất bại",
+    "mapLoadFail": "Tải bản đồ thất bại",
+    "allowedDomainHint": "Đảm bảo http://localhost:5173 có trong danh sách domain được phép",
+    "kakaoConsoleHint": "Kiểm tra xem ứng dụng trong bảng điều khiển Kakao có phải là khóa JavaScript không (không phải khóa REST API)",
+    "networkTabHint": "Nhấn F12 trên trình duyệt -> Kiểm tra trạng thái yêu cầu sdk.js trong tab Network",
+    "eventMapAriaLabel": "Bản đồ vị trí sự kiện",
+    "scriptLoadFailNoTarget": "Tải script bản đồ thất bại (không có event target)"
+  },
+  "eventList": {
+    "emptyHint": "Hãy thử danh mục khác.",
+    "defaultTotalSuffix": " sự kiện",
+    "sortHint": "Đang & sắp diễn ra trước",
+    "sortHintTitle": "Sự kiện đang và sắp diễn ra hiển thị trước; sự kiện đã kết thúc ở sau",
+    "distanceAriaLabel": "Khoảng cách {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "Tìm kiếm bộ lọc",
+    "list": "Xem danh sách tất cả",
+    "chat": "Tìm kiếm phòng chat",
+    "detailSuffix": "Chi tiết {{title}}",
+    "closeAria": "Đóng bảng"
+  },
+  "phase": {
+    "upcoming": "Sắp tới",
+    "ongoing": "Đang diễn ra",
+    "ended": "Đã kết thúc"
+  }
+}

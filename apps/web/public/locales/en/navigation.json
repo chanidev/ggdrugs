@@ -1,0 +1,227 @@
+{
+  "sidebar": {
+    "eyebrow": "Seoul's way\nto find events",
+    "description": "Explore festivals, expos, symposiums and conferences with map pins, chat, and filters.",
+    "filter": {
+      "title": "Filter Search",
+      "description": "Narrow by 5 axes"
+    },
+    "list": {
+      "title": "Full List View",
+      "description": "Browse by category"
+    },
+    "chat": {
+      "title": "Chat Search",
+      "description": "Ask in natural language"
+    },
+    "ariaLabel": "Event navigation menu",
+    "navLabel": "Navigation section"
+  },
+  "stats": {
+    "label": "Events currently open",
+    "total": "All",
+    "ongoing": "Ongoing",
+    "upcoming": "Upcoming"
+  },
+  "mobile": {
+    "tabs": {
+      "list": "List",
+      "filter": "Filter",
+      "chat": "Chat"
+    },
+    "backToList": "Back to list",
+    "eventSummary": "Event summary",
+    "chatHint": "Ask in natural language to get 5-filter + AI semantic search results.",
+    "chatPlaceholder": "\"Festivals for families this weekend\"",
+    "chatAriaInput": "Search events in natural language",
+    "chatAriaSend": "Send search",
+    "aiCandidates": "{{count}} AI candidates · semantic",
+    "sheetTabsLabel": "Sheet tabs",
+    "homeAria": "Alle Home"
+  },
+  "region": {
+    "sido": {
+      "서울": "Seoul",
+      "부산": "Busan",
+      "인천": "Incheon",
+      "대구": "Daegu",
+      "대전": "Daejeon",
+      "광주": "Gwangju",
+      "울산": "Ulsan",
+      "세종": "Sejong",
+      "경기": "Gyeonggi",
+      "강원": "Gangwon",
+      "충북": "Chungbuk",
+      "충남": "Chungnam",
+      "전북": "Jeonbuk",
+      "전남": "Jeonnam",
+      "경북": "Gyeongbuk",
+      "경남": "Gyeongnam",
+      "제주": "Jeju"
+    }
+  },
+  "filter": {
+    "region": {
+      "label": "Region",
+      "seoul": "Seoul",
+      "all": "All",
+      "loadError": "Region load failed: {{msg}}",
+      "loading": "Loading…"
+    },
+    "period": {
+      "label": "Period",
+      "today": "Today",
+      "weekend": "This weekend",
+      "week": "This week",
+      "month": "This month"
+    },
+    "companion": {
+      "label": "Group type",
+      "solo": "Solo",
+      "couple": "Couple",
+      "family": "Family",
+      "friend": "Friends"
+    },
+    "eventType": {
+      "label": "Event type",
+      "festival": "Festival",
+      "expo": "Expo",
+      "symposium": "Symposium",
+      "conference": "Conference",
+      "exhibition": "Exhibition",
+      "performance": "Performance",
+      "education": "Education/Workshop",
+      "movie": "Movie"
+    },
+    "vibe": {
+      "label": "Event vibe",
+      "loading": "Loading…"
+    },
+    "action": {
+      "hintPrefix": "Select filters to",
+      "hintApply": "apply",
+      "hintSuffix": "",
+      "_hintSuffixNote": "intentionally empty — English sentence is grammatically complete without a trailing particle",
+      "selectedSuffix": "conditions selected",
+      "reset": "Reset",
+      "subscribe": "Subscribe to this filter",
+      "subscribeTitle": "Get notified when new events match",
+      "apply": "Apply",
+      "resultCount": "{{count}} results"
+    },
+    "subscribe": {
+      "maxReached": "Max 20 subscriptions — manage in My Page",
+      "failed": "Failed: {{msg}}"
+    }
+  },
+  "subscription": {
+    "created": "Subscription created — manage in My Page > Subscriptions",
+    "deleted": "Subscription cancelled.",
+    "loginRequired": "Login required to subscribe."
+  },
+  "fullList": {
+    "phase": {
+      "tabsLabel": "Event phase",
+      "all": "All",
+      "upcoming": "Upcoming",
+      "ongoing": "Ongoing",
+      "ended": "Ended"
+    },
+    "sort": {
+      "label": "Sort",
+      "ariaLabel": "Sort by",
+      "ending": "Ending soon",
+      "recent": "Recent",
+      "popular": "Popular",
+      "distance": "Distance",
+      "distanceDisabledTitle": "Enable map or use my location to activate"
+    },
+    "anchor": {
+      "label": "Anchor",
+      "clear": "Clear",
+      "clearTitle": "Clear anchor point",
+      "placeholder": "Place or address (e.g. Gangnam Station)",
+      "searchAriaLabel": "Set distance sort anchor by place search",
+      "searching": "Searching…",
+      "noResults": "No results"
+    },
+    "gps": {
+      "requesting": "Getting location…",
+      "on": "My location ON",
+      "onClearTitle": "Clear my location anchor",
+      "idle": "My location",
+      "denied": "Permission denied",
+      "retrying": "Retry",
+      "unsupported": "Unsupported",
+      "deniedTitle": "Permission denied — allow in browser settings and retry",
+      "errorTitle": "Failed to get location — retry",
+      "unsupportedTitle": "Browser does not support location services",
+      "idleTitle": "Use my location as the distance sort anchor"
+    },
+    "chips": {
+      "all": "All"
+    },
+    "statsError": "Failed to load stats",
+    "totalLabel": "{{count}} events"
+  },
+  "eventSummary": {
+    "title": "Event Summary",
+    "closeAriaLabel": "Close summary panel",
+    "asideAriaLabel": "Selected event summary",
+    "detailPage": "Go to detail page",
+    "noPoster": "No poster",
+    "label": {
+      "category": "Category",
+      "place": "Venue",
+      "period": "Period",
+      "time": "Time",
+      "price": "Price",
+      "target": "Target"
+    },
+    "articles": {
+      "title": "Related Articles",
+      "loadError": "Failed to load articles.",
+      "topItems": "Top {{shown}} of {{total}}",
+      "originalLink": "Source ↗"
+    },
+    "aiSummaryLabel": "AI Summary",
+    "descSummaryLabel": "Content Summary",
+    "relatedArticlesCount": "Related articles",
+    "relatedArticlesCountTitle": "{{count}} related articles — top 3 below, all on detail page"
+  },
+  "map": {
+    "ariaLabel": "Event map",
+    "pinCount": "{{count}} events shown",
+    "pinCountSuffix": " events shown",
+    "missingKey": {
+      "title": "Kakao Maps key missing",
+      "body": "Set VITE_KAKAO_MAP_JS_KEY in .env and restart the dev server."
+    },
+    "scriptLoadFail": "Script load failed",
+    "mapLoadFail": "Map load failed",
+    "allowedDomainHint": "Make sure http://localhost:5173 is in allowed domains",
+    "kakaoConsoleHint": "Check if the app in the Kakao Developer Console is a JavaScript key (not REST API key)",
+    "networkTabHint": "Check the sdk.js request status in the Network tab (F12 in browser)",
+    "eventMapAriaLabel": "Event location map",
+    "scriptLoadFailNoTarget": "Map script failed to load (no event target)"
+  },
+  "eventList": {
+    "emptyHint": "Try a different category.",
+    "defaultTotalSuffix": " events",
+    "sortHint": "Ongoing & upcoming first",
+    "sortHintTitle": "Ongoing and upcoming events appear first; ended events last",
+    "distanceAriaLabel": "Distance {{distance}}"
+  },
+  "overlayPanel": {
+    "filter": "Filter Search",
+    "list": "View All",
+    "chat": "Chat Room Search",
+    "detailSuffix": "{{title}} Details",
+    "closeAria": "Close Panel"
+  },
+  "phase": {
+    "upcoming": "Upcoming",
+    "ongoing": "Ongoing",
+    "ended": "Ended"
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "button": {
+    "login": "Log in",
+    "logout": "Log out",
+    "write": "Write",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "close": "Close",
+    "submit": "Submit",
+    "save": "Save",
+    "report": "Report",
+    "translate": "Translate",
+    "translateAnother": "Translate to another language",
+    "copy": "Copy",
+    "retry": "Retry",
+    "back": "Back",
+    "backToList": "Back to list"
+  },
+  "label": {
+    "loading": "Loading…",
+    "error": "An error occurred.",
+    "notFound": "This item does not exist or has expired.",
+    "eventNotFound": "Event not found",
+    "empty": "No items.",
+    "credits": "Credits",
+    "notifications": "Notifications",
+    "chatRoom": "Chat room",
+    "admin": "Admin",
+    "uploader": "Uploader",
+    "myPage": "My Page",
+    "login_kakao": "Kakao",
+    "login_google": "Log in with Google",
+    "login_google_short": "Google",
+    "category": "Category",
+    "location": "Location",
+    "period": "Period",
+    "vibe": "Vibe"
+  },
+  "aria": {
+    "adminConsole": "Admin console",
+    "uploaderConsole": "Uploader console",
+    "myPage": "My Page",
+    "quickSearch": "Quick search (⌘K) — coming soon",
+    "quickSearchLabel": "Quick search (⌘K) — coming soon",
+    "eventSheet": "Event sheet",
+    "sheetCollapse": "Collapse sheet to half",
+    "sheetExpandFull": "Expand sheet fully",
+    "sheetExpand": "Expand sheet",
+    "bookmark": "Bookmark",
+    "bookmarked": "Bookmarked",
+    "bookmarkLoginRequired": "Login to bookmark",
+    "notifications": "Notifications",
+    "notificationsPlus": "Notifications 9+",
+    "notificationsCount": "Notifications {{count}}",
+    "languageSelect": "Language selection",
+    "logoLockup": "Alle, Seoul event map"
+  },
+  "search": {
+    "placeholder": "Search events & places"
+  },
+  "error": {
+    "loginRequired": "Login required.",
+    "forbidden": "You do not have permission.",
+    "loadFailed": "Failed to load.",
+    "deleteFailed": "Failed to delete.",
+    "networkError": "No response received. Please try again later.",
+    "llmUnreachable": "Could not connect to LLM service."
+  },
+  "report": {
+    "reasons": {
+      "spam": "Spam/Advertising",
+      "abuse": "Profanity/Hate speech",
+      "harassment": "Harassment",
+      "obscene": "Obscene content",
+      "no_show": "No-show",
+      "etc": "Other"
+    },
+    "error": {
+      "duplicate": "You have already reported this.",
+      "unauthenticated": "Login is required.",
+      "generic": "An error occurred while submitting your report. Please try again."
+    },
+    "reasonLabel": "Reason for report",
+    "detailLabel": "Detailed reason",
+    "detailLabelFull": "Detailed reason (optional, up to 500 characters)",
+    "placeholder": "Providing specific details helps us process your report faster.",
+    "submitting": "Reporting…",
+    "success": "Your report has been submitted.",
+    "ariaLabel": "Report"
+  },
+  "articles": {
+    "title": "Related Articles",
+    "loadError": "Failed to load related articles.",
+    "openOriginal": "Open original ↗",
+    "prev": "Previous",
+    "next": "Next",
+    "ariaLabel": "Related articles page",
+    "autoMatch": "Auto-matched"
+  },
+  "overview": {
+    "title": "Summary",
+    "showOriginal": "Show original description"
+  },
+  "posterHeader": {
+    "noPoster": "No poster",
+    "bookmarkCount": "{{count}} bookmarks"
+  },
+  "provenance": {
+    "title": "Source",
+    "firstCollected": "First collected",
+    "lastUpdated": "Last updated"
+  },
+  "loginGate": {
+    "reviewHint": "Login is required to leave a review.",
+    "googleLogin": "Log in with Google"
+  },
+  "sentiment": {
+    "positive": "Positive",
+    "negative": "Negative",
+    "neutral": "Neutral"
+  },
+  "pagination": {
+    "prev": "Previous",
+    "next": "Next",
+    "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(None)"
+  },
+  "errorBoundary": {
+    "message": "Unable to display this section",
+    "retry": "Try again"
+  }
+}

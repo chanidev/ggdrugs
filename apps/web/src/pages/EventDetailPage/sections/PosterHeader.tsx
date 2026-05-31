@@ -1,8 +1,10 @@
+import { useTranslation } from 'react-i18next';
 import type { BffEventDetail } from '../../../lib/api';
 import { PhaseBadge } from '../../../components/PhaseBadge';
 import { BookmarkButton } from '../../../components/BookmarkButton';
 
 export function PosterHeader({ detail }: { detail: BffEventDetail }) {
+  const { t } = useTranslation('common');
   return (
     <div className="flex flex-col gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6 md:flex-row">
       <div className="h-56 w-full shrink-0 overflow-hidden rounded-(--radius-md) bg-(--color-surface-warm) md:h-64 md:w-64">
@@ -18,7 +20,7 @@ export function PosterHeader({ detail }: { detail: BffEventDetail }) {
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-[12px] text-(--color-text-subtle)">
-            포스터 없음
+            {t('posterHeader.noPoster')}
           </div>
         )}
       </div>
@@ -36,7 +38,7 @@ export function PosterHeader({ detail }: { detail: BffEventDetail }) {
             initialBookmarked={detail.isBookmarked}
           />
           <span className="tabular text-[12px] text-(--color-text-subtle)">
-            북마크 {detail.bookmarkCount.toLocaleString()}
+            {t('posterHeader.bookmarkCount', { count: detail.bookmarkCount.toLocaleString() })}
           </span>
         </div>
       </div>

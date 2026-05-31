@@ -1,6 +1,8 @@
+import { useTranslation } from 'react-i18next';
 import type { BffEventDetail } from '../../../lib/api';
 
 export function OverviewSection({ detail }: { detail: BffEventDetail }) {
+  const { t } = useTranslation('common');
   if (!detail.aiSummary && !detail.description) return null;
   return (
     <section className="flex flex-col gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
@@ -13,7 +15,7 @@ export function OverviewSection({ detail }: { detail: BffEventDetail }) {
             >
               AI
             </span>
-            <h2 className="m-0 text-[14px] font-semibold tracking-[-0.01em]">요약</h2>
+            <h2 className="m-0 text-[14px] font-semibold tracking-[-0.01em]">{t('overview.title')}</h2>
           </div>
           <p className="m-0 whitespace-pre-wrap text-[14px] leading-[1.6] text-(--color-text)">
             {detail.aiSummary}
@@ -23,7 +25,7 @@ export function OverviewSection({ detail }: { detail: BffEventDetail }) {
       {detail.description && (
         <details className="group">
           <summary className="m-0 cursor-pointer list-none text-[13px] font-medium text-(--color-text-muted) hover:text-(--color-text)">
-            원본 설명 보기
+            {t('overview.showOriginal')}
           </summary>
           <p className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.6] text-(--color-text-muted)">
             {detail.description}

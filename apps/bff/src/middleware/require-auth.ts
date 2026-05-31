@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { prisma } from '../prisma.js';
+import { extractSession } from '../lib/extract-session.js';
 
 /**
  * 세션 쿠키 → user 조회. 성공 시 req.auth 채워서 다음 핸들러로, 실패 시 401.
@@ -10,24 +11,16 @@ import { prisma } from '../prisma.js';
  * Sliding + cap (ADR 0004 D-4): 세션 검증 성공 시 last_seen_at 과 함께
  *   expires_at = MIN(now()+SLIDING_TTL, created_at+ABSOLUTE_CAP) 로 갱신.
  *   같은 UPDATE 한 statement 라 추가 IO 없음. fire-and-forget.
+ *
+ * 세션 파싱/검증 로직은 extractSession (lib/extract-session.ts) 에서 공유.
+ * Socket.IO io.use() 미들웨어도 동일 함수를 사용한다 (withUserFields=false).
  */
 
-const COOKIE_NAME = 'alle_sid';
 export const SESSION_SLIDING_TTL_MS = 7 * 24 * 60 * 60 * 1000;       // 7d sliding
 export const SESSION_ABSOLUTE_CAP_MS = 30 * 24 * 60 * 60 * 1000;     // 30d max from createdAt
 
 export interface AuthenticatedRequest extends Request {
   auth: { userId: bigint; nickname: string; activeRole: string };
-}
-
-function parseSid(req: Request): string | null {
-  const raw = req.headers.cookie;
-  if (!raw) return null;
-  for (const part of raw.split(';')) {
-    const [k, ...rest] = part.trim().split('=');
-    if (k === COOKIE_NAME) return rest.join('=') || null;
-  }
-  return null;
 }
 
 /**
@@ -61,67 +54,80 @@ function touchSession(sessionId: string, createdAt: Date): void {
  * 공개 + 인증 시 개인화 응답을 섞는 엔드포인트용 (예: event-detail 에 isBookmarked).
  */
 export async function resolveAuth(req: Request, _res: Response, next: NextFunction) {
-  const sid = parseSid(req);
-  if (!sid) {
-    next();
-    return;
-  }
-  const row = await prisma.authSession.findUnique({
-    where: { sessionId: sid },
-    select: {
-      expiresAt: true,
-      createdAt: true,
-      user: {
-        select: {
-          userId: true,
-          nickname: true,
-          activeRole: true,
-          isDeleted: true,
-        },
-      },
-    },
-  });
-  if (row && !row.user.isDeleted && row.expiresAt > new Date()) {
+  // extractSession 내부에서 alle_sid 파싱 + 만료/삭제 검증 일괄 처리.
+  // null 반환이면 미인증이므로 추가 early-return 불필요.
+  const session = await extractSession(req.headers.cookie, prisma, true);
+  if (session && session.nickname && session.activeRole) {
     (req as AuthenticatedRequest).auth = {
-      userId: row.user.userId,
-      nickname: row.user.nickname,
-      activeRole: row.user.activeRole,
+      userId: session.userId,
+      nickname: session.nickname,
+      activeRole: session.activeRole,
     };
-    touchSession(sid, row.createdAt);
+    touchSession(session.sessionId, session.createdAt);
   }
   next();
 }
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
-  const sid = parseSid(req);
-  if (!sid) {
-    res.status(401).json({ error: 'unauthenticated' });
-    return;
-  }
-  const row = await prisma.authSession.findUnique({
-    where: { sessionId: sid },
-    select: {
-      expiresAt: true,
-      createdAt: true,
-      user: {
-        select: {
-          userId: true,
-          nickname: true,
-          activeRole: true,
-          isDeleted: true,
-        },
-      },
-    },
-  });
-  if (!row || row.user.isDeleted || row.expiresAt <= new Date()) {
+  // extractSession 내부에서 alle_sid 파싱 + 만료/삭제 검증 일괄 처리.
+  // null 반환이면 미인증 → 401. 중복 parseSid 호출 제거.
+  const session = await extractSession(req.headers.cookie, prisma, true);
+  if (!session || !session.nickname || !session.activeRole) {
     res.status(401).json({ error: 'unauthenticated' });
     return;
   }
   (req as AuthenticatedRequest).auth = {
-    userId: row.user.userId,
-    nickname: row.user.nickname,
-    activeRole: row.user.activeRole,
+    userId: session.userId,
+    nickname: session.nickname,
+    activeRole: session.activeRole,
   };
-  touchSession(sid, row.createdAt);
+  touchSession(session.sessionId, session.createdAt);
+  next();
+}
+
+/**
+ * 유효한(만료 전) 이용정지 여부. (GG-REPORT-006/009)
+ *
+ * 컨벤션: actionAdminReport(admin-reports.ts)는 항상 non-null sanctionExpiresAt을 설정.
+ *   sanctionExpiresAt=null 은 "만료됨/정지 없음" → suspended + null = 정지 해제로 취급.
+ *   runSanctionExpirySweep 실행 전일 수 있어 앱 레이어에서도 만료 여부를 확인한다.
+ *   match-request.ts / getRecommendations(mate.ts) 의 수신측 판정과 동일한 술어.
+ */
+export function isActivelySuspended(
+  user: { sanctionStatus: string; sanctionExpiresAt: Date | null },
+  now = new Date(),
+): boolean {
+  return (
+    user.sanctionStatus === 'suspended' &&
+    user.sanctionExpiresAt != null &&
+    user.sanctionExpiresAt > now
+  );
+}
+
+/**
+ * requireAuth 뒤에 체이닝 — 발신측 제재 가드. (GG-REPORT-006/009)
+ *
+ * 정지된 사용자가 글/댓글/좋아요/신고/차단/매칭신청/채팅을 계속 수행하던 비대칭 갭을
+ * 막는다(수신측만 막혀 있던 문제). 유효 정지면 403 sanction_active.
+ * req.auth 가 채워져 있어야 하므로 반드시 requireAuth 다음에 배치한다.
+ */
+export async function requireNotSuspended(req: Request, res: Response, next: NextFunction) {
+  const { auth } = req as AuthenticatedRequest;
+  if (!auth) {
+    res.status(401).json({ error: 'unauthenticated' });
+    return;
+  }
+  const user = await prisma.user.findUnique({
+    where: { userId: auth.userId },
+    select: { sanctionStatus: true, sanctionExpiresAt: true },
+  });
+  if (user && isActivelySuspended(user)) {
+    res.status(403).json({
+      error: 'sanction_active',
+      detail: 'account suspended',
+      sanctionExpiresAt: user.sanctionExpiresAt?.toISOString() ?? null,
+    });
+    return;
+  }
   next();
 }

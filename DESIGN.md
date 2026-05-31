@@ -75,6 +75,32 @@
 />
 ```
 
+### 다국어 폰트 Fallback (i18n 예외)
+
+기본 전략은 Pretendard 단일 패밀리이나, 6개국어 서비스(Slice 7~)에서 zh/ja/vi 렌더 시
+Han unification 글리프 왜곡·tofu 방지를 위해 언어별 fallback을 추가한다.
+
+구현: `index.css`의 `--font-sans` 커스텀 프로퍼티 체인에서 **기존 OS/한국어 fallback을 유지한 채** `sans-serif` 직전에 삽입(extend, 교체 아님).
+
+실제 index.css 전체 체인:
+
+```css
+--font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+  system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo',
+  'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji',
+  'Noto Sans JP', 'Noto Sans SC', 'Noto Sans', sans-serif;
+```
+
+로딩: Google Fonts CDN에서 `display=swap`으로 비동기 로드. Pretendard 이후 fallback이므로
+한국어/영어/프랑스어는 영향 없음.
+
+```css
+/* @import (index.css 최상단) */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&family=Noto+Sans:wght@400;500;700&display=swap');
+```
+
+금지: Pretendard 자체를 제거하거나 언어별 완전히 다른 패밀리로 교체하는 것. 기존 OS/한국어 fallback 체인(-apple-system, Noto Sans KR 등)을 제거하는 것.
+
 **Modular scale** (8px base, 1.250 Major Third):
 
 | 레벨 | px | rem | 용도 |
@@ -331,3 +357,39 @@
 | 2026-04-17 | 초기 디자인 시스템 생성 | `/design-consultation` 세션. 프로덕트 맥락 (civic/cultural discovery), map-first utility 방향, Pretendard de facto, 단일 버밀리언 accent 결정. |
 | 2026-04-17 | 예약/결제 관련 UI 패턴 제외 | v5.0 요구사항에 부재. "쇼핑몰" 언어 대신 "도시 지도" 언어 채택. |
 | 2026-04-17 | Accent는 보라·그라디언트 대신 버밀리언 단색 | AI slop 회피 + 한국 전통 색 현대화 + "빨간 핀 앱" 기억성. |
+| 2026-05-29 | **SEED Design 채택 (Option B)** — 신규 소셜 화면은 SEED 컴포넌트, Alle 정체성(버밀리언·Pretendard·anti-bubbly)은 테마로 유지 | ADR 0008. 사용자 지시 "전체 디자인 SEED". carrot→버밀리언 재테마는 비공식 경로라 설치 시 검증. |
+
+---
+
+## SEED Design 채택 (Option B — ADR 0008, 초안)
+
+> Phase 2 소셜 레이어(커뮤니티/메이트)부터 당근 **SEED Design**(`@seed-design/react` / `@seed-design/css`)을 컴포넌트/파운데이션으로 도입한다. 단 위에 정의된 Alle 정체성을 **테마 오버라이드로 유지**한다. 결정·리스크 근거: [`docs/decisions/0008-seed-design-adoption.md`](docs/decisions/0008-seed-design-adoption.md). **본 섹션은 설치 검증 전 초안** — `--seed-*` 오버라이드 실제 가능 범위는 설치 시 확정.
+
+### 적용 범위
+- **SEED 사용**: 신규 커뮤니티·메이트 화면(A_800 / A_802 / A_801 / A_803~805 / A_900 / A_901 등 — 슬라이스 1 Task 5b·6·7 및 후속 메이트 슬라이스의 UI).
+- **Alle 유지(불변)**: 기존 발견(지도·검색 A_200/201/202)·상세·마이페이지·업로더·관리자 화면, 그리고 로고·워드마크·브랜드.
+- 두 영역은 공유 브리지 토큰(accent·폰트·색모드)으로 시각적 연속성 확보.
+
+### SEED ↔ Alle 토큰 매핑 (오버라이드)
+`@seed-design/css/all.css` **이후**에 Alle 오버라이드 CSS 를 얹는다. (⚠️ base.css 는 토큰 전용이라 컴포넌트가 무스타일로 깨짐 — 반드시 all.css 사용.)
+
+| 목적 | SEED 시맨틱 토큰 | Alle 오버라이드 |
+|---|---|---|
+| 브랜드 전경 | `fg.brand` | 버밀리언 `--accent` (light #E8562D / dark #F27147) |
+| 브랜드 솔리드 BG | `bg.brand-solid` | `--accent` |
+| 브랜드 약 BG | `bg.brand-weak` | `--accent-bg` (light #FCEEE8 / dark #3A1F15) |
+| 브랜드 stroke | `stroke.brand-solid` / `-weak` | `--accent` / `--border-hover` |
+| 폰트 패밀리 | (SEED 기본 Noto Sans KR) | **Pretendard Variable** |
+| 색모드 | `data-seed-color-mode` | Alle light/dark 와 정렬 |
+| 중립/표면/텍스트 | `fg.neutral`, `bg.layer-*`, `stroke.neutral-*` | Alle `--text*` / `--surface*` / `--border*` 에 정렬(가능 범위) |
+
+> ⚠️ carrot→버밀리언 재색상화는 SEED 비공식 경로(테마 문서는 light/dark 색모드만). 설치 시 검증하고, 실패/부분 적용 시 폴백은 ADR 0008 §3.
+
+### 정책
+- **anti-bubbly 유지**: SEED 컴포넌트 변형은 과도한 라운드를 피하고, 위 Alle radius 정책(용도별 4/8/12/16/full)에 가깝게 선택.
+- **accent 절제**: SEED 브랜드색(=버밀리언)도 Alle 규칙대로 핀/CTA/활성 상태에만 사용.
+- semantic(critical/positive/warning)은 SEED 기본을 쓰되 Alle status badge 색과 큰 충돌 없으면 유지.
+- **신규 소셜 컴포넌트는 SEED 우선**(직접 핸드빌드 금지) — SEED 에 없는 것만 Alle 토큰으로 보충.
+
+### 컴포넌트 인벤토리 (예상 — 설치 시 확정)
+ActionButton · TextField/TextArea · Checkbox · Modal/BottomSheet · Avatar · Chip/Tag · Tabs · Callout · ProgressCircle 등. 추가는 `npx @seed-design/cli@latest add ui:<name>` 로 `seed-design/` 에 vendoring.

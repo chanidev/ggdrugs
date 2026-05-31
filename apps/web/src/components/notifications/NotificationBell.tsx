@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import { fetchUnreadNotificationCount } from '../../lib/api';
 
@@ -10,6 +11,7 @@ import { fetchUnreadNotificationCount } from '../../lib/api';
  * 미읽음 있으면 accent dot, 9 초과면 '9+'.
  */
 export function NotificationBell() {
+  const { t } = useTranslation('common');
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -31,7 +33,11 @@ export function NotificationBell() {
     };
   }, []);
 
-  const label = count === 0 ? '알림' : count > 9 ? '알림 9+' : `알림 ${count}`;
+  const label = count === 0
+    ? t('aria.notifications')
+    : count > 9
+      ? t('aria.notificationsPlus')
+      : t('aria.notificationsCount', { count });
 
   return (
     <Link

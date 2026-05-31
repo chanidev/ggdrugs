@@ -1,9 +1,11 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { LogoLockup } from '../components/brand/Logo';
 import { Icon } from '../components/Icon';
 import { NotificationBell } from '../components/notifications/NotificationBell';
 import { useCurrentUser } from '../lib/auth-context';
 import { loginUrl } from '../lib/auth-redirect';
+import { LanguageToggle } from '../components/LanguageToggle';
 
 /**
  * Header — 상단 바 (60px).
@@ -20,6 +22,7 @@ export function Header() {
 
       <div className="flex items-center gap-3">
         <SearchMini />
+        <LanguageToggle />
         <AuthArea />
       </div>
     </header>
@@ -27,6 +30,7 @@ export function Header() {
 }
 
 function AuthArea() {
+  const { t } = useTranslation('common');
   const { user, loading, logout } = useCurrentUser();
 
   if (loading) {
@@ -47,25 +51,25 @@ function AuthArea() {
           <Link
             to="/admin"
             className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-accent)/40 bg-(--color-accent)/5 px-3 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/10 md:inline-flex"
-            aria-label="관리자 콘솔"
+            aria-label={t('aria.adminConsole')}
           >
-            Admin
+            {t('label.admin')}
           </Link>
         )}
         {user.activeRole === 'uploader' && (
           <Link
             to="/uploader"
             className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-accent)/40 bg-(--color-accent)/5 px-3 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/10 md:inline-flex"
-            aria-label="업로더 콘솔"
+            aria-label={t('aria.uploaderConsole')}
           >
-            Uploader
+            {t('label.uploader')}
           </Link>
         )}
         <NotificationBell />
         <Link
           to="/me"
           className="hidden h-8 items-center gap-1.5 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] text-(--color-text) transition-colors hover:border-(--color-border-hover) sm:inline-flex"
-          aria-label="마이페이지"
+          aria-label={t('aria.myPage')}
         >
           <span
             aria-hidden
@@ -80,7 +84,7 @@ function AuthArea() {
           }}
           className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
         >
-          로그아웃
+          {t('button.logout')}
         </button>
       </div>
     );
@@ -94,31 +98,32 @@ function AuthArea() {
         href={loginUrl('kakao')}
         className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-border) bg-[#FEE500] px-2.5 text-[12px] font-medium text-[#191600] transition-colors hover:bg-[#FDD835] md:px-3 md:text-[13px]"
       >
-        Kakao
+        {t('label.login_kakao')}
       </a>
       <a
         href={loginUrl('google')}
         className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-2.5 text-[12px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) md:px-3 md:text-[13px]"
       >
-        <span className="md:hidden">Google</span>
-        <span className="hidden md:inline">Google 로그인</span>
+        <span className="md:hidden">{t('label.login_google_short')}</span>
+        <span className="hidden md:inline">{t('label.login_google')}</span>
       </a>
     </div>
   );
 }
 
 function SearchMini() {
+  const { t } = useTranslation('common');
   return (
     <button
       type="button"
       disabled
       aria-disabled="true"
-      title="빠른 검색 (⌘K) — 준비 중입니다"
+      title={t('aria.quickSearch')}
       className="hidden h-[34px] w-[220px] cursor-not-allowed items-center gap-2 rounded-(--radius-md) bg-(--color-surface-alt) px-3 text-[13px] text-(--color-text-subtle) md:flex"
-      aria-label="빠른 검색 (⌘K) — 준비 중"
+      aria-label={t('aria.quickSearchLabel')}
     >
       <Icon name="search" size={14} />
-      <span>이벤트·장소 검색</span>
+      <span>{t('search.placeholder')}</span>
       <kbd className="ml-auto rounded-[3px] border border-(--color-border) bg-(--color-surface) px-[5px] py-[1px] font-mono text-[11px] text-(--color-text-subtle)">
         ⌘K
       </kbd>

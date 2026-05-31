@@ -15,7 +15,11 @@
     "isolatedModules": true,
     "moduleDetection": "force",
     "noEmit": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "seed-design/*": ["./seed-design/*"]
+    }
   },
   "include": ["src"]
 }

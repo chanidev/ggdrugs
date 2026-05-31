@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import {
   MonthCalendar,
   type CalendarEvent,
@@ -6,8 +8,10 @@ import {
 import {
   fetchMyBookmarks,
   fetchMyReviews,
+  fetchMyAppointments,
   type BookmarkListItem,
   type MyReviewItem,
+  type MyAppointmentItem,
 } from '../../../lib/api';
 import { CalendarSummaryCard } from '../parts/CalendarSummaryCard.js';
 import { EmptyBox } from '../parts/EmptyBox.js';
@@ -19,14 +23,19 @@ function ymd(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+const APPT_PREFIX = 'appt:';
+
 export function CalendarTab() {
+  const { t } = useTranslation('mypage');
   const now = useMemo(() => new Date(), []);
+  const navigate = useNavigate();
   const [year, setYear] = useState(now.getFullYear());
   const [month0, setMonth0] = useState(now.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(ymd(now));
 
   const [bookmarks, setBookmarks] = useState<BookmarkListItem[]>([]);
   const [reviews, setReviews] = useState<MyReviewItem[]>([]);
+  const [appointments, setAppointments] = useState<MyAppointmentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,10 +45,12 @@ export function CalendarTab() {
     Promise.all([
       fetchMyBookmarks({ limit: 200 }, ctrl.signal),
       fetchMyReviews({ limit: 200 }, ctrl.signal),
+      fetchMyAppointments({}, ctrl.signal),
     ])
-      .then(([b, r]) => {
+      .then(([b, r, a]) => {
         setBookmarks(b.items);
         setReviews(r.items);
+        setAppointments(a.items);
       })
       .catch((e: unknown) => {
         if ((e as { name?: string }).name === 'AbortError') return;
@@ -49,10 +60,11 @@ export function CalendarTab() {
     return () => ctrl.abort();
   }, []);
 
-  // 북마크 이벤트 + 리뷰한 이벤트 병합 (중복 제거).
-  // 리뷰한 이벤트는 원래 참석했다는 뜻이므로 캘린더에 함께 표시 — 회고 맥락.
+  // 북마크 + 리뷰 + confirmed 약속 단일 CalendarEvent[] 병합
   const calendarEvents: CalendarEvent[] = useMemo(() => {
     const map = new Map<string, CalendarEvent>();
+
+    // 북마크
     for (const b of bookmarks) {
       const e = b.event;
       map.set(e.eventId, {
@@ -63,6 +75,8 @@ export function CalendarTab() {
         phase: e.phase,
       });
     }
+
+    // 리뷰
     for (const r of reviews) {
       const e = r.event;
       if (!map.has(e.eventId)) {
@@ -71,15 +85,33 @@ export function CalendarTab() {
           title: e.title,
           startDate: e.startDate,
           endDate: e.endDate,
-          phase: 'ended', // 리뷰가 있으면 종료 이벤트
+          phase: 'ended',
         });
       }
     }
-    return [...map.values()];
-  }, [bookmarks, reviews]);
 
-  // 선택된 날짜에 걸린 이벤트 (북마크 기준으로만 — 상세 정보가 풍부).
-  const selectedEvents = useMemo(() => {
+    // 약속 — appointedAt 날짜를 단일 날짜 이벤트로 매핑.
+    // 'appt:' 접두사는 Map 키 충돌 방지용이며, MonthCalendar는 현재 phase 기반 색상만
+    // 구분하고 이 접두사를 별도 처리하지 않는다 (도트 색상 미분화는 알려진 한계).
+    for (const a of appointments) {
+      if (!a.appointedAt) continue;
+      const dateStr = a.appointedAt.slice(0, 10);
+      const apptEventId = `${APPT_PREFIX}${a.appointmentId}`;
+      const isPast = dateStr < ymd(now);
+      map.set(apptEventId, {
+        eventId: apptEventId,
+        title: a.eventName ?? a.event?.title ?? t('calendar.appointmentFallback'),
+        startDate: dateStr,
+        endDate: dateStr,
+        phase: isPast ? 'ended' : 'upcoming',
+      });
+    }
+
+    return [...map.values()];
+  }, [bookmarks, reviews, appointments, now]);
+
+  // 선택 날짜 북마크
+  const selectedBookmarks = useMemo(() => {
     if (!selectedDate) return [];
     return bookmarks.filter((b) => {
       const e = b.event;
@@ -87,21 +119,39 @@ export function CalendarTab() {
     });
   }, [bookmarks, selectedDate]);
 
-  // 선택된 날짜에 내가 리뷰한 이벤트도 함께 (종료 이벤트).
+  // 선택 날짜 리뷰 (북마크와 중복 제외)
   const selectedReviewed = useMemo(() => {
     if (!selectedDate) return [];
     return reviews.filter((r) => {
       const e = r.event;
-      return e.startDate <= selectedDate && selectedDate <= e.endDate;
+      return (
+        e.startDate <= selectedDate &&
+        selectedDate <= e.endDate &&
+        !selectedBookmarks.some((b) => b.event.eventId === e.eventId)
+      );
     });
-  }, [reviews, selectedDate]);
+  }, [reviews, selectedDate, selectedBookmarks]);
+
+  // 선택 날짜 약속
+  const selectedAppointments = useMemo(() => {
+    if (!selectedDate) return [];
+    return appointments.filter((a) => a.appointedAt?.slice(0, 10) === selectedDate);
+  }, [appointments, selectedDate]);
 
   if (loading) {
     return (
-      <div aria-hidden className="h-[480px] animate-pulse rounded-(--radius-lg) bg-(--color-surface-alt)" />
+      <div
+        aria-hidden
+        className="h-[480px] animate-pulse rounded-(--radius-lg) bg-(--color-surface-alt)"
+      />
     );
   }
-  if (error) return <EmptyBox label="불러오지 못했어요" hint={error} />;
+  if (error) return <EmptyBox label={t('calendar.loadError')} hint={error} />;
+
+  const hasAnything =
+    selectedBookmarks.length > 0 ||
+    selectedReviewed.length > 0 ||
+    selectedAppointments.length > 0;
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -116,22 +166,25 @@ export function CalendarTab() {
         }}
         onDayClick={(d) => setSelectedDate(d)}
       />
+
       <aside className="flex flex-col gap-3 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-5">
         <header>
           <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            A_500 · 캘린더 요약
+            {t('calendar.summaryLabel')}
           </p>
           <h3 className="tabular m-0 mt-0.5 text-[15px] font-bold tracking-[-0.01em]">
-            {selectedDate ?? '날짜를 선택하세요'}
+            {selectedDate ?? t('calendar.selectDate')}
           </h3>
         </header>
-        {selectedEvents.length === 0 && selectedReviewed.length === 0 ? (
+
+        {!hasAnything ? (
           <p className="m-0 rounded-(--radius-md) bg-(--color-surface-alt) p-4 text-center text-[12px] text-(--color-text-subtle)">
-            이 날에 걸린 북마크·리뷰 이벤트가 없어요.
+            {t('calendar.noEvents')}
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
-            {selectedEvents.map((b) => {
+            {/* 북마크 이벤트 */}
+            {selectedBookmarks.map((b) => {
               const reviewOfThis = reviews.find((r) => r.event.eventId === b.event.eventId);
               return (
                 <li key={b.bookmarkId}>
@@ -143,20 +196,119 @@ export function CalendarTab() {
                 </li>
               );
             })}
-            {selectedReviewed
-              .filter((r) => !selectedEvents.some((b) => b.event.eventId === r.event.eventId))
-              .map((r) => (
-                <li key={r.reviewId}>
-                  <CalendarSummaryCard
-                    event={r.event}
-                    phase="ended"
-                    reviewedRating={r.rating}
-                  />
-                </li>
-              ))}
+
+            {/* 리뷰만 있는 이벤트 */}
+            {selectedReviewed.map((r) => (
+              <li key={r.reviewId}>
+                <CalendarSummaryCard
+                  event={r.event}
+                  phase="ended"
+                  reviewedRating={r.rating}
+                />
+              </li>
+            ))}
+
+            {/* confirmed 약속 카드 — GG-MY-002 / GG-ROOM-020 */}
+            {selectedAppointments.map((a) => (
+              <li key={a.appointmentId}>
+                <AppointmentCard
+                  appointment={a}
+                  onGoToRoom={() => void navigate(`/chat/rooms/${a.chatRoomId}`)}
+                />
+              </li>
+            ))}
           </ul>
         )}
       </aside>
     </div>
+  );
+}
+
+// ─── 약속 카드 (emerald 소스 구분, GG-MY-002 6항목) ─────────
+
+function AppointmentCard({
+  appointment: a,
+  onGoToRoom,
+}: {
+  appointment: MyAppointmentItem;
+  onGoToRoom: () => void;
+}) {
+  const { t } = useTranslation('mypage');
+  const dateLabel = a.appointedAt
+    ? a.appointedAt.slice(0, 16).replace('T', ' ')
+    : t('calendar.schedulePending');
+  const hasEvent = a.event != null;
+
+  return (
+    <article className="flex flex-col gap-2 rounded-(--radius-lg) border border-emerald-200 bg-emerald-50/50 p-4 transition-colors hover:border-emerald-300">
+      <header className="flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1 rounded-(--radius-sm) bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+          {t('calendar.appointmentBadge')}
+        </span>
+      </header>
+
+      {/* 이벤트명 */}
+      <h4 className="m-0 text-[14px] font-semibold leading-[1.4] text-(--color-text)">
+        {a.eventName ?? a.event?.title ?? t('calendar.appointmentFallback')}
+      </h4>
+
+      {/* 약속 일시 */}
+      <p className="tabular m-0 text-[12px] text-(--color-text-muted)">{t('calendar.appointedAt')} {dateLabel}</p>
+
+      {/* 이벤트 기간·장소·가격·운영시간·대상 — GG-MY-002 요약 항목 */}
+      {hasEvent && (
+        <div className="flex flex-col gap-0.5">
+          <p className="m-0 text-[11px] text-(--color-text-subtle)">
+            {t('calendar.period')} {a.event!.startDate} ~ {a.event!.endDate}
+          </p>
+          {a.event!.region && (
+            <p className="m-0 text-[11px] text-(--color-text-subtle)">
+              {t('calendar.location')} {a.event!.region}
+            </p>
+          )}
+          {a.event!.price != null && (
+            <p className="m-0 text-[11px] text-(--color-text-subtle)">
+              {t('calendar.price')} {a.event!.price === '0' || a.event!.price === '' ? t('calendar.free') : a.event!.price}
+            </p>
+          )}
+          {a.event!.operatingHours && (
+            <p className="m-0 text-[11px] text-(--color-text-subtle)">
+              {t('calendar.operatingHours')} {a.event!.operatingHours}
+            </p>
+          )}
+          {a.event!.targetAudience && (
+            <p className="m-0 text-[11px] text-(--color-text-subtle)">
+              {t('calendar.targetAudience')} {a.event!.targetAudience}
+            </p>
+          )}
+        </div>
+      )}
+      {!hasEvent && (
+        <p className="m-0 text-[11px] text-(--color-text-subtle)">
+          {t('calendar.noEventLink')}
+        </p>
+      )}
+
+      {/* CTA 버튼 영역 */}
+      <div className="mt-1 flex flex-wrap gap-2">
+        {/* GG-ROOM-020: 채팅방으로 */}
+        <button
+          type="button"
+          onClick={onGoToRoom}
+          className="inline-flex h-7 items-center justify-center rounded-(--radius-md) border border-emerald-300 bg-white px-3 text-[12px] font-medium text-emerald-700 transition-colors hover:bg-emerald-50"
+        >
+          {t('calendar.goToRoom')}
+        </button>
+        {/* GG-MY-002: 이벤트 상세 이동 (event 있을 때만) */}
+        {hasEvent && (
+          <Link
+            to={`/events/${a.event!.eventId}`}
+            className="inline-flex h-7 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-white px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
+          >
+            {t('calendar.eventDetail')}
+          </Link>
+        )}
+      </div>
+    </article>
   );
 }

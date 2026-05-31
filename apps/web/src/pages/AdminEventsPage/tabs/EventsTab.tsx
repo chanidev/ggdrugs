@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PhaseBadge } from '../../../components/PhaseBadge';
 import {
   fetchAdminEvents,
@@ -11,6 +12,7 @@ import {
 type HasVibesMode = 'false' | 'true' | 'any';
 
 export function EventsTab() {
+  const { t } = useTranslation('admin');
   const [hasVibesMode, setHasVibesMode] = useState<HasVibesMode>('false');
   const [q, setQ] = useState('');
   const [qDraft, setQDraft] = useState('');
@@ -81,18 +83,18 @@ export function EventsTab() {
 
   const totalPages = Math.max(1, Math.ceil(total / limit));
 
+  const VIBE_FILTERS: { key: HasVibesMode; labelKey: string }[] = [
+    { key: 'false', labelKey: 'event.vibeFilter.unassigned' },
+    { key: 'any',   labelKey: 'event.vibeFilter.any' },
+    { key: 'true',  labelKey: 'event.vibeFilter.assigned' },
+  ];
+
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
       <section className="min-w-0">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <div className="inline-flex rounded-(--radius-md) border border-(--color-border) p-0.5">
-            {(
-              [
-                { key: 'false', label: '미부여' },
-                { key: 'any', label: '전체' },
-                { key: 'true', label: '부여됨' },
-              ] as const
-            ).map((opt) => (
+            {VIBE_FILTERS.map((opt) => (
               <button
                 key={opt.key}
                 type="button"
@@ -106,7 +108,7 @@ export function EventsTab() {
                     : 'text-(--color-text-muted) hover:text-(--color-text)'
                 }`}
               >
-                {opt.label}
+                {t(opt.labelKey)}
               </button>
             ))}
           </div>
@@ -122,32 +124,32 @@ export function EventsTab() {
               type="text"
               value={qDraft}
               onChange={(e) => setQDraft(e.target.value)}
-              placeholder="제목으로 검색"
+              placeholder={t('event.searchPlaceholder')}
               className="h-8 w-full min-w-[140px] rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] outline-none focus:border-(--color-border-hover)"
             />
             <button
               type="submit"
               className="h-8 shrink-0 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium transition-colors hover:border-(--color-border-hover)"
             >
-              검색
+              {t('event.searchButton')}
             </button>
           </form>
           <span className="ml-auto text-[12px] text-(--color-text-subtle)">
-            {total.toLocaleString()}건
+            {t('event.total', { count: total.toLocaleString() })}
           </span>
         </div>
 
         {error && (
           <div className="mb-3 rounded-(--radius-md) border border-(--color-danger)/30 bg-(--color-danger)/5 p-3 text-[13px] text-(--color-danger)">
-            불러오기 실패: {error}
+            {t('event.loadError')}: {error}
           </div>
         )}
 
         <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) overflow-hidden">
           {loading && events.length === 0 ? (
-            <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+            <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
           ) : events.length === 0 ? (
-            <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">결과 없음</div>
+            <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">{t('event.empty')}</div>
           ) : (
             <ul className="divide-y divide-(--color-border)">
               {events.map((ev) => (
@@ -173,7 +175,7 @@ export function EventsTab() {
                       <div className="mt-1 flex flex-wrap gap-1">
                         {ev.vibes.length === 0 ? (
                           <span className="text-[11px] text-(--color-text-subtle)">
-                            (라벨 없음)
+                            {t('event.noLabel')}
                           </span>
                         ) : (
                           ev.vibes.map((v) => (
@@ -202,7 +204,7 @@ export function EventsTab() {
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
             >
-              이전
+              {t('audit.prev')}
             </button>
             <span className="text-[13px] text-(--color-text-muted)">
               {page} / {totalPages}
@@ -213,7 +215,7 @@ export function EventsTab() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               className="h-8 rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] disabled:opacity-40"
             >
-              다음
+              {t('audit.next')}
             </button>
           </div>
         )}
@@ -228,7 +230,7 @@ export function EventsTab() {
           />
         ) : (
           <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-            왼쪽에서 이벤트를 선택하세요
+            {t('event.selectHint')}
           </div>
         )}
       </aside>
@@ -245,6 +247,7 @@ function VibeEditor({
   allVibes: VibeItem[];
   onSaved: (next: AdminEventItem['vibes']) => void;
 }) {
+  const { t } = useTranslation('admin');
   const initialIds = useMemo(() => new Set(event.vibes.map((v) => v.vibeId)), [event.vibes]);
   const [selected, setSelected] = useState<Set<string>>(() => new Set(initialIds));
   const [saving, setSaving] = useState(false);
@@ -317,7 +320,7 @@ function VibeEditor({
       </div>
 
       {allVibes.length === 0 ? (
-        <div className="text-[13px] text-(--color-text-subtle)">vibe 목록 로딩 실패</div>
+        <div className="text-[13px] text-(--color-text-subtle)">{t('event.vibeLoadError')}</div>
       ) : (
         <div className="space-y-4">
           {byGroup.map(([group, items]) => (
@@ -355,8 +358,8 @@ function VibeEditor({
 
       <div className="mt-4 flex items-center justify-between border-t border-(--color-border) pt-3">
         <div className="text-[12px] text-(--color-text-subtle)">
-          선택 {selected.size}개 · 최대 10개
-          {savedAt && !dirty && <span className="ml-2 text-(--color-success)">✓ 저장됨</span>}
+          {t('event.selectCount', { count: selected.size })}
+          {savedAt && !dirty && <span className="ml-2 text-(--color-success)">✓ {t('event.saved')}</span>}
           {err && <span className="ml-2 text-(--color-danger)">{err}</span>}
         </div>
         <button
@@ -365,7 +368,7 @@ function VibeEditor({
           disabled={!dirty || saving || selected.size > 10}
           className="h-8 rounded-(--radius-md) bg-(--color-accent) px-4 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {saving ? '저장 중…' : '저장'}
+          {saving ? t('event.saving') : t('event.assignVibes')}
         </button>
       </div>
     </div>

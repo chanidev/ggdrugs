@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { SUGGESTIONS } from '../data/mock';
+import { useTranslation } from 'react-i18next';
 import { Icon } from './Icon';
 import { PhaseBadge } from './PhaseBadge';
 import type { ChatSuggestion } from '../lib/api';
@@ -55,6 +55,8 @@ export function ChatDock({
   collapsed: boolean;
   onToggleCollapsed: () => void;
 }) {
+  const { t } = useTranslation('chat');
+  const suggestions = t('dock.suggestions', { returnObjects: true, defaultValue: [] }) as string[];
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lastMsg = messages[messages.length - 1];
   useEffect(() => {
@@ -69,8 +71,8 @@ export function ChatDock({
       className="pointer-events-auto absolute bottom-6 left-1/2 z-[7] w-[min(820px,calc(100%-48px))] -translate-x-1/2 rounded-(--radius-xl) border border-(--color-border) bg-(--color-surface) px-[18px] pb-4 pt-3.5 shadow-(--shadow-lg)"
       onSubmit={(e) => {
         e.preventDefault();
-        const t = value.trim();
-        if (t) onSubmit(t);
+        const t2 = value.trim();
+        if (t2) onSubmit(t2);
       }}
     >
       <button
@@ -84,7 +86,7 @@ export function ChatDock({
           className="h-1.5 w-1.5 rounded-full bg-(--color-accent) [animation:alle-pulse_1.6s_cubic-bezier(0,0,0.2,1)_infinite]"
         />
         <span>
-          {collapsed ? '추천·기록 펼치기' : '추천·기록 접기'}
+          {collapsed ? t('dock.expand') : t('dock.collapse')}
           {messages.length > 0 && ` · ${messages.length}`}
         </span>
         <span
@@ -149,10 +151,10 @@ export function ChatDock({
           <div className="mb-2 flex items-center gap-2 text-[12px] text-(--color-text-subtle)">
             {/* static dot — handle pulse 와 중복되지 않도록. DESIGN.md §Motion signature 단일 지점 규칙. */}
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
-            <span>자연어로 질문하면 5개 필터 + AI 의미 검색 후보를 함께 드려요</span>
+            <span>{t('dock.eyebrow')}</span>
           </div>
           <div className="mb-2.5 flex flex-wrap gap-1.5">
-            {SUGGESTIONS.map((s) => (
+            {suggestions.map((s) => (
               <button
                 key={s}
                 type="button"
@@ -174,8 +176,8 @@ export function ChatDock({
               type="text"
               value={value}
               onChange={(e) => onChange(e.target.value)}
-              placeholder='"이번 주말 가족이랑 볼만한 축제"'
-              aria-label="자연어로 이벤트 검색"
+              placeholder={t('dock.placeholder')}
+              aria-label={t('dock.inputAriaLabel')}
               className="h-12 w-full rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) py-0 pl-11 pr-4 text-[15px] text-(--color-text) placeholder:text-(--color-text-subtle) transition-[border-color,box-shadow] duration-[180ms] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)] focus:outline-none"
             />
           </div>
@@ -185,7 +187,7 @@ export function ChatDock({
             className="inline-flex h-12 shrink-0 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-5 text-[14px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
           >
             <Icon name="send" size={15} />
-            검색
+            {t('dock.submit')}
           </button>
         </div>
       </div>
@@ -226,10 +228,11 @@ function SuggestionsRow({
   items: ChatSuggestion[];
   onClick: (eventId: string) => void;
 }) {
+  const { t } = useTranslation('chat');
   return (
     <div className="flex flex-col gap-1">
       <p className="m-0 pl-1 text-[10.5px] font-semibold uppercase tracking-[0.06em] text-(--color-text-subtle)">
-        AI 후보 {items.length}건 · 의미 기반
+        {t('dock.aiCandidates', { count: items.length })}
       </p>
       <div className="flex gap-1.5 overflow-x-auto pb-1">
         {items.map((s) => (
@@ -291,10 +294,11 @@ export function TypingDots() {
  * vermillion accent dot + muted 안내 텍스트. 모바일·데스크톱 동일 사용.
  */
 export function RetreatMeta() {
+  const { t } = useTranslation('chat');
   return (
     <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-(--color-text-subtle)">
       <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" />
-      <span>0건 — 조건을 넓혀보세요</span>
+      <span>{t('dock.retreatMeta')}</span>
     </div>
   );
 }
@@ -304,6 +308,7 @@ export function RetreatMeta() {
  * (vermillion 텍스트·테두리, surface bg). 클릭 시 caller(AppShell) 의 retry 핸들러 호출.
  */
 export function ErrorRetryButton({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation('chat');
   return (
     <button
       type="button"
@@ -311,7 +316,7 @@ export function ErrorRetryButton({ onRetry }: { onRetry: () => void }) {
       className="mt-1.5 inline-flex h-7 items-center gap-1 rounded-(--radius-md) border border-(--color-accent) bg-(--color-surface) px-2.5 text-[12px] font-medium text-(--color-accent) transition-colors duration-[180ms] hover:bg-(--color-accent-bg)"
     >
       <Icon name="sparkles" size={12} />
-      다시 시도
+      {t('dock.retryButton')}
     </button>
   );
 }

@@ -1,0 +1,100 @@
+{
+  "shell": {
+    "title": "Community",
+    "creditsLabel": "{{count}} credits",
+    "creditsPlaceholder": "Credits",
+    "languageToggle": "Change language",
+    "chatRoomBtn": "Chat room"
+  },
+  "category": {
+    "festival_story": "Festival Stories",
+    "mate_finder": "Find a Mate",
+    "free": "Free Board",
+    "all": "All",
+    "ariaLabel": "Board category"
+  },
+  "post": {
+    "loading": "Loading…",
+    "notFound": "This post does not exist or has expired.",
+    "loadError": "Failed to load.",
+    "likeAriaPressed": "Unlike",
+    "likeAriaUnpressed": "Like",
+    "likeButton": "♥ {{count}}",
+    "commentCount": "Comments ({{count}})",
+    "commentSection": "Comments",
+    "loginToComment": "Please log in to leave a comment.",
+    "deleteConfirm": "Delete this post?",
+    "deleteSuccess": "Deleted.",
+    "deleteForbidden": "This is not your post.",
+    "deleteFail": "Failed to delete.",
+    "translateTitle": "Translation Result",
+    "translateLoading": "Translating…",
+    "translateError": "Translation failed.",
+    "translateUnavailable": "Translation service unavailable. (OpenAI key not configured)",
+    "translateClose": "Close",
+    "translateSelectLang": "Select a language to translate into",
+    "translateOriginal": "Original",
+    "translateResult": "Translation",
+    "translateAnother": "Translate to another language"
+  },
+  "compose": {
+    "newPost": "New Post",
+    "editPost": "Edit Post",
+    "titlePlaceholder": "Enter a title",
+    "bodyPlaceholder": "Enter content",
+    "titleLabel": "Title",
+    "bodyLabel": "Content",
+    "categoryLabel": "Category",
+    "categorySelectLabel": "Select category",
+    "submit": "Post",
+    "save": "Save",
+    "cancel": "Cancel",
+    "titleRequired": "Title must be 2–200 characters.",
+    "bodyRequired": "Content must be 2–5000 characters.",
+    "categoryRequired": "Please select a category.",
+    "loginRequired": "Login required.",
+    "submitError": "Failed to post."
+  },
+  "comment": {
+    "placeholder": "Leave a comment…",
+    "replyPlaceholder": "Leave a reply…",
+    "submit": "Post",
+    "reply": "Reply",
+    "edit": "Edit",
+    "editAriaLabel": "Edit comment",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this comment?",
+    "deleteForbidden": "This is not your comment.",
+    "deleteFail": "Failed to delete.",
+    "replyNotAllowed": "You cannot reply to a reply.",
+    "bodyLength": "Comment must be 1–1000 characters.",
+    "authorProfileAria": "View {{nickname}}'s profile"
+  },
+  "authorModal": {
+    "title": "{{nickname}}",
+    "mateScore": "Mate Score",
+    "chatRequest": "Request Chat",
+    "close": "Close",
+    "blockConfirm": "Block {{nickname}}?",
+    "blocked": "Blocked.",
+    "alreadyBlocked": "Already blocked.",
+    "blockFailed": "Failed to block.",
+    "blockBtn": "Block",
+    "blockAriaLabel": "Block {{nickname}}",
+    "avatarAriaLabel": "{{nickname}}'s profile avatar",
+    "chatRequestAriaLabel": "Request chat with {{nickname}}"
+  },
+  "mateReco": {
+    "title": "Mate Recommendations",
+    "placeholder": "We'll recommend mates that match your criteria.",
+    "viewRecommendations": "View recommendations",
+    "editConditions": "Enter / edit criteria"
+  },
+  "postList": {
+    "empty": "No posts yet.",
+    "loadError": "Failed to load posts.",
+    "commentCount": "Comments {{count}}",
+    "likeCount": "♥ {{count}}",
+    "reportAria": "Report post: {{title}}"
+  }
+}

@@ -708,6 +708,41 @@ def events_personalized(req: PersonalizedRequest) -> PersonalizedResponse:
     )
 
 
+class TranslateRequest(BaseModel):
+    title: str = Field(max_length=200)
+    body: str = Field(max_length=5000)
+    lang: str = Field(pattern="^(en|vi|zh|ja|fr)$")
+
+
+class TranslateResponse(BaseModel):
+    translatedTitle: str
+    translatedBody: str
+
+
+@app.post("/translate", response_model=TranslateResponse)
+def translate_post(req: TranslateRequest) -> TranslateResponse:
+    """
+    게시글 제목+본문을 지정 언어로 번역.
+    LLM 비활성 → 503 (BFF 가 캐시 없을 때만 호출하므로 503 은 BFF 가 그대로 중계).
+    """
+    from fastapi import HTTPException
+
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="translate unavailable (no key or over budget)")
+
+    lang_names = {"en": "English", "vi": "Vietnamese", "zh": "Chinese (Simplified)", "ja": "Japanese", "fr": "French"}
+    target = lang_names.get(req.lang, req.lang)
+
+    try:
+        from openai_chain import translate_text
+        translated_title = translate_text(req.title, target)
+        translated_body = translate_text(req.body, target)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"translate failed: {e.__class__.__name__}")
+
+    return TranslateResponse(translatedTitle=translated_title, translatedBody=translated_body)
+
+
 @app.post("/events/upsert", response_model=EventUpsertResponse)
 def events_upsert(req: EventUpsertRequest) -> EventUpsertResponse:
     """
@@ -740,3 +775,54 @@ def events_delete(req: EventDeleteRequest) -> EventDeleteResponse:
         raise HTTPException(status_code=400, detail="max 256 ids per call")
     delete_events(list(req.ids))
     return EventDeleteResponse(requested=len(req.ids), collection="alle-events")
+
+
+# ── Slice 7: 번역 엔드포인트 ────────────────────────────────────────────────
+from pydantic import BaseModel as _BaseModel, Field as PydField
+
+
+class TranslateBundleRequest(_BaseModel):
+    namespace: str = PydField(max_length=50)
+    lang: str = PydField(pattern="^(en|vi|zh|ja|fr)$")
+    keys: dict
+
+
+class TranslateBundleResponse(_BaseModel):
+    namespace: str
+    lang: str
+    translated: dict
+
+
+class TranslatePostRequest(_BaseModel):
+    content: str = PydField(min_length=1, max_length=10000)
+    target_lang: str = PydField(pattern="^(en|vi|zh|ja|fr)$")
+
+
+class TranslatePostResponse(_BaseModel):
+    translated: str
+
+
+@app.post("/translate-bundle", response_model=TranslateBundleResponse)
+def translate_bundle_endpoint(req: TranslateBundleRequest):
+    from fastapi import HTTPException
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="translation unavailable")
+    try:
+        from translate import translate_bundle
+        result = translate_bundle(req.namespace, req.lang, req.keys)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"translation failed: {type(e).__name__}: {e}")
+    return TranslateBundleResponse(namespace=req.namespace, lang=req.lang, translated=result)
+
+
+@app.post("/translate-post", response_model=TranslatePostResponse)
+def translate_post_endpoint(req: TranslatePostRequest):
+    from fastapi import HTTPException
+    if not _openai_available():
+        raise HTTPException(status_code=503, detail="translation unavailable")
+    try:
+        from translate import translate_post_content
+        result = translate_post_content(req.content, req.target_lang)
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"translation failed: {type(e).__name__}: {e}")
+    return TranslatePostResponse(translated=result)

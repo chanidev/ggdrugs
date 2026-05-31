@@ -1,0 +1,43 @@
+/**
+ * SEED Design ↔ Alle 테마 브리지 (ADR 0008, Option B)
+ * @seed-design/css/all.css 이후에 로드되어야 한다 (main.tsx import 순서 참고).
+ * 주의: base.css(토큰 전용) 아닌 all.css(토큰+컴포넌트 스타일)를 import 해야 SEED 컴포넌트가 스타일을 받는다.
+ * SEED 브랜드 시맨틱 토큰(carrot)을 Alle 버밀리언으로 재정의한다.
+ * base.css 의 light/dark 셀렉터와 동일 구조로 맞춰 specificity 우위 + 후행 로드로 승리.
+ */
+
+/* Light (기본) — Alle accent #E8562D */
+:root,
+:root[data-seed-color-mode='system'][data-seed-user-color-scheme='light'],
+:root[data-seed-color-mode='light-only'],
+:root [data-seed-color-mode='light-only'] {
+  --seed-color-fg-brand: #e8562d;
+  --seed-color-fg-brand-contrast: #b53a18;
+  --seed-color-bg-brand-solid: #e8562d;
+  --seed-color-bg-brand-solid-pressed: #d44a22;
+  --seed-color-bg-brand-weak: #fceee8;
+  --seed-color-bg-brand-weak-pressed: #f9ddd0;
+  --seed-color-stroke-brand-solid: #e8562d;
+  --seed-color-stroke-brand-weak: #f3c4b3;
+}
+
+/* Dark — Alle accent #F27147 (dark 팔레트, DESIGN.md) */
+:root[data-seed-color-mode='system'][data-seed-user-color-scheme='dark'],
+:root[data-seed-color-mode='dark-only'],
+:root [data-seed-color-mode='dark-only'] {
+  --seed-color-fg-brand: #f27147;
+  --seed-color-fg-brand-contrast: #f27147;
+  --seed-color-bg-brand-solid: #f27147;
+  --seed-color-bg-brand-solid-pressed: #e8562d;
+  --seed-color-bg-brand-weak: #3a1f15;
+  --seed-color-bg-brand-weak-pressed: #4a2a1c;
+  --seed-color-stroke-brand-solid: #f27147;
+  --seed-color-stroke-brand-weak: #5a3525;
+}
+
+/* 폰트: SEED 컴포넌트도 Alle Pretendard 상속 (DESIGN.md 서체 정책) */
+body {
+  font-family:
+    'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
+    'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}

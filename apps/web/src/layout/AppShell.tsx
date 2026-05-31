@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Header } from './Header';
 import { Sidebar, type SidebarSection } from './Sidebar';
 import { MobileShell } from './MobileShell';
@@ -111,6 +112,7 @@ export function AppShell() {
 
   // v3.4 — 진행 중인 /chat/stream 요청 AbortController. 새 submit 시 이전 stream 취소.
   const chatStreamAbortRef = useRef<AbortController | null>(null);
+  const { t } = useTranslation('common');
 
   // unmount 시 진행 중 stream 정리.
   useEffect(() => {
@@ -171,7 +173,7 @@ export function AppShell() {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
                 next[placeholderIndex] = {
-                  ...next[placeholderIndex],
+                  ...next[placeholderIndex]!,
                   text: accumulatedReply,
                   streaming: true,
                 };
@@ -186,7 +188,7 @@ export function AppShell() {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
                 next[placeholderIndex] = {
-                  ...next[placeholderIndex],
+                  ...next[placeholderIndex]!,
                   text: canonical,
                   streaming: false,
                 };
@@ -204,7 +206,7 @@ export function AppShell() {
                   if (placeholderIndex >= prev.length) return prev;
                   const next = prev.slice();
                   next[placeholderIndex] = {
-                    ...next[placeholderIndex],
+                    ...next[placeholderIndex]!,
                     followups: meta.followups,
                   };
                   return next;
@@ -216,7 +218,7 @@ export function AppShell() {
               setMessages((prev) => {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
-                next[placeholderIndex] = { ...next[placeholderIndex], suggestions: items };
+                next[placeholderIndex] = { ...next[placeholderIndex]!, suggestions: items };
                 return next;
               });
             },
@@ -226,7 +228,7 @@ export function AppShell() {
               setMessages((prev) => {
                 if (placeholderIndex >= prev.length) return prev;
                 const next = prev.slice();
-                next[placeholderIndex] = { ...next[placeholderIndex], overriding: true };
+                next[placeholderIndex] = { ...next[placeholderIndex]!, overriding: true };
                 return next;
               });
               // step 2: 180ms 후 텍스트 swap + opacity 1 + retreat 메타.
@@ -236,10 +238,11 @@ export function AppShell() {
                   if (placeholderIndex >= prev.length) return prev;
                   const next = prev.slice();
                   const cur = next[placeholderIndex]!;
+                  const mergedFollowups = p.followups.length > 0 ? p.followups : cur.followups;
                   next[placeholderIndex] = {
                     ...cur,
                     text: p.text,
-                    followups: p.followups.length > 0 ? p.followups : cur.followups,
+                    ...(mergedFollowups !== undefined ? { followups: mergedFollowups } : {}),
                     streaming: false,
                     overriding: false,
                     meta: 'retreat',
@@ -256,8 +259,8 @@ export function AppShell() {
         if ((err as { name?: string })?.name === 'AbortError') return;
         const msg =
           (err as Error).message === 'LLM_UNREACHABLE'
-            ? 'LLM 서비스에 연결하지 못했어요. 서비스가 올라와 있는지 확인해 주세요.'
-            : '응답을 받지 못했어요. 잠시 후 다시 시도해 주세요.';
+            ? t('error.llmUnreachable')
+            : t('error.networkError');
         // 직전 user 메시지 텍스트 — retry 버튼이 같은 메시지로 재시도.
         const lastUser = [...history].reverse().find((m) => m.role === 'user');
         const retryUserText = lastUser?.text ?? '';

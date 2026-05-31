@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { fetchEventDetail, type BffEventDetail } from '../../lib/api';
 import { Header } from '../../layout/Header';
 import { Icon } from '../../components/Icon';
@@ -58,6 +59,7 @@ export function EventDetailPage() {
 }
 
 function BackLink() {
+  const { t } = useTranslation('common');
   return (
     <Link
       to="/"
@@ -66,39 +68,43 @@ function BackLink() {
       <span aria-hidden className="inline-block rotate-180">
         <Icon name="arrow" size={14} />
       </span>
-      탐색으로 돌아가기
+      {t('button.back')}
     </Link>
   );
 }
 
 function LoadingBox() {
+  const { t } = useTranslation('common');
   return (
     <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-8 text-center text-[13px] text-(--color-text-muted)">
-      불러오는 중…
+      {t('label.loading')}
     </div>
   );
 }
 
 function NotFoundBox() {
+  const { t } = useTranslation('common');
   return (
     <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-10 text-center">
-      <h1 className="m-0 mb-2 text-[20px] font-bold">이벤트를 찾을 수 없어요</h1>
+      <h1 className="m-0 mb-2 text-[20px] font-bold">{t('label.eventNotFound')}</h1>
       <p className="m-0 text-[14px] text-(--color-text-muted)">
-        삭제됐거나 승인이 취소된 이벤트일 수 있어요.
+        {t('label.notFound')}
       </p>
     </div>
   );
 }
 
 function ErrorBox() {
+  const { t } = useTranslation('common');
   return (
     <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-10 text-center text-[13px] text-(--color-error)">
-      상세 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.
+      {t('error.loadFailed')}
     </div>
   );
 }
 
 function DetailBody({ detail }: { detail: BffEventDetail }) {
+  const { t } = useTranslation('common');
   const location = detail.addressDetail ?? detail.region.fullAddress;
   const dateLabel =
     detail.startDate === detail.endDate
@@ -111,21 +117,21 @@ function DetailBody({ detail }: { detail: BffEventDetail }) {
 
       <section className="grid grid-cols-1 gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6 md:grid-cols-[180px_1fr]">
         <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-          분류
+          {t('label.category')}
         </dt>
         <dd className="m-0 text-[14px]">{detail.category.name}</dd>
         <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-          장소
+          {t('label.location')}
         </dt>
         <dd className="m-0 text-[14px]">{location}</dd>
         <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-          기간
+          {t('label.period')}
         </dt>
         <dd className="tabular m-0 text-[14px]">{dateLabel}</dd>
         {detail.vibes.length > 0 && (
           <>
             <dt className="text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
-              성향
+              {t('label.vibe')}
             </dt>
             <dd className="m-0 flex flex-wrap gap-1.5">
               {detail.vibes.map((v) => (

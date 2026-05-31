@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { PERIODS, COMPANIONS, TYPES } from '../data/mock';
+import { useTranslation } from 'react-i18next';
 import {
   createSubscription,
   fetchEvents,
@@ -87,7 +87,32 @@ export function FilterSearchPanel({
   onSelectEvent?: (id: string) => void;
   activeEventId?: string | null;
 }) {
+  const { t } = useTranslation('navigation');
   const { user } = useCurrentUser();
+
+  // 동적 필터 배열 — 언어 전환 시 즉시 재렌더됨
+  const PERIODS = [
+    { k: 'today',   l: t('filter.period.today') },
+    { k: 'weekend', l: t('filter.period.weekend') },
+    { k: 'week',    l: t('filter.period.week') },
+    { k: 'month',   l: t('filter.period.month') },
+  ];
+  const COMPANIONS = [
+    { k: 'solo',   l: t('filter.companion.solo') },
+    { k: 'couple', l: t('filter.companion.couple') },
+    { k: 'family', l: t('filter.companion.family') },
+    { k: 'friend', l: t('filter.companion.friend') },
+  ];
+  const TYPES = [
+    { k: 'festival',    l: t('filter.eventType.festival') },
+    { k: 'expo',        l: t('filter.eventType.expo') },
+    { k: 'symposium',   l: t('filter.eventType.symposium') },
+    { k: 'conference',  l: t('filter.eventType.conference') },
+    { k: 'exhibition',  l: t('filter.eventType.exhibition') },
+    { k: 'performance', l: t('filter.eventType.performance') },
+    { k: 'education',   l: t('filter.eventType.education') },
+    { k: 'movie',       l: t('filter.eventType.movie') },
+  ];
 
   const [regions, setRegions] = useState<RegionItem[]>([]);
   const [vibes, setVibes] = useState<VibeItem[]>([]);
@@ -134,8 +159,19 @@ export function FilterSearchPanel({
     return Array.from(map.entries()).map(([sido, items]) => ({ sido, items }));
   }, [regions]);
 
-  /** 어떤 sido 섹션이 펼쳐져 있는지. 기본은 서울만 펼침 (기존 UX 유지). */
-  const [expandedSido, setExpandedSido] = useState<Set<string>>(new Set(['서울']));
+  /** 어떤 sido 섹션이 펼쳐져 있는지. 기본은 첫 번째 sido 섹션 펼침 (한국어 고정 제거). */
+  const [expandedSido, setExpandedSido] = useState<Set<string>>(new Set());
+
+  /** regionsBySido 첫 로드 시 첫 번째 sido 자동 펼침 (한국어 '서울' 하드코딩 대신). */
+  useEffect(() => {
+    if (regionsBySido.length > 0) {
+      setExpandedSido((prev) => {
+        if (prev.size > 0) return prev; // 사용자가 이미 조작했으면 덮어쓰지 않음
+        return new Set([regionsBySido[0]!.sido]);
+      });
+    }
+  }, [regionsBySido]);
+
   const toggleSido = (sido: string) => {
     setExpandedSido((prev) => {
       const next = new Set(prev);
@@ -194,12 +230,12 @@ export function FilterSearchPanel({
         vibeIds: Array.from(vibe),
         periodMonths,
       });
-      setSubscribeMsg('구독 생성됨 — 마이페이지 > 구독 탭에서 관리');
+      setSubscribeMsg(t('subscription.created'));
     } catch (err) {
       const msg = (err as Error).message;
-      if (msg === 'UNAUTHENTICATED') setSubscribeMsg('로그인이 필요해요');
-      else if (msg === 'MAX_SUBSCRIPTIONS_REACHED') setSubscribeMsg('구독 최대 20개 — 마이페이지에서 정리');
-      else setSubscribeMsg(`실패: ${msg}`);
+      if (msg === 'UNAUTHENTICATED') setSubscribeMsg(t('subscription.loginRequired'));
+      else if (msg === 'MAX_SUBSCRIPTIONS_REACHED') setSubscribeMsg(t('filter.subscribe.maxReached'));
+      else setSubscribeMsg(t('filter.subscribe.failed', { msg }));
     } finally {
       setSubscribing(false);
     }
@@ -233,11 +269,11 @@ export function FilterSearchPanel({
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex-1 overflow-y-auto">
-        <FilterBlock title="지역" count={region.size}>
+        <FilterBlock title={t('filter.region.label')} count={region.size}>
           {lookupError ? (
-            <div className="text-[12px] text-(--color-error)">지역 로드 실패: {lookupError}</div>
+            <div className="text-[12px] text-(--color-error)">{t('filter.region.loadError', { msg: lookupError })}</div>
           ) : regionsBySido.length === 0 ? (
-            <div className="text-[12px] text-(--color-text-subtle)">불러오는 중…</div>
+            <div className="text-[12px] text-(--color-text-subtle)">{t('filter.region.loading')}</div>
           ) : (
             <div className="flex flex-col gap-2">
               {regionsBySido.map(({ sido, items }) => {
@@ -250,7 +286,7 @@ export function FilterSearchPanel({
                       onClick={() => toggleSido(sido)}
                       className="flex w-full items-center justify-between px-3 py-2 text-[13px] font-medium text-(--color-text)"
                     >
-                      <span>{sido}{selectedCount > 0 ? ` (${selectedCount})` : ''}</span>
+                      <span>{t(`region.sido.${sido}`, { defaultValue: sido })}{selectedCount > 0 ? ` (${selectedCount})` : ''}</span>
                       <span className="text-(--color-text-subtle)">{expanded ? '−' : '+'}</span>
                     </button>
                     {expanded && (
@@ -268,7 +304,7 @@ export function FilterSearchPanel({
             </div>
           )}
         </FilterBlock>
-        <FilterBlock title="기간">
+        <FilterBlock title={t('filter.period.label')}>
           <div className="flex gap-1.5">
             {PERIODS.map((p) => (
               <Chip
@@ -285,15 +321,15 @@ export function FilterSearchPanel({
             ))}
           </div>
         </FilterBlock>
-        <FilterBlock title="인원구성" count={companion.size}>
+        <FilterBlock title={t('filter.companion.label')} count={companion.size}>
           <ChipGroup items={COMPANIONS} isActive={(k) => companion.has(k)} onToggle={toggleIn(setCompanion)} />
         </FilterBlock>
-        <FilterBlock title="종류" count={type.size}>
+        <FilterBlock title={t('filter.eventType.label')} count={type.size}>
           <ChipGroup items={TYPES} isActive={(k) => type.has(k)} onToggle={toggleIn(setType)} />
         </FilterBlock>
-        <FilterBlock title="성향" count={vibe.size} last>
+        <FilterBlock title={t('filter.vibe.label')} count={vibe.size} last>
           {vibes.length === 0 ? (
-            <div className="text-[12px] text-(--color-text-subtle)">불러오는 중…</div>
+            <div className="text-[12px] text-(--color-text-subtle)">{t('filter.vibe.loading')}</div>
           ) : (
             <ChipGroup
               items={vibes.map((v) => ({ k: v.vibeId, l: v.name }))}
@@ -309,12 +345,15 @@ export function FilterSearchPanel({
           <div className="flex-1 text-[13px] text-(--color-text-muted)">
             {totalActive === 0 ? (
               <>
-                필터를 선택하면 <strong className="font-semibold text-(--color-text)">적용</strong>할 수 있어요
+                {t('filter.action.hintPrefix')}{' '}
+                <strong className="font-semibold text-(--color-text)">{t('filter.action.hintApply')}</strong>
+                {/* hintSuffix: ko="할 수 있어요" 등 문법 조사, 영어·기타 언어는 의도적 빈 문자열 */}
+                {t('filter.action.hintSuffix') && <>{' '}{t('filter.action.hintSuffix')}</>}
               </>
             ) : (
               <>
                 <strong className="tabular font-semibold text-(--color-text)">{totalActive}</strong>
-                개 조건 선택됨
+                {t('filter.action.selectedSuffix')}
               </>
             )}
           </div>
@@ -324,7 +363,7 @@ export function FilterSearchPanel({
               onClick={reset}
               className="inline-flex h-8 items-center rounded-(--radius-md) bg-transparent px-2.5 text-[13px] font-medium text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
             >
-              초기화
+              {t('filter.action.reset')}
             </button>
           )}
           {user && totalActive > 0 && (
@@ -332,10 +371,10 @@ export function FilterSearchPanel({
               type="button"
               onClick={() => void subscribe()}
               disabled={subscribing}
-              title="새 이벤트가 조건에 맞으면 알림"
+              title={t('filter.action.subscribeTitle')}
               className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-2.5 text-[13px] font-medium text-(--color-text-muted) hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
             >
-              {subscribing ? '…' : '이 조건 구독'}
+              {subscribing ? '…' : t('filter.action.subscribe')}
             </button>
           )}
           <button
@@ -344,7 +383,7 @@ export function FilterSearchPanel({
             onClick={apply}
             className="inline-flex h-8 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-3 text-[13px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
           >
-            적용 <Icon name="arrow" size={14} />
+            {t('filter.action.apply')} <Icon name="arrow" size={14} />
           </button>
         </div>
         {subscribeMsg && (
@@ -361,7 +400,7 @@ export function FilterSearchPanel({
             activeId={activeEventId ?? null}
             onSelect={(id) => onSelectEvent?.(id)}
             totalLabel={
-              listState.data ? `${listState.data.total.toLocaleString()}개의 결과` : undefined
+              listState.data ? t('filter.action.resultCount', { count: listState.data.total.toLocaleString() }) : undefined
             }
           />
         </div>
@@ -381,12 +420,13 @@ function FilterBlock({
   last?: boolean;
   children: React.ReactNode;
 }) {
+  const { t } = useTranslation('navigation');
   return (
     <div className={`px-5 py-4 ${last ? '' : 'border-b border-(--color-border)'}`}>
       <div className="mb-2.5 text-[12px] font-semibold uppercase tracking-[0.04em] text-(--color-text-subtle)">
         {title}
         {count !== undefined && (
-          <span className="ml-1 font-medium text-(--color-text-subtle)">({count || '전체'})</span>
+          <span className="ml-1 font-medium text-(--color-text-subtle)">({count || t('filter.region.all')})</span>
         )}
       </div>
       {children}

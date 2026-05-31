@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   decideAdminEvent,
   fetchAdminEventDocuments,
@@ -20,6 +21,7 @@ export function UploadReviewPanel({
   event: AdminEventItem;
   onDecided: (decided: { eventId: string; nextStatus: string }) => void;
 }) {
+  const { t } = useTranslation('admin');
   const [docs, setDocs] = useState<AdminEventDocumentItem[]>([]);
   const [docsLoading, setDocsLoading] = useState(true);
   const [docsError, setDocsError] = useState<string | null>(null);
@@ -74,14 +76,14 @@ export function UploadReviewPanel({
 
       <section className="mb-4">
         <div className="mb-2 flex items-baseline justify-between">
-          <h3 className="m-0 text-[13px] font-semibold">제출 서류</h3>
+          <h3 className="m-0 text-[13px] font-semibold">{t('uploadReview.documents')}</h3>
           <span className="text-[11px] text-(--color-text-subtle)">
-            {docs.length}건 · 5분 TTL
+            {t('uploadReview.docCount', { count: docs.length })}
           </span>
         </div>
         {docsLoading && (
           <div className="rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-4 text-center text-[12px] text-(--color-text-subtle)">
-            서류 불러오는 중…
+            {t('uploadReview.loading')}
           </div>
         )}
         {docsError && (
@@ -91,7 +93,7 @@ export function UploadReviewPanel({
         )}
         {!docsLoading && !docsError && docs.length === 0 && (
           <div className="rounded-(--radius-md) border border-(--color-warning)/30 bg-(--color-warning)/10 p-3 text-[12px] text-(--color-warning)">
-            첨부된 서류가 없어요.
+            {t('uploadReview.noDocuments')}
           </div>
         )}
         {docs.length > 0 && (
@@ -114,7 +116,7 @@ export function UploadReviewPanel({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block"
-                  aria-label={`${d.originalFilename} 원본 크기로 열기`}
+                  aria-label={t('document.openOriginal', { filename: d.originalFilename })}
                 >
                   <img
                     src={d.previewUrl}
@@ -130,13 +132,13 @@ export function UploadReviewPanel({
       </section>
 
       <section>
-        <label className="mb-1 block text-[13px] font-semibold">결정 사유 (선택)</label>
+        <label className="mb-1 block text-[13px] font-semibold">{t('uploadReview.reasonLabel')}</label>
         <textarea
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           maxLength={2000}
           rows={3}
-          placeholder="보완요청/반려 사유를 업로더에게 전달하려면 작성"
+          placeholder={t('uploadReview.reasonPlaceholder')}
           className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[13px] outline-none focus:border-(--color-accent)"
         />
         {err && (
@@ -149,7 +151,7 @@ export function UploadReviewPanel({
             disabled={pending !== null}
             className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-error)/40 bg-(--color-error)/5 px-3 text-[13px] font-medium text-(--color-error) hover:bg-(--color-error)/10 disabled:opacity-40"
           >
-            {pending === 'rejected' ? '…' : '반려'}
+            {pending === 'rejected' ? '…' : t('uploadReview.reject')}
           </button>
           <button
             type="button"
@@ -157,7 +159,7 @@ export function UploadReviewPanel({
             disabled={pending !== null}
             className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[13px] font-medium text-(--color-text) hover:border-(--color-border-hover) disabled:opacity-40"
           >
-            {pending === 'revision_requested' ? '…' : '보완요청'}
+            {pending === 'revision_requested' ? '…' : t('uploadReview.requestRevision')}
           </button>
           <button
             type="button"
@@ -165,7 +167,7 @@ export function UploadReviewPanel({
             disabled={pending !== null}
             className="inline-flex h-9 items-center rounded-(--radius-md) bg-(--color-accent) px-4 text-[13px] font-medium text-white hover:bg-(--color-accent-hover) disabled:opacity-40"
           >
-            {pending === 'approved' ? '…' : '승인'}
+            {pending === 'approved' ? '…' : t('uploadReview.approve')}
           </button>
         </div>
       </section>

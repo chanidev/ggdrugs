@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router';
 import {
   fetchAdminAuditLogs,
@@ -21,25 +22,10 @@ import { AuditDashboard } from './audit/AuditDashboard';
 type Source = 'overview' | 'event' | 'admin';
 type EventAction = 'any' | 'approved' | 'revision_requested' | 'rejected';
 
-const EVENT_ACTION_LABEL: Record<AdminAuditLogItem['action'], string> = {
-  approved: '승인',
-  revision_requested: '보완 요청',
-  rejected: '반려',
-};
-
 const EVENT_ACTION_TONE: Record<AdminAuditLogItem['action'], string> = {
   approved: 'bg-(--color-success)/10 text-(--color-success)',
   revision_requested: 'bg-(--color-warning)/10 text-(--color-warning)',
   rejected: 'bg-(--color-error)/10 text-(--color-error)',
-};
-
-const ADMIN_ACTION_LABEL: Record<AdminAuditAdminAction, string> = {
-  revoke_sessions: '세션 폐기',
-  admin_promote: 'admin 승급',
-  admin_demote: 'admin 박탈',
-  admin_scope_change: 'scope 변경',
-  user_soft_delete: '계정 비활성화',
-  uploader_decision: '업로더 심사',
 };
 
 const ADMIN_ACTION_TONE: Record<AdminAuditAdminAction, string> = {
@@ -56,17 +42,20 @@ const PAGE_SIZE = 50;
 /**
  * admin payload → 한 줄 요약. UserDetailPanel 의 summarizeAuditPayload 와 동일 스펙.
  */
-function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown): string {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TFn = (k: string, opts?: any) => string;
+
+function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown, t: TFn): string {
   if (!payload || typeof payload !== 'object') return '';
   const p = payload as Record<string, unknown>;
   switch (action) {
     case 'revoke_sessions':
-      return `세션 ${p.count ?? '?'}개 폐기`;
+      return t('audit.summarize.revokeCount', { count: p.count ?? '?' });
     case 'admin_promote':
-      return `scope=${p.scope ?? '?'}`;
+      return t('audit.summarize.scope', { scope: p.scope ?? '?' });
     case 'admin_demote': {
       const before = p.before as Record<string, unknown> | undefined;
-      return `이전 scope=${before?.scope ?? '?'} → 비활성`;
+      return t('audit.summarize.demotion', { scope: before?.scope ?? '?' });
     }
     case 'admin_scope_change': {
       const before = p.before as Record<string, unknown> | undefined;
@@ -74,15 +63,10 @@ function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown):
       return `${before?.scope ?? '?'} → ${after?.scope ?? '?'}`;
     }
     case 'user_soft_delete':
-      return `세션 ${p.deletedSessionCount ?? '?'}개 같이 폐기`;
+      return t('audit.summarize.softDelete', { count: p.deletedSessionCount ?? '?' });
     case 'uploader_decision': {
       const dec = String(p.action ?? '?');
-      const koMap: Record<string, string> = {
-        approved: '승인됨',
-        revision_requested: '보완요청',
-        rejected: '반려',
-      };
-      return `결정: ${koMap[dec] ?? dec}`;
+      return t('audit.summarize.decision', { value: t(`member.uploaderStatus.${dec}`, { defaultValue: dec }) });
     }
     default:
       return '';
@@ -90,6 +74,7 @@ function summarizeAdminPayload(action: AdminAuditAdminAction, payload: unknown):
 }
 
 export function AuditLogsTab() {
+  const { t } = useTranslation('admin');
   // 기본은 대시보드 — 운영자가 들어왔을 때 한 화면에 요약 보여주는 게 자연스러움.
   const [source, setSource] = useState<Source>('overview');
 
@@ -98,16 +83,16 @@ export function AuditLogsTab() {
       {/* Source toggle (3종) — 활자 위주, 라운드 박스 회피 */}
       <nav
         className="flex items-baseline gap-1 border-b border-(--color-border)"
-        aria-label="감사 로그 보기"
+        aria-label={t('tabs.audit')}
       >
         <SourceTab active={source === 'overview'} onClick={() => setSource('overview')}>
-          대시보드
+          {t('audit.overview')}
         </SourceTab>
         <SourceTab active={source === 'event'} onClick={() => setSource('event')}>
-          이벤트 심사
+          {t('audit.eventSource')}
         </SourceTab>
         <SourceTab active={source === 'admin'} onClick={() => setSource('admin')}>
-          Admin 작업
+          {t('audit.adminSource')}
         </SourceTab>
       </nav>
 
@@ -149,6 +134,7 @@ function SourceTab({
 // =============================================================
 
 function EventAuditPanel() {
+  const { t } = useTranslation('admin');
   const [action, setAction] = useState<EventAction>('any');
   const [eventIdQ, setEventIdQ] = useState('');
   const [eventIdInput, setEventIdInput] = useState('');
@@ -191,10 +177,10 @@ function EventAuditPanel() {
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const FILTERS: { key: EventAction; label: string; count?: number }[] = [
-    { key: 'any', label: '전체', count: byAction.approved + byAction.revision_requested + byAction.rejected },
-    { key: 'approved', label: '승인', count: byAction.approved },
-    { key: 'revision_requested', label: '보완', count: byAction.revision_requested },
-    { key: 'rejected', label: '반려', count: byAction.rejected },
+    { key: 'any',              label: t('audit.eventAction.any'),              count: byAction.approved + byAction.revision_requested + byAction.rejected },
+    { key: 'approved',         label: t('audit.eventAction.approved'),         count: byAction.approved },
+    { key: 'revision_requested', label: t('audit.eventAction.revision_requested'), count: byAction.revision_requested },
+    { key: 'rejected',         label: t('audit.eventAction.rejected'),         count: byAction.rejected },
   ];
 
   return (
@@ -239,14 +225,14 @@ function EventAuditPanel() {
             inputMode="numeric"
             value={eventIdInput}
             onChange={(e) => setEventIdInput(e.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="eventId 로 필터"
+            placeholder={t('audit.eventIdPlaceholder')}
             className="h-8 w-[160px] rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-2.5 text-[12px] outline-none focus:border-(--color-accent)"
           />
           <button
             type="submit"
             className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:text-(--color-text)"
           >
-            조회
+            {t('audit.search')}
           </button>
           {eventIdQ && (
             <button
@@ -258,26 +244,26 @@ function EventAuditPanel() {
               }}
               className="text-[12px] text-(--color-text-subtle) hover:text-(--color-accent)"
             >
-              초기화
+              {t('audit.reset')}
             </button>
           )}
         </form>
 
-        <span className="ml-auto text-[12px] text-(--color-text-subtle)">총 {total.toLocaleString()}건</span>
+        <span className="ml-auto text-[12px] text-(--color-text-subtle)">{t('audit.total', { count: total.toLocaleString() })}</span>
       </div>
 
       {error && (
         <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-          불러오기 실패: {error}
+          {t('audit.loadError')}: {error}
         </div>
       )}
 
       <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
         {loading && items.length === 0 ? (
-          <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+          <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
         ) : items.length === 0 ? (
           <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-            {eventIdQ ? `eventId=${eventIdQ} 기록 없음.` : '기록이 없어요.'}
+            {eventIdQ ? t('audit.noEventId', { eventId: eventIdQ }) : t('audit.empty')}
           </div>
         ) : (
           <ul className="divide-y divide-(--color-border)">
@@ -287,7 +273,7 @@ function EventAuditPanel() {
                   <span
                     className={`inline-flex shrink-0 items-center rounded-(--radius-sm) px-2 py-[3px] text-[11px] font-semibold tracking-[0.02em] ${EVENT_ACTION_TONE[log.action]}`}
                   >
-                    {EVENT_ACTION_LABEL[log.action]}
+                    {t(`audit.eventAction.${log.action}`)}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2 text-[13px]">
@@ -320,7 +306,7 @@ function EventAuditPanel() {
                       {log.eventCurrentStatus && (
                         <>
                           <span aria-hidden>·</span>
-                          <span>현재 상태 {log.eventCurrentStatus}</span>
+                          <span>{t('audit.currentStatus')} {log.eventCurrentStatus}</span>
                         </>
                       )}
                     </div>
@@ -342,6 +328,7 @@ function EventAuditPanel() {
 // =============================================================
 
 function AdminAuditPanel() {
+  const { t } = useTranslation('admin');
   const [action, setAction] = useState<'any' | AdminAuditAdminAction>('any');
   const [page, setPage] = useState(1);
 
@@ -379,14 +366,18 @@ function AdminAuditPanel() {
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const allCount = Object.values(byAction).reduce((s, n) => s + n, 0);
 
+  const ADMIN_ACTION_KEYS: AdminAuditAdminAction[] = [
+    'uploader_decision', 'admin_promote', 'admin_demote',
+    'admin_scope_change', 'revoke_sessions', 'user_soft_delete',
+  ];
+
   const FILTERS: { key: 'any' | AdminAuditAdminAction; label: string; count: number }[] = [
-    { key: 'any', label: '전체', count: allCount },
-    { key: 'uploader_decision', label: ADMIN_ACTION_LABEL.uploader_decision, count: byAction.uploader_decision },
-    { key: 'admin_promote', label: ADMIN_ACTION_LABEL.admin_promote, count: byAction.admin_promote },
-    { key: 'admin_demote', label: ADMIN_ACTION_LABEL.admin_demote, count: byAction.admin_demote },
-    { key: 'admin_scope_change', label: ADMIN_ACTION_LABEL.admin_scope_change, count: byAction.admin_scope_change },
-    { key: 'revoke_sessions', label: ADMIN_ACTION_LABEL.revoke_sessions, count: byAction.revoke_sessions },
-    { key: 'user_soft_delete', label: ADMIN_ACTION_LABEL.user_soft_delete, count: byAction.user_soft_delete },
+    { key: 'any', label: t('audit.eventAction.any'), count: allCount },
+    ...ADMIN_ACTION_KEYS.map((k) => ({
+      key: k as 'any' | AdminAuditAdminAction,
+      label: t(`audit.adminAction.${k}`),
+      count: byAction[k],
+    })),
   ];
 
   return (
@@ -415,24 +406,24 @@ function AdminAuditPanel() {
             );
           })}
         </div>
-        <span className="ml-auto text-[12px] text-(--color-text-subtle)">총 {total.toLocaleString()}건</span>
+        <span className="ml-auto text-[12px] text-(--color-text-subtle)">{t('audit.total', { count: total.toLocaleString() })}</span>
       </div>
 
       {error && (
         <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-          불러오기 실패: {error}
+          {t('audit.loadError')}: {error}
         </div>
       )}
 
       <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
         {loading && items.length === 0 ? (
-          <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">불러오는 중…</div>
+          <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">{t('uploader.loading')}</div>
         ) : items.length === 0 ? (
-          <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">기록이 없어요.</div>
+          <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">{t('audit.empty')}</div>
         ) : (
           <ul className="divide-y divide-(--color-border)">
             {items.map((log) => {
-              const summary = summarizeAdminPayload(log.action, log.payload);
+              const summary = summarizeAdminPayload(log.action, log.payload, t);
               const reason =
                 log.payload && typeof log.payload === 'object'
                   ? ((log.payload as Record<string, unknown>).reason as string | null | undefined)
@@ -443,7 +434,7 @@ function AdminAuditPanel() {
                     <span
                       className={`inline-flex shrink-0 items-center rounded-(--radius-sm) px-2 py-[3px] text-[11px] font-semibold tracking-[0.02em] ${ADMIN_ACTION_TONE[log.action]}`}
                     >
-                      {ADMIN_ACTION_LABEL[log.action]}
+                      {t(`audit.adminAction.${log.action}`)}
                     </span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-baseline gap-2 text-[13px]">
@@ -456,7 +447,7 @@ function AdminAuditPanel() {
                             {log.targetNickname}
                           </span>
                         ) : (
-                          <span className="text-(--color-text-subtle)">(대상 없음)</span>
+                          <span className="text-(--color-text-subtle)">{t('audit.noTarget')}</span>
                         )}
                         {summary && (
                           <span className="text-[12px] text-(--color-text-muted)">{summary}</span>
@@ -464,7 +455,7 @@ function AdminAuditPanel() {
                       </div>
                       {typeof reason === 'string' && reason.length > 0 && (
                         <p className="m-0 mt-1.5 whitespace-pre-wrap rounded-(--radius-sm) bg-(--color-surface-alt) p-2.5 text-[12px] text-(--color-text)">
-                          “{reason}”
+                          "{reason}"
                         </p>
                       )}
                       <div className="mt-1.5 flex flex-wrap items-center gap-2 tabular text-[11px] text-(--color-text-subtle)">
@@ -499,11 +490,12 @@ function Pager({
   loading: boolean;
   onChange: (next: number) => void;
 }) {
+  const { t } = useTranslation('admin');
   if (total <= PAGE_SIZE) return null;
   return (
     <div className="flex items-center justify-between text-[13px]">
       <span className="tabular text-(--color-text-subtle)">
-        {page} / {lastPage} 페이지
+        {t('audit.page', { page, lastPage })}
       </span>
       <div className="flex gap-1.5">
         <button
@@ -512,7 +504,7 @@ function Pager({
           disabled={page <= 1 || loading}
           className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:text-(--color-text) disabled:opacity-40"
         >
-          이전
+          {t('audit.prev')}
         </button>
         <button
           type="button"
@@ -520,7 +512,7 @@ function Pager({
           disabled={page >= lastPage || loading}
           className="inline-flex h-8 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) hover:text-(--color-text) disabled:opacity-40"
         >
-          다음
+          {t('audit.next')}
         </button>
       </div>
     </div>

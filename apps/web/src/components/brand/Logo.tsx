@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Line Monogram 로고 — 정사각 액자 + A 획 + 버밀리언 크로스바.
@@ -43,11 +44,12 @@ export function LogoMark({ size = 32, className = '' }: { size?: number; classNa
  * 모바일에서 SEOUL 은 hidden sm:inline 로 드롭.
  */
 export function LogoLockup({ className = '' }: { className?: string }) {
+  const { t } = useTranslation('common');
   return (
     <Link
       to="/"
       className={`flex items-center gap-2 ${className}`}
-      aria-label="Alle, 서울 이벤트 지도"
+      aria-label={t('aria.logoLockup')}
     >
       <LogoMark size={32} className="text-(--color-text)" />
       <span className="font-sans text-h3 font-bold tracking-tight" style={{ letterSpacing: '-0.015em' }}>

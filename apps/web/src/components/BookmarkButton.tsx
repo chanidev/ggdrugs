@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { createBookmark, deleteBookmark } from '../lib/api';
 import { useCurrentUser } from '../lib/auth-context';
 import { redirectToLogin } from '../lib/auth-redirect';
@@ -26,6 +27,7 @@ export function BookmarkButton({
   /** 토글 성공 시 부모에 변화 전달 (옵션). */
   onChange?: (next: boolean) => void;
 }) {
+  const { t } = useTranslation('common');
   const { user } = useCurrentUser();
   const [bookmarked, setBookmarked] = useState<boolean>(Boolean(initialBookmarked));
   const [pending, setPending] = useState(false);
@@ -62,7 +64,9 @@ export function BookmarkButton({
   };
 
   const active = bookmarked;
-  const label = loggedIn ? (active ? '북마크됨' : '북마크') : '로그인 후 북마크';
+  const label = loggedIn
+    ? (active ? t('aria.bookmarked') : t('aria.bookmark'))
+    : t('aria.bookmarkLoginRequired');
 
   if (variant === 'compact') {
     return (

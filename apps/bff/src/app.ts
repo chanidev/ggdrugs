@@ -20,8 +20,10 @@ import {
   startKakao,
   kakaoCallback,
 } from './routes/auth.js';
-import { requireAuth, resolveAuth } from './middleware/require-auth.js';
+import { requireAuth, resolveAuth, requireNotSuspended } from './middleware/require-auth.js';
 import { addBookmark, removeBookmark, listMyBookmarks, listMyReviews } from './routes/bookmarks.js';
+import { listPosts, getPostDetail, createPost, updatePost, deletePost, toggleLike, createComment, updateComment, deleteComment } from './routes/posts.js';
+import { translatePost } from './routes/translate.js';
 import { listMyRecommendations } from './routes/me-recommendations.js';
 import { postChat, postChatStream } from './routes/chat.js';
 import { listAdminEvents, putAdminEventVibes } from './routes/admin-events.js';
@@ -78,6 +80,37 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from './routes/notifications.js';
+import {
+  saveMateProfile,
+  getMyMateProfile,
+  getMyMateProfileWithIndex,
+  getMateIndex,
+  getRecommendations,
+} from './routes/mate.js';
+import { updateMyProfile, listMyCredits } from './routes/me.js';
+import { listMyAppointments } from './routes/appointments.js';
+import { submitEvaluation, getMyEvaluation } from './routes/evaluation.js';
+import {
+  sendOneToOneRequest,
+  sendGroupRequest,
+  acceptMatchRequest,
+  rejectMatchRequest,
+  listIncomingRequests,
+} from './routes/match-request.js';
+import {
+  listMyChatRooms,
+  listMessages,
+  selectEvent,
+  proposeAppointment,
+  voteAppointment,
+  leaveRoom,
+  blockMember,
+  instantKick,
+  startKickVote,
+  castKickVote,
+} from './routes/chat-room.js';
+import { createReport, listMyReports, blockUser } from './routes/reports.js';
+import { listAdminReports, getAdminReport, actionAdminReport } from './routes/admin-reports.js';
 
 // CORS — dev 전용 origin: env.WEB_URL (기본 http://localhost:5173).
 // Vite proxy 쓰는 경우에도 무해 (Origin 헤더 없으면 그대로 통과).
@@ -222,6 +255,201 @@ export function createApp(): Express {
   app.get('/places/search', (req: Request, res: Response, next: NextFunction) => {
     searchPlaces(req, res).catch(next);
   });
+
+  // A_802 커뮤니티 게시판 (GG-COMM-004/005, GG-POST-001/010/011/012)
+  app.get('/community/posts', (req, res, next) => listPosts(req, res).catch(next));
+  app.get(
+    '/community/posts/:id',
+    (req, res, next) => resolveAuth(req, res, next).catch(next),
+    (req, res, next) => getPostDetail(req, res).catch(next),
+  );
+  app.post(
+    '/community/posts',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => createPost(req, res).catch(next),
+  );
+  app.post(
+    '/community/posts/:id/comments',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => createComment(req, res).catch(next),
+  );
+  app.patch(
+    '/community/comments/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => updateComment(req, res).catch(next),
+  );
+  app.delete(
+    '/community/comments/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => deleteComment(req, res).catch(next),
+  );
+  app.patch(
+    '/community/posts/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => updatePost(req, res).catch(next),
+  );
+  app.delete(
+    '/community/posts/:id',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => deletePost(req, res).catch(next),
+  );
+  app.post(
+    '/community/posts/:id/like',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => toggleLike(req, res).catch(next),
+  );
+  // GG-COMM-013 게시글 번역 (비로그인 가능 — resolveAuth)
+  app.post(
+    '/community/posts/:id/translate',
+    (req, res, next) => resolveAuth(req, res, next).catch(next),
+    (req, res, next) => translatePost(req, res).catch(next),
+  );
+
+  // A_801 메이트 프로필 저장/조회 + A_807 메이트지수 (Phase 2 / ADR 0007)
+  // NOTE: /profile/me 를 /profile/:id 보다 먼저 등록해야 충돌 없음.
+  app.get(
+    '/community/mate/profile/me',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getMyMateProfileWithIndex(req, res).catch(next),
+  );
+  app.post(
+    '/community/mate/profile',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => saveMateProfile(req, res).catch(next),
+  );
+  app.get(
+    '/community/mate/profile',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getMyMateProfile(req, res).catch(next),
+  );
+  // A_801 메이트 추천 목록 (Task 3 / ADR 0007)
+  app.get(
+    '/community/mate/recommendations',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getRecommendations(req, res).catch(next),
+  );
+  // 경량 메이트지수 조회 (작성자 프로필 모달 — Task 6 연결 예정)
+  app.get('/community/mate/index/:userId', (req, res, next) => getMateIndex(req, res).catch(next));
+
+  // A_803/A_804 1:1/그룹 신청 REST (Task 3 — GG-MATE-001~016)
+  // NOTE: /incoming 을 /:matchRequestId/* 보다 먼저 등록해야 충돌 없음.
+  app.get(
+    '/community/match/request/incoming',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listIncomingRequests(req, res).catch(next),
+  );
+  app.post(
+    '/community/match/request/1-to-1',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => sendOneToOneRequest(req, res).catch(next),
+  );
+  app.post(
+    '/community/match/request/group',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => sendGroupRequest(req, res).catch(next),
+  );
+  app.patch(
+    '/community/match/request/:matchRequestId/accept',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => acceptMatchRequest(req, res).catch(next),
+  );
+  app.patch(
+    '/community/match/request/:matchRequestId/reject',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => rejectMatchRequest(req, res).catch(next),
+  );
+
+  // A_805 채팅방 REST (Task 4 — GG-ROOM-001~025)
+  // NOTE: /mine 을 /:chatRoomId/* 보다 먼저 등록해야 충돌 없음.
+  app.get(
+    '/community/chat-rooms/mine',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyChatRooms(req, res).catch(next),
+  );
+  app.get(
+    '/community/chat-rooms/:chatRoomId/messages',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMessages(req, res).catch(next),
+  );
+  app.patch(
+    '/community/chat-rooms/:chatRoomId/event',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => selectEvent(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/appointment',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => proposeAppointment(req, res).catch(next),
+  );
+  app.patch(
+    '/community/chat-rooms/:chatRoomId/appointment/:appointmentId/vote',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireNotSuspended(req, res, next).catch(next),
+    (req, res, next) => voteAppointment(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/leave',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => leaveRoom(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/block/:targetUserId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => blockMember(req, res).catch(next),
+  );
+
+  // Task 5 — 방장 권한 REST (GG-MATE-017~021)
+  // NOTE: /kick/instant/:targetUserId 보다 /kick/vote/:voteNotifId 가 뒤에 등록 — Express는 등록 순서대로 매칭
+  app.post(
+    '/community/chat-rooms/:chatRoomId/kick/instant/:targetUserId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => instantKick(req, res).catch(next),
+  );
+  app.post(
+    '/community/chat-rooms/:chatRoomId/kick/vote',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => startKickVote(req, res).catch(next),
+  );
+  app.patch(
+    '/community/chat-rooms/:chatRoomId/kick/vote/:voteNotifId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => castKickVote(req, res).catch(next),
+  );
+
+  // A_900/A_901 메이트평가 + 축제설문/후기 단일 제출 (Slice 5)
+  // [오버라이드] 그룹 포함 전체 지원, "다녀온 후" 게이트(appointedAt <= now)
+  app.post(
+    '/community/appointments/:appointmentId/evaluate',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => submitEvaluation(req, res).catch(next),
+  );
+  app.get(
+    '/community/appointments/:appointmentId/evaluation',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => getMyEvaluation(req, res).catch(next),
+  );
+
+  // GG-MY-008 + GG-COMM-017 크레딧 내역 + 잔액 (Slice 5)
+  app.get(
+    '/me/credits',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyCredits(req, res).catch(next),
+  );
+
+  // GG-MY-002 캘린더용 내 약속 조회 (Slice 6)
+  app.get(
+    '/me/appointments',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyAppointments(req, res).catch(next),
+  );
 
   app.post(
     '/chat',
@@ -369,6 +597,45 @@ export function createApp(): Express {
     (req, res, next) => softDeleteUser(req, res).catch(next),
   );
 
+  // GG-REPORT-004~007: 관리자 신고 모더레이션 (A_701)
+  app.get(
+    '/admin/reports',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => listAdminReports(req, res).catch(next),
+  );
+  app.get(
+    '/admin/reports/:reportId',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => getAdminReport(req, res).catch(next),
+  );
+  app.post(
+    '/admin/reports/:reportId/action',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => requireAdmin(req, res, next).catch(next),
+    (req, res, next) => actionAdminReport(req, res).catch(next),
+  );
+
+  // GG-REPORT-001~003: 사용자 신고 접수 (4 surface)
+  app.post(
+    '/community/reports',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => createReport(req, res).catch(next),
+  );
+  app.get(
+    '/me/reports',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => listMyReports(req, res).catch(next),
+  );
+
+  // GG-REPORT-008: 일반 사용자 차단 (chatRoom 없는 surface — Block.create 만, GroupMembership 변경 없음)
+  app.post(
+    '/community/users/:targetUserId/block',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => blockUser(req, res).catch(next),
+  );
+
   // Uploader — 본인 프로파일/신청/역할 토글/이벤트 업로드
   app.get(
     '/me/uploader',
@@ -426,6 +693,12 @@ export function createApp(): Express {
     '/me/notifications/read-all',
     (req, res, next) => requireAuth(req, res, next).catch(next),
     (req, res, next) => markAllNotificationsRead(req, res).catch(next),
+  );
+  // A_807 프로필 수정 — 닉네임 (GG-PROFILE-005)
+  app.patch(
+    '/me/profile',
+    (req, res, next) => requireAuth(req, res, next).catch(next),
+    (req, res, next) => updateMyProfile(req, res).catch(next),
   );
   app.put(
     '/me/active-role',

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Map as KakaoMap,
   MapMarker,
@@ -161,6 +162,7 @@ export function SeoulMap({
   /** v4.5 — 지도 viewport bbox 가 변경될 때 부모로 lift up. distance sort 의 anchor 로 활용. */
   onBboxChange?: ((bbox: string | null) => void) | undefined;
 }) {
+  const { t } = useTranslation('navigation');
   const appkey = import.meta.env.VITE_KAKAO_MAP_JS_KEY as string | undefined;
 
   const [loading, error] = useKakaoLoader({
@@ -328,7 +330,7 @@ export function SeoulMap({
         center={SEOUL_CENTER}
         level={DEFAULT_LEVEL}
         style={{ width: '100%', height: '100%' }}
-        aria-label="이벤트 지도"
+        aria-label={t('map.ariaLabel')}
         onClick={() => onSelectEvent?.(null)}
         onBoundsChanged={handleBoundsChanged}
         onCreate={(map) => { mapInstanceRef.current = map; }}
@@ -384,39 +386,44 @@ export function SeoulMap({
 }
 
 function StatusBadge({ count, error }: { count: number; error: string | null }) {
+  const { t: tc } = useTranslation('common');
+  const { t } = useTranslation('navigation');
   if (error) {
     return (
       <div className="absolute bottom-24 left-4 z-10 rounded-(--radius-md) bg-(--color-error) px-3 py-1.5 text-[12px] font-medium text-white shadow-(--shadow-md)">
-        지도 핀 로드 실패: {error.slice(0, 80)}
+        {tc('error.loadFailed')}: {error.slice(0, 80)}
       </div>
     );
   }
   return (
     <div className="absolute left-4 top-4 z-10 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-1.5 text-[12px] font-medium text-(--color-text-muted) shadow-(--shadow-sm)">
-      <span className="tabular text-(--color-text)">{count.toLocaleString()}</span>개 이벤트 표시
+      <span className="tabular text-(--color-text)">{count.toLocaleString()}</span>
+      {t('map.pinCountSuffix')}
     </div>
   );
 }
 
 function MissingKeyNotice() {
+  const { t } = useTranslation('navigation');
   return (
     <NoticeBox tone="warning">
-      <p className="font-semibold">Kakao Maps 키 없음</p>
+      <p className="font-semibold">{t('map.missingKey.title')}</p>
       <p className="text-body-sm text-(--color-text-muted)">
-        <code className="rounded-sm bg-(--color-surface) px-1 py-0.5">.env</code> 파일에{' '}
-        <code className="rounded-sm bg-(--color-surface) px-1 py-0.5">VITE_KAKAO_MAP_JS_KEY</code>를 설정하고 dev 서버 재시작.
+        <code className="rounded-sm bg-(--color-surface) px-1 py-0.5">.env</code>{' '}
+        {t('map.missingKey.body')}
       </p>
     </NoticeBox>
   );
 }
 
 function LoaderErrorNotice({ error }: { error: unknown }) {
+  const { t } = useTranslation('navigation');
   let msg: string;
   let scriptSrc: string | null = null;
   if (error instanceof Event) {
     const target = error.target as HTMLScriptElement | null;
     scriptSrc = target?.src ?? null;
-    msg = scriptSrc ? `스크립트 로드 실패: ${scriptSrc}` : '스크립트 로드 실패 (event target 없음)';
+    msg = scriptSrc ? `${t('map.scriptLoadFail')}: ${scriptSrc}` : t('map.scriptLoadFailNoTarget');
   } else if (error instanceof Error) {
     msg = error.message;
   } else {
@@ -424,21 +431,22 @@ function LoaderErrorNotice({ error }: { error: unknown }) {
   }
   return (
     <NoticeBox tone="error">
-      <p className="font-semibold">지도 로드 실패</p>
+      <p className="font-semibold">{t('map.mapLoadFail')}</p>
       <p className="text-body-sm text-(--color-text-muted)">{msg}</p>
       <ul className="ml-4 list-disc space-y-1 text-body-sm text-(--color-text-muted)">
-        <li>Kakao 개발자 콘솔의 앱이 <b>JavaScript 키</b>인지 확인 (REST API 키 X)</li>
-        <li>허용 도메인에 <code>http://localhost:5173</code> 등록 확인</li>
-        <li>브라우저 F12 → Network 탭에서 sdk.js 요청 status 확인</li>
+        <li>{t('map.kakaoConsoleHint')}</li>
+        <li>{t('map.allowedDomainHint')}</li>
+        <li>{t('map.networkTabHint')}</li>
       </ul>
     </NoticeBox>
   );
 }
 
 function LoadingNotice() {
+  const { t } = useTranslation('common');
   return (
     <div className="flex h-full items-center justify-center bg-(--color-surface-alt)">
-      <p className="text-body-sm text-(--color-text-muted)">지도 로딩…</p>
+      <p className="text-body-sm text-(--color-text-muted)">{t('label.loading')}</p>
     </div>
   );
 }

@@ -63,6 +63,14 @@ export async function getEventDetail(req: Request, res: Response) {
           vibe: { select: { vibeId: true, vibeName: true, vibeGroup: true } },
         },
       },
+      // GG-ROOM-003: 업로더 주관처 정보 — 크롤 이벤트는 null.
+      uploader: {
+        select: {
+          organizationName: true,
+          contactEmail: true,
+          contactPhone: true,
+        },
+      },
       _count: { select: { articleMappings: true } },
     },
   });
@@ -132,6 +140,14 @@ export async function getEventDetail(req: Request, res: Response) {
       crawlOrigin: row.crawlOrigin,
       externalId: row.externalSourceId,
     },
+    // GG-ROOM-003 — 업로더 주관처 정보. 크롤 이벤트(uploader=null)는 null 반환.
+    organizer: row.uploader
+      ? {
+          name: row.uploader.organizationName,
+          email: row.uploader.contactEmail,
+          phone: row.uploader.contactPhone,
+        }
+      : null,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
     isBookmarked, // null = 비로그인, true/false = 로그인 상태

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { RegionItem } from '../../lib/api';
 
 /**
@@ -38,23 +39,18 @@ export const EVENT_FORM_INITIAL: EventFormState = {
   expectedCompanionSecondary: '',
 };
 
-export const EVENT_CATEGORY_OPTIONS: { code: string; label: string }[] = [
-  { code: 'festival', label: '축제' },
-  { code: 'expo', label: '박람회' },
-  { code: 'symposium', label: '심포지움' },
-  { code: 'conference', label: '컨퍼런스' },
-  { code: 'exhibition', label: '전시' },
-  { code: 'performance', label: '공연' },
-  { code: 'education', label: '교육' },
-  { code: 'movie', label: '영화' },
-];
+export const EVENT_CATEGORY_CODES = [
+  'festival',
+  'expo',
+  'symposium',
+  'conference',
+  'exhibition',
+  'performance',
+  'education',
+  'movie',
+] as const;
 
-export const EVENT_COMPANION_OPTIONS: { code: CompanionCode; label: string }[] = [
-  { code: 'family', label: '가족' },
-  { code: 'friend', label: '친구' },
-  { code: 'couple', label: '연인' },
-  { code: 'solo', label: '혼자' },
-];
+export const EVENT_COMPANION_CODES: CompanionCode[] = ['family', 'friend', 'couple', 'solo'];
 
 export function isEventFormFilled(f: EventFormState): boolean {
   return (
@@ -76,6 +72,7 @@ export function EventFormFields({
   setForm: (updater: (f: EventFormState) => EventFormState) => void;
   regions: RegionItem[];
 }) {
+  const { t } = useTranslation('uploader');
   const sidoList = useMemo(
     () => Array.from(new Set(regions.map((r) => r.sido))).sort(),
     [regions],
@@ -90,31 +87,31 @@ export function EventFormFields({
 
   return (
     <>
-      <Field label="제목" required>
+      <Field label={t('form.title')} required>
         <input
           type="text"
           value={form.title}
           onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
           maxLength={200}
-          placeholder="예: 2026 한강 여름 페스티벌"
+          placeholder={t('form.titleNewPlaceholder')}
           className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
         />
       </Field>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Field label="분류" required>
+        <Field label={t('form.category')} required>
           <select
             value={form.categoryCode}
             onChange={(e) => setForm((f) => ({ ...f, categoryCode: e.target.value }))}
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
           >
-            {EVENT_CATEGORY_OPTIONS.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.label}
+            {EVENT_CATEGORY_CODES.map((code) => (
+              <option key={code} value={code}>
+                {t(`category.${code}`)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="지역" required>
+        <Field label={t('form.region')} required>
           <div className="flex flex-col gap-2">
             <select
               value={selectedSido}
@@ -124,7 +121,7 @@ export function EventFormFields({
               }}
               className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
             >
-              <option value="">시·도 선택</option>
+              <option value="">{t('form.sidoPlaceholder')}</option>
               {sidoList.map((sido) => (
                 <option key={sido} value={sido}>
                   {sido}
@@ -137,7 +134,7 @@ export function EventFormFields({
               disabled={selectedSido === ''}
               className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">시·군·구 선택</option>
+              <option value="">{t('form.sigunguPlaceholder')}</option>
               {sigunguOptions.map((r) => (
                 <option key={r.regionId} value={r.regionId}>
                   {r.sigungu}
@@ -148,7 +145,7 @@ export function EventFormFields({
         </Field>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Field label="시작일" required>
+        <Field label={t('form.startDate')} required>
           <input
             type="date"
             value={form.startDate}
@@ -156,7 +153,7 @@ export function EventFormFields({
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
           />
         </Field>
-        <Field label="종료일" required>
+        <Field label={t('form.endDate')} required>
           <input
             type="date"
             value={form.endDate}
@@ -165,28 +162,28 @@ export function EventFormFields({
           />
         </Field>
       </div>
-      <Field label="상세 주소">
+      <Field label={t('form.addressDetail')}>
         <input
           type="text"
           value={form.addressDetail}
           onChange={(e) => setForm((f) => ({ ...f, addressDetail: e.target.value }))}
           maxLength={255}
-          placeholder="예: 서울 영등포구 여의도동 한강공원"
+          placeholder={t('form.addressDetailPlaceholder')}
           className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
         />
       </Field>
-      <Field label="설명" hint="최대 10,000자. 사실 기반 담백하게">
+      <Field label={t('form.description')} hint={t('form.descriptionHint')}>
         <textarea
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
           maxLength={10_000}
           rows={6}
-          placeholder="이벤트 개요, 프로그램, 대상 등"
+          placeholder={t('form.descriptionPlaceholder')}
           className="w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 py-2 text-[14px] outline-none focus:border-(--color-accent)"
         />
       </Field>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Field label="운영 시간" hint="예: 매일 10:00~22:00">
+        <Field label={t('form.operatingHours')} hint={t('form.operatingHoursHint')}>
           <input
             type="text"
             value={form.operatingHours}
@@ -195,7 +192,7 @@ export function EventFormFields({
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
           />
         </Field>
-        <Field label="대상 관객" hint="예: 가족, 20대">
+        <Field label={t('form.targetAudience')} hint={t('form.targetAudienceHint')}>
           <input
             type="text"
             value={form.targetAudience}
@@ -204,7 +201,7 @@ export function EventFormFields({
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
           />
         </Field>
-        <Field label="입장료" hint="예: 무료, 1만원">
+        <Field label={t('form.admissionFee')} hint={t('form.admissionFeeHint')}>
           <input
             type="text"
             value={form.admissionFee}
@@ -215,7 +212,7 @@ export function EventFormFields({
         </Field>
       </div>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Field label="예상 인원구성 (주)" hint="가장 많을 것으로 예상되는 관객">
+        <Field label={t('form.companionPrimary')} hint={t('form.companionPrimaryHint')}>
           <select
             value={form.expectedCompanionPrimary}
             onChange={(e) =>
@@ -226,15 +223,15 @@ export function EventFormFields({
             }
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
           >
-            <option value="">선택 안 함</option>
-            {EVENT_COMPANION_OPTIONS.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.label}
+            <option value="">{t('form.companionNone')}</option>
+            {EVENT_COMPANION_CODES.map((code) => (
+              <option key={code} value={code}>
+                {t(`companion.${code}`)}
               </option>
             ))}
           </select>
         </Field>
-        <Field label="예상 인원구성 (보조)">
+        <Field label={t('form.companionSecondary')}>
           <select
             value={form.expectedCompanionSecondary}
             onChange={(e) =>
@@ -246,10 +243,10 @@ export function EventFormFields({
             }
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px]"
           >
-            <option value="">선택 안 함</option>
-            {EVENT_COMPANION_OPTIONS.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.label}
+            <option value="">{t('form.companionNone')}</option>
+            {EVENT_COMPANION_CODES.map((code) => (
+              <option key={code} value={code}>
+                {t(`companion.${code}`)}
               </option>
             ))}
           </select>

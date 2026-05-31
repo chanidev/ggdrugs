@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const ALLOWED_POSTER_MIME = ['image/jpeg', 'image/png', 'image/webp'] as const;
 const MAX_POSTER_BYTES = 5 * 1024 * 1024;
@@ -16,6 +17,7 @@ export function PosterPickerField({
   onChange: (f: File | null) => void;
   uploading?: boolean;
 }) {
+  const { t } = useTranslation('uploader');
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -38,13 +40,13 @@ export function PosterPickerField({
       return;
     }
     if (!(ALLOWED_POSTER_MIME as readonly string[]).includes(f.type)) {
-      setErr(`지원 형식: ${ALLOWED_POSTER_MIME.join(', ')}`);
+      setErr(t('picker.mimeError', { mime: ALLOWED_POSTER_MIME.join(', ') }));
       onChange(null);
       if (inputRef.current) inputRef.current.value = '';
       return;
     }
     if (f.size > MAX_POSTER_BYTES) {
-      setErr(`최대 ${Math.round(MAX_POSTER_BYTES / 1024 / 1024)}MB`);
+      setErr(t('picker.sizeError', { mb: Math.round(MAX_POSTER_BYTES / 1024 / 1024) }));
       onChange(null);
       if (inputRef.current) inputRef.current.value = '';
       return;
@@ -62,11 +64,11 @@ export function PosterPickerField({
     <div className="flex items-start gap-3">
       {preview ? (
         <div className="relative h-32 w-24 shrink-0 overflow-hidden rounded-(--radius-md) bg-(--color-surface-alt)">
-          <img src={preview} alt="포스터 미리보기" className="h-full w-full object-cover" />
+          <img src={preview} alt={t('picker.posterPreview')} className="h-full w-full object-cover" />
         </div>
       ) : (
         <div className="flex h-32 w-24 shrink-0 items-center justify-center rounded-(--radius-md) border border-dashed border-(--color-border) bg-(--color-surface-alt) text-[11px] text-(--color-text-subtle)">
-          없음
+          {t('picker.posterNone')}
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -87,12 +89,12 @@ export function PosterPickerField({
               onClick={clear}
               className="shrink-0 text-(--color-text-subtle) hover:text-(--color-error)"
             >
-              제거
+              {t('picker.remove')}
             </button>
           </div>
         )}
         {err && <div className="text-[12px] text-(--color-error)">{err}</div>}
-        {uploading && <div className="text-[12px] text-(--color-text-muted)">업로드 중…</div>}
+        {uploading && <div className="text-[12px] text-(--color-text-muted)">{t('picker.uploading')}</div>}
       </div>
     </div>
   );

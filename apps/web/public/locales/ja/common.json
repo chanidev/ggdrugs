@@ -1,0 +1,136 @@
+{
+  "button": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "write": "投稿",
+    "edit": "編集",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "confirm": "確認",
+    "close": "閉じる",
+    "submit": "送信",
+    "save": "保存",
+    "report": "通報",
+    "translate": "翻訳する",
+    "translateAnother": "別の言語に翻訳",
+    "copy": "コピー",
+    "retry": "再試行",
+    "back": "戻る",
+    "backToList": "一覧へ戻る"
+  },
+  "label": {
+    "loading": "読み込み中…",
+    "error": "エラーが発生しました。",
+    "notFound": "このアイテムは存在しないか、期限切れです。",
+    "eventNotFound": "イベントが見つかりません",
+    "empty": "項目がありません。",
+    "credits": "クレジット",
+    "notifications": "通知",
+    "chatRoom": "チャットルーム",
+    "admin": "管理者",
+    "uploader": "アップロード者",
+    "myPage": "マイページ",
+    "login_kakao": "Kakao",
+    "login_google": "Google でログイン",
+    "login_google_short": "Google",
+    "category": "カテゴリ",
+    "location": "場所",
+    "period": "期間",
+    "vibe": "雰囲気"
+  },
+  "aria": {
+    "adminConsole": "管理者コンソール",
+    "uploaderConsole": "アップロード者コンソール",
+    "myPage": "マイページ",
+    "quickSearch": "クイック検索 (⌘K) — 準備中",
+    "quickSearchLabel": "クイック検索 (⌘K) — 準備中",
+    "eventSheet": "イベントシート",
+    "sheetCollapse": "シートを半分に折りたたむ",
+    "sheetExpandFull": "シートを完全に展開",
+    "sheetExpand": "シートを展開",
+    "bookmark": "ブックマーク",
+    "bookmarked": "ブックマーク済み",
+    "bookmarkLoginRequired": "ログイン後にブックマーク",
+    "notifications": "通知",
+    "notificationsPlus": "通知 9+",
+    "notificationsCount": "通知 {{count}}",
+    "languageSelect": "言語選択",
+    "logoLockup": "Alle、ソウルイベントマップ"
+  },
+  "search": {
+    "placeholder": "イベント・場所を検索"
+  },
+  "error": {
+    "loginRequired": "ログインが必要です。",
+    "forbidden": "権限がありません。",
+    "loadFailed": "読み込みに失敗しました。",
+    "deleteFailed": "削除に失敗しました。",
+    "networkError": "応答がありませんでした。しばらくしてから再試行してください。",
+    "llmUnreachable": "LLM サービスに接続できませんでした。"
+  },
+  "report": {
+    "reasons": {
+      "spam": "スパム/広告",
+      "abuse": "暴言/ヘイト",
+      "harassment": "嫌がらせ",
+      "obscene": "猥褻コンテンツ",
+      "no_show": "無断欠席",
+      "etc": "その他"
+    },
+    "error": {
+      "duplicate": "すでにこのコンテンツを通報しています。",
+      "unauthenticated": "ログインが必要です。",
+      "generic": "通報の送信中にエラーが発生しました。もう一度お試しください。"
+    },
+    "reasonLabel": "通報の理由",
+    "detailLabel": "詳細な理由",
+    "detailLabelFull": "詳細な理由（任意、最大 500 文字）",
+    "placeholder": "具体的な内容を入力すると、より早く処理できます。",
+    "submitting": "通報中…",
+    "success": "通報が受け付けられました。",
+    "ariaLabel": "通報する"
+  },
+  "articles": {
+    "title": "関連記事",
+    "loadError": "関連記事を読み込めませんでした。",
+    "openOriginal": "原文を開く ↗",
+    "prev": "前へ",
+    "next": "次へ",
+    "ariaLabel": "関連記事ページ",
+    "autoMatch": "自動マッチング"
+  },
+  "overview": {
+    "title": "概要",
+    "showOriginal": "元の説明を表示"
+  },
+  "posterHeader": {
+    "noPoster": "ポスターなし",
+    "bookmarkCount": "{{count}} ブックマーク"
+  },
+  "provenance": {
+    "title": "出典",
+    "firstCollected": "初回収集",
+    "lastUpdated": "最終更新"
+  },
+  "loginGate": {
+    "reviewHint": "レビューを書くにはログインが必要です。",
+    "googleLogin": "Google でログイン"
+  },
+  "sentiment": {
+    "positive": "ポジティブ",
+    "negative": "ネガティブ",
+    "neutral": "普通"
+  },
+  "pagination": {
+    "prev": "前へ",
+    "next": "次へ",
+    "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(なし)"
+  },
+  "errorBoundary": {
+    "message": "このエリアを表示できませんでした",
+    "retry": "再試行"
+  }
+}

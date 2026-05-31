@@ -72,6 +72,10 @@ export function fromBffItem(item: BffEventItem): DisplayEvent {
   };
 }
 
+/**
+ * @dev-only mock 변환 — 실사용 경로에서는 호출되지 않음. categoryLabel은 한국어 고정.
+ * 실사용 시 fromBffItem을 사용할 것.
+ */
 export function fromMockEvent(m: MockEvent): DisplayEvent {
   const typeLabel = TYPES.find((t) => t.k === m.category)?.l ?? m.category;
   return {

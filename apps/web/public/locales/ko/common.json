@@ -1,0 +1,136 @@
+{
+  "button": {
+    "login": "로그인",
+    "logout": "로그아웃",
+    "write": "글쓰기",
+    "edit": "수정",
+    "delete": "삭제",
+    "cancel": "취소",
+    "confirm": "확인",
+    "close": "닫기",
+    "submit": "제출",
+    "save": "저장",
+    "report": "신고",
+    "translate": "번역하기",
+    "translateAnother": "다른 언어로 번역",
+    "copy": "복사",
+    "retry": "다시 시도",
+    "back": "뒤로",
+    "backToList": "목록으로"
+  },
+  "label": {
+    "loading": "불러오는 중…",
+    "error": "오류가 발생했어요.",
+    "notFound": "존재하지 않거나 만료된 항목이에요.",
+    "eventNotFound": "이벤트를 찾을 수 없어요",
+    "empty": "항목이 없어요.",
+    "credits": "크레딧",
+    "notifications": "알림",
+    "chatRoom": "채팅방",
+    "admin": "관리자",
+    "uploader": "업로더",
+    "myPage": "마이페이지",
+    "login_kakao": "Kakao",
+    "login_google": "Google 로그인",
+    "login_google_short": "Google",
+    "category": "분류",
+    "location": "장소",
+    "period": "기간",
+    "vibe": "성향"
+  },
+  "aria": {
+    "adminConsole": "관리자 콘솔",
+    "uploaderConsole": "업로더 콘솔",
+    "myPage": "마이페이지",
+    "quickSearch": "빠른 검색 (⌘K) — 준비 중입니다",
+    "quickSearchLabel": "빠른 검색 (⌘K) — 준비 중",
+    "eventSheet": "이벤트 시트",
+    "sheetCollapse": "시트 절반으로 축소",
+    "sheetExpandFull": "시트 전체 펼치기",
+    "sheetExpand": "시트 펼치기",
+    "bookmark": "북마크",
+    "bookmarked": "북마크됨",
+    "bookmarkLoginRequired": "로그인 후 북마크",
+    "notifications": "알림",
+    "notificationsPlus": "알림 9+",
+    "notificationsCount": "알림 {{count}}",
+    "languageSelect": "언어 선택",
+    "logoLockup": "Alle, 서울 이벤트 지도"
+  },
+  "search": {
+    "placeholder": "이벤트·장소 검색"
+  },
+  "error": {
+    "loginRequired": "로그인이 필요해요.",
+    "forbidden": "권한이 없어요.",
+    "loadFailed": "불러오지 못했어요.",
+    "deleteFailed": "삭제하지 못했어요.",
+    "networkError": "응답을 받지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "llmUnreachable": "LLM 서비스에 연결하지 못했어요."
+  },
+  "report": {
+    "reasons": {
+      "spam": "스팸/광고",
+      "abuse": "욕설/혐오",
+      "harassment": "괴롭힘",
+      "obscene": "음란물",
+      "no_show": "노쇼",
+      "etc": "기타"
+    },
+    "error": {
+      "duplicate": "이미 신고한 내용입니다.",
+      "unauthenticated": "로그인이 필요합니다.",
+      "generic": "신고 접수 중 오류가 발생했어요. 다시 시도해 주세요."
+    },
+    "reasonLabel": "신고 사유",
+    "detailLabel": "상세 사유",
+    "detailLabelFull": "상세 사유 (선택, 최대 500자)",
+    "placeholder": "구체적인 내용을 입력하면 처리에 도움이 됩니다.",
+    "submitting": "신고 중…",
+    "success": "신고가 접수되었습니다.",
+    "ariaLabel": "신고하기"
+  },
+  "articles": {
+    "title": "관련 기사",
+    "loadError": "관련 기사를 불러오지 못했어요.",
+    "openOriginal": "원문 열기 ↗",
+    "prev": "이전",
+    "next": "다음",
+    "ariaLabel": "관련 기사 페이지",
+    "autoMatch": "자동 매칭"
+  },
+  "overview": {
+    "title": "요약",
+    "showOriginal": "원본 설명 보기"
+  },
+  "posterHeader": {
+    "noPoster": "포스터 없음",
+    "bookmarkCount": "북마크 {{count}}"
+  },
+  "provenance": {
+    "title": "출처",
+    "firstCollected": "최초 수집",
+    "lastUpdated": "최근 업데이트"
+  },
+  "loginGate": {
+    "reviewHint": "리뷰를 남기려면 로그인이 필요해요.",
+    "googleLogin": "Google 로그인"
+  },
+  "sentiment": {
+    "positive": "긍정",
+    "negative": "부정",
+    "neutral": "보통"
+  },
+  "pagination": {
+    "prev": "이전",
+    "next": "다음",
+    "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(없음)"
+  },
+  "errorBoundary": {
+    "message": "이 영역을 표시하지 못했어요",
+    "retry": "다시 시도"
+  }
+}

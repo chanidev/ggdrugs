@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { DisplayEvent } from '../lib/event-display';
 import { Icon } from './Icon';
 import { PhaseBadge } from './PhaseBadge';
@@ -24,17 +25,18 @@ export function EventList({
   /** 상단 바에 표시할 커스텀 카운트 라벨 — 서버 total 과 items.length 가 다른 경우 사용. */
   totalLabel?: React.ReactNode;
 }) {
+  const { t } = useTranslation(['common', 'navigation']);
   if (loading) {
     return (
       <div className="flex flex-1 items-center justify-center p-10 text-[13px] text-(--color-text-subtle)">
-        불러오는 중…
+        {t('label.loading')}
       </div>
     );
   }
   if (error) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-2 p-10 text-center text-[13px] text-(--color-error)">
-        <div className="text-[14px] font-medium">이벤트를 불러오지 못했어요</div>
+        <div className="text-[14px] font-medium">{t('error.loadFailed')}</div>
         <div className="max-w-[260px] text-(--color-text-muted)">{error}</div>
       </div>
     );
@@ -45,8 +47,8 @@ export function EventList({
         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-(--color-surface-alt) text-(--color-text-subtle)">
           <Icon name="inbox" size={20} />
         </div>
-        <div className="text-[14px] font-medium text-(--color-text-muted)">아직 결과가 없어요</div>
-        <div>다른 카테고리를 선택해보세요.</div>
+        <div className="text-[14px] font-medium text-(--color-text-muted)">{t('label.empty')}</div>
+        <div>{t('navigation:eventList.emptyHint')}</div>
       </div>
     );
   }
@@ -58,15 +60,15 @@ export function EventList({
           {totalLabel ?? (
             <>
               <strong className="tabular text-(--color-text)">{items.length}</strong>
-              개의 이벤트
+              {t('navigation:eventList.defaultTotalSuffix')}
             </>
           )}
         </div>
         <span
           className="text-[12px] text-(--color-text-subtle)"
-          title="진행중·예정 이벤트가 먼저, 종료는 뒤로"
+          title={t('navigation:eventList.sortHintTitle')}
         >
-          진행중·예정 우선
+          {t('navigation:eventList.sortHint')}
         </span>
       </div>
       <ul className="m-0 min-h-0 flex-1 list-none overflow-y-auto p-0">
@@ -89,6 +91,7 @@ function EventCard({
   active: boolean;
   onClick: () => void;
 }) {
+  const { t } = useTranslation('navigation');
   return (
     <button
       type="button"
@@ -110,7 +113,7 @@ function EventCard({
           {event.distanceLabel && (
             <>
               <span aria-hidden className="text-(--color-text-subtle)">·</span>
-              <span className="tabular text-(--color-accent)" aria-label={`거리 ${event.distanceLabel}`}>
+              <span className="tabular text-(--color-accent)" aria-label={t('eventList.distanceAriaLabel', { distance: event.distanceLabel })}>
                 {event.distanceLabel}
               </span>
             </>

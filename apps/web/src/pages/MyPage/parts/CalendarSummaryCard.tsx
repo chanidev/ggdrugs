@@ -1,4 +1,5 @@
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { PhaseBadge } from '../../../components/PhaseBadge';
 import { Stars } from './Stars.js';
 
@@ -36,6 +37,7 @@ export function CalendarSummaryCard({
   phase: 'upcoming' | 'ongoing' | 'ended';
   reviewedRating?: number;
 }) {
+  const { t } = useTranslation('mypage');
   const dateLabel = event.startDate === event.endDate ? event.startDate : `${event.startDate} ~ ${event.endDate}`;
   const place =
     event.addressDetail ??
@@ -44,7 +46,7 @@ export function CalendarSummaryCard({
       : event.region.fullAddress);
 
   const canReview = phase === 'ended';
-  const reviewLabel = reviewedRating !== undefined ? '리뷰 수정' : '리뷰 작성';
+  const reviewLabel = reviewedRating !== undefined ? t('calendar.reviewEdit') : t('calendar.reviewWrite');
   const reviewHref = `/events/${event.eventId}#review`;
 
   return (
@@ -59,10 +61,10 @@ export function CalendarSummaryCard({
         {event.articleCount > 0 && (
           <span
             className="ml-auto inline-flex items-center gap-1 rounded-full bg-(--color-surface-alt) px-2 py-0.5 text-[10px] font-medium text-(--color-text-muted)"
-            title={`관련 기사 ${event.articleCount}건 — 상세에서 전체 보기`}
+            title={t('calendar.relatedArticlesTitle', { count: event.articleCount })}
           >
             <span className="tabular text-(--color-text)">{event.articleCount}</span>
-            <span>관련 기사</span>
+            <span>{t('calendar.relatedArticles')}</span>
           </span>
         )}
       </header>
@@ -72,19 +74,19 @@ export function CalendarSummaryCard({
       </h4>
 
       <dl className="grid grid-cols-[44px_1fr] gap-x-3 gap-y-1 text-[12.5px]">
-        <dt className="text-(--color-text-subtle)">장소</dt>
+        <dt className="text-(--color-text-subtle)">{t('calendar.place')}</dt>
         <dd className="m-0 truncate text-(--color-text-muted)">{place}</dd>
-        <dt className="text-(--color-text-subtle)">기간</dt>
+        <dt className="text-(--color-text-subtle)">{t('calendar.period')}</dt>
         <dd className="tabular m-0 text-(--color-text-muted)">{dateLabel}</dd>
         {event.admissionFee && (
           <>
-            <dt className="text-(--color-text-subtle)">가격</dt>
+            <dt className="text-(--color-text-subtle)">{t('calendar.price')}</dt>
             <dd className="m-0 text-(--color-text-muted)">{event.admissionFee}</dd>
           </>
         )}
         {event.targetAudience && (
           <>
-            <dt className="text-(--color-text-subtle)">대상</dt>
+            <dt className="text-(--color-text-subtle)">{t('calendar.audience')}</dt>
             <dd className="m-0 text-(--color-text-muted)">{event.targetAudience}</dd>
           </>
         )}
@@ -101,7 +103,7 @@ export function CalendarSummaryCard({
           to={`/events/${event.eventId}`}
           className="inline-flex h-8 flex-1 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
         >
-          상세 보기
+          {t('calendar.viewDetail')}
         </Link>
         {canReview ? (
           <Link
@@ -114,9 +116,9 @@ export function CalendarSummaryCard({
           <span
             aria-disabled="true"
             className="inline-flex h-8 flex-1 cursor-not-allowed items-center justify-center rounded-(--radius-md) border border-dashed border-(--color-border) text-[11.5px] text-(--color-text-subtle)"
-            title="이벤트 종료일 이후에 작성 가능 (GG-REVIEW-001)"
+            title={t('calendar.reviewAfterEndTooltip')}
           >
-            {phase === 'upcoming' ? '리뷰는 종료 후' : '종료 후 작성'}
+            {phase === 'upcoming' ? t('calendar.reviewAfterEnd') : t('calendar.reviewAfterEndShort')}
           </span>
         )}
       </footer>

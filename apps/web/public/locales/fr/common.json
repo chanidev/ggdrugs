@@ -1,0 +1,136 @@
+{
+  "button": {
+    "login": "Se connecter",
+    "logout": "Se déconnecter",
+    "write": "Écrire",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "close": "Fermer",
+    "submit": "Soumettre",
+    "save": "Enregistrer",
+    "report": "Signaler",
+    "translate": "Traduire",
+    "translateAnother": "Traduire dans une autre langue",
+    "copy": "Copier",
+    "retry": "Réessayer",
+    "back": "Retour",
+    "backToList": "Retour à la liste"
+  },
+  "label": {
+    "loading": "Chargement…",
+    "error": "Une erreur est survenue.",
+    "notFound": "Cet élément n'existe pas ou a expiré.",
+    "eventNotFound": "Événement introuvable",
+    "empty": "Aucun élément.",
+    "credits": "Crédits",
+    "notifications": "Notifications",
+    "chatRoom": "Salon de chat",
+    "admin": "Administrateur",
+    "uploader": "Téléverseur",
+    "myPage": "Ma page",
+    "login_kakao": "Kakao",
+    "login_google": "Se connecter avec Google",
+    "login_google_short": "Google",
+    "category": "Catégorie",
+    "location": "Lieu",
+    "period": "Période",
+    "vibe": "Ambiance"
+  },
+  "aria": {
+    "adminConsole": "Console d'administration",
+    "uploaderConsole": "Console téléverseur",
+    "myPage": "Ma page",
+    "quickSearch": "Recherche rapide (⌘K) — bientôt disponible",
+    "quickSearchLabel": "Recherche rapide (⌘K) — bientôt disponible",
+    "eventSheet": "Feuille d'événement",
+    "sheetCollapse": "Réduire la feuille à moitié",
+    "sheetExpandFull": "Déplier la feuille complètement",
+    "sheetExpand": "Déplier la feuille",
+    "bookmark": "Favori",
+    "bookmarked": "Ajouté aux favoris",
+    "bookmarkLoginRequired": "Connexion requise pour ajouter aux favoris",
+    "notifications": "Notifications",
+    "notificationsPlus": "Notifications 9+",
+    "notificationsCount": "Notifications {{count}}",
+    "languageSelect": "Sélection de langue",
+    "logoLockup": "Alle, carte des événements de Séoul"
+  },
+  "search": {
+    "placeholder": "Rechercher des événements et lieux"
+  },
+  "error": {
+    "loginRequired": "Connexion requise.",
+    "forbidden": "Vous n'avez pas la permission.",
+    "loadFailed": "Chargement échoué.",
+    "deleteFailed": "Suppression échouée.",
+    "networkError": "Aucune réponse reçue. Veuillez réessayer plus tard.",
+    "llmUnreachable": "Impossible de se connecter au service LLM."
+  },
+  "report": {
+    "reasons": {
+      "spam": "Spam/Publicité",
+      "abuse": "Insultes/Haine",
+      "harassment": "Harcèlement",
+      "obscene": "Contenu obscène",
+      "no_show": "Absence",
+      "etc": "Autre"
+    },
+    "error": {
+      "duplicate": "Vous avez déjà signalé ceci.",
+      "unauthenticated": "Connexion requise.",
+      "generic": "Une erreur est survenue lors de votre signalement. Veuillez réessayer."
+    },
+    "reasonLabel": "Motif du signalement",
+    "detailLabel": "Motif détaillé",
+    "detailLabelFull": "Motif détaillé (facultatif, jusqu'à 500 caractères)",
+    "placeholder": "Des détails précis nous aideront à traiter votre signalement plus rapidement.",
+    "submitting": "Signalement en cours…",
+    "success": "Votre signalement a été soumis.",
+    "ariaLabel": "Signaler"
+  },
+  "articles": {
+    "title": "Articles connexes",
+    "loadError": "Impossible de charger les articles connexes.",
+    "openOriginal": "Ouvrir l'original ↗",
+    "prev": "Précédent",
+    "next": "Suivant",
+    "ariaLabel": "Page des articles connexes",
+    "autoMatch": "Correspondance automatique"
+  },
+  "overview": {
+    "title": "Résumé",
+    "showOriginal": "Voir la description originale"
+  },
+  "posterHeader": {
+    "noPoster": "Pas d'affiche",
+    "bookmarkCount": "{{count}} favoris"
+  },
+  "provenance": {
+    "title": "Source",
+    "firstCollected": "Première collecte",
+    "lastUpdated": "Dernière mise à jour"
+  },
+  "loginGate": {
+    "reviewHint": "Connexion requise pour laisser un avis.",
+    "googleLogin": "Se connecter avec Google"
+  },
+  "sentiment": {
+    "positive": "Positif",
+    "negative": "Négatif",
+    "neutral": "Neutre"
+  },
+  "pagination": {
+    "prev": "Précédent",
+    "next": "Suivant",
+    "page": "{{page}} / {{lastPage}}"
+  },
+  "fallback": {
+    "none": "(aucun)"
+  },
+  "errorBoundary": {
+    "message": "Impossible d'afficher cette section",
+    "retry": "Réessayer"
+  }
+}

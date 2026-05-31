@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { PhaseBadge } from '../../../components/PhaseBadge';
 import { UploadReviewPanel } from '../../../components/admin/UploadReviewPanel';
 import { fetchAdminEvents, type AdminEventItem } from '../../../lib/api';
@@ -8,6 +9,7 @@ import { fetchAdminEvents, type AdminEventItem } from '../../../lib/api';
 // =============================================================
 
 export function UploadReviewsTab() {
+  const { t } = useTranslation('admin');
   const [events, setEvents] = useState<AdminEventItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -62,8 +64,8 @@ export function UploadReviewsTab() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_440px]">
       <section className="min-w-0">
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="m-0 text-[14px] font-semibold">승인 대기 업로드 이벤트</h2>
-          <span className="text-[12px] text-(--color-text-subtle)">{total}건</span>
+          <h2 className="m-0 text-[14px] font-semibold">{t('tabs.uploadReviews')}</h2>
+          <span className="text-[12px] text-(--color-text-subtle)">{t('uploadReview.total', { count: total })}</span>
         </div>
         {error && (
           <div className="mb-3 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
@@ -73,11 +75,11 @@ export function UploadReviewsTab() {
         <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
           {loading && events.length === 0 ? (
             <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-              불러오는 중…
+              {t('uploader.loading')}
             </div>
           ) : events.length === 0 ? (
             <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-              대기 중인 업로드 이벤트가 없어요.
+              {t('uploader.empty')}
             </div>
           ) : (
             <ul className="divide-y divide-(--color-border)">
@@ -93,7 +95,7 @@ export function UploadReviewsTab() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="inline-flex items-center rounded-(--radius-sm) bg-(--color-warning)/10 px-2 py-[2px] text-[11px] font-semibold text-(--color-warning)">
-                          대기
+                          {t('event.status.pending')}
                         </span>
                         <PhaseBadge phase={ev.phase} />
                         <span className="text-[12px] text-(--color-text-subtle)">
@@ -121,7 +123,7 @@ export function UploadReviewsTab() {
           <UploadReviewPanel event={selected} onDecided={onDecided} />
         ) : (
           <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-            왼쪽에서 이벤트를 선택하면 서류 미리보기와 결정 버튼이 나와요
+            {t('uploadReview.selectHint')}
           </div>
         )}
       </aside>

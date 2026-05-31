@@ -5,7 +5,7 @@ import { runBackfillSummaries } from './summarize-events.js';
 import { runNewsNaverIngest } from './news-naver-ingest.js';
 import { runEmbedEvents } from './embed-events.js';
 import { auditMappingDistributionQuick } from './audit-news-mappings.js';
-import { runSessionSweep } from './session-sweep.js';
+import { runSessionSweep, runSanctionExpirySweep } from './session-sweep.js';
 import { runTasteAggregation } from './aggregate-taste-profiles.js';
 import { snapshot as quotaSnapshot } from './lib/quota-counter.js';
 import { logger } from '../logger.js';
@@ -101,6 +101,14 @@ async function runAll(): Promise<void> {
     log.info({ sweep }, 'post-ingest session sweep done');
   } catch (err) {
     log.warn({ err: err instanceof Error ? err.message : String(err) }, 'session sweep failed');
+  }
+
+  // GG-REPORT-006/007: 이용정지 만료 사용자 제재 해제 배치.
+  try {
+    const sanction = await runSanctionExpirySweep();
+    log.info({ sanction }, 'sanction expiry sweep done');
+  } catch (err) {
+    log.warn({ err: err instanceof Error ? err.message : String(err) }, 'sanction expiry sweep failed');
   }
 
   // G-5: user_taste_profiles 일일 집계 — 활성 user 의 top 1 dimension 갱신.

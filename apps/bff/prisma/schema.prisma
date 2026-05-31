@@ -26,18 +26,20 @@ datasource db {
 // 1. REGIONS
 // =============================================================
 model Region {
-  regionId     BigInt   @id @default(autoincrement()) @map("region_id")
-  sidoName     String   @map("sido_name")    @db.VarChar(30)
-  sigunguName  String?  @map("sigungu_name") @db.VarChar(30)
-  dongName     String?  @map("dong_name")    @db.VarChar(30)
-  fullAddress  String   @map("full_address") @db.VarChar(100)
+  regionId    BigInt   @id @default(autoincrement()) @map("region_id")
+  sidoName    String   @map("sido_name") @db.VarChar(30)
+  sigunguName String?  @map("sigungu_name") @db.VarChar(30)
+  dongName    String?  @map("dong_name") @db.VarChar(30)
+  fullAddress String   @map("full_address") @db.VarChar(100)
   /// v4.6 — distance sort 의 region centroid anchor 용 (구청 좌표). sigungu 단위만 채움.
-  centerLat    Decimal? @map("center_lat") @db.Decimal(10, 7)
-  centerLng    Decimal? @map("center_lng") @db.Decimal(10, 7)
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
+  centerLat   Decimal? @map("center_lat") @db.Decimal(10, 7)
+  centerLng   Decimal? @map("center_lng") @db.Decimal(10, 7)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  users  User[]
-  events Event[]
+  users           User[]
+  events          Event[]
+  mateRegions     MateProfile[] @relation("MateRegion")
+  matePrefRegions MateProfile[] @relation("MatePrefRegion")
 
   @@index([sidoName], map: "idx_regions_sido")
   @@index([sidoName, sigunguName], map: "idx_regions_sigungu")
@@ -48,36 +50,59 @@ model Region {
 // 2. USERS  (ADR 0001 #2: active_role 추가)
 // =============================================================
 model User {
-  userId            BigInt    @id @default(autoincrement()) @map("user_id")
-  socialUid         String    @map("social_uid")     @db.VarChar(255)
-  authProvider      String    @map("auth_provider")  @db.VarChar(20) // google | kakao
-  nickname          String    @db.VarChar(50)
-  gender            String?   @db.Char(1) // M | F | null
-  dateOfBirth       DateTime? @map("date_of_birth")  @db.Date
-  regionId          BigInt?   @map("region_id")
-  activeRole        String    @default("user") @map("active_role") @db.VarChar(20) // user | uploader  (ADR 0001 #2)
-  isNotificationOn  Boolean   @default(false) @map("is_notification_on")
-  isDeleted         Boolean   @default(false) @map("is_deleted")
-  lastLoggedInAt    DateTime? @map("last_logged_in_at") @db.Timestamptz
-  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt         DateTime? @map("deleted_at") @db.Timestamptz
+  userId           BigInt    @id @default(autoincrement()) @map("user_id")
+  socialUid        String    @map("social_uid") @db.VarChar(255)
+  authProvider     String    @map("auth_provider") @db.VarChar(20) // google | kakao
+  nickname         String    @db.VarChar(50)
+  gender           String?   @db.Char(1) // M | F | null
+  dateOfBirth      DateTime? @map("date_of_birth") @db.Date
+  regionId         BigInt?   @map("region_id")
+  activeRole       String    @default("user") @map("active_role") @db.VarChar(20) // user | uploader  (ADR 0001 #2)
+  isNotificationOn Boolean   @default(false) @map("is_notification_on")
+  isDeleted        Boolean   @default(false) @map("is_deleted")
+  lastLoggedInAt   DateTime? @map("last_logged_in_at") @db.Timestamptz
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt        DateTime? @map("deleted_at") @db.Timestamptz
 
-  region             Region?              @relation(fields: [regionId], references: [regionId])
-  uploaderProfile    UploaderProfile?
-  adminProfile       AdminProfile?
-  vibeAssignments    EventVibeAssignment[]
-  approvalLogs       ApprovalLog[]
-  bookmarks          Bookmark[]
-  reviews            Review[]
-  notifications      Notification[]
-  subscriptions      EventSubscription[]
-  searchLogs         SearchLog[]
-  chatSessions       ChatSession[]
-  photoAlbums        PhotoAlbum[]
-  tasteProfiles      UserTasteProfile[]
-  authSessions       AuthSession[]
-  adminAuditLogs     AdminAuditLog[]
+  // 슬라이스8 제재 상태 (GG-REPORT-006/007). 'none'|'warned'|'suspended'
+  sanctionStatus    String    @default("none") @map("sanction_status") @db.VarChar(20)
+  sanctionExpiresAt DateTime? @map("sanction_expires_at") @db.Timestamptz
+  sanctionReason    String?   @map("sanction_reason") @db.Text
+
+  region                  Region?               @relation(fields: [regionId], references: [regionId])
+  uploaderProfile         UploaderProfile?
+  adminProfile            AdminProfile?
+  vibeAssignments         EventVibeAssignment[]
+  approvalLogs            ApprovalLog[]
+  bookmarks               Bookmark[]
+  reviews                 Review[]
+  notifications           Notification[]
+  subscriptions           EventSubscription[]
+  searchLogs              SearchLog[]
+  chatSessions            ChatSession[]
+  photoAlbums             PhotoAlbum[]
+  tasteProfiles           UserTasteProfile[]
+  authSessions            AuthSession[]
+  adminAuditLogs          AdminAuditLog[]
+  posts                   Post[]
+  comments                Comment[]
+  postLikes               PostLike[]
+  mateProfile             MateProfile?
+  mateIndex               MateIndex?
+  sentMatchRequests       MatchRequest[]        @relation("Requester")
+  receivedMatchRequests   MatchRequest[]        @relation("Receiver")
+  chatRoomMemberships     GroupMembership[]
+  blocksGiven             Block[]               @relation("BlockSender")
+  blocksReceived          Block[]               @relation("BlockReceiver")
+  mateEvaluationsGiven    MateEvaluation[]      @relation("EvalGiver")
+  mateEvaluationsReceived MateEvaluation[]      @relation("EvalReceiver")
+  festivalSurveys         FestivalSurvey[]
+  festivalReviews         FestivalReview[]
+  creditLedgers           CreditLedger[]
+  reportsGiven            Report[]              @relation("ReportSender")
+  reportsReceived         Report[]              @relation("ReportTarget")
+  reportsMade             Report[]              @relation("ReportAdmin")
 
   @@unique([authProvider, socialUid], map: "uq_users_social")
   @@index([authProvider, socialUid], map: "idx_users_provider_uid")
@@ -90,24 +115,24 @@ model User {
 // 3. UPLOADER_PROFILES  (ADR 0001 #1: revision_requested 추가)
 // =============================================================
 model UploaderProfile {
-  uploaderId       BigInt    @id @default(autoincrement()) @map("uploader_id")
-  userId           BigInt    @unique @map("user_id")
-  organizationName String    @map("organization_name") @db.VarChar(100)
-  contactPhone     String    @map("contact_phone")     @db.VarChar(20)
-  contactEmail     String    @map("contact_email")     @db.VarChar(255)
+  uploaderId                 BigInt    @id @default(autoincrement()) @map("uploader_id")
+  userId                     BigInt    @unique @map("user_id")
+  organizationName           String    @map("organization_name") @db.VarChar(100)
+  contactPhone               String    @map("contact_phone") @db.VarChar(20)
+  contactEmail               String    @map("contact_email") @db.VarChar(255)
   /// 실명 (ADR 0003). 기존 dev 행은 ''. 신규 apply 부터 필수 (서버 검증).
-  realName         String    @default("") @map("real_name") @db.VarChar(50)
+  realName                   String    @default("") @map("real_name") @db.VarChar(50)
   /// 기관 업로더 사업자등록번호 10자리 (숫자만). ci_hash 와 XOR.
-  businessRegistrationNumber String? @map("business_registration_number") @db.Char(10)
+  businessRegistrationNumber String?   @map("business_registration_number") @db.Char(10)
   /// 개인 업로더 본인인증 CI (88자 Base64). businessRegistrationNumber 와 XOR.
-  ciHash           String?   @map("ci_hash") @db.Char(88)
-  approvalStatus   String    @default("pending") @map("approval_status") @db.VarChar(20)
+  ciHash                     String?   @map("ci_hash") @db.Char(88)
+  approvalStatus             String    @default("pending") @map("approval_status") @db.VarChar(20)
   // pending | approved | revision_requested | rejected  (ADR 0001 #1 대칭 적용)
-  approvedAt       DateTime? @map("approved_at") @db.Timestamptz
-  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  approvedAt                 DateTime? @map("approved_at") @db.Timestamptz
+  createdAt                  DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
-  user      User                @relation(fields: [userId], references: [userId])
+  user      User               @relation(fields: [userId], references: [userId])
   events    Event[]
   documents UploaderDocument[]
 
@@ -119,9 +144,9 @@ model UploaderProfile {
 model UploaderDocument {
   documentId       BigInt   @id @default(autoincrement()) @map("document_id")
   uploaderId       BigInt   @map("uploader_id")
-  filePath         String   @map("file_path")         @db.VarChar(500)
+  filePath         String   @map("file_path") @db.VarChar(500)
   originalFilename String   @map("original_filename") @db.VarChar(255)
-  mimeType         String   @map("mime_type")         @db.VarChar(30)
+  mimeType         String   @map("mime_type") @db.VarChar(30)
   fileSizeBytes    Int      @map("file_size_bytes")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -155,7 +180,7 @@ model AdminProfile {
 model EventCategory {
   categoryId   BigInt   @id @default(autoincrement()) @map("category_id")
   categoryCode String   @unique @map("category_code") @db.VarChar(30) // festival | expo | symposium | conference
-  displayName  String   @map("display_name")   @db.VarChar(50)
+  displayName  String   @map("display_name") @db.VarChar(50)
   sortOrder    Int      @default(0) @map("sort_order") @db.SmallInt
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -169,59 +194,59 @@ model EventCategory {
 // 5. EVENTS  (ADR 0001 #1/#4: approval_status rename + expected_companion rename)
 // =============================================================
 model Event {
-  eventId                     BigInt    @id @default(autoincrement()) @map("event_id")
-  uploaderId                  BigInt?   @map("uploader_id")
-  categoryId                  BigInt    @map("category_id")
-  regionId                    BigInt    @map("region_id")
-  sourceType                  String    @map("source_type")          @db.VarChar(20)  // crawled | uploaded
-  crawlOrigin                 String?   @map("crawl_origin")         @db.VarChar(50)
-  externalSourceId            String?   @map("external_source_id")   @db.VarChar(100)
-  title                       String    @db.VarChar(200)
-  description                 String?   @db.Text
+  eventId                    BigInt                                @id @default(autoincrement()) @map("event_id")
+  uploaderId                 BigInt?                               @map("uploader_id")
+  categoryId                 BigInt                                @map("category_id")
+  regionId                   BigInt                                @map("region_id")
+  sourceType                 String                                @map("source_type") @db.VarChar(20) // crawled | uploaded
+  crawlOrigin                String?                               @map("crawl_origin") @db.VarChar(50)
+  externalSourceId           String?                               @map("external_source_id") @db.VarChar(100)
+  title                      String                                @db.VarChar(200)
+  description                String?                               @db.Text
   /// LLM 2~3문장 요약 (gpt-4o-mini 생성). description + title + category + vibes 기반.
   /// ingest 시점 또는 backfill 스크립트로 채움. 실시간 조회 시 캐시 역할.
-  aiSummary                   String?   @map("ai_summary") @db.Text
-  aiSummaryAt                 DateTime? @map("ai_summary_at") @db.Timestamptz
+  aiSummary                  String?                               @map("ai_summary") @db.Text
+  aiSummaryAt                DateTime?                             @map("ai_summary_at") @db.Timestamptz
   /// ai_summary 생성 시점의 description 원문 MD5. description 변경 시 트리거가 자동 NULL 화
   /// (fn_invalidate_ai_summary_on_description_change). 감사/eval 목적.
-  descriptionHash             String?   @map("description_hash") @db.Char(32)
-  addressDetail               String?   @map("address_detail")       @db.VarChar(255)
+  descriptionHash            String?                               @map("description_hash") @db.Char(32)
+  addressDetail              String?                               @map("address_detail") @db.VarChar(255)
   /// v4.3 — PostGIS geometry(Point, 4326) WGS84. v4.10 (stage 4b) — lat/lng 컬럼 DROP 후
   /// 단일 source of truth. Prisma client 생성에서 제외 (raw query 로만 접근).
   /// 응답의 lat/lng 는 ST_X/ST_Y 로 derive — Web 측 변경 0.
-  locationGeom                Unsupported("geometry(Point, 4326)")? @map("location_geom")
-  startDate                   DateTime  @map("start_date")           @db.Date
-  endDate                     DateTime  @map("end_date")             @db.Date
-  operatingHours              String?   @map("operating_hours")      @db.VarChar(100)
-  targetAudience              String?   @map("target_audience")      @db.VarChar(100)
-  admissionFee                String?   @map("admission_fee")        @db.VarChar(100)
-  expectedCompanionPrimary    String?   @map("expected_companion_primary")   @db.VarChar(20)
-  expectedCompanionSecondary  String?   @map("expected_companion_secondary") @db.VarChar(20)
-  posterImageUrl              String?   @map("poster_image_url")     @db.VarChar(500)
-  approvalStatus              String    @default("pending") @map("approval_status") @db.VarChar(20)
+  locationGeom               Unsupported("geometry(Point, 4326)")? @map("location_geom")
+  startDate                  DateTime                              @map("start_date") @db.Date
+  endDate                    DateTime                              @map("end_date") @db.Date
+  operatingHours             String?                               @map("operating_hours") @db.VarChar(100)
+  targetAudience             String?                               @map("target_audience") @db.VarChar(100)
+  admissionFee               String?                               @map("admission_fee") @db.VarChar(100)
+  expectedCompanionPrimary   String?                               @map("expected_companion_primary") @db.VarChar(20)
+  expectedCompanionSecondary String?                               @map("expected_companion_secondary") @db.VarChar(20)
+  posterImageUrl             String?                               @map("poster_image_url") @db.VarChar(500)
+  approvalStatus             String                                @default("pending") @map("approval_status") @db.VarChar(20)
   // pending | approved | revision_requested | rejected  (ADR 0001 #1)
-  phase                       String    @default("upcoming") @map("phase") @db.VarChar(20)
+  phase                      String                                @default("upcoming") @map("phase") @db.VarChar(20)
   // upcoming | ongoing | ended
-  bookmarkCount               Int       @default(0) @map("bookmark_count")
-  avgRating                   Decimal   @default(0) @map("avg_rating") @db.Decimal(3, 2)
-  reviewCount                 Int       @default(0) @map("review_count")
-  isDeleted                   Boolean   @default(false) @map("is_deleted")
-  approvedAt                  DateTime? @map("approved_at")         @db.Timestamptz
-  createdAt                   DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt                   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt                   DateTime? @map("deleted_at")          @db.Timestamptz
+  bookmarkCount              Int                                   @default(0) @map("bookmark_count")
+  avgRating                  Decimal                               @default(0) @map("avg_rating") @db.Decimal(3, 2)
+  reviewCount                Int                                   @default(0) @map("review_count")
+  isDeleted                  Boolean                               @default(false) @map("is_deleted")
+  approvedAt                 DateTime?                             @map("approved_at") @db.Timestamptz
+  createdAt                  DateTime                              @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt                  DateTime                              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt                  DateTime?                             @map("deleted_at") @db.Timestamptz
 
-  uploader           UploaderProfile?       @relation(fields: [uploaderId], references: [uploaderId])
-  category           EventCategory          @relation(fields: [categoryId], references: [categoryId])
-  region             Region                 @relation(fields: [regionId], references: [regionId])
-  vibeAssignments    EventVibeAssignment[]
-  approvalDocuments  ApprovalDocument[]
-  approvalLogs       ApprovalLog[]
-  bookmarks          Bookmark[]
-  reviews            Review[]
-  notifications      Notification[]
-  articleMappings    EventArticleMapping[]
-  photoAlbums        PhotoAlbum[]
+  uploader          UploaderProfile?      @relation(fields: [uploaderId], references: [uploaderId])
+  category          EventCategory         @relation(fields: [categoryId], references: [categoryId])
+  region            Region                @relation(fields: [regionId], references: [regionId])
+  vibeAssignments   EventVibeAssignment[]
+  approvalDocuments ApprovalDocument[]
+  approvalLogs      ApprovalLog[]
+  bookmarks         Bookmark[]
+  reviews           Review[]
+  notifications     Notification[]
+  articleMappings   EventArticleMapping[]
+  photoAlbums       PhotoAlbum[]
 
   @@unique([crawlOrigin, externalSourceId], map: "uq_events_external")
   @@index([regionId, categoryId, startDate, phase], map: "idx_events_filter")
@@ -236,11 +261,11 @@ model Event {
 // 6. EVENT_VIBES  (ADR 0001 #5: rename from event_tendency_labels)
 // =============================================================
 model EventVibe {
-  vibeId     BigInt   @id @default(autoincrement()) @map("vibe_id")
-  vibeName   String   @unique @map("vibe_name")   @db.VarChar(50)
-  vibeGroup  String   @map("vibe_group")  @db.VarChar(30) // mood | activity | theme
-  isActive   Boolean  @default(true) @map("is_active")
-  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+  vibeId    BigInt   @id @default(autoincrement()) @map("vibe_id")
+  vibeName  String   @unique @map("vibe_name") @db.VarChar(50)
+  vibeGroup String   @map("vibe_group") @db.VarChar(30) // mood | activity | theme
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   assignments EventVibeAssignment[]
 
@@ -257,9 +282,9 @@ model EventVibeAssignment {
   assignedBy   BigInt   @map("assigned_by") // 관리자 user_id
   createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz
 
-  event      Event     @relation(fields: [eventId], references: [eventId])
-  vibe       EventVibe @relation(fields: [vibeId], references: [vibeId])
-  assignedByUser User  @relation(fields: [assignedBy], references: [userId])
+  event          Event     @relation(fields: [eventId], references: [eventId])
+  vibe           EventVibe @relation(fields: [vibeId], references: [vibeId])
+  assignedByUser User      @relation(fields: [assignedBy], references: [userId])
 
   @@unique([eventId, vibeId], map: "uq_event_vibe")
   @@index([eventId], map: "idx_vibe_assign_event")
@@ -273,9 +298,9 @@ model EventVibeAssignment {
 model ApprovalDocument {
   documentId       BigInt   @id @default(autoincrement()) @map("document_id")
   eventId          BigInt   @map("event_id")
-  filePath         String   @map("file_path")         @db.VarChar(500)
+  filePath         String   @map("file_path") @db.VarChar(500)
   originalFilename String   @map("original_filename") @db.VarChar(255)
-  mimeType         String   @map("mime_type")         @db.VarChar(30) // image/jpeg | image/png
+  mimeType         String   @map("mime_type") @db.VarChar(30) // image/jpeg | image/png
   fileSizeBytes    Int      @map("file_size_bytes")
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
 
@@ -326,16 +351,16 @@ model Bookmark {
 // 11. REVIEWS
 // =============================================================
 model Review {
-  reviewId   BigInt    @id @default(autoincrement()) @map("review_id")
-  userId     BigInt    @map("user_id")
-  eventId    BigInt    @map("event_id")
-  body       String    @db.Text
-  rating     Int       @db.SmallInt
-  sentiment  String?   @db.VarChar(10) // positive | negative | neutral
-  isDeleted  Boolean   @default(false) @map("is_deleted")
-  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz
-  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
-  deletedAt  DateTime? @map("deleted_at") @db.Timestamptz
+  reviewId  BigInt    @id @default(autoincrement()) @map("review_id")
+  userId    BigInt    @map("user_id")
+  eventId   BigInt    @map("event_id")
+  body      String    @db.Text
+  rating    Int       @db.SmallInt
+  sentiment String?   @db.VarChar(10) // positive | negative | neutral
+  isDeleted Boolean   @default(false) @map("is_deleted")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz
 
   user   User          @relation(fields: [userId], references: [userId])
   event  Event         @relation(fields: [eventId], references: [eventId])
@@ -354,9 +379,9 @@ model Review {
 model ReviewPhoto {
   reviewPhotoId    BigInt   @id @default(autoincrement()) @map("review_photo_id")
   reviewId         BigInt   @map("review_id")
-  filePath         String   @map("file_path")         @db.VarChar(500)
+  filePath         String   @map("file_path") @db.VarChar(500)
   originalFilename String   @map("original_filename") @db.VarChar(255)
-  mimeType         String   @map("mime_type")         @db.VarChar(30)
+  mimeType         String   @map("mime_type") @db.VarChar(30)
   fileSizeBytes    Int      @map("file_size_bytes")
   sortOrder        Int      @default(0) @map("sort_order") @db.SmallInt
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz
@@ -371,17 +396,22 @@ model ReviewPhoto {
 // 12. NOTIFICATIONS
 // =============================================================
 model Notification {
-  notificationId BigInt    @id @default(autoincrement()) @map("notification_id")
-  userId         BigInt    @map("user_id")
-  eventId        BigInt?   @map("event_id")
-  title          String    @db.VarChar(100)
-  message        String    @db.Text
-  scheduledAt    DateTime  @map("scheduled_at") @db.Timestamptz
-  isSent         Boolean   @default(false) @map("is_sent")
-  sentAt         DateTime? @map("sent_at") @db.Timestamptz
+  notificationId    BigInt    @id @default(autoincrement()) @map("notification_id")
+  userId            BigInt    @map("user_id")
+  eventId           BigInt?   @map("event_id")
+  title             String    @db.VarChar(100)
+  message           String    @db.Text
+  scheduledAt       DateTime  @map("scheduled_at") @db.Timestamptz
+  isSent            Boolean   @default(false) @map("is_sent")
+  sentAt            DateTime? @map("sent_at") @db.Timestamptz
   /// 사용자가 알림 읽은 시각. NULL 이면 미읽음 (A_500 알림 센터 unread 뱃지).
-  readAt         DateTime? @map("read_at") @db.Timestamptz
-  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  readAt            DateTime? @map("read_at") @db.Timestamptz
+  notificationType  String?   @map("notification_type") @db.VarChar(30)
+  // 'match_request'|'group_invite'|'appointment'|'kick_vote'|'mate_eval'|'chat_message'
+  relatedEntityId   BigInt?   @map("related_entity_id")
+  relatedEntityType String?   @map("related_entity_type") @db.VarChar(30)
+  // 'match_request'|'chat_room'|'appointment'|'kick_vote' — 알림 클릭 라우팅 (GG-NOTI-007)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz
 
   user  User   @relation(fields: [userId], references: [userId])
   event Event? @relation(fields: [eventId], references: [eventId])
@@ -470,7 +500,7 @@ model ChatMessage {
 model NewsArticle {
   articleId       BigInt    @id @default(autoincrement()) @map("article_id")
   sourceName      String    @default("donga") @map("source_name") @db.VarChar(30)
-  authorName      String?   @map("author_name")      @db.VarChar(50)
+  authorName      String?   @map("author_name") @db.VarChar(50)
   articleCategory String?   @map("article_category") @db.VarChar(50)
   title           String    @db.VarChar(300)
   originalUrl     String    @unique @map("original_url") @db.VarChar(500)
@@ -533,7 +563,7 @@ model PhotoAlbum {
 model Photo {
   photoId          BigInt    @id @default(autoincrement()) @map("photo_id")
   albumId          BigInt    @map("album_id")
-  filePath         String    @map("file_path")         @db.VarChar(500)
+  filePath         String    @map("file_path") @db.VarChar(500)
   originalFilename String    @map("original_filename") @db.VarChar(255)
   aiTags           Json      @default("{}") @map("ai_tags") @db.JsonB
   takenAt          DateTime? @map("taken_at") @db.Timestamptz
@@ -553,13 +583,13 @@ model AuthSession {
   // PK 로 그대로 사용 — lookup key 도 이것. cookie 에는 이 값을 담는다.
   sessionId  String   @id @map("session_id") @db.VarChar(128)
   userId     BigInt   @map("user_id")
-  expiresAt  DateTime @map("expires_at")  @db.Timestamptz
-  createdAt  DateTime @default(now()) @map("created_at")   @db.Timestamptz
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
   lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz
 
   user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
 
-  @@index([userId],    map: "idx_auth_sessions_user")
+  @@index([userId], map: "idx_auth_sessions_user")
   @@index([expiresAt], map: "idx_auth_sessions_expires")
   @@map("auth_sessions")
 }
@@ -572,16 +602,16 @@ model AuthSession {
 model AdminAuditLog {
   auditId   BigInt   @id @default(autoincrement()) @map("audit_id")
   adminId   BigInt   @map("admin_id") // user_id (admin 자격은 admin_profiles 별도 검증)
-  action    String   @db.VarChar(50)  // 'revoke_sessions' (현재). enum CHECK 없음 — 확장 자유.
+  action    String   @db.VarChar(50) // 'revoke_sessions' (현재). enum CHECK 없음 — 확장 자유.
   targetId  BigInt?  @map("target_id") // action 마다 의미 다름. revoke_sessions → user_id.
-  payload   Json     @default("{}")    // { count, reason, ... }
+  payload   Json     @default("{}") // { count, reason, ... }
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz
 
   admin User @relation(fields: [adminId], references: [userId])
 
-  @@index([action, createdAt(sort: Desc)],  map: "idx_admin_audit_action_created")
+  @@index([action, createdAt(sort: Desc)], map: "idx_admin_audit_action_created")
   @@index([adminId, createdAt(sort: Desc)], map: "idx_admin_audit_admin_created")
-  @@index([targetId],                        map: "idx_admin_audit_target")
+  @@index([targetId], map: "idx_admin_audit_target")
   @@map("admin_audit_logs")
 }
 
@@ -592,7 +622,7 @@ model UserTasteProfile {
   profileId      BigInt   @id @default(autoincrement()) @map("profile_id")
   userId         BigInt   @map("user_id")
   tasteDimension String   @map("taste_dimension") @db.VarChar(30)
-  tasteValue     String   @map("taste_value")     @db.VarChar(30)
+  tasteValue     String   @map("taste_value") @db.VarChar(30)
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -601,4 +631,423 @@ model UserTasteProfile {
   @@unique([userId, tasteDimension], map: "uq_user_taste")
   @@index([userId], map: "idx_taste_user")
   @@map("user_taste_profiles")
+}
+
+// =============================================================
+// POSTS  (Phase 2 / ADR 0007 결정 12 — A_802 게시판)
+// =============================================================
+model Post {
+  postId       BigInt    @id @default(autoincrement()) @map("post_id")
+  userId       BigInt    @map("user_id")
+  // festival_story | mate_finder | free  (고정 3종, 마스터 테이블 없음. CHECK 는 마이그레이션 SQL 에)
+  category     String    @map("category") @db.VarChar(20)
+  title        String    @db.VarChar(200)
+  body         String    @db.Text
+  likeCount    Int       @default(0) @map("like_count")
+  commentCount Int       @default(0) @map("comment_count")
+  // 작성 후 7일 (GG-POST-010). 조회 시 expiresAt > now() 필터 — 비노출이지 삭제 아님(GG-POST-012).
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz
+  isDeleted    Boolean   @default(false) @map("is_deleted")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt    DateTime? @map("deleted_at") @db.Timestamptz
+
+  user     User       @relation(fields: [userId], references: [userId])
+  comments Comment[]
+  likes    PostLike[]
+
+  @@index([category, expiresAt, createdAt(sort: Desc)], map: "idx_posts_category_active")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_posts_user")
+  @@map("posts")
+}
+
+// =============================================================
+// COMMENTS  (자기참조 — 대댓글 1단계만, 대댓글에 답글 불가 GG-POST-003)
+// =============================================================
+model Comment {
+  commentId       BigInt    @id @default(autoincrement()) @map("comment_id")
+  postId          BigInt    @map("post_id")
+  userId          BigInt    @map("user_id")
+  // NULL = 최상위 댓글, 값 있으면 대댓글. depth 1 강제는 라우트에서 검증(GG-POST-003).
+  parentCommentId BigInt?   @map("parent_comment_id")
+  body            String    @db.Text
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  post    Post      @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [userId])
+  parent  Comment?  @relation("CommentReplies", fields: [parentCommentId], references: [commentId], onDelete: Cascade)
+  replies Comment[] @relation("CommentReplies")
+
+  @@index([postId, createdAt], map: "idx_comments_post")
+  @@index([parentCommentId], map: "idx_comments_parent")
+  @@index([userId], map: "idx_comments_user")
+  @@map("comments")
+}
+
+// =============================================================
+// POST_LIKES  (좋아요/하트 토글)
+// =============================================================
+model PostLike {
+  postLikeId BigInt   @id @default(autoincrement()) @map("post_like_id")
+  postId     BigInt   @map("post_id")
+  userId     BigInt   @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  post Post @relation(fields: [postId], references: [postId], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [userId])
+
+  @@unique([postId, userId], map: "uq_post_like")
+  @@index([postId], map: "idx_post_likes_post")
+  @@map("post_likes")
+}
+
+// =============================================================
+// MATE PROFILE  (Phase 2 / ADR 0007 — A_801 메이트 프로필, PII)
+// =============================================================
+model MateProfile {
+  mateProfileId   BigInt    @id @default(autoincrement()) @map("mate_profile_id")
+  userId          BigInt    @unique @map("user_id")
+  gender          String    @db.Char(1) // M | F
+  ageRangeLower   Int       @map("age_range_lower") // 10/15/.../50 (5세 단위 하한)
+  regionId        BigInt?   @map("region_id")
+  hasCar          Boolean   @map("has_car")
+  nationality     String    @db.VarChar(20)
+  koreanOk        Boolean   @map("korean_ok")
+  // 선호 조건 (NULL = 상관없음)
+  prefGender      String?   @map("pref_gender") @db.Char(1)
+  prefAgeLower    Int?      @map("pref_age_lower")
+  prefRegionId    BigInt?   @map("pref_region_id")
+  prefHasCar      Boolean?  @map("pref_has_car")
+  prefNationality String?   @map("pref_nationality") @db.VarChar(20)
+  prefKoreanOk    Boolean?  @map("pref_korean_ok")
+  autoRecommend   Boolean   @default(false) @map("auto_recommend")
+  groupApply      Boolean   @default(false) @map("group_apply")
+  consentedAt     DateTime? @map("consented_at") @db.Timestamptz // null=미동의→매칭불가
+  isDeleted       Boolean   @default(false) @map("is_deleted")
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  deletedAt       DateTime? @map("deleted_at") @db.Timestamptz
+
+  user       User    @relation(fields: [userId], references: [userId])
+  region     Region? @relation("MateRegion", fields: [regionId], references: [regionId])
+  prefRegion Region? @relation("MatePrefRegion", fields: [prefRegionId], references: [regionId])
+
+  @@index([consentedAt, regionId], map: "idx_mate_profiles_pool")
+  @@map("mate_profiles")
+}
+
+// =============================================================
+// MATE INDEX  (메이트 지수 — 수정불가, 갱신 슬라이스5)
+// =============================================================
+model MateIndex {
+  mateIndexId BigInt   @id @default(autoincrement()) @map("mate_index_id")
+  userId      BigInt   @unique @map("user_id")
+  indexValue  Int      @default(50) @map("index_value") // 0~100
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("mate_indexes")
+}
+
+// ============ MATCH_REQUEST (ADR 0007 결정6 — A_803/A_804) ============
+// 1:1 신청 24h, 그룹 초대 6h 만료. ChatRoom 생성은 수락 시점.
+// WARNING: ChatSession(LLM 검색)과 완전 별개 — JOIN 금지.
+model MatchRequest {
+  matchRequestId BigInt   @id @default(autoincrement()) @map("match_request_id")
+  requesterId    BigInt   @map("requester_id")
+  receiverId     BigInt   @map("receiver_id")
+  requestType    String   @map("request_type") @db.VarChar(10) // '1:1' | 'group'
+  status         String   @default("pending") @db.VarChar(20)
+  // pending | accepted | rejected | expired | cancelled
+  chatRoomId     BigInt?  @map("chat_room_id") // nullable — 수락 후 생성된 채팅방
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz // 1:1=+24h, group=+6h
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  requester User      @relation("Requester", fields: [requesterId], references: [userId])
+  receiver  User      @relation("Receiver", fields: [receiverId], references: [userId])
+  chatRoom  ChatRoom? @relation(fields: [chatRoomId], references: [chatRoomId])
+
+  @@index([receiverId, status], map: "idx_match_req_receiver_status")
+  @@index([expiresAt, status], map: "idx_match_req_expires")
+  @@map("match_requests")
+}
+
+// ============ CHAT_ROOM (ADR 0007 결정6 — A_805) ============
+// 1:1/그룹(최대4인) 실시간 채팅방. Postgres 영속, Socket.IO 실시간.
+// WARNING: ChatSession(LLM 이벤트 검색)과 완전 별개 — JOIN 금지.
+model ChatRoom {
+  chatRoomId  BigInt    @id @default(autoincrement()) @map("chat_room_id")
+  roomType    String    @map("room_type") @db.VarChar(10) // '1:1' | 'group'
+  status      String    @default("active") @db.VarChar(20) // 'active' | 'ended'
+  maxMembers  Int       @default(2) @map("max_members") // 1:1=2, group=4
+  eventId     BigInt?   @map("event_id") // 축제 선택 (GG-ROOM-004)
+  ownerUserId BigInt?   @map("owner_user_id") // 그룹 방장만 (1:1=NULL, GG-MATE-014)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+  endedAt     DateTime? @map("ended_at") @db.Timestamptz
+
+  matchRequests MatchRequest[]
+  messages      ChatRoomMessage[]
+  memberships   GroupMembership[]
+  appointments  Appointment[]
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_chat_rooms_active")
+  @@map("chat_rooms")
+}
+
+// ============ CHAT_ROOM_MESSAGE (ADR 0007 결정6) ============
+// 텍스트(≤1000자) + 이미지(S3 URL) + 스티커 + 시스템.
+// WARNING: ChatMessage(LLM 검색)과 완전 별개.
+model ChatRoomMessage {
+  messageId     BigInt   @id @default(autoincrement()) @map("message_id")
+  chatRoomId    BigInt   @map("chat_room_id")
+  senderUserId  BigInt?  @map("sender_user_id") // null = 시스템 메시지
+  messageType   String   @map("message_type") @db.VarChar(10)
+  // 'text' | 'image' | 'sticker' | 'system'
+  body          String?  @db.VarChar(1000)
+  attachmentUrl String?  @map("attachment_url") @db.VarChar(500)
+  stickerId     String?  @map("sticker_id") @db.VarChar(50)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+
+  @@index([chatRoomId, createdAt], map: "idx_chat_room_msg_room")
+  @@map("chat_room_messages")
+}
+
+// ============ GROUP_MEMBERSHIP (ADR 0007 결정11) ============
+// 그룹/1:1 채팅방 멤버십. 1:1=role:'member' 양쪽. 그룹=방장:'owner'/일반:'member'.
+// instantKickUsed: 방장(role='owner') 행에만 의미있음 — 방 전체 1회 소진 카운터.
+model GroupMembership {
+  membershipId    BigInt    @id @default(autoincrement()) @map("membership_id")
+  chatRoomId      BigInt    @map("chat_room_id")
+  userId          BigInt    @map("user_id")
+  role            String    @default("member") @db.VarChar(10) // 'owner' | 'member'
+  memberStatus    String    @default("active") @map("member_status") @db.VarChar(20)
+  // 'active' | 'left' | 'kicked' | 'blocked'
+  instantKickUsed Boolean   @default(false) @map("instant_kick_used") // 방장 행에서만 유효
+  lastSeenAt      DateTime? @map("last_seen_at") @db.Timestamptz // 48h 미접속 체크
+  joinedAt        DateTime  @default(now()) @map("joined_at") @db.Timestamptz
+  leftAt          DateTime? @map("left_at") @db.Timestamptz
+
+  chatRoom ChatRoom @relation(fields: [chatRoomId], references: [chatRoomId])
+  user     User     @relation(fields: [userId], references: [userId])
+
+  @@unique([chatRoomId, userId], map: "uq_group_membership_room_user")
+  @@index([chatRoomId, memberStatus], map: "idx_group_membership_room_active")
+  @@index([lastSeenAt], map: "idx_group_membership_last_seen")
+  @@map("group_memberships")
+}
+
+// ============ APPOINTMENT (ADR 0007 결정14 — GG-ROOM-013~020) ============
+// 약속 제안/동의/역제안/캘린더. 시스템메시지만으론 상태 영속 불가.
+// 강퇴투표와 달리 AppointmentVote가 별도로 동의 현황 추적.
+model Appointment {
+  appointmentId  BigInt    @id @default(autoincrement()) @map("appointment_id")
+  chatRoomId     BigInt    @map("chat_room_id")
+  proposerUserId BigInt    @map("proposer_user_id")
+  eventName      String?   @map("event_name") @db.VarChar(200)
+  eventId        BigInt?   @map("event_id") // 연결된 이벤트 (선택)
+  appointedAt    DateTime? @map("appointed_at") @db.Timestamptz // 제안 일시
+  status         String    @default("proposed") @db.VarChar(20)
+  // 'proposed' | 'confirmed' | 'rejected' | 'cancelled' | 'counter_proposed'
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz // +36h
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  chatRoom        ChatRoom          @relation(fields: [chatRoomId], references: [chatRoomId])
+  votes           AppointmentVote[]
+  mateEvaluations MateEvaluation[] // [리뷰 medium] FK 관계 — 삭제된 약속 ID로 평가 행 잠김 방지
+  festivalSurveys FestivalSurvey[] // drift 제거 — DB FK(20260530140000) 와 schema 정합
+  festivalReviews FestivalReview[] // drift 제거 — DB FK(20260530140000) 와 schema 정합
+
+  @@index([chatRoomId, status], map: "idx_appointment_room_status")
+  @@index([expiresAt, status], map: "idx_appointment_expires")
+  @@map("appointments")
+}
+
+// ============ APPOINTMENT_VOTE (GG-ROOM-016~018 동의/거절/역제안) ============
+model AppointmentVote {
+  voteId        BigInt    @id @default(autoincrement()) @map("vote_id")
+  appointmentId BigInt    @map("appointment_id")
+  userId        BigInt    @map("user_id")
+  vote          String    @db.VarChar(20) // 'agree' | 'reject' | 'counter' | 'pending'
+  counterAt     DateTime? @map("counter_at") @db.Timestamptz // 역제안 일시
+  counterTime   DateTime? @map("counter_time") @db.Timestamptz // 역제안 제안 시각
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  appointment Appointment @relation(fields: [appointmentId], references: [appointmentId])
+
+  @@unique([appointmentId, userId], map: "uq_appointment_vote_user")
+  @@map("appointment_votes")
+}
+
+// ============ BLOCK (ADR 0007 결정14 — GG-REPORT-009) ============
+// 차단 레코드. 차단된 사용자는 추천/신청/채팅에서 제외.
+model Block {
+  blockId       BigInt   @id @default(autoincrement()) @map("block_id")
+  blockerId     BigInt   @map("blocker_id")
+  blockedUserId BigInt   @map("blocked_user_id")
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  blocker     User @relation("BlockSender", fields: [blockerId], references: [userId])
+  blockedUser User @relation("BlockReceiver", fields: [blockedUserId], references: [userId])
+
+  @@unique([blockerId, blockedUserId], map: "uq_block_pair")
+  @@index([blockerId], map: "idx_block_blocker")
+  @@index([blockedUserId], map: "idx_block_blocked_user")
+  @@map("blocks")
+}
+
+// ============================================================
+// MATE_EVALUATION (A_900 — GG-REVIEW-001,002,004~010, 와이어 9-15)
+// GG-REVIEW-003은 요구사항 원문(_p2_req_text.txt)에서 결번(002→004 점프).
+// reportedFor: null=신고없음 | 'inappropriate'|'harassing'|'no_show'|'etc'
+// 1 evaluator → 1 evaluation per (appointment, evaluated) — uq_mate_eval_pair
+// [오버라이드] 그룹 포함 전체 지원 (roomType 게이트 삭제됨).
+// [이슈13] 신고 별도 Report 모델 없음 — Slice 8 범위. 관리자는 reported_for IS NOT NULL 직접 조회.
+// [리뷰 medium] appointmentId → Appointment FK 추가 (참조 무결성 보장).
+// [리뷰 low]    comment: DB-level byte 제약은 CHECK(octet_length) — migration.sql 참조.
+// ============================================================
+model MateEvaluation {
+  evalId          BigInt   @id @default(autoincrement()) @map("eval_id")
+  appointmentId   BigInt   @map("appointment_id")
+  evaluatorUserId BigInt   @map("evaluator_user_id")
+  evaluatedUserId BigInt   @map("evaluated_user_id")
+  ratingStars     Int      @map("rating_stars") @db.SmallInt // 1~5
+  q1              Int      @db.SmallInt // 시간약속 1~5
+  q2              Int      @db.SmallInt // 의사소통 1~5
+  q3              Int      @db.SmallInt // 분위기/유쾌함 1~5
+  q4              Int      @db.SmallInt // 재방문의향 1~5
+  comment         String?  @db.VarChar(30) // ≤30 UTF-8 byte (GG-REVIEW-005); DB-level: CHECK(octet_length(comment)<=30)
+  reportedFor     String?  @map("reported_for") @db.VarChar(20)
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  appointment   Appointment @relation(fields: [appointmentId], references: [appointmentId])
+  evaluator     User        @relation("EvalGiver", fields: [evaluatorUserId], references: [userId])
+  evaluatedUser User        @relation("EvalReceiver", fields: [evaluatedUserId], references: [userId])
+
+  @@unique([appointmentId, evaluatorUserId, evaluatedUserId], map: "uq_mate_eval_pair")
+  @@index([evaluatedUserId, createdAt(sort: Desc)], map: "idx_mate_eval_evaluated")
+  @@map("mate_evaluations")
+}
+
+// ============================================================
+// FESTIVAL_SURVEY (A_901 — GG-FEST-REVIEW-001~007, 비공개)
+// 5범주 Likert 1~5: atmosphere, program, food, safety, transport
+// [이슈3] UNIQUE = (appointmentId, userId) — appointmentId 단독 UNIQUE 아님.
+//         그룹(최대 4인) 확장 시 각 멤버가 독립 제출 가능.
+// ============================================================
+model FestivalSurvey {
+  surveyId      BigInt   @id @default(autoincrement()) @map("survey_id")
+  appointmentId BigInt   @map("appointment_id")
+  userId        BigInt   @map("user_id")
+  atmosphere    Int      @db.SmallInt
+  program       Int      @db.SmallInt
+  food          Int      @db.SmallInt
+  safety        Int      @db.SmallInt
+  transport     Int      @db.SmallInt
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  // appointment FK 는 migration(20260530140000)에서 이미 생성됨 — schema 에도 관계를 명시해
+  // drift 제거 (constraint 명 festival_surveys_appointment_id_fkey 일치).
+  appointment Appointment @relation(fields: [appointmentId], references: [appointmentId])
+  user        User        @relation(fields: [userId], references: [userId])
+
+  @@unique([appointmentId, userId], map: "uq_festival_survey_pair")
+  @@map("festival_surveys")
+}
+
+// ============================================================
+// FESTIVAL_REVIEW (A_901 — GG-FEST-REVIEW-008, 공개)
+// [이슈3] UNIQUE = (appointmentId, userId).
+// [이슈4] eventId 추가 — 이벤트 상세 연동 전제 (GG-FEST-REVIEW-008 공개 surfacing).
+//         eventId=null인 약속은 평가 제출 차단(400 event_required).
+//         후기 공개 surfacing(events/:id) 자체는 후속 태스크.
+// ============================================================
+model FestivalReview {
+  reviewId      BigInt   @id @default(autoincrement()) @map("review_id")
+  appointmentId BigInt   @map("appointment_id")
+  userId        BigInt   @map("user_id")
+  eventId       BigInt?  @map("event_id") // Appointment.eventId에서 복사 (null 불가 — 라우트에서 검증)
+  ratingStars   Int      @map("rating_stars") @db.SmallInt // 1~5
+  body          String   @db.VarChar(5000)
+  photoUrls     String[] @map("photo_urls") // TEXT[], max 10 URLs (S3 publicUrl)
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt     DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  // appointment FK 는 migration(20260530140000)에서 이미 생성됨 — schema 에도 관계를 명시해
+  // drift 제거 (constraint 명 festival_reviews_appointment_id_fkey 일치).
+  appointment Appointment @relation(fields: [appointmentId], references: [appointmentId])
+  user        User        @relation(fields: [userId], references: [userId])
+
+  @@unique([appointmentId, userId], map: "uq_festival_review_pair")
+  @@index([eventId, createdAt(sort: Desc)], map: "idx_festival_review_event")
+  @@index([userId, createdAt(sort: Desc)], map: "idx_festival_review_user")
+  @@map("festival_reviews")
+}
+
+// ============================================================
+// CREDIT_LEDGER (ADR 0007 결정5 옵션C — GG-MY-008, GG-COMM-017)
+// append-only 거래 로그. 잔액 = SUM(pointsAmount) WHERE userId.
+// action 도메인:
+//   'mate_eval_complete'  — 메이트 평가 작성 +10 (Slice 5 구현)
+//   'review_complete'     — 후기 최초 제출 +10 (Slice 5 구현, evaluation.ts 트랜잭션 내)
+//   'appointment_complete'— 약속 완료 (스케줄러 notifyMateEval에서 적립, Slice 5 구현)
+// 크레딧 적립 +10 상수: ADR 0007 결정5에서 "액수 Open items"로 미정.
+//   이 플랜에서 10으로 가정 고정 — ADR 0007 보강 필요 (에이전트 작업 아님).
+// ============================================================
+model CreditLedger {
+  ledgerId      BigInt   @id @default(autoincrement()) @map("ledger_id")
+  userId        BigInt   @map("user_id")
+  action        String   @db.VarChar(30)
+  pointsAmount  Int      @map("points_amount") // 양수 = 적립
+  appointmentId BigInt?  @map("appointment_id") // 출처 추적
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@index([userId, createdAt(sort: Desc)], map: "idx_credit_ledger_user")
+  @@map("credit_ledgers")
+}
+
+// =============================================================
+// REPORT (ADR 0007 결정14 — GG-REPORT-001~009)
+// targetType: 'post'|'comment'|'chat_message'|'mate_eval'
+// reason:     'spam'|'abuse'|'harassment'|'obscene'|'no_show'|'etc'
+// status:     'pending'|'reviewed'|'dismissed'
+// adminAction: null|'warned'|'suspended'|'false_report'
+// =============================================================
+model Report {
+  reportId       BigInt    @id @default(autoincrement()) @map("report_id")
+  reporterId     BigInt    @map("reporter_id")
+  targetUserId   BigInt    @map("target_user_id")
+  targetType     String    @map("target_type") @db.VarChar(20)
+  targetEntityId BigInt    @map("target_entity_id")
+  reason         String    @db.VarChar(50)
+  detail         String?   @db.VarChar(500)
+  status         String    @default("pending") @db.VarChar(20)
+  adminId        BigInt?   @map("admin_id")
+  adminAction    String?   @map("admin_action") @db.VarChar(20)
+  adminNote      String?   @map("admin_note") @db.Text
+  reviewedAt     DateTime? @map("reviewed_at") @db.Timestamptz
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
+
+  reporter   User  @relation("ReportSender", fields: [reporterId], references: [userId])
+  targetUser User  @relation("ReportTarget", fields: [targetUserId], references: [userId])
+  admin      User? @relation("ReportAdmin", fields: [adminId], references: [userId])
+
+  @@index([status, createdAt(sort: Desc)], map: "idx_reports_status_created")
+  @@index([reporterId, createdAt(sort: Desc)], map: "idx_reports_reporter")
+  @@index([targetUserId, createdAt(sort: Desc)], map: "idx_reports_target")
+  @@index([targetType, targetEntityId], map: "idx_reports_entity")
+  @@map("reports")
 }

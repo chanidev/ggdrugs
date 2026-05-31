@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 // 서버 CHECK chk_doc_mime 와 동기 — 마이그레이션 20260421110000 이후 PDF 허용.
 export const APPROVAL_DOC_MIME = [
@@ -45,6 +46,7 @@ export function DocumentsPickerField({
   max: number;
   maxBytes?: number;
 }) {
+  const { t } = useTranslation('uploader');
   const inputRef = useRef<HTMLInputElement>(null);
   const [err, setErr] = useState<string | null>(null);
 
@@ -55,15 +57,15 @@ export function DocumentsPickerField({
     const next: StagedDoc[] = [...files];
     for (const f of picked) {
       if (next.length >= max) {
-        setErr(`최대 ${max}개`);
+        setErr(t('picker.maxFiles', { max }));
         break;
       }
       if (!allowedMime.includes(f.type)) {
-        setErr(`지원 형식: ${allowedMime.join(', ')}`);
+        setErr(t('picker.mimeError', { mime: allowedMime.join(', ') }));
         continue;
       }
       if (f.size > maxBytes) {
-        setErr(`파일당 최대 ${Math.round(maxBytes / 1024 / 1024)}MB`);
+        setErr(t('picker.sizeError', { mb: Math.round(maxBytes / 1024 / 1024) }));
         continue;
       }
       next.push({
@@ -108,19 +110,19 @@ export function DocumentsPickerField({
                 onClick={() => remove(d.id)}
                 className="shrink-0 text-(--color-text-subtle) hover:text-(--color-error)"
               >
-                제거
+                {t('picker.remove')}
               </button>
             </li>
           ))}
         </ul>
       )}
       <div className="mt-1 text-[12px] text-(--color-text-subtle)">
-        현재 {files.length}개 선택됨
-        {min > 0 && files.length < min && ` (최소 ${min}개 필요)`}
-        {` · 최대 ${max}`}
+        {t('picker.selectedCount', { count: files.length })}
+        {min > 0 && files.length < min && ` ${t('picker.minRequired', { min })}`}
+        {` ${t('picker.maxAllowed', { max })}`}
       </div>
       {uploading && (
-        <div className="mt-1 text-[12px] text-(--color-text-muted)">업로드 중…</div>
+        <div className="mt-1 text-[12px] text-(--color-text-muted)">{t('picker.uploading')}</div>
       )}
     </div>
   );

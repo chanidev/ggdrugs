@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   fetchAdminAuditSummary,
   type AdminAuditSummary,
@@ -14,45 +15,46 @@ import {
  * - tabular numbers, Pretendard scale, 60-30-10 색 운용.
  */
 
-const EVENT_ACTION_LABEL: Record<string, string> = {
-  approved: '승인',
-  revision_requested: '보완 요청',
-  rejected: '반려',
-};
-
-const ADMIN_ACTION_LABEL: Record<string, string> = {
-  uploader_decision: '업로더 심사',
-  admin_promote: 'admin 승급',
-  admin_scope_change: 'scope 변경',
-  admin_demote: 'admin 박탈',
-  revoke_sessions: '세션 폐기',
-  user_soft_delete: '계정 비활성화',
-};
-
-const ALL_LABEL: Record<string, string> = {
-  ...EVENT_ACTION_LABEL,
-  ...ADMIN_ACTION_LABEL,
-};
-
 const WINDOWS = [7, 30, 90] as const;
 
-function relativeTime(iso: string): string {
-  const ms = Date.now() - new Date(iso).getTime();
-  if (ms < 60_000) return '방금';
-  const minutes = Math.floor(ms / 60_000);
-  if (minutes < 60) return `${minutes}분 전`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}시간 전`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}일 전`;
-  return iso.slice(0, 10);
-}
-
 export function AuditDashboard() {
+  const { t } = useTranslation('admin');
+
+  function relativeTime(iso: string): string {
+    const ms = Date.now() - new Date(iso).getTime();
+    if (ms < 60_000) return t('audit.time.justNow');
+    const minutes = Math.floor(ms / 60_000);
+    if (minutes < 60) return t('audit.time.minutesAgo', { count: minutes });
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return t('audit.time.hoursAgo', { count: hours });
+    const days = Math.floor(hours / 24);
+    if (days < 7) return t('audit.time.daysAgo', { count: days });
+    return iso.slice(0, 10);
+  }
   const [windowDays, setWindowDays] = useState<number>(7);
   const [data, setData] = useState<AdminAuditSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const EVENT_ACTION_LABEL: Record<string, string> = {
+    approved:           t('audit.eventAction.approved'),
+    revision_requested: t('audit.eventAction.revision_requested'),
+    rejected:           t('audit.eventAction.rejected'),
+  };
+
+  const ADMIN_ACTION_LABEL: Record<string, string> = {
+    uploader_decision:  t('audit.adminAction.uploader_decision'),
+    admin_promote:      t('audit.adminAction.admin_promote'),
+    admin_scope_change: t('audit.adminAction.admin_scope_change'),
+    admin_demote:       t('audit.adminAction.admin_demote'),
+    revoke_sessions:    t('audit.adminAction.revoke_sessions'),
+    user_soft_delete:   t('audit.adminAction.user_soft_delete'),
+  };
+
+  const ALL_LABEL: Record<string, string> = {
+    ...EVENT_ACTION_LABEL,
+    ...ADMIN_ACTION_LABEL,
+  };
 
   useEffect(() => {
     const ctrl = new AbortController();
@@ -71,14 +73,14 @@ export function AuditDashboard() {
   if (loading && !data) {
     return (
       <div className="py-16 text-center text-[13px] text-(--color-text-subtle)">
-        불러오는 중…
+        {t('uploader.loading')}
       </div>
     );
   }
   if (error || !data) {
     return (
       <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-        {error ?? '조회 실패'}
+        {error ?? t('audit.loadError')}
       </div>
     );
   }
@@ -119,19 +121,19 @@ export function AuditDashboard() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-(--color-border) pb-4">
         <div>
           <h2 className="m-0 text-[20px] font-bold tracking-[-0.015em] text-(--color-text)">
-            검토 요약
+            {t('audit.dashboardTitle')}
           </h2>
           <p className="m-0 mt-1 text-[12px] text-(--color-text-subtle)">
-            <span className="tabular">{totalAll.toLocaleString()}</span>건 처리
+            <span className="tabular">{totalAll.toLocaleString()}</span>{t('audit.totalCount', { count: '' }).replace('{{count}}', '').trim()}
             {lastTime && (
               <>
                 <span className="mx-1.5">·</span>
-                <span>마지막 활동 {relativeTime(lastTime)}</span>
+                <span>{t('audit.lastActivity')} {relativeTime(lastTime)}</span>
               </>
             )}
           </p>
         </div>
-        <nav className="flex items-baseline gap-0.5" aria-label="기간 선택">
+        <nav className="flex items-baseline gap-0.5" aria-label={t('audit.periodSelect')}>
           {WINDOWS.map((w) => {
             const active = w === windowDays;
             return (
@@ -145,7 +147,7 @@ export function AuditDashboard() {
                     : 'text-(--color-text-muted) hover:text-(--color-text)'
                 }`}
               >
-                지난 {w}일
+                {t('audit.periodDays', { days: w })}
                 {active && (
                   <span
                     aria-hidden
@@ -160,18 +162,18 @@ export function AuditDashboard() {
 
       {/* Counts — 2 column 비대칭 grid (이벤트 심사 0.9fr / Admin 작업 1.1fr) */}
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:gap-16">
-        <CountGroup title="이벤트 심사" entries={eventEntries} accentKey={accentKey} />
-        <CountGroup title="Admin 작업" entries={adminEntries} accentKey={accentKey} />
+        <CountGroup title={t('audit.eventSource')} entries={eventEntries} accentKey={accentKey} />
+        <CountGroup title={t('audit.adminSource')} entries={adminEntries} accentKey={accentKey} />
       </div>
 
       {/* Recent activity */}
       <section>
         <h3 className="m-0 mb-4 text-[11px] font-semibold tracking-[0.1em] text-(--color-text-subtle) uppercase">
-          최근 활동
+          {t('audit.recentActivity')}
         </h3>
         {data.recentActivity.length === 0 ? (
           <p className="m-0 py-8 text-center text-[13px] text-(--color-text-subtle)">
-            지난 {windowDays}일간 처리 기록이 없어요.
+            {t('audit.noPeriodActivity', { days: windowDays })}
           </p>
         ) : (
           <ol className="m-0 flex list-none flex-col p-0">
@@ -201,7 +203,7 @@ export function AuditDashboard() {
                   </p>
                   {entry.reason && (
                     <p className="m-0 mt-1 max-w-[65ch] text-[12px] leading-[1.55] text-(--color-text-muted)">
-                      “{entry.reason}”
+                      "{entry.reason}"
                     </p>
                   )}
                 </div>

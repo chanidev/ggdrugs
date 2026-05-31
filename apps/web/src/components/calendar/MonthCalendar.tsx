@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * A_500 마이페이지 월간 캘린더.
@@ -25,7 +26,7 @@ export interface CalendarEvent {
   phase: 'upcoming' | 'ongoing' | 'ended';
 }
 
-const WEEKDAY_LABELS = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
 
 function ymd(d: Date): string {
   const y = d.getFullYear();
@@ -67,7 +68,12 @@ export function MonthCalendar({
   onMonthChange: (y: number, m0: number) => void;
   onDayClick: (date: string) => void;
 }) {
+  const { t, i18n } = useTranslation('mypage');
   const today = ymd(new Date());
+  const weekdayLabels = useMemo(
+    () => WEEKDAY_KEYS.map((k) => t(`calendar.weekday.${k}`)),
+    [t],
+  );
 
   // 6주 grid (42 cells) — 항상 고정 크기, 빈 셀은 전/다음달 dim.
   const gridStart = useMemo(() => firstCellOfMonthGrid(year, month0), [year, month0]);
@@ -96,7 +102,9 @@ export function MonthCalendar({
     return m;
   }, [events, cells]);
 
-  const label = `${year}년 ${month0 + 1}월`;
+  const label = new Intl.DateTimeFormat(i18n.language, { year: 'numeric', month: 'long' }).format(
+    new Date(year, month0, 1),
+  );
 
   const prev = () => {
     if (month0 === 0) onMonthChange(year - 1, 11);
@@ -121,14 +129,14 @@ export function MonthCalendar({
             onClick={toToday}
             className="inline-flex h-7 items-center rounded-(--radius-sm) border border-(--color-border) px-2 text-[12px] text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
           >
-            오늘
+            {t('calendar.today')}
           </button>
         </div>
         <div className="flex gap-1">
           <button
             type="button"
             onClick={prev}
-            aria-label="이전 달"
+            aria-label={t('calendar.prevMonth')}
             className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
           >
             ‹
@@ -136,7 +144,7 @@ export function MonthCalendar({
           <button
             type="button"
             onClick={next}
-            aria-label="다음 달"
+            aria-label={t('calendar.nextMonth')}
             className="inline-flex h-8 w-8 items-center justify-center rounded-(--radius-md) text-(--color-text-muted) transition-colors hover:bg-(--color-surface-alt) hover:text-(--color-text)"
           >
             ›
@@ -146,12 +154,12 @@ export function MonthCalendar({
 
       <div
         role="grid"
-        aria-label={`${label} 캘린더`}
+        aria-label={t('calendar.calendarAriaLabel', { label })}
         className="grid grid-cols-7 gap-px bg-(--color-border) overflow-hidden rounded-(--radius-md)"
       >
-        {WEEKDAY_LABELS.map((w, i) => (
+        {weekdayLabels.map((w, i) => (
           <div
-            key={w}
+            key={WEEKDAY_KEYS[i]}
             role="columnheader"
             className={`bg-(--color-surface) py-1.5 text-center text-[11px] font-semibold tracking-[0.05em] ${
               i === 0
@@ -226,13 +234,13 @@ export function MonthCalendar({
       {/* 범례 */}
       <footer className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-(--color-text-subtle)">
         <span className="inline-flex items-center gap-1">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-info)" /> 예정
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-info)" /> {t('calendar.legend.upcoming')}
         </span>
         <span className="inline-flex items-center gap-1">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" /> 진행중
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-accent)" /> {t('calendar.legend.ongoing')}
         </span>
         <span className="inline-flex items-center gap-1">
-          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-text-subtle)" /> 종료
+          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-(--color-text-subtle)" /> {t('calendar.legend.ended')}
         </span>
       </footer>
     </section>

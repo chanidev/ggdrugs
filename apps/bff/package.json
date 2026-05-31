@@ -31,21 +31,31 @@
     "backfill:summary": "dotenv -e ../../.env -- tsx src/jobs/summarize-events.ts",
     "eval:summary": "dotenv -e ../../.env -- tsx src/jobs/eval-summaries.ts",
     "chat:eval": "dotenv -e ../../.env -- tsx src/jobs/chat-eval.ts",
+    "community:eval": "dotenv -e ../../.env -- tsx src/jobs/community-eval.ts",
     "bench:chat-rank": "dotenv -e ../../.env -- tsx src/jobs/chat-rank-bench.ts",
     "audit:news-mappings": "dotenv -e ../../.env -- tsx src/jobs/audit-news-mappings.ts",
     "wiki:lint": "tsx src/jobs/wiki-lint.ts",
     "sweep:sessions": "dotenv -e ../../.env -- tsx src/jobs/session-sweep.ts",
     "aggregate:taste": "dotenv -e ../../.env -- tsx src/jobs/aggregate-taste-profiles.ts",
-    "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts"
+    "seed:admin": "dotenv -e ../../.env -- tsx src/jobs/seed-admin.ts",
+    "mate:eval": "dotenv -e ../../.env -- tsx src/jobs/mate-eval.ts",
+    "chatroom:eval": "dotenv -e ../../.env -- tsx src/jobs/chat-room-eval.ts",
+    "slice5:eval": "dotenv -e ../../.env -- tsx src/jobs/slice5-eval.ts",
+    "notif:eval": "dotenv -e ../../.env -- tsx src/jobs/notif-eval.ts",
+    "report:eval": "dotenv -e ../../.env -- tsx src/jobs/report-eval.ts",
+    "i18n:generate": "dotenv -e ../../.env -- tsx src/jobs/generate-i18n-bundles.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1033.0",
     "@aws-sdk/s3-request-presigner": "^3.1033.0",
     "@ggdrugs/config": "workspace:*",
     "@prisma/client": "^5.22.0",
+    "@socket.io/redis-adapter": "^8.3.0",
     "express": "^5.2.1",
+    "ioredis": "^5.11.0",
     "pino": "^10.3.1",
-    "pino-http": "^11.0.0"
+    "pino-http": "^11.0.0",
+    "socket.io": "^4.8.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

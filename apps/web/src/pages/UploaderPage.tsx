@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
+import { useTranslation } from 'react-i18next';
 import { Header } from '../layout/Header';
 import { PhaseBadge } from '../components/PhaseBadge';
 import { Icon } from '../components/Icon';
@@ -38,13 +39,6 @@ import { uploadUploaderSignupDocuments } from '../lib/uploads';
  */
 
 type View = 'loading' | 'anon' | 'no-profile' | 'pending' | 'needs-revision' | 'rejected' | 'approved';
-
-const STATUS_LABEL: Record<UploaderApprovalStatus, string> = {
-  pending: '승인 대기',
-  approved: '승인됨',
-  revision_requested: '보완 요청됨',
-  rejected: '반려됨',
-};
 
 export function UploaderPage() {
   const { user, loading: authLoading, refresh } = useCurrentUser();
@@ -112,15 +106,16 @@ export function UploaderPage() {
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation('uploader');
   return (
     <div className="flex min-h-screen flex-col bg-(--color-bg) text-(--color-text)">
       <Header />
       <main className="mx-auto w-full max-w-[960px] flex-1 px-4 py-6 md:px-8 md:py-10">
         <header className="mb-6">
           <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            Uploader · A_600 / A_601
+            {t('page.subtitle')}
           </p>
-          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">업로더 콘솔</h1>
+          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">{t('page.title')}</h1>
         </header>
         {children}
       </main>
@@ -129,33 +124,36 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 function LoadingBox() {
+  const { t } = useTranslation('uploader');
   return (
     <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-8 text-center text-[13px] text-(--color-text-muted)">
-      불러오는 중…
+      {t('page.loading')}
     </div>
   );
 }
 
 function ErrorBox({ message }: { message: string }) {
+  const { t } = useTranslation('uploader');
   return (
     <div className="mb-4 rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-      프로파일 조회 실패: {message}
+      {t('page.profileFetchError')} {message}
     </div>
   );
 }
 
 function LoginGate() {
+  const { t } = useTranslation('uploader');
   return (
     <section className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
-      <h2 className="m-0 mb-2 text-[20px] font-bold tracking-[-0.015em]">로그인이 필요해요</h2>
+      <h2 className="m-0 mb-2 text-[20px] font-bold tracking-[-0.015em]">{t('page.loginRequired')}</h2>
       <p className="m-0 mb-6 text-[14px] text-(--color-text-muted)">
-        업로더 역할 신청과 이벤트 등록은 로그인 후에 할 수 있어요.
+        {t('page.loginDescription')}
       </p>
       <a
         href={loginUrl('google', '/uploader')}
         className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-4 text-[14px] font-medium text-white transition-colors hover:bg-(--color-accent-hover)"
       >
-        Google 로그인 <Icon name="arrow" size={14} />
+        {t('page.loginButton')} <Icon name="arrow" size={14} />
       </a>
     </section>
   );
@@ -168,6 +166,7 @@ function LoginGate() {
 type IdentityKind = 'organization' | 'individual';
 
 function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => void }) {
+  const { t } = useTranslation('uploader');
   const [organizationName, setOrg] = useState('');
   const [contactPhone, setPhone] = useState('');
   const [contactEmail, setEmail] = useState('');
@@ -239,9 +238,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
       if (raw.startsWith('REAPPLY_COOLDOWN:')) {
         const [, iso, days] = raw.split(':');
         const dateLabel = iso ? iso.slice(0, 10) : '?';
-        setError(
-          `반려된 신청은 ${days}일 쿨다운 적용 — ${dateLabel} 이후 다시 신청해 주세요.`,
-        );
+        setError(t('form.cooldownMsg', { days, date: dateLabel }));
       } else {
         setError(raw);
       }
@@ -253,63 +250,64 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
   return (
     <section>
       <div className="mb-5">
-        <h2 className="m-0 text-[18px] font-bold tracking-[-0.01em]">업로더 역할 신청</h2>
+        <h2 className="m-0 text-[18px] font-bold tracking-[-0.01em]">{t('page.apply')}</h2>
         <p className="m-0 mt-1 text-[13px] text-(--color-text-muted)">
-          이벤트를 등록하려면 업로더 역할이 필요해요. 신청 후 관리자 승인을 거치면 활성화됩니다.
+          {t('page.applyDescription')}
         </p>
-        <p className="m-0 mt-2 text-[12px] text-(--color-text-subtle)">
-          주민번호 대신 <strong>기관은 사업자등록번호</strong>, <strong>개인은 본인인증</strong>으로 신원을 확인해요 (ADR 0003).
-        </p>
+        <p
+          className="m-0 mt-2 text-[12px] text-(--color-text-subtle)"
+          dangerouslySetInnerHTML={{ __html: t('page.applyIdNote') }}
+        />
       </div>
 
       <form
         onSubmit={submit}
         className="flex flex-col gap-4 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6"
       >
-        <Field label="기관/팀 이름" hint="2자 이상. 예: 서울축제기획, 성수동 로컬맛집협회">
+        <FormField label={t('form.orgName')} hint={t('form.orgNameHint')}>
           <input
             type="text"
             value={organizationName}
             onChange={(e) => setOrg(e.target.value)}
-            placeholder="기관·팀 이름"
+            placeholder={t('form.orgNamePlaceholder')}
             maxLength={100}
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
           />
-        </Field>
-        <Field label="신청자 실명" hint="서류에 적힌 대표자/담당자 실명">
+        </FormField>
+        <FormField label={t('form.realName')} hint={t('form.realNameHint')}>
           <input
             type="text"
             value={realName}
             onChange={(e) => setRealName(e.target.value)}
-            placeholder="홍길동"
+            placeholder={t('form.realNamePlaceholder')}
             maxLength={50}
             autoComplete="name"
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
           />
-        </Field>
-        <Field label="연락처" hint="숫자·+·-·공백·괄호만 허용">
+        </FormField>
+        <FormField label={t('form.phone')} hint={t('form.phoneHint')}>
           <input
             type="tel"
             value={contactPhone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="02-1234-5678"
+            placeholder={t('form.phonePlaceholder')}
             maxLength={20}
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
           />
-        </Field>
-        <Field label="이메일" hint="관리자 심사 결과 통보에 사용">
+        </FormField>
+        <FormField label={t('form.email')} hint={t('form.emailHint')}>
           <input
             type="email"
             value={contactEmail}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="contact@example.com"
+            placeholder={t('form.emailPlaceholder')}
             maxLength={255}
             className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none transition-[border-color,box-shadow] focus:border-(--color-accent) focus:shadow-[0_0_0_4px_var(--color-accent-bg)]"
           />
-        </Field>
+        </FormField>
 
         <fieldset className="flex flex-col gap-2 rounded-(--radius-md) border border-(--color-border) bg-(--color-surface-alt) p-3">
-          <legend className="px-1 text-[13px] font-semibold text-(--color-text)">신원 확인</legend>
+          <legend className="px-1 text-[13px] font-semibold text-(--color-text)">{t('form.identity')}</legend>
           <div className="flex gap-2">
             <label
               className={`inline-flex flex-1 cursor-pointer items-center gap-2 rounded-(--radius-md) border px-3 py-2 text-[13px] ${
@@ -324,7 +322,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                 checked={identityKind === 'organization'}
                 onChange={() => setIdentityKind('organization')}
               />
-              기관 (사업자등록번호)
+              {t('form.identityOrg')}
             </label>
             <label
               className={`inline-flex flex-1 cursor-pointer items-center gap-2 rounded-(--radius-md) border px-3 py-2 text-[13px] ${
@@ -339,29 +337,29 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                 checked={identityKind === 'individual'}
                 onChange={() => setIdentityKind('individual')}
               />
-              개인 (본인인증)
+              {t('form.identityIndividual')}
             </label>
           </div>
           {identityKind === 'organization' ? (
-            <Field label="사업자등록번호" hint="10자리 숫자. 하이픈은 자동 제거">
+            <FormField label={t('form.bizRegNumber')} hint={t('form.bizRegNumberHint')}>
               <input
                 type="text"
                 value={bizRegNumber}
                 onChange={(e) => setBizRegNumber(e.target.value)}
-                placeholder="123-45-67890"
+                placeholder={t('form.bizRegNumberPlaceholder')}
                 maxLength={13}
                 className="h-10 w-full rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[14px] outline-none tabular focus:border-(--color-accent)"
               />
-            </Field>
+            </FormField>
           ) : (
             <div className="flex flex-col gap-2">
-              <span className="text-[13px] font-semibold text-(--color-text)">본인인증</span>
+              <span className="text-[13px] font-semibold text-(--color-text)">{t('form.kycTitle')}</span>
               {ciHash ? (
                 <div className="flex items-center justify-between gap-2 rounded-(--radius-md) border border-(--color-success)/40 bg-(--color-success)/5 px-3 py-2 text-[12px]">
                   <span className="text-(--color-success)">
-                    ✓ {KYC_PROVIDERS.find((p) => p.id === ciProvider)?.label ?? ciProvider} 본인인증 완료
+                    {t('form.kycSuccess', { provider: t(`form.kycProvider.${ciProvider}`) })}
                     {IS_KYC_DEV_MOCK && (
-                      <span className="ml-1.5 text-(--color-text-subtle)">(dev stub)</span>
+                      <span className="ml-1.5 text-(--color-text-subtle)">{t('form.kycDevStub')}</span>
                     )}
                   </span>
                   <button
@@ -369,13 +367,13 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                     onClick={() => setCiHash(null)}
                     className="text-(--color-text-subtle) hover:text-(--color-error)"
                   >
-                    다시 인증
+                    {t('form.kycRedo')}
                   </button>
                 </div>
               ) : (
                 <>
-                  <fieldset className="flex flex-wrap gap-1.5" aria-label="본인인증 제공자">
-                    <legend className="sr-only">본인인증 제공자 선택</legend>
+                  <fieldset className="flex flex-wrap gap-1.5" aria-label={t('form.kycProviderLabel')}>
+                    <legend className="sr-only">{t('form.kycProviderLabel')}</legend>
                     {KYC_PROVIDERS.map((p) => {
                       const active = ciProvider === p.id;
                       return (
@@ -395,7 +393,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                             onChange={() => setCiProvider(p.id)}
                             className="sr-only"
                           />
-                          {p.label}
+                          {t(`form.kycProvider.${p.id}`)}
                         </label>
                       );
                     })}
@@ -407,26 +405,24 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
                     className="inline-flex h-10 items-center justify-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-4 text-[13px] font-medium hover:border-(--color-border-hover) disabled:opacity-40"
                   >
                     {verifying
-                      ? '인증 중…'
-                      : `${KYC_PROVIDERS.find((p) => p.id === ciProvider)?.label ?? ciProvider}로 본인인증`}
+                      ? t('form.kycVerifying')
+                      : t('form.kycVerify', { provider: t(`form.kycProvider.${ciProvider}`) })}
                   </button>
                   {verifyError && (
                     <p className="m-0 rounded-(--radius-sm) bg-(--color-error)/5 p-2 text-[11.5px] text-(--color-error)">
-                      인증 실패: {verifyError}
+                      {t('form.kycFail')} {verifyError}
                     </p>
                   )}
                 </>
               )}
               <span className="text-[11px] text-(--color-text-subtle)">
-                {IS_KYC_DEV_MOCK
-                  ? 'Dev: random CI 88자 생성 stub. Prod 통합 시 PASS / NICE / Kakao popup 흐름으로 자동 swap (lib/identity-verification.ts).'
-                  : '본인인증 완료 후 CI 가 안전 보관됨 (관리자만 마스킹 노출).'}
+                {IS_KYC_DEV_MOCK ? t('form.kycDevNote') : t('form.kycProdNote')}
               </span>
             </div>
           )}
         </fieldset>
 
-        <Field label="증빙 서류 (1~5개)" hint="사업자등록증 · 허가서 · 재직증명 등. JPEG · PNG · PDF, 파일당 5MB">
+        <FormField label={t('form.document')} hint={t('form.documentHint')}>
           <DocumentsPickerField
             files={docs}
             onChange={setDocs}
@@ -435,11 +431,11 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
             min={1}
             max={5}
           />
-        </Field>
+        </FormField>
 
         {error && (
           <div className="rounded-(--radius-md) border border-(--color-error)/30 bg-(--color-error)/5 p-3 text-[13px] text-(--color-error)">
-            신청 실패: {error}
+            {t('form.applyFail')} {error}
           </div>
         )}
 
@@ -449,7 +445,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
             disabled={!valid || submitting}
             className="inline-flex h-10 items-center gap-1.5 rounded-(--radius-md) bg-(--color-accent) px-5 text-[14px] font-medium text-white transition-colors hover:bg-(--color-accent-hover) disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? '제출 중…' : '신청하기'}
+            {submitting ? t('form.applySubmitting') : t('form.applySubmit')}
           </button>
         </div>
       </form>
@@ -457,7 +453,7 @@ function ApplyForm({ onSubmitted }: { onSubmitted: (p: MyUploaderProfile) => voi
   );
 }
 
-function Field({
+function FormField({
   label,
   hint,
   children,
@@ -486,40 +482,49 @@ function StatusPanel({
   profile: MyUploaderProfile;
   onResubmitted: (p: MyUploaderProfile) => void;
 }) {
+  const { t } = useTranslation('uploader');
   const canResubmit =
     profile.approvalStatus === 'rejected' || profile.approvalStatus === 'revision_requested';
 
   const [open, setOpen] = useState(false);
+
+  const statusBadge: Record<UploaderApprovalStatus, string> = {
+    pending: t('status.pendingBadge'),
+    approved: t('status.approvedBadge'),
+    revision_requested: t('status.revisionBadge'),
+    rejected: t('status.rejectedBadge'),
+  };
+
+  const statusMessage: Partial<Record<UploaderApprovalStatus, string>> = {
+    pending: t('page.pendingMessage'),
+    revision_requested: t('page.revisionMessage'),
+    rejected: t('page.rejectedMessage'),
+  };
 
   return (
     <section className="flex flex-col gap-4">
       <div className="rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-6">
         <div className="mb-3 flex items-center gap-2">
           <span className="inline-flex items-center rounded-(--radius-sm) bg-(--color-warning)/10 px-2 py-[3px] text-[11px] font-semibold text-(--color-warning)">
-            {STATUS_LABEL[profile.approvalStatus]}
+            {statusBadge[profile.approvalStatus]}
           </span>
           <span className="text-[12px] text-(--color-text-subtle)">
-            uploader_id={profile.uploaderId}
+            {t('page.uploaderId', { id: profile.uploaderId })}
           </span>
         </div>
         <h2 className="m-0 text-[18px] font-bold tracking-[-0.01em]">{profile.organizationName}</h2>
         <dl className="mt-3 grid grid-cols-[80px_1fr] gap-x-3 gap-y-1.5 text-[13px]">
-          <dt className="text-(--color-text-subtle)">이메일</dt>
+          <dt className="text-(--color-text-subtle)">{t('page.emailLabel')}</dt>
           <dd className="m-0 text-(--color-text)">{profile.contactEmail}</dd>
-          <dt className="text-(--color-text-subtle)">연락처</dt>
+          <dt className="text-(--color-text-subtle)">{t('page.phoneLabel')}</dt>
           <dd className="tabular m-0 text-(--color-text)">{profile.contactPhone}</dd>
-          <dt className="text-(--color-text-subtle)">신청</dt>
+          <dt className="text-(--color-text-subtle)">{t('page.appliedAt')}</dt>
           <dd className="tabular m-0 text-(--color-text-muted)">
             {profile.createdAt.slice(0, 19).replace('T', ' ')}
           </dd>
         </dl>
         <p className="mt-4 text-[13px] text-(--color-text-muted)">
-          {profile.approvalStatus === 'pending' &&
-            '관리자가 검토 중이에요. 승인되면 이벤트를 등록할 수 있어요.'}
-          {profile.approvalStatus === 'revision_requested' &&
-            '관리자가 보완을 요청했어요. 정보를 다시 확인하고 재신청할 수 있어요.'}
-          {profile.approvalStatus === 'rejected' &&
-            '신청이 반려됐어요. 정보를 다시 다듬어 재신청할 수 있어요.'}
+          {statusMessage[profile.approvalStatus] ?? ''}
         </p>
       </div>
 
@@ -531,7 +536,7 @@ function StatusPanel({
               onClick={() => setOpen(true)}
               className="inline-flex h-10 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-4 text-[13px] font-medium text-(--color-text) transition-colors hover:border-(--color-border-hover)"
             >
-              재신청 작성
+              {t('page.reapply')}
             </button>
           ) : (
             <ApplyForm onSubmitted={onResubmitted} />
@@ -555,6 +560,7 @@ function ApprovedBody({
   activeRole: string;
   onRoleChanged: () => Promise<void> | void;
 }) {
+  const { t } = useTranslation('uploader');
   const [tab, setTab] = useState<UploaderApprovalStatus | 'any'>('any');
   const [items, setItems] = useState<MyUploaderEventItem[]>([]);
   const [byStatus, setByStatus] = useState<Record<UploaderApprovalStatus, number>>({
@@ -598,12 +604,19 @@ function ApprovedBody({
     }
   };
 
+  const statusLabel: Record<UploaderApprovalStatus, string> = {
+    pending: t('status.pending'),
+    approved: t('status.approved'),
+    revision_requested: t('status.revision_requested'),
+    rejected: t('status.rejected'),
+  };
+
   const TABS: { key: UploaderApprovalStatus | 'any'; label: string }[] = [
-    { key: 'any', label: `전체 ${total || ''}` },
-    { key: 'pending', label: `대기 ${byStatus.pending}` },
-    { key: 'approved', label: `승인됨 ${byStatus.approved}` },
-    { key: 'revision_requested', label: `보완 ${byStatus.revision_requested}` },
-    { key: 'rejected', label: `반려 ${byStatus.rejected}` },
+    { key: 'any', label: t('page.tabAll', { count: total || '' }) },
+    { key: 'pending', label: t('page.tabPending', { count: byStatus.pending }) },
+    { key: 'approved', label: t('page.tabApproved', { count: byStatus.approved }) },
+    { key: 'revision_requested', label: t('page.tabRevision', { count: byStatus.revision_requested }) },
+    { key: 'rejected', label: t('page.tabRejected', { count: byStatus.rejected }) },
   ];
 
   return (
@@ -612,18 +625,18 @@ function ApprovedBody({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded-(--radius-sm) bg-(--color-success)/10 px-2 py-[3px] text-[11px] font-semibold text-(--color-success)">
-              승인됨
+              {t('page.approvedBadge')}
             </span>
             <span className="truncate text-[14px] font-semibold text-(--color-text)">
               {profile.organizationName}
             </span>
           </div>
           <p className="mt-0.5 text-[12px] text-(--color-text-subtle)">
-            현재 역할:{' '}
+            {t('page.currentRole')}{' '}
             <span className="font-medium text-(--color-text-muted)">
-              {activeRole === 'uploader' ? 'uploader' : 'user'}
+              {activeRole === 'uploader' ? t('page.roleUploader') : t('page.roleUser')}
             </span>
-            {activeRole !== 'uploader' && ' — 업로더로 전환해야 이벤트를 등록할 수 있어요'}
+            {activeRole !== 'uploader' && ` ${t('page.needSwitchDesc')}`}
           </p>
         </div>
         <div className="flex w-full gap-2 sm:w-auto">
@@ -638,16 +651,16 @@ function ApprovedBody({
             }`}
           >
             {toggling
-              ? '…'
+              ? t('page.switching')
               : activeRole === 'uploader'
-                ? 'user 역할로'
-                : 'uploader 역할로 전환'}
+                ? t('page.switchToUser')
+                : t('page.switchToUploader')}
           </button>
           <Link
             to="/uploader/new"
             className="inline-flex h-9 flex-1 items-center justify-center gap-1.5 rounded-(--radius-md) border border-(--color-accent) bg-(--color-accent-bg) px-3 text-[13px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/15 sm:flex-initial"
           >
-            새 이벤트 업로드 <Icon name="arrow" size={14} />
+            {t('page.newEvent')} <Icon name="arrow" size={14} />
           </Link>
         </div>
       </div>
@@ -659,20 +672,20 @@ function ApprovedBody({
       )}
 
       <div className="inline-flex flex-wrap rounded-(--radius-md) border border-(--color-border) p-0.5">
-        {TABS.map((t) => {
-          const active = tab === t.key;
+        {TABS.map((tab2) => {
+          const active = tab === tab2.key;
           return (
             <button
-              key={t.key}
+              key={tab2.key}
               type="button"
-              onClick={() => setTab(t.key)}
+              onClick={() => setTab(tab2.key)}
               className={`h-8 rounded-[6px] px-3 text-[13px] font-medium transition-colors ${
                 active
                   ? 'bg-(--color-accent) text-white'
                   : 'text-(--color-text-muted) hover:text-(--color-text)'
               }`}
             >
-              {t.label}
+              {tab2.label}
             </button>
           );
         })}
@@ -681,13 +694,11 @@ function ApprovedBody({
       <div className="overflow-hidden rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface)">
         {loading && items.length === 0 ? (
           <div className="p-6 text-center text-[13px] text-(--color-text-subtle)">
-            불러오는 중…
+            {t('page.loading')}
           </div>
         ) : items.length === 0 ? (
           <div className="p-10 text-center text-[13px] text-(--color-text-subtle)">
-            {tab === 'any'
-              ? '아직 등록한 이벤트가 없어요. 우측 상단 ‘새 이벤트 업로드’ 에서 시작하세요.'
-              : '이 상태의 이벤트가 없어요.'}
+            {tab === 'any' ? t('page.emptyAll') : t('page.emptyStatus')}
           </div>
         ) : (
           <ul className="divide-y divide-(--color-border)">
@@ -711,7 +722,7 @@ function ApprovedBody({
                                 : 'bg-(--color-warning)/10 text-(--color-warning)'
                           }`}
                         >
-                          {STATUS_LABEL[e.approvalStatus]}
+                          {statusLabel[e.approvalStatus]}
                         </span>
                         <span className="text-[12px] text-(--color-text-subtle)">
                           {e.category.name} · {e.region.sido}
@@ -722,7 +733,7 @@ function ApprovedBody({
                         {e.title}
                       </div>
                       <div className="mt-0.5 tabular text-[12px] text-(--color-text-subtle)">
-                        {e.startDate} ~ {e.endDate} · 등록 {e.createdAt.slice(0, 10)}
+                        {e.startDate} ~ {e.endDate} · {t('page.createdAt')} {e.createdAt.slice(0, 10)}
                       </div>
                       {needsReason && e.latestDecision && (
                         <div
@@ -739,10 +750,10 @@ function ApprovedBody({
                                 : 'text-(--color-warning)'
                             }`}
                           >
-                            관리자 사유 · {e.latestDecision.decidedAt.slice(0, 10)}
+                            {t('page.adminReason', { date: e.latestDecision.decidedAt.slice(0, 10) })}
                           </div>
                           <p className="m-0 whitespace-pre-wrap text-(--color-text)">
-                            {e.latestDecision.reason ?? '(사유 없음)'}
+                            {e.latestDecision.reason ?? t('page.noReason')}
                           </p>
                         </div>
                       )}
@@ -752,7 +763,7 @@ function ApprovedBody({
                         to={`/events/${e.eventId}`}
                         className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-border) bg-(--color-surface) px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text)"
                       >
-                        공개 페이지
+                        {t('page.viewPublic')}
                       </Link>
                     )}
                     {(e.approvalStatus === 'revision_requested' ||
@@ -761,7 +772,7 @@ function ApprovedBody({
                         to={`/uploader/events/${e.eventId}/edit`}
                         className="inline-flex h-8 shrink-0 items-center rounded-(--radius-md) border border-(--color-accent) bg-(--color-accent-bg) px-3 text-[12px] font-medium text-(--color-accent) transition-colors hover:bg-(--color-accent)/15"
                       >
-                        수정 재제출
+                        {t('page.editResubmit')}
                       </Link>
                     )}
                   </div>

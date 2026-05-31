@@ -54,6 +54,8 @@ export interface EventListQuery {
   sort?: EventSort;
   /** v4.5 — sort=distance 명시 anchor "lng,lat". 미지정 시 BFF 가 bbox center fallback. */
   anchor?: string;
+  /** GG-ROOM-004 — 제목 포함 검색. BFF 에서 ILIKE 처리. */
+  search?: string;
 }
 
 function buildQuery(q: EventListQuery): string {
@@ -71,6 +73,7 @@ function buildQuery(q: EventListQuery): string {
   if (q.bbox) sp.set('bbox', q.bbox);
   if (q.sort) sp.set('sort', q.sort);
   if (q.anchor) sp.set('anchor', q.anchor);
+  if (q.search) sp.set('search', q.search);
   return sp.toString();
 }
 
@@ -145,6 +148,8 @@ export interface BffEventDetail extends BffEventItem {
   /** 매핑된 관련 기사 수 (A_400 상세 섹션에서 실제 list 조회). */
   articleCount: number;
   source: { type: string; crawlOrigin: string; externalId: string };
+  /** GG-ROOM-003 — 업로더 주관처 정보. 크롤 이벤트는 null. */
+  organizer: { name: string; email: string; phone: string } | null;
   createdAt: string;
   updatedAt: string;
   /** null = 비로그인. true/false = 로그인 상태의 현재 북마크 여부. */
