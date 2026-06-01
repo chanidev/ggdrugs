@@ -234,7 +234,15 @@
     "reject": "拒绝",
     "eventPrivate": "（活动已私密或已删除）",
     "viewEvent": "查看活动",
-    "processing": "处理中…"
+    "processing": "处理中…",
+    "kickVotePrompt": "请就踢出成员投票。",
+    "kickVoteVoted": "已投票：{{result}}",
+    "kickVoteExpired": "投票已过期。",
+    "kickVoteAlready": "你已经投过票了。",
+    "kickVote": {
+      "agree": "同意踢出",
+      "reject": "反对踢出"
+    }
   },
   "evaluation": {
     "title": "评价",

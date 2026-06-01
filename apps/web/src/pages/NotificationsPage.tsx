@@ -11,6 +11,7 @@ import {
   respondMatchRequest,
   type MyNotification,
 } from '../lib/api';
+import { castKickVote } from '../lib/api/match.js';
 import { loginUrl } from '../lib/auth-redirect';
 
 /**
@@ -99,6 +100,22 @@ function resolveHref(n: MyNotification): string | null {
 // (match_request 신청됨 + group_invite 초대됨 모두 해당)
 function hasInlineAction(n: MyNotification): boolean {
   return n.relatedEntityType === 'match_request';
+}
+
+/**
+ * kick_vote 알림의 message 는 사람용 텍스트가 아니라 JSON({targetUserId,expiresAt,voteResult?}).
+ * 파싱해 투표 UI 상태를 만든다. kick_vote 가 아니면 null.
+ */
+function parseKickVote(
+  n: MyNotification,
+): { expiresAt: string | null; voteResult: string | null } | null {
+  if (n.notificationType !== 'kick_vote') return null;
+  try {
+    const m = JSON.parse(n.message) as { expiresAt?: string; voteResult?: string };
+    return { expiresAt: m.expiresAt ?? null, voteResult: m.voteResult ?? null };
+  } catch {
+    return { expiresAt: null, voteResult: null };
+  }
 }
 
 export function NotificationsPage() {
@@ -203,6 +220,33 @@ export function NotificationsPage() {
     }
   };
 
+  // 강퇴 투표 응답 (GG-MATE-019/020) — kick_vote 알림. relatedEntityId=chatRoomId, voteNotifId=알림 id.
+  const onCastKickVote = async (n: MyNotification, vote: 'agree' | 'reject') => {
+    if (n.notificationType !== 'kick_vote' || !n.relatedEntityId) return;
+    setRespondingIds((s) => new Set(s).add(n.notificationId));
+    try {
+      await castKickVote(n.relatedEntityId, n.notificationId, vote);
+      // 로컬: message JSON 에 voteResult 병합 (이미 투표 상태로 전환)
+      setItems((prev) =>
+        prev.map((x) => {
+          if (x.notificationId !== n.notificationId) return x;
+          let meta: Record<string, unknown> = {};
+          try { meta = JSON.parse(x.message) as Record<string, unknown>; } catch { /* corrupt */ }
+          return { ...x, message: JSON.stringify({ ...meta, voteResult: vote }) };
+        }),
+      );
+    } catch (e) {
+      const m = e instanceof Error ? e.message : 'kick vote failed';
+      setError(m === 'ALREADY_VOTED' ? t('notification.kickVoteAlready') : m === 'VOTE_EXPIRED' ? t('notification.kickVoteExpired') : m);
+    } finally {
+      setRespondingIds((s) => {
+        const next = new Set(s);
+        next.delete(n.notificationId);
+        return next;
+      });
+    }
+  };
+
   if (authLoading) return <Shell>{null}</Shell>;
 
   if (!user) {
@@ -289,6 +333,7 @@ export function NotificationsPage() {
                 onItemClick={onItemClick}
                 onMarkReadOnly={markReadOnly}
                 onRespond={onRespond}
+                onCastKickVote={onCastKickVote}
               />
             ))}
           </ul>
@@ -306,6 +351,7 @@ function NotifItem({
   onItemClick,
   onMarkReadOnly,
   onRespond,
+  onCastKickVote,
 }: {
   n: MyNotification;
   responding: boolean;
@@ -313,10 +359,13 @@ function NotifItem({
   /** Link 네이티브 이동과 중복 navigate 방지용 — 읽음 처리만 수행 */
   onMarkReadOnly: (n: MyNotification) => void;
   onRespond: (n: MyNotification, action: 'accept' | 'reject') => void;
+  onCastKickVote: (n: MyNotification, vote: 'agree' | 'reject') => void;
 }) {
   const { t } = useTranslation('mypage');
   const unread = !n.readAt;
   const badgeCls = typeBadgeCls(n.notificationType);
+  const kickVote = parseKickVote(n);
+  const kickVoteExpired = kickVote?.expiresAt ? new Date(kickVote.expiresAt) <= new Date() : false;
   const typeLabel = n.notificationType
     ? t(`notification.notiTypes.${n.notificationType}`, { defaultValue: n.notificationType })
     : null;
@@ -358,7 +407,9 @@ function NotifItem({
             >
               {n.title}
             </h3>
-            <p className="m-0 mt-0.5 text-[13px] text-(--color-text)">{n.message}</p>
+            <p className="m-0 mt-0.5 text-[13px] text-(--color-text)">
+              {kickVote ? t('notification.kickVotePrompt') : n.message}
+            </p>
             <p className="tabular m-0 mt-1 text-[11px] text-(--color-text-subtle)">
               {n.createdAt.slice(0, 19).replace('T', ' ')}
               {!n.eventAvailable && n.eventId && (
@@ -387,6 +438,36 @@ function NotifItem({
                 {t('notification.reject')}
               </button>
             </div>
+          )}
+
+          {/* 강퇴 투표 (GG-MATE-019/020) — kick_vote 알림 인라인 찬반 */}
+          {kickVote && (
+            kickVote.voteResult ? (
+              <p className="mt-2 text-[12px] text-(--color-text-subtle)">
+                {t('notification.kickVoteVoted', { result: t(`notification.kickVote.${kickVote.voteResult}`) })}
+              </p>
+            ) : kickVoteExpired ? (
+              <p className="mt-2 text-[12px] text-(--color-text-subtle)">{t('notification.kickVoteExpired')}</p>
+            ) : (
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  disabled={responding}
+                  onClick={() => onCastKickVote(n, 'agree')}
+                  className="inline-flex h-7 items-center rounded-(--radius-md) bg-(--color-error) px-3 text-[12px] font-medium text-white transition-colors hover:opacity-90 disabled:opacity-40"
+                >
+                  {responding ? t('notification.applying') : t('notification.kickVote.agree')}
+                </button>
+                <button
+                  type="button"
+                  disabled={responding}
+                  onClick={() => onCastKickVote(n, 'reject')}
+                  className="inline-flex h-7 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[12px] font-medium text-(--color-text-muted) transition-colors hover:border-(--color-border-hover) hover:text-(--color-text) disabled:opacity-40"
+                >
+                  {t('notification.kickVote.reject')}
+                </button>
+              </div>
+            )
           )}
 
           {/* 이벤트 링크 (notificationType 없는 이벤트 알림 폴백) */}

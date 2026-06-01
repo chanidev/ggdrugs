@@ -381,3 +381,31 @@ export async function startKickVote(chatRoomId: string, targetUserId: string): P
     throw new Error(`POST chat-rooms/${chatRoomId}/kick/vote ${res.status}: ${t.slice(0, 200)}`);
   }
 }
+
+/**
+ * PATCH /community/chat-rooms/:chatRoomId/kick/vote/:voteNotifId
+ * 강퇴투표 응답 (멤버, GG-MATE-019/020). voteNotifId = 내 kick_vote 알림의 notificationId.
+ */
+export async function castKickVote(
+  chatRoomId: string,
+  voteNotifId: string,
+  vote: 'agree' | 'reject',
+): Promise<void> {
+  const res = await fetch(
+    `${BFF_URL}/community/chat-rooms/${encodeURIComponent(chatRoomId)}/kick/vote/${encodeURIComponent(voteNotifId)}`,
+    withCredentials({
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ vote }),
+    }),
+  );
+  if (res.status === 401) throw new Error('UNAUTHENTICATED');
+  if (res.status === 403) throw new Error('NOT_MEMBER');
+  if (res.status === 404) throw new Error('VOTE_NOT_FOUND');
+  if (res.status === 409) throw new Error('ALREADY_VOTED');
+  if (res.status === 410) throw new Error('VOTE_EXPIRED');
+  if (!res.ok) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`PATCH chat-rooms/${chatRoomId}/kick/vote/${voteNotifId} ${res.status}: ${t.slice(0, 200)}`);
+  }
+}
