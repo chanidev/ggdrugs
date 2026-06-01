@@ -18,9 +18,18 @@
     "retryButton": "Retry",
     "aiCandidates": "{{count}} AI candidates · semantic",
     "examples": [
-      { "q": "Show me festivals I can go to with family this weekend", "hint": "period + companion + type auto-mapped" },
-      { "q": "AI conference in Gangnam this month", "hint": "region + period + type + keyword" },
-      { "q": "Educational events good for solo visits", "hint": "companion + vibe mapped" }
+      {
+        "q": "Show me festivals I can go to with family this weekend",
+        "hint": "period + companion + type auto-mapped"
+      },
+      {
+        "q": "AI conference in Gangnam this month",
+        "hint": "region + period + type + keyword"
+      },
+      {
+        "q": "Educational events good for solo visits",
+        "hint": "companion + vibe mapped"
+      }
     ]
   },
   "request": {
@@ -140,5 +149,21 @@
     "attachedImage": "Attached image",
     "sticker": "Sticker",
     "stickerReport": "Report message"
+  },
+  "list": {
+    "title": "Chats",
+    "subtitle": "Your mate chat rooms",
+    "loginRequired": "Please log in.",
+    "loadError": "Couldn't load your chats.",
+    "emptyTitle": "No chat rooms yet",
+    "emptySubtitle": "Request a chat from mate recommendations to get started.",
+    "emptyCta": "Get mate recommendations",
+    "oneToOne": "1:1",
+    "group": "Group",
+    "ended": "Ended",
+    "owner": "Owner",
+    "memberCount": "{{count}} members",
+    "unknownMate": "Mate",
+    "groupFallback": "Group chat"
   }
 }

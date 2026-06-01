@@ -18,9 +18,18 @@
     "retryButton": "重试",
     "aiCandidates": "{{count}}个AI候选 · 语义",
     "examples": [
-      { "q": "告诉我这个周末可以和家人一起参加的节日", "hint": "时间 + 同伴 + 类型自动映射" },
-      { "q": "江南地区本月的AI会议", "hint": "地区 + 时间 + 类型 + 关键词" },
-      { "q": "适合一个人参加的教育类活动", "hint": "同伴 + 风格映射" }
+      {
+        "q": "告诉我这个周末可以和家人一起参加的节日",
+        "hint": "时间 + 同伴 + 类型自动映射"
+      },
+      {
+        "q": "江南地区本月的AI会议",
+        "hint": "地区 + 时间 + 类型 + 关键词"
+      },
+      {
+        "q": "适合一个人参加的教育类活动",
+        "hint": "同伴 + 风格映射"
+      }
     ]
   },
   "request": {
@@ -140,5 +149,21 @@
     "attachedImage": "附件图片",
     "sticker": "贴纸",
     "stickerReport": "举报消息"
+  },
+  "list": {
+    "title": "聊天",
+    "subtitle": "你的伙伴聊天室",
+    "loginRequired": "请先登录。",
+    "loadError": "无法加载聊天室。",
+    "emptyTitle": "还没有聊天室",
+    "emptySubtitle": "从伙伴推荐中发起聊天即可开始。",
+    "emptyCta": "获取伙伴推荐",
+    "oneToOne": "1:1",
+    "group": "群组",
+    "ended": "已结束",
+    "owner": "房主",
+    "memberCount": "{{count}}人",
+    "unknownMate": "伙伴",
+    "groupFallback": "群聊"
   }
 }

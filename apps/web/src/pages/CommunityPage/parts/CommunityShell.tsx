@@ -71,14 +71,14 @@ export function CommunityShell({
                 )}
                 {/* GG-COMM-013 언어 토글 — LanguageToggle 실연결 */}
                 <LanguageToggle />
-                {/* GG-COMM-014/015 채팅방 이동 placeholder */}
+                {/* GG-COMM-014/015 채팅방 이동 → 내 채팅방 목록(/chat/rooms) 실연결 */}
                 <ActionButton
                   variant="neutralOutline"
                   size="small"
-                  disabled
+                  asChild
                   title={t('shell.chatRoomBtn')}
                 >
-                  {t('shell.chatRoomBtn')}
+                  <Link to="/chat/rooms">{t('shell.chatRoomBtn')}</Link>
                 </ActionButton>
                 {/* GG-COMM-016 알림 — 실연결 */}
                 <Link
