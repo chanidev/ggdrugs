@@ -151,7 +151,22 @@
       "fri": "Fri",
       "sat": "Sat"
     },
-    "summaryLabel": "Calendar Summary"
+    "summaryLabel": "Calendar Summary",
+    "viewToggleAriaLabel": "Calendar view",
+    "prevWeek": "Previous week",
+    "nextWeek": "Next week",
+    "prevYear": "Previous year",
+    "nextYear": "Next year",
+    "yearMonthCount": "{{count}} events",
+    "yearMonthNone": "None",
+    "bookmarkSection": "Bookmark history",
+    "carouselPrev": "Previous",
+    "carouselNext": "Next",
+    "view": {
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    }
   },
   "credit": {
     "title": "Credit History",
@@ -317,5 +332,13 @@
     "logoutAllSuccess": "Logged out from {{count}} sessions.",
     "logoutFailed": "Logout failed: {{message}}",
     "hint": "Use logout from all devices if loss or theft is suspected."
+  },
+  "nav": {
+    "heading": "My page menu",
+    "notifications": "Notifications",
+    "community": "Community",
+    "chatRooms": "Chat rooms",
+    "profile": "View / edit profile",
+    "credits": "Credit history"
   }
 }

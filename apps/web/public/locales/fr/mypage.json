@@ -151,7 +151,22 @@
       "fri": "Ven",
       "sat": "Sam"
     },
-    "summaryLabel": "Résumé du calendrier"
+    "summaryLabel": "Résumé du calendrier",
+    "viewToggleAriaLabel": "Vue du calendrier",
+    "prevWeek": "Semaine précédente",
+    "nextWeek": "Semaine suivante",
+    "prevYear": "Année précédente",
+    "nextYear": "Année suivante",
+    "yearMonthCount": "{{count}} évén.",
+    "yearMonthNone": "Aucun",
+    "bookmarkSection": "Favoris enregistrés",
+    "carouselPrev": "Précédent",
+    "carouselNext": "Suivant",
+    "view": {
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année"
+    }
   },
   "credit": {
     "title": "Historique des crédits",
@@ -317,5 +332,13 @@
     "logoutAllSuccess": "Déconnexion de {{count}} sessions réussie.",
     "logoutFailed": "Échec de la déconnexion : {{message}}",
     "hint": "Utilisez la déconnexion de tous les appareils en cas de perte ou de vol suspecté."
+  },
+  "nav": {
+    "heading": "Menu Mon espace",
+    "notifications": "Notifications",
+    "community": "Communauté",
+    "chatRooms": "Salons de discussion",
+    "profile": "Voir / modifier le profil",
+    "credits": "Historique des crédits"
   }
 }

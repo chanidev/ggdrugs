@@ -151,7 +151,22 @@
       "fri": "五",
       "sat": "六"
     },
-    "summaryLabel": "日历摘要"
+    "summaryLabel": "日历摘要",
+    "viewToggleAriaLabel": "日历视图",
+    "prevWeek": "上一周",
+    "nextWeek": "下一周",
+    "prevYear": "上一年",
+    "nextYear": "下一年",
+    "yearMonthCount": "{{count}}个",
+    "yearMonthNone": "无",
+    "bookmarkSection": "收藏记录",
+    "carouselPrev": "上一个",
+    "carouselNext": "下一个",
+    "view": {
+      "week": "周",
+      "month": "月",
+      "year": "年"
+    }
   },
   "credit": {
     "title": "积分历史",
@@ -317,5 +332,13 @@
     "logoutAllSuccess": "已断开 {{count}} 个会话。",
     "logoutFailed": "注销失败: {{message}}",
     "hint": "如怀疑丢失或被盗，请使用从所有设备注销。"
+  },
+  "nav": {
+    "heading": "我的页面菜单",
+    "notifications": "通知设置",
+    "community": "社区",
+    "chatRooms": "聊天室",
+    "profile": "查看/编辑资料",
+    "credits": "积分记录"
   }
 }
