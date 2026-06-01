@@ -86,10 +86,28 @@ export interface RecommendationsList {
   items: RecommendationItem[];
 }
 
+/** 와이어 9-12/13/14: 현재 메이트 관계 단계 (추천 목록 대신 표시). */
+export interface RecommendationsChatting {
+  state: 'chatting';
+  chatRoomId: string;
+}
+export interface RecommendationsAppointment {
+  state: 'appointment';
+  chatRoomId: string;
+}
+export interface RecommendationsPostUse {
+  state: 'post_use';
+  chatRoomId: string;
+  appointmentId: string;
+}
+
 export type RecommendationsResponse =
   | RecommendationsBlind
   | RecommendationsNoEvent
-  | RecommendationsList;
+  | RecommendationsList
+  | RecommendationsChatting
+  | RecommendationsAppointment
+  | RecommendationsPostUse;
 
 export interface MateIndexResult {
   userId: string;

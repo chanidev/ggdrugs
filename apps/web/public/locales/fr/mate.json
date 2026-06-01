@@ -101,7 +101,15 @@
     "groupSuccess": "Invitation de groupe envoyée à {{count}} mate(s).",
     "groupError": "Impossible d'envoyer l'invitation de groupe. Veuillez réessayer.",
     "groupProfileRequired": "Veuillez d'abord configurer votre profil mate.",
-    "groupSelectAriaLabel": "Sélectionner {{nickname}} pour l'invitation de groupe"
+    "groupSelectAriaLabel": "Sélectionner {{nickname}} pour l'invitation de groupe",
+    "engChattingTitle": "Vous organisez une sortie",
+    "engChattingSub": "Convenez d'un rendez-vous avec votre mate dans le chat.",
+    "engAppointmentTitle": "Votre rendez-vous est fixé. Bon moment !",
+    "engAppointmentSub": "Consultez le rendez-vous confirmé dans le salon.",
+    "engPostUseTitle": "Comment était le festival ?",
+    "engPostUseSub": "Laissez un avis pour le mate qui vous a accompagné.",
+    "engRoomCta": "Aller au salon",
+    "engPostUseCta": "Écrire un avis"
   },
   "safetyNotice": {
     "ariaLabel": "Consignes de sécurité",

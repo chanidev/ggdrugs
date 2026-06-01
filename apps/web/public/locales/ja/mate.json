@@ -101,7 +101,15 @@
     "groupSuccess": "{{count}}人にグループ招待を送りました。",
     "groupError": "グループ招待を送れませんでした。しばらくして再度お試しください。",
     "groupProfileRequired": "先にメイトプロフィールを登録してください。",
-    "groupSelectAriaLabel": "{{nickname}}をグループ招待に選択"
+    "groupSelectAriaLabel": "{{nickname}}をグループ招待に選択",
+    "engChattingTitle": "約束を調整中です",
+    "engChattingSub": "チャットでメイトと約束を決めましょう。",
+    "engAppointmentTitle": "約束が決まりました！楽しんできてください",
+    "engAppointmentSub": "確定した約束をチャットルームで確認しましょう。",
+    "engPostUseTitle": "フェスティバルはいかがでしたか？",
+    "engPostUseSub": "一緒に行ったメイトの評価を残してください。",
+    "engRoomCta": "チャットルームへ",
+    "engPostUseCta": "レビューを書く"
   },
   "safetyNotice": {
     "ariaLabel": "安全ガイドライン",

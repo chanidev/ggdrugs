@@ -101,7 +101,15 @@
     "groupSuccess": "Sent a group invite to {{count}} mate(s).",
     "groupError": "Couldn't send the group invite. Please try again.",
     "groupProfileRequired": "Please set up your mate profile first.",
-    "groupSelectAriaLabel": "Select {{nickname}} for group invite"
+    "groupSelectAriaLabel": "Select {{nickname}} for group invite",
+    "engChattingTitle": "You're arranging a meet-up",
+    "engChattingSub": "Set up an appointment with your mate in chat.",
+    "engAppointmentTitle": "Your meet-up is set. Have a great time!",
+    "engAppointmentSub": "Check the confirmed appointment in your chat room.",
+    "engPostUseTitle": "How was the festival?",
+    "engPostUseSub": "Leave a review for the mate you went with.",
+    "engRoomCta": "Go to chat room",
+    "engPostUseCta": "Write a review"
   },
   "safetyNotice": {
     "ariaLabel": "Safety Guidelines",

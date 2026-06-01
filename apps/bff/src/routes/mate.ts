@@ -431,6 +431,53 @@ const RECO_LIMIT = 20;
 // (지역 단위 풀에서 500은 충분히 넉넉; 초과분은 의도적으로 드롭.)
 const RECO_CANDIDATE_CAP = 500;
 
+/** 추천 영역 관계 단계 (와이어 9-12/13/14). chatting/appointment/post_use, 없으면 null. */
+type EngagementState =
+  | { state: 'chatting'; chatRoomId: string }
+  | { state: 'appointment'; chatRoomId: string }
+  | { state: 'post_use'; chatRoomId: string; appointmentId: string };
+
+async function getMateEngagementState(userId: bigint, now: Date): Promise<EngagementState | null> {
+  // 활성 메이트 채팅방 멤버십
+  const rooms = await prisma.groupMembership.findMany({
+    where: { userId, memberStatus: 'active', chatRoom: { status: 'active' } },
+    select: { chatRoomId: true },
+  });
+  if (rooms.length === 0) return null;
+  const roomIds = rooms.map((r) => r.chatRoomId);
+
+  const appts = await prisma.appointment.findMany({
+    where: { chatRoomId: { in: roomIds }, status: { in: ['proposed', 'counter_proposed', 'confirmed'] } },
+    select: { appointmentId: true, chatRoomId: true, status: true, appointedAt: true },
+    orderBy: { updatedAt: 'desc' },
+  });
+  const confirmed = appts.filter((a) => a.status === 'confirmed');
+
+  // 1) post_use: 확정 + 일시 경과 + 내가 아직 평가 안 함 → 후기 작성 유도(9-14)
+  for (const a of confirmed) {
+    if (a.appointedAt && a.appointedAt <= now) {
+      const evaluated = await prisma.mateEvaluation.findFirst({
+        where: { appointmentId: a.appointmentId, evaluatorUserId: userId },
+        select: { evalId: true },
+      });
+      if (!evaluated) {
+        return { state: 'post_use', chatRoomId: a.chatRoomId.toString(), appointmentId: a.appointmentId.toString() };
+      }
+    }
+  }
+  // 2) appointment: 확정 + 미래(또는 일시 미정) → 다녀오세요(9-13)
+  const upcoming = confirmed.find((a) => !a.appointedAt || a.appointedAt > now);
+  if (upcoming) {
+    return { state: 'appointment', chatRoomId: upcoming.chatRoomId.toString() };
+  }
+  // 3) chatting: 확정 약속 없음(제안/협상 중 또는 없음) → 약속 정하는 중(9-12)
+  if (confirmed.length === 0) {
+    return { state: 'chatting', chatRoomId: roomIds[0]!.toString() };
+  }
+  // 확정됐지만 모두 경과+평가완료 → 관계 종료 → 목록 재노출
+  return null;
+}
+
 export async function getRecommendations(req: Request, res: Response) {
   const auth = (req as AuthenticatedRequest).auth;
   if (!auth) {
@@ -468,12 +515,21 @@ export async function getRecommendations(req: Request, res: Response) {
     return;
   }
 
+  const recoNow = new Date();
+
+  // 와이어 9-12/13/14: 현재 메이트 관계 단계가 있으면 추천 목록 대신 단계 상태를 반환한다
+  // (요구사항 line 229~244: 약속 성사 후 목록 블라인드). 단계는 축제 선택과 무관하게 우선.
+  const engagement = await getMateEngagementState(auth.userId, recoNow);
+  if (engagement) {
+    res.json(engagement);
+    return;
+  }
+
   // GG-MATCH-003 / ADR 0007 #3: 후보풀의 hard 경계 = "같은 축제(2주내 개최)".
   // 축제 미선택, 또는 선택 축제가 삭제·미승인·윈도우 이탈(과거 시작 / 관리자가 +14일 밖으로 이동)
   // → stale 로 보고 축제 (재)선택 유도. 윈도우 상·하한 모두 검사해 selector/save 검증과 패리티.
   // [TZ note] upcomingMateEventWindow 는 events.ts parsePeriod 와 동일하게 UTC 기준 날짜 경계를
   //   쓴다(앱 전역 컨벤션, @db.Date 는 TZ-naive). KST 정합이 필요하면 parsePeriod 포함 전역 수정.
-  const recoNow = new Date();
   const { from: evFrom, to: evTo } = upcomingMateEventWindow(recoNow);
   const myEvent = myProfile.selectedEvent;
   const eventUsable =

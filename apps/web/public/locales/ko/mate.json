@@ -101,7 +101,15 @@
     "groupSuccess": "{{count}}명에게 그룹 초대를 보냈어요.",
     "groupError": "그룹 초대를 보내지 못했어요. 잠시 후 다시 시도해 주세요.",
     "groupProfileRequired": "메이트 프로필을 먼저 등록해 주세요.",
-    "groupSelectAriaLabel": "{{nickname}} 그룹 초대 선택"
+    "groupSelectAriaLabel": "{{nickname}} 그룹 초대 선택",
+    "engChattingTitle": "약속을 정하는 중이에요",
+    "engChattingSub": "메이트와 채팅에서 약속을 정해보세요.",
+    "engAppointmentTitle": "약속이 잡혔어요! 좋은 시간 보내세요",
+    "engAppointmentSub": "확정된 약속을 채팅방에서 확인하세요.",
+    "engPostUseTitle": "축제는 잘 다녀오셨나요?",
+    "engPostUseSub": "함께한 메이트와 축제 후기를 남겨주세요.",
+    "engRoomCta": "채팅방으로 가기",
+    "engPostUseCta": "후기 작성하기"
   },
   "safetyNotice": {
     "ariaLabel": "안전 가이드라인",
