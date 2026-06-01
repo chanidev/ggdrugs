@@ -59,7 +59,7 @@ export function ComposeModal({ defaultCategory, editPost, onClose, onCreated }: 
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Backdrop />
       <Dialog.Positioner>
-        <Dialog.Content className="w-[480px] max-w-[92vw]">
+        <Dialog.Content className="compose-dialog w-[480px] max-w-[92vw]">
           {/* 모달 헤더 */}
           <Dialog.Header>
             <Dialog.Title>{editPost ? t('compose.editPost') : t('compose.newPost')}</Dialog.Title>
