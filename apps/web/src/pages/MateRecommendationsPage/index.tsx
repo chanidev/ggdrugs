@@ -76,6 +76,11 @@ export function MateRecommendationsPage() {
             <>
               {data.state === 'blind' && <BlindState />}
               {data.state === 'no_event' && <NoEventState />}
+              {data.state === 'chatting' && <EngagementState kind="chatting" chatRoomId={data.chatRoomId} />}
+              {data.state === 'appointment' && <EngagementState kind="appointment" chatRoomId={data.chatRoomId} />}
+              {data.state === 'post_use' && (
+                <EngagementState kind="post_use" chatRoomId={data.chatRoomId} appointmentId={data.appointmentId} />
+              )}
               {data.state === 'list' && <RecoList items={data.items} />}
             </>
           )}
@@ -126,6 +131,40 @@ function NoEventState() {
       <p className="mb-6 text-[13px] text-(--color-text-muted)">{t('reco.noEventSubtitle')}</p>
       <ActionButton variant="brandSolid" size="medium" asChild>
         <Link to="/mate/form">{t('reco.noEventCta')}</Link>
+      </ActionButton>
+    </div>
+  );
+}
+
+// ── 메이트 관계 단계 상태 (와이어 9-12/13/14) ──
+
+const ENG_COPY = {
+  chatting: { title: 'reco.engChattingTitle', sub: 'reco.engChattingSub' },
+  appointment: { title: 'reco.engAppointmentTitle', sub: 'reco.engAppointmentSub' },
+  post_use: { title: 'reco.engPostUseTitle', sub: 'reco.engPostUseSub' },
+} as const;
+
+function EngagementState({
+  kind,
+  chatRoomId,
+  appointmentId,
+}: {
+  kind: 'chatting' | 'appointment' | 'post_use';
+  chatRoomId: string;
+  appointmentId?: string;
+}) {
+  const { t } = useTranslation('mate');
+  const copy = ENG_COPY[kind];
+  const cta =
+    kind === 'post_use'
+      ? { to: `/evaluate/${appointmentId ?? ''}`, label: t('reco.engPostUseCta') }
+      : { to: `/chat/rooms/${chatRoomId}`, label: t('reco.engRoomCta') };
+  return (
+    <div className="rounded-(--radius-lg) border border-dashed border-(--color-border) bg-(--color-surface-alt) p-10 text-center">
+      <h2 className="mb-2 text-[17px] font-semibold">{t(copy.title)}</h2>
+      <p className="mb-6 text-[13px] text-(--color-text-muted)">{t(copy.sub)}</p>
+      <ActionButton variant="brandSolid" size="medium" asChild>
+        <Link to={cta.to}>{cta.label}</Link>
       </ActionButton>
     </div>
   );

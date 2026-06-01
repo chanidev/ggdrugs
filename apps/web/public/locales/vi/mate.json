@@ -101,7 +101,15 @@
     "groupSuccess": "Đã gửi lời mời nhóm đến {{count}} mate.",
     "groupError": "Không thể gửi lời mời nhóm. Vui lòng thử lại sau.",
     "groupProfileRequired": "Vui lòng thiết lập hồ sơ mate trước.",
-    "groupSelectAriaLabel": "Chọn {{nickname}} để mời nhóm"
+    "groupSelectAriaLabel": "Chọn {{nickname}} để mời nhóm",
+    "engChattingTitle": "Bạn đang sắp xếp buổi hẹn",
+    "engChattingSub": "Hãy hẹn gặp với mate trong cuộc trò chuyện.",
+    "engAppointmentTitle": "Đã hẹn xong. Chúc bạn vui vẻ!",
+    "engAppointmentSub": "Xem cuộc hẹn đã xác nhận trong phòng chat.",
+    "engPostUseTitle": "Lễ hội thế nào?",
+    "engPostUseSub": "Hãy để lại đánh giá cho mate đã đi cùng.",
+    "engRoomCta": "Đến phòng chat",
+    "engPostUseCta": "Viết đánh giá"
   },
   "safetyNotice": {
     "ariaLabel": "Hướng dẫn an toàn",

@@ -101,7 +101,15 @@
     "groupSuccess": "已向 {{count}} 位伙伴发送组队邀请。",
     "groupError": "无法发送组队邀请，请稍后重试。",
     "groupProfileRequired": "请先填写你的伙伴资料。",
-    "groupSelectAriaLabel": "选择 {{nickname}} 加入组队邀请"
+    "groupSelectAriaLabel": "选择 {{nickname}} 加入组队邀请",
+    "engChattingTitle": "正在约定中",
+    "engChattingSub": "在聊天中与伙伴约定吧。",
+    "engAppointmentTitle": "约定已定！祝你玩得愉快",
+    "engAppointmentSub": "在聊天室查看已确认的约定。",
+    "engPostUseTitle": "庆典玩得还好吗？",
+    "engPostUseSub": "给一起同行的伙伴写一份评价吧。",
+    "engRoomCta": "前往聊天室",
+    "engPostUseCta": "写评价"
   },
   "safetyNotice": {
     "ariaLabel": "安全须知",
