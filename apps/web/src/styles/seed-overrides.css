@@ -41,3 +41,18 @@ body {
     'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui,
     'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
 }
+
+/* 폼/콘텐츠 다이얼로그(.compose-dialog) — SEED 기본 dialog content 의 좁은 max-width:272px 와
+ * word-break:break-all 은 폼(글쓰기 등)에 부적합하다(라벨/텍스트가 글자 단위로 쪼개짐).
+ * 인스턴스가 지정한 폭을 존중하고, 한국어는 어절 단위(keep-all)로 끊는다.
+ * unlayered + all.css 후행 로드 + 복합 셀렉터로 SEED 기본값을 이긴다. */
+.compose-dialog.seed-dialog__content,
+.compose-dialog {
+  max-width: min(480px, 92vw);
+  width: min(480px, 92vw);
+  word-break: keep-all;
+}
+/* 카테고리 토글(SegmentedControl) 라벨이 좁은 칸에서 줄바꿈되지 않도록 */
+.compose-dialog .seed-segmented-control__item {
+  white-space: nowrap;
+}
