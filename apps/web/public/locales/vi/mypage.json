@@ -151,7 +151,22 @@
       "fri": "T6",
       "sat": "T7"
     },
-    "summaryLabel": "Tóm tắt lịch"
+    "summaryLabel": "Tóm tắt lịch",
+    "viewToggleAriaLabel": "Chế độ xem lịch",
+    "prevWeek": "Tuần trước",
+    "nextWeek": "Tuần sau",
+    "prevYear": "Năm trước",
+    "nextYear": "Năm sau",
+    "yearMonthCount": "{{count}} sự kiện",
+    "yearMonthNone": "Không có",
+    "bookmarkSection": "Mục đã lưu",
+    "carouselPrev": "Trước",
+    "carouselNext": "Sau",
+    "view": {
+      "week": "Tuần",
+      "month": "Tháng",
+      "year": "Năm"
+    }
   },
   "credit": {
     "title": "Lịch sử tín dụng",
@@ -317,5 +332,13 @@
     "logoutAllSuccess": "Đã ngắt {{count}} phiên.",
     "logoutFailed": "Đăng xuất thất bại: {{message}}",
     "hint": "Nếu nghi ngờ mất mát hoặc bị đánh cắp, hãy sử dụng đăng xuất tất cả thiết bị."
+  },
+  "nav": {
+    "heading": "Menu trang của tôi",
+    "notifications": "Cài đặt thông báo",
+    "community": "Cộng đồng",
+    "chatRooms": "Phòng chat",
+    "profile": "Xem / sửa hồ sơ",
+    "credits": "Lịch sử tín dụng"
   }
 }

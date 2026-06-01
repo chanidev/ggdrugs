@@ -5,6 +5,9 @@ import {
   MonthCalendar,
   type CalendarEvent,
 } from '../../../components/calendar/MonthCalendar';
+import { WeekCalendar } from '../../../components/calendar/WeekCalendar';
+import { YearCalendar } from '../../../components/calendar/YearCalendar';
+import { BookmarkCarousel } from '../parts/BookmarkCarousel.js';
 import {
   fetchMyBookmarks,
   fetchMyReviews,
@@ -32,6 +35,8 @@ export function CalendarTab() {
   const [year, setYear] = useState(now.getFullYear());
   const [month0, setMonth0] = useState(now.getMonth());
   const [selectedDate, setSelectedDate] = useState<string | null>(ymd(now));
+  // 와이어 6번 "주간/월간/연간" 토글
+  const [view, setView] = useState<'week' | 'month' | 'year'>('month');
 
   const [bookmarks, setBookmarks] = useState<BookmarkListItem[]>([]);
   const [reviews, setReviews] = useState<MyReviewItem[]>([]);
@@ -153,21 +158,75 @@ export function CalendarTab() {
     selectedReviewed.length > 0 ||
     selectedAppointments.length > 0;
 
-  return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-      <MonthCalendar
-        year={year}
-        month0={month0}
-        events={calendarEvents}
-        selectedDate={selectedDate}
-        onMonthChange={(y, m) => {
-          setYear(y);
-          setMonth0(m);
-        }}
-        onDayClick={(d) => setSelectedDate(d)}
-      />
+  const shiftWeek = (deltaWeeks: number) => {
+    const base = selectedDate ? new Date(selectedDate) : new Date();
+    base.setDate(base.getDate() + deltaWeeks * 7);
+    setSelectedDate(ymd(base));
+  };
 
-      <aside className="flex flex-col gap-3 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-5">
+  const VIEWS = ['week', 'month', 'year'] as const;
+
+  return (
+    <div>
+      {/* 주간/월간/연간 토글 (와이어 6번 우상단) */}
+      <div
+        role="tablist"
+        aria-label={t('calendar.viewToggleAriaLabel')}
+        className="mb-3 inline-flex gap-px overflow-hidden rounded-(--radius-md) border border-(--color-border)"
+      >
+        {VIEWS.map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            aria-selected={view === v}
+            onClick={() => setView(v)}
+            className={`h-8 px-3 text-[13px] font-medium transition-colors ${
+              view === v
+                ? 'bg-(--color-accent) text-white'
+                : 'bg-(--color-surface) text-(--color-text-muted) hover:bg-(--color-surface-alt)'
+            }`}
+          >
+            {t(`calendar.view.${v}`)}
+          </button>
+        ))}
+      </div>
+
+      {view === 'year' ? (
+        <YearCalendar
+          year={year}
+          events={calendarEvents}
+          onMonthSelect={(m) => {
+            setMonth0(m);
+            setView('month');
+          }}
+          onShiftYear={(d) => setYear(year + d)}
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+          {view === 'week' ? (
+            <WeekCalendar
+              anchor={selectedDate ?? ymd(now)}
+              events={calendarEvents}
+              selectedDate={selectedDate}
+              onDayClick={(d) => setSelectedDate(d)}
+              onShiftWeek={shiftWeek}
+            />
+          ) : (
+            <MonthCalendar
+              year={year}
+              month0={month0}
+              events={calendarEvents}
+              selectedDate={selectedDate}
+              onMonthChange={(y, m) => {
+                setYear(y);
+                setMonth0(m);
+              }}
+              onDayClick={(d) => setSelectedDate(d)}
+            />
+          )}
+
+          <aside className="flex flex-col gap-3 rounded-(--radius-lg) border border-(--color-border) bg-(--color-surface) p-5">
         <header>
           <p className="m-0 text-[11px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
             {t('calendar.summaryLabel')}
@@ -219,7 +278,11 @@ export function CalendarTab() {
             ))}
           </ul>
         )}
-      </aside>
+          </aside>
+        </div>
+      )}
+
+      <BookmarkCarousel items={bookmarks} />
     </div>
   );
 }

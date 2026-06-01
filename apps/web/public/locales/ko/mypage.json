@@ -151,7 +151,22 @@
       "fri": "금",
       "sat": "토"
     },
-    "summaryLabel": "캘린더 요약"
+    "summaryLabel": "캘린더 요약",
+    "viewToggleAriaLabel": "캘린더 보기 전환",
+    "prevWeek": "이전 주",
+    "nextWeek": "다음 주",
+    "prevYear": "이전 해",
+    "nextYear": "다음 해",
+    "yearMonthCount": "{{count}}건",
+    "yearMonthNone": "없음",
+    "bookmarkSection": "북마크 기록",
+    "carouselPrev": "이전",
+    "carouselNext": "다음",
+    "view": {
+      "week": "주간",
+      "month": "월간",
+      "year": "연간"
+    }
   },
   "credit": {
     "title": "크레딧 내역",
@@ -317,5 +332,13 @@
     "reapplyLink": "{{label}} · 재신청",
     "reapplyTitle": "{{label}}됨 — 보완하여 재신청",
     "switchFailed": "전환 실패: {{message}}"
+  },
+  "nav": {
+    "heading": "마이페이지 메뉴",
+    "notifications": "알림 설정 하기",
+    "community": "커뮤니티",
+    "chatRooms": "채팅방 이동",
+    "profile": "프로필 보기/수정",
+    "credits": "크레딧 내역"
   }
 }

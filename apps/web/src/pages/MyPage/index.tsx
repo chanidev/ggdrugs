@@ -7,6 +7,7 @@ import { loginUrl } from '../../lib/auth-redirect';
 import { ActionButton } from 'seed-design/ui/action-button';
 import { PageShell } from './parts/PageShell.js';
 import { RoleToggleButton } from './parts/RoleToggleButton.js';
+import { MyPageNav } from './parts/MyPageNav.js';
 import { SessionFooter } from './parts/SessionFooter.js';
 import { TabBtn } from './parts/TabBtn.js';
 import { CalendarTab } from './tabs/CalendarTab.js';
@@ -65,25 +66,13 @@ export function MyPage() {
             <span className="text-(--color-accent)">•</span> {t('page.greetingUser', { nickname: user.nickname })}
           </h1>
         </div>
-        <div className="flex items-center gap-2">
-          {/* GG-MY-006 마이페이지 → 커뮤니티 진입 */}
-          <Link
-            to="/community"
-            className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] font-medium hover:border-(--color-border-hover)"
-          >
-            {t('page.communityLink')}
-          </Link>
-          {/* GG-MY-007 마이페이지 → 프로필 보기 (A_807) */}
-          <Link
-            to="/me/profile"
-            className="inline-flex h-9 items-center rounded-(--radius-md) border border-(--color-border) px-3 text-[13px] font-medium hover:border-(--color-border-hover)"
-          >
-            {t('profile.title')}
-          </Link>
-          <RoleToggleButton />
-        </div>
+        {/* GG-ROLE-001: 역할 전환 버튼 우측 상단 상시 노출. 나머지 진입점(커뮤니티/프로필/알림/채팅/크레딧)은
+            와이어 6번 우측 사이드바(MyPageNav)로 이동 — GG-MY-006/007 포함. */}
+        <RoleToggleButton />
       </header>
 
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_220px]">
+        <div className="min-w-0">
       <div
         role="tablist"
         aria-label={t('page.title')}
@@ -111,6 +100,13 @@ export function MyPage() {
       {tab === 'reviews' && <ReviewsList />}
       {tab === 'subscriptions' && <SubscriptionsList />}
       {tab === 'recommendations' && <RecommendationsList />}
+        </div>
+
+        {/* 와이어 6번 우측 네비게이션 사이드바 (A_500) */}
+        <aside className="lg:sticky lg:top-4 lg:self-start">
+          <MyPageNav />
+        </aside>
+      </div>
 
       <SessionFooter />
     </PageShell>

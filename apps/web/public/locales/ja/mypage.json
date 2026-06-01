@@ -151,7 +151,22 @@
       "fri": "金",
       "sat": "土"
     },
-    "summaryLabel": "カレンダー概要"
+    "summaryLabel": "カレンダー概要",
+    "viewToggleAriaLabel": "カレンダー表示",
+    "prevWeek": "前の週",
+    "nextWeek": "次の週",
+    "prevYear": "前の年",
+    "nextYear": "次の年",
+    "yearMonthCount": "{{count}}件",
+    "yearMonthNone": "なし",
+    "bookmarkSection": "ブックマーク履歴",
+    "carouselPrev": "前へ",
+    "carouselNext": "次へ",
+    "view": {
+      "week": "週間",
+      "month": "月間",
+      "year": "年間"
+    }
   },
   "credit": {
     "title": "クレジット履歴",
@@ -317,5 +332,13 @@
     "logoutAllSuccess": "{{count}}件のセッションを切断しました。",
     "logoutFailed": "ログアウト失敗: {{message}}",
     "hint": "紛失・盗難が疑われる場合は、すべてのデバイスからログアウトを使用してください。"
+  },
+  "nav": {
+    "heading": "マイページメニュー",
+    "notifications": "通知設定",
+    "community": "コミュニティ",
+    "chatRooms": "チャットルーム",
+    "profile": "プロフィール表示/編集",
+    "credits": "クレジット履歴"
   }
 }
