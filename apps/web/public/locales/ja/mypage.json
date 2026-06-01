@@ -234,7 +234,15 @@
     "reject": "拒否",
     "eventPrivate": "（イベントが非公開または削除済み）",
     "viewEvent": "イベントを見る",
-    "processing": "処理中…"
+    "processing": "処理中…",
+    "kickVotePrompt": "強制退会に投票してください。",
+    "kickVoteVoted": "投票済み: {{result}}",
+    "kickVoteExpired": "投票は期限切れです。",
+    "kickVoteAlready": "すでに投票済みです。",
+    "kickVote": {
+      "agree": "退会に賛成",
+      "reject": "退会に反対"
+    }
   },
   "evaluation": {
     "title": "評価",

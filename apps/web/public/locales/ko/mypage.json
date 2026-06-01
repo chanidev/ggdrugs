@@ -234,7 +234,15 @@
     "accept": "수락",
     "reject": "거절",
     "eventPrivate": "(이벤트 비공개 또는 삭제됨)",
-    "viewEvent": "이벤트 보기"
+    "viewEvent": "이벤트 보기",
+    "kickVotePrompt": "강퇴 찬반에 투표해 주세요.",
+    "kickVoteVoted": "투표 완료: {{result}}",
+    "kickVoteExpired": "투표가 만료됐어요.",
+    "kickVoteAlready": "이미 투표했어요.",
+    "kickVote": {
+      "agree": "강퇴 찬성",
+      "reject": "강퇴 반대"
+    }
   },
   "evaluation": {
     "title": "평가",

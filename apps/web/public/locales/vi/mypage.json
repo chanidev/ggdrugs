@@ -234,7 +234,15 @@
     "reject": "Từ chối",
     "eventPrivate": "(Sự kiện riêng tư hoặc đã xóa)",
     "viewEvent": "Xem sự kiện",
-    "processing": "Đang xử lý…"
+    "processing": "Đang xử lý…",
+    "kickVotePrompt": "Vui lòng bỏ phiếu về việc loại thành viên.",
+    "kickVoteVoted": "Đã bỏ phiếu: {{result}}",
+    "kickVoteExpired": "Cuộc bỏ phiếu đã hết hạn.",
+    "kickVoteAlready": "Bạn đã bỏ phiếu rồi.",
+    "kickVote": {
+      "agree": "Đồng ý loại",
+      "reject": "Phản đối"
+    }
   },
   "evaluation": {
     "title": "Đánh giá",

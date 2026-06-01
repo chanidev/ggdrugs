@@ -234,7 +234,15 @@
     "reject": "Decline",
     "eventPrivate": "(Event private or deleted)",
     "viewEvent": "View event",
-    "processing": "Processing…"
+    "processing": "Processing…",
+    "kickVotePrompt": "Please vote on the kick.",
+    "kickVoteVoted": "Voted: {{result}}",
+    "kickVoteExpired": "The vote has expired.",
+    "kickVoteAlready": "You already voted.",
+    "kickVote": {
+      "agree": "Agree to kick",
+      "reject": "Reject kick"
+    }
   },
   "evaluation": {
     "title": "Evaluation",

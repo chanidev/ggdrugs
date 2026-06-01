@@ -234,7 +234,15 @@
     "reject": "Refuser",
     "eventPrivate": "(Événement privé ou supprimé)",
     "viewEvent": "Voir l'événement",
-    "processing": "Traitement en cours…"
+    "processing": "Traitement en cours…",
+    "kickVotePrompt": "Veuillez voter sur l'exclusion.",
+    "kickVoteVoted": "Voté : {{result}}",
+    "kickVoteExpired": "Le vote a expiré.",
+    "kickVoteAlready": "Vous avez déjà voté.",
+    "kickVote": {
+      "agree": "Pour l'exclusion",
+      "reject": "Contre"
+    }
   },
   "evaluation": {
     "title": "Évaluation",

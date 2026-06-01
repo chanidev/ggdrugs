@@ -334,13 +334,14 @@ export async function proposeAppointment(req: Request, res: Response) {
       })),
     });
 
-    // 시스템 메시지
+    // 시스템 메시지 — 제안 일시(+축제명)를 본문에 포함 (와이어 9-7: 버블에 설정값 표시)
+    const apptLabel = appointedAt.toISOString().slice(0, 16).replace('T', ' ');
     await tx.chatRoomMessage.create({
       data: {
         chatRoomId,
         senderUserId: null,
         messageType: 'system',
-        body: '약속이 제안되었습니다',
+        body: `약속이 제안되었습니다 · ${apptLabel}${eventName ? ` · ${eventName}` : ''}`,
       },
     });
 
