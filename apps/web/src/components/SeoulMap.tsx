@@ -314,6 +314,14 @@ export function SeoulMap({
       const b = map.getBounds();
       const sw = b.getSouthWest();
       const ne = b.getNorthEast();
+      // 지도 bounds 가 아직 안 잡혀 한 점(min==max)이면 degenerate bbox → BFF parseBbox 가
+      // 무효(min>=max)로 400. 그런 경우 bbox 를 null 로 두면 distance sort 가 'ending' 으로
+      // fallback(FullListPanel.distanceReady)되어 400 을 피하고, 다음 idle 의 유효 bounds 로 갱신된다.
+      if (sw.getLng() >= ne.getLng() || sw.getLat() >= ne.getLat()) {
+        setMapBbox(null);
+        onBboxChange?.(null);
+        return;
+      }
       const bbox = `${sw.getLng()},${sw.getLat()},${ne.getLng()},${ne.getLat()}`;
       setMapBbox(bbox);
       onBboxChange?.(bbox);
