@@ -16,6 +16,7 @@
 
 import type { Request, Response } from 'express';
 import { prisma } from '../prisma.js';
+import { randomUUID } from 'node:crypto';
 import { logger } from '../logger.js';
 import type { AuthenticatedRequest } from '../middleware/require-auth.js';
 import { getSocketServer } from '../lib/socket-server.js';
@@ -329,6 +330,8 @@ export async function sendGroupRequest(req: Request, res: Response) {
   }
 
   const expiresAt = new Date(Date.now() + GROUP_TTL_MS);
+  // ADR 0010: 이 그룹 초대 배치를 묶는 UUID. 수락 시 같은 배치의 방으로만 합류하도록 경계.
+  const groupBatchId = randomUUID();
 
   const matchRequestIds = await prisma.$transaction(async (tx) => {
     const ids: string[] = [];
@@ -339,6 +342,7 @@ export async function sendGroupRequest(req: Request, res: Response) {
           receiverId,
           requestType: 'group',
           status: 'pending',
+          groupBatchId,
           expiresAt,
         },
         select: { matchRequestId: true },
@@ -408,6 +412,7 @@ export async function acceptMatchRequest(req: Request, res: Response) {
       receiverId: true,
       requestType: true,
       status: true,
+      groupBatchId: true,
       expiresAt: true,
     },
   });
@@ -501,12 +506,17 @@ export async function acceptMatchRequest(req: Request, res: Response) {
         await prisma.$transaction(
           async (tx) => {
             // (a) 기존 수락 방을 tx 내부에서 재조회 (경합 차단)
+            // ADR 0010: groupBatchId 가 있으면 **같은 배치**의 수락 방으로만 합류 경계 한정.
+            //   배치 식별자가 없는 레거시 그룹 요청(NULL)은 기존 신청자 단위 동작으로 폴백.
             const existingAccepted = await tx.matchRequest.findFirst({
               where: {
                 requesterId: matchRequest.requesterId,
                 requestType: 'group',
                 status: 'accepted',
                 chatRoomId: { not: null },
+                ...(matchRequest.groupBatchId
+                  ? { groupBatchId: matchRequest.groupBatchId }
+                  : {}),
               },
               select: { chatRoomId: true },
             });

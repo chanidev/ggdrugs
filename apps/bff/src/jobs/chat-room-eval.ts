@@ -582,6 +582,75 @@ async function main() {
       return f;
     });
 
+    // ── CASE 12c: match.group.batch_isolation — 같은 배치=같은 방, 다른 배치=별도 방 (ADR 0010) ──
+    // 같은 신청자(synR)가 배치1[synA,synA2] 와 배치2[synB] 를 보낸다. 배치1 이 방을 만든 뒤
+    // 배치2 수락자(synB)가 배치1 방에 합류하면 안 된다(groupBatchId 경계).
+    await check('match.group.batch_isolation', async () => {
+      const f: string[] = [];
+      const sfx = Date.now();
+      const mk = (tag: string) =>
+        prisma.user.create({ data: { socialUid: `batch_${tag}_${sfx}`, authProvider: 'dev', nickname: `B${tag}${sfx}`, activeRole: 'user' } });
+      const [synR, synA, synA2, synB] = await Promise.all([mk('r'), mk('a'), mk('a2'), mk('b')]);
+      const ids = [synR.userId, synA.userId, synA2.userId, synB.userId];
+      // 수신자(+requester) MateProfile(groupApply=true) — groupapply 게이트 통과용
+      await prisma.mateProfile.createMany({
+        data: ids.map((userId) => ({
+          userId, gender: 'M', ageRangeLower: 25, nationality: 'KR', koreanOk: true, hasCar: false,
+          consentedAt: new Date(), autoRecommend: true, groupApply: true,
+        })),
+      });
+      const rooms: bigint[] = [];
+      const authR = { userId: synR.userId, nickname: `Br${sfx}`, activeRole: 'user' };
+      try {
+        // 배치1: synR → [synA, synA2]
+        const r1 = mockRes();
+        await sendGroupRequest(mockReq({ auth: authR, body: { receiverUserIds: [synA.userId.toString(), synA2.userId.toString()] } }), r1);
+        if (r1._c.status !== 201) { f.push(`batch1 send status ${r1._c.status} != 201`); return f; }
+        const b1 = (r1._c.json as { matchRequestIds: string[] }).matchRequestIds;
+        // 배치2: synR → [synB]
+        const r2 = mockRes();
+        await sendGroupRequest(mockReq({ auth: authR, body: { receiverUserIds: [synB.userId.toString()] } }), r2);
+        if (r2._c.status !== 201) { f.push(`batch2 send status ${r2._c.status} != 201`); return f; }
+        const b2 = (r2._c.json as { matchRequestIds: string[] }).matchRequestIds;
+
+        const [m1a, m1b] = b1;
+        const [m2a] = b2;
+        if (!m1a || !m1b || !m2a) { f.push('unexpected matchRequestId count'); return f; }
+
+        // synA 수락 → 배치1 방(Room1)
+        const aRes = mockRes();
+        await acceptMatchRequest(mockReq({ auth: { userId: synA.userId, nickname: `Ba${sfx}`, activeRole: 'user' }, params: { matchRequestId: m1a } }), aRes);
+        const room1 = (aRes._c.json as { chatRoomId?: string }).chatRoomId;
+        if (!room1) { f.push(`synA accept failed: ${aRes._c.status}`); return f; }
+        rooms.push(BigInt(room1));
+
+        // synA2 수락 → 같은 배치이므로 Room1 합류
+        const a2Res = mockRes();
+        await acceptMatchRequest(mockReq({ auth: { userId: synA2.userId, nickname: `Ba2${sfx}`, activeRole: 'user' }, params: { matchRequestId: m1b } }), a2Res);
+        const room1b = (a2Res._c.json as { chatRoomId?: string }).chatRoomId;
+        if (room1b !== room1) f.push(`same-batch synA2 should join Room1(${room1}), got ${room1b}`);
+
+        // synB 수락 → 다른 배치이므로 Room1 이 아닌 별도 방(Room2)
+        const bRes = mockRes();
+        await acceptMatchRequest(mockReq({ auth: { userId: synB.userId, nickname: `Bb${sfx}`, activeRole: 'user' }, params: { matchRequestId: m2a } }), bRes);
+        const room2 = (bRes._c.json as { chatRoomId?: string }).chatRoomId;
+        if (!room2) { f.push(`synB accept failed: ${bRes._c.status}`); return f; }
+        rooms.push(BigInt(room2));
+        if (room2 === room1) f.push(`different-batch synB must NOT join Room1 — got same room ${room2}`);
+      } finally {
+        await prisma.matchRequest.deleteMany({ where: { requesterId: synR.userId } });
+        if (rooms.length > 0) {
+          await prisma.groupMembership.deleteMany({ where: { chatRoomId: { in: rooms } } });
+          await prisma.chatRoomMessage.deleteMany({ where: { chatRoomId: { in: rooms } } });
+          await prisma.chatRoom.deleteMany({ where: { chatRoomId: { in: rooms } } });
+        }
+        await prisma.notification.deleteMany({ where: { userId: { in: ids } } });
+        await prisma.mateProfile.deleteMany({ where: { userId: { in: ids } } });
+        await prisma.user.deleteMany({ where: { userId: { in: ids } } });
+      }
+      return f;
+    });
+
     // ─────────────────────────────────────────────────────────────────
     // TASK 4 — 채팅방 REST (A_805)
     // 별도 1:1 채팅방 생성 (u1↔u2) 후 모든 케이스 실행

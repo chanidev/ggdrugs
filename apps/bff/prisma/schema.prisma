@@ -771,6 +771,9 @@ model MatchRequest {
   status         String   @default("pending") @db.VarChar(20)
   // pending | accepted | rejected | expired | cancelled
   chatRoomId     BigInt?  @map("chat_room_id") // nullable — 수락 후 생성된 채팅방
+  // ADR 0010 — 그룹 초대 배치 식별자(UUID). 한 번의 그룹 초대(N명)에 동일 값. 1:1 은 NULL.
+  // 수락 시 "같은 배치의 방"으로 합류 경계를 한정해 배치 간 방 오염 방지.
+  groupBatchId   String?  @map("group_batch_id") @db.Uuid
   expiresAt      DateTime @map("expires_at") @db.Timestamptz // 1:1=+24h, group=+6h
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz
@@ -781,6 +784,7 @@ model MatchRequest {
 
   @@index([receiverId, status], map: "idx_match_req_receiver_status")
   @@index([expiresAt, status], map: "idx_match_req_expires")
+  @@index([groupBatchId, status], map: "idx_match_req_batch_status")
   @@map("match_requests")
 }
 
