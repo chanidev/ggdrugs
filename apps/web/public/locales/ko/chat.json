@@ -18,9 +18,18 @@
     "retryButton": "다시 시도",
     "aiCandidates": "AI 후보 {{count}}건 · 의미 기반",
     "examples": [
-      { "q": "이번 주말 가족이랑 볼만한 축제 알려줘", "hint": "기간 + 인원구성 + 종류 자동 매핑" },
-      { "q": "강남에서 이번 달 AI 컨퍼런스", "hint": "지역 + 기간 + 종류 + 키워드" },
-      { "q": "혼자 가도 좋은 교육형 이벤트", "hint": "인원구성 + 성향 매핑" }
+      {
+        "q": "이번 주말 가족이랑 볼만한 축제 알려줘",
+        "hint": "기간 + 인원구성 + 종류 자동 매핑"
+      },
+      {
+        "q": "강남에서 이번 달 AI 컨퍼런스",
+        "hint": "지역 + 기간 + 종류 + 키워드"
+      },
+      {
+        "q": "혼자 가도 좋은 교육형 이벤트",
+        "hint": "인원구성 + 성향 매핑"
+      }
     ]
   },
   "request": {
@@ -140,5 +149,21 @@
     "attachedImage": "첨부 이미지",
     "sticker": "스티커",
     "stickerReport": "메시지 신고"
+  },
+  "list": {
+    "title": "채팅방",
+    "subtitle": "참여 중인 메이트 채팅방",
+    "loginRequired": "로그인이 필요해요.",
+    "loadError": "채팅방을 불러오지 못했어요.",
+    "emptyTitle": "참여 중인 채팅방이 없어요",
+    "emptySubtitle": "메이트 추천에서 채팅을 신청해 대화를 시작해 보세요.",
+    "emptyCta": "메이트 추천 받기",
+    "oneToOne": "1:1",
+    "group": "그룹",
+    "ended": "종료됨",
+    "owner": "방장",
+    "memberCount": "{{count}}명",
+    "unknownMate": "상대",
+    "groupFallback": "그룹 채팅"
   }
 }

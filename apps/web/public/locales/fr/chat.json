@@ -18,9 +18,18 @@
     "retryButton": "Réessayer",
     "aiCandidates": "{{count}} candidats IA · sémantique",
     "examples": [
-      { "q": "Montre-moi des festivals où aller en famille ce week-end", "hint": "période + compagnon + type mappés automatiquement" },
-      { "q": "Conférence IA à Gangnam ce mois-ci", "hint": "région + période + type + mot-clé" },
-      { "q": "Événements éducatifs adaptés aux visites solo", "hint": "compagnon + ambiance mappés" }
+      {
+        "q": "Montre-moi des festivals où aller en famille ce week-end",
+        "hint": "période + compagnon + type mappés automatiquement"
+      },
+      {
+        "q": "Conférence IA à Gangnam ce mois-ci",
+        "hint": "région + période + type + mot-clé"
+      },
+      {
+        "q": "Événements éducatifs adaptés aux visites solo",
+        "hint": "compagnon + ambiance mappés"
+      }
     ]
   },
   "request": {
@@ -140,5 +149,21 @@
     "attachedImage": "Image jointe",
     "sticker": "Autocollant",
     "stickerReport": "Signaler le message"
+  },
+  "list": {
+    "title": "Discussions",
+    "subtitle": "Vos salons de discussion entre mates",
+    "loginRequired": "Veuillez vous connecter.",
+    "loadError": "Impossible de charger vos discussions.",
+    "emptyTitle": "Aucun salon de discussion",
+    "emptySubtitle": "Demandez une discussion depuis les recommandations de mates pour commencer.",
+    "emptyCta": "Obtenir des recommandations",
+    "oneToOne": "1:1",
+    "group": "Groupe",
+    "ended": "Terminé",
+    "owner": "Hôte",
+    "memberCount": "{{count}} membres",
+    "unknownMate": "Mate",
+    "groupFallback": "Discussion de groupe"
   }
 }

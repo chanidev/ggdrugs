@@ -18,9 +18,18 @@
     "retryButton": "Thử lại",
     "aiCandidates": "{{count}} ứng viên AI · ngữ nghĩa",
     "examples": [
-      { "q": "Cho tôi xem các lễ hội có thể đi cùng gia đình cuối tuần này", "hint": "thời gian + đồng hành + loại tự động ánh xạ" },
-      { "q": "Hội nghị AI ở Gangnam tháng này", "hint": "khu vực + thời gian + loại + từ khóa" },
-      { "q": "Sự kiện giáo dục phù hợp đi một mình", "hint": "đồng hành + phong cách ánh xạ" }
+      {
+        "q": "Cho tôi xem các lễ hội có thể đi cùng gia đình cuối tuần này",
+        "hint": "thời gian + đồng hành + loại tự động ánh xạ"
+      },
+      {
+        "q": "Hội nghị AI ở Gangnam tháng này",
+        "hint": "khu vực + thời gian + loại + từ khóa"
+      },
+      {
+        "q": "Sự kiện giáo dục phù hợp đi một mình",
+        "hint": "đồng hành + phong cách ánh xạ"
+      }
     ]
   },
   "request": {
@@ -140,5 +149,21 @@
     "attachedImage": "Ảnh đính kèm",
     "sticker": "Sticker",
     "stickerReport": "Báo cáo tin nhắn"
+  },
+  "list": {
+    "title": "Trò chuyện",
+    "subtitle": "Các phòng chat mate của bạn",
+    "loginRequired": "Vui lòng đăng nhập.",
+    "loadError": "Không thể tải các cuộc trò chuyện.",
+    "emptyTitle": "Chưa có phòng chat nào",
+    "emptySubtitle": "Hãy gửi yêu cầu trò chuyện từ gợi ý mate để bắt đầu.",
+    "emptyCta": "Nhận gợi ý mate",
+    "oneToOne": "1:1",
+    "group": "Nhóm",
+    "ended": "Đã kết thúc",
+    "owner": "Trưởng nhóm",
+    "memberCount": "{{count}} thành viên",
+    "unknownMate": "Mate",
+    "groupFallback": "Trò chuyện nhóm"
   }
 }
