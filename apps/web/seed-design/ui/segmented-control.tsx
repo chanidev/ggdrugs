@@ -30,7 +30,10 @@ export const SegmentedControl = React.forwardRef<HTMLDivElement, SegmentedContro
     return (
       <SeedSegmentedControl.Root ref={ref} {...otherProps}>
         {children}
-        <SeedSegmentedControl.Indicator />
+        {/* 미선택(controlled value="")일 때는 인디케이터(thumb)를 렌더하지 않는다.
+            매칭되는 아이템이 없으면 thumb 가 컨트롤 왼쪽 바깥으로 늘어지는 버그 방지.
+            값이 선택되면(또는 uncontrolled) 정상적으로 표시·슬라이드된다. */}
+        {otherProps.value !== "" && <SeedSegmentedControl.Indicator />}
       </SeedSegmentedControl.Root>
     );
   },
