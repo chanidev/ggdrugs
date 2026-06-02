@@ -359,7 +359,6 @@ export function ChatRoomPage() {
       {eventBoxOpen && (
         <EventSelectDialog
           chatRoomId={id}
-          currentEventId={room?.eventId ?? null}
           onClose={() => setEventBoxOpen(false)}
           onSelected={(eventId) => {
             if (room) setRoom({ ...room, eventId });
@@ -556,7 +555,7 @@ function MenuDialog({
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Backdrop />
       <Dialog.Positioner>
-        <Dialog.Content className="w-[320px] max-w-[92vw]">
+        <Dialog.Content className="dialog-fit dialog-w320">
           <Dialog.Header>
             <Dialog.Title>{isOwner ? t('room.ownerMenu') : t('room.chatMenu')}</Dialog.Title>
           </Dialog.Header>
@@ -691,12 +690,10 @@ function MenuDialog({
 
 function EventSelectDialog({
   chatRoomId,
-  currentEventId,
   onClose,
   onSelected,
 }: {
   chatRoomId: string;
-  currentEventId: string | null;
   onClose: () => void;
   onSelected: (eventId: string) => void;
 }) {
@@ -767,7 +764,7 @@ function EventSelectDialog({
       <Dialog.Root open onOpenChange={(open) => { if (!open) setSummaryOpen(false); }}>
         <Dialog.Backdrop />
         <Dialog.Positioner>
-          <Dialog.Content className="w-[340px] max-w-[92vw]">
+          <Dialog.Content className="dialog-fit dialog-w340">
             <Dialog.Header>
               <Dialog.Title>{selectedEvent.title}</Dialog.Title>
               <Dialog.Description>
@@ -836,7 +833,7 @@ function EventSelectDialog({
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Backdrop />
       <Dialog.Positioner>
-        <Dialog.Content className="w-[360px] max-w-[92vw]">
+        <Dialog.Content className="dialog-fit dialog-w360">
           <Dialog.Header>
             <Dialog.Title>{t('room.eventSelectTitle')}</Dialog.Title>
             <Dialog.Description>
@@ -866,13 +863,6 @@ function EventSelectDialog({
                 {t('room.searchBtn')}
               </ActionButton>
             </div>
-
-            {/* 현재 선택된 축제 안내 */}
-            {currentEventId && searchResults.length === 0 && (
-              <p className="text-[12px] text-(--color-text-muted)">
-                {t('room.currentEvent', { id: currentEventId })}
-              </p>
-            )}
 
             {/* 검색 결과 목록 */}
             {searchResults.length > 0 && (
@@ -997,7 +987,7 @@ function AppointmentDialog({
     <Dialog.Root open onOpenChange={(open) => { if (!open) onClose(); }}>
       <Dialog.Backdrop />
       <Dialog.Positioner>
-        <Dialog.Content className="w-[360px] max-w-[92vw]">
+        <Dialog.Content className="dialog-fit dialog-w360">
           <Dialog.Header>
             <Dialog.Title>{t('room.appointmentTitle')}</Dialog.Title>
             {canVote && (

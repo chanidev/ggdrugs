@@ -48,6 +48,9 @@ body {
  * unlayered + all.css 후행 로드 + 복합 셀렉터로 SEED 기본값을 이긴다. */
 .compose-dialog.seed-dialog__content,
 .compose-dialog {
+  /* flex:0 1 auto — SEED 기본 .seed-dialog__content{flex:1 1 0%} 가 positioner(justify:center)
+   * 안에서 콘텐츠를 92vw 까지 늘려 지정 width 를 무시한다. flex-grow 를 꺼야 width 가 적용됨. */
+  flex: 0 1 auto;
   max-width: min(480px, 92vw);
   width: min(480px, 92vw);
   word-break: keep-all;
@@ -56,3 +59,20 @@ body {
 .compose-dialog .seed-segmented-control__item {
   white-space: nowrap;
 }
+
+/* 폭 지정 다이얼로그(.dialog-fit) — SEED 기본 dialog content 의 max-width:272px 가
+ * 인스턴스가 지정한 폭(예: 360px)보다 작아 내부 요소(검색 버튼 등)가 카드 밖으로 넘친다.
+ * Tailwind v4 유틸(@layer)은 unlayered SEED CSS 에 지므로(width/max-width 모두) 여기서
+ * unlayered + 복합 셀렉터로 명시 폭을 지정한다. width 와 max-width 를 함께 줘야
+ * (max-width 만 풀면 SEED 가 92vw 로 부풀림) 의도한 폭으로 고정된다. */
+.dialog-fit.seed-dialog__content,
+.dialog-fit {
+  /* flex:0 1 auto — SEED {flex:1 1 0%} 의 grow 를 꺼야 아래 width 가 실제 폭이 된다.
+   * (positioner 가 justify-content:center 라 grow 0 이면 지정 폭으로 중앙 정렬됨) */
+  flex: 0 1 auto;
+  max-width: 92vw;
+  word-break: keep-all;
+}
+.dialog-fit.dialog-w320 { width: min(320px, 92vw); }
+.dialog-fit.dialog-w340 { width: min(340px, 92vw); }
+.dialog-fit.dialog-w360 { width: min(360px, 92vw); }
