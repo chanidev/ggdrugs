@@ -18,9 +18,12 @@ export default defineConfig({
     port: 5173,
     proxy: {
       // BFF — /api/* 는 BFF로 프록시, /api prefix 제거하고 전달
+      // ws:true — Socket.IO 웹소켓 업그레이드(/api/socket.io)를 BFF로 프록시.
+      //           누락 시 ws 핸드셰이크가 vite에서 끊겨 실시간 채팅 전송이 동작하지 않음.
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        ws: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
