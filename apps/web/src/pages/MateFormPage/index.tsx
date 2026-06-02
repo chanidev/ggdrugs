@@ -273,6 +273,7 @@ export function MateFormPage() {
                 {/* 연령대 */}
                 <FieldRow label={t('form.ageRange')} required>
                   <SegmentedControl
+                    className="age-segmented"
                     aria-label={t('form.ageRangeAriaLabel')}
                     value={form.ageRangeLower !== null ? String(form.ageRangeLower) : ''}
                     onValueChange={(v) => upd('ageRangeLower', Number(v) as AgeRange)}
@@ -384,6 +385,7 @@ export function MateFormPage() {
                   onDontCareChange={(v) => upd('prefAgeDontCare', v)}
                 >
                   <SegmentedControl
+                    className="age-segmented"
                     aria-label={t('form.prefAgeRangeAriaLabel')}
                     value={form.prefAgeLower !== null ? String(form.prefAgeLower) : ''}
                     onValueChange={(v) => upd('prefAgeLower', Number(v) as AgeRange)}

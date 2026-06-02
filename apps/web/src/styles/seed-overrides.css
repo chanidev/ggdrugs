@@ -76,3 +76,9 @@ body {
 .dialog-fit.dialog-w320 { width: min(320px, 92vw); }
 .dialog-fit.dialog-w340 { width: min(340px, 92vw); }
 .dialog-fit.dialog-w360 { width: min(360px, 92vw); }
+
+/* 연령대 세그먼트(9개 항목: 10~14 … 50~54) — SEED 기본 item min-width:86px 라
+ * 9×86=774px > 트랙 폭(약 608px) 으로 항목이 회색 트랙 밖으로 튀어나온다.
+ * min-width 를 풀면 grid 1fr 이 9개를 균등 분배(각 ~67px)해 한 줄에 들어간다.
+ * .age-segmented 는 연령대/선호연령대 SegmentedControl 에만 부여(2지선다 컨트롤엔 영향 없음). */
+.age-segmented .seed-segmented-control__item { min-width: 0; }
