@@ -122,6 +122,7 @@
     "email": "Email: {{email}}",
     "back": "Quay lại",
     "viewDetail": "Xem chi tiết",
+    "selectedEventAria": "Sự kiện đã chọn: {{title}}, xem chi tiết",
     "selectThisEvent": "Chọn sự kiện này",
     "eventNotFound": "Không tìm thấy sự kiện.",
     "eventSelectFail": "Không thể chọn sự kiện.",

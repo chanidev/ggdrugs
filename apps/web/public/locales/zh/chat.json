@@ -122,6 +122,7 @@
     "email": "邮箱：{{email}}",
     "back": "返回",
     "viewDetail": "查看详情",
+    "selectedEventAria": "已选活动：{{title}}，查看详情",
     "selectThisEvent": "选择此活动",
     "eventNotFound": "找不到该活动。",
     "eventSelectFail": "无法选择活动。",

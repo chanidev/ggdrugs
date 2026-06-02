@@ -122,6 +122,7 @@
     "email": "E-mail : {{email}}",
     "back": "Retour",
     "viewDetail": "Voir les détails",
+    "selectedEventAria": "Événement sélectionné : {{title}}, voir les détails",
     "selectThisEvent": "Choisir cet événement",
     "eventNotFound": "Événement introuvable.",
     "eventSelectFail": "Impossible de sélectionner l'événement.",

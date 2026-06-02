@@ -94,6 +94,19 @@ export function ChatRoomPage() {
     }
   }, [allMessages.length]);
 
+  // ── 선택된 축제 상세 (GG-ROOM-003: 룸 본문 축제 박스 + 주관처 연락처) ──
+  // room.eventId 가 정해지거나 바뀌면 상세를 받아 헤더 아래 배너로 표시한다.
+  const [roomEvent, setRoomEvent] = useState<BffEventDetail | null>(null);
+  useEffect(() => {
+    const eid = room?.eventId ?? null;
+    if (!eid) { setRoomEvent(null); return; }
+    let mounted = true;
+    fetchEventDetail(eid)
+      .then((d) => { if (mounted) setRoomEvent(d); })
+      .catch(() => { if (mounted) setRoomEvent(null); });
+    return () => { mounted = false; };
+  }, [room?.eventId]);
+
   const isOwner = user ? (room?.ownerUserId === user.userId || members.find((m) => m.userId === user.userId)?.role === 'owner') : false;
   const myUserId = user?.userId ?? '';
 
@@ -221,6 +234,28 @@ export function ChatRoomPage() {
               </button>
             </div>
           </div>
+
+          {/* 선택된 축제 박스 (GG-ROOM-003) — 룸에 축제가 정해지면 헤더 아래에 표시.
+              제목·지역·기간 + 주관처 연락처(있으면). 클릭 시 이벤트 상세로 이동. */}
+          {roomEvent && (
+            <button
+              type="button"
+              onClick={() => void navigate(`/events/${roomEvent.eventId}`)}
+              className="flex w-full items-center gap-2.5 border-b border-(--color-border) bg-(--color-accent)/5 px-4 py-2.5 text-left transition-colors hover:bg-(--color-accent)/10"
+              aria-label={t('room.selectedEventAria', { title: roomEvent.title })}
+            >
+              <span aria-hidden className="text-[16px]">&#127881;</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[13px] font-semibold text-(--color-text)">{roomEvent.title}</span>
+                <span className="block truncate text-[12px] text-(--color-text-muted)">
+                  {roomEvent.region.sidoName}{roomEvent.region.sigunguName ? ` ${roomEvent.region.sigunguName}` : ''}
+                  {' · '}{roomEvent.startDate}~{roomEvent.endDate}
+                  {roomEvent.organizer?.phone ? ` · ${t('room.contact', { phone: roomEvent.organizer.phone })}` : ''}
+                </span>
+              </span>
+              <span aria-hidden className="shrink-0 text-[12px] font-medium text-(--color-accent)">{t('room.viewDetail')}</span>
+            </button>
+          )}
 
           {/* 약속 확정 안내 배너 (GG-ROOM-021) */}
           {appointmentConfirmed && (

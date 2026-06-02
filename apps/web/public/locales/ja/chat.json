@@ -122,6 +122,7 @@
     "email": "メール：{{email}}",
     "back": "戻る",
     "viewDetail": "詳細を見る",
+    "selectedEventAria": "選択された祭り: {{title}}、詳細を見る",
     "selectThisEvent": "このイベントに決める",
     "eventNotFound": "イベントが見つかりません。",
     "eventSelectFail": "イベントを選択できませんでした。",

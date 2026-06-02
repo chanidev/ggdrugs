@@ -119,6 +119,13 @@ function RoomCard({ room, myUserId }: { room: ChatRoomSummaryOut; myUserId: stri
           {t('list.memberCount', { count: room.members.length })}
           {room.myRole === 'owner' ? ` · ${t('list.owner')}` : ''}
         </p>
+        {/* 선택된 축제 (GG-ROOM-003/004) — 정해진 축제가 있으면 표시 */}
+        {room.eventTitle && (
+          <p className="mt-0.5 flex items-center gap-1 truncate text-[12px] font-medium text-(--color-accent)">
+            <span aria-hidden>&#127881;</span>
+            <span className="truncate">{room.eventTitle}</span>
+          </p>
+        )}
       </div>
       <span aria-hidden className="text-(--color-text-subtle)">›</span>
     </Link>

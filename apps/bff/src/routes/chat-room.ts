@@ -91,6 +91,20 @@ export async function listMyChatRooms(req: Request, res: Response) {
     orderBy: { chatRoom: { updatedAt: 'desc' } },
   });
 
+  // 선택된 축제명 — ChatRoom↔Event 관계가 없어(스칼라 eventId만) id→title 일괄 조회로 매핑.
+  const eventIds = [
+    ...new Set(
+      memberships
+        .map((m) => m.chatRoom.eventId)
+        .filter((x): x is bigint => x !== null)
+        .map((x) => x.toString()),
+    ),
+  ].map((s) => BigInt(s));
+  const events = eventIds.length
+    ? await prisma.event.findMany({ where: { eventId: { in: eventIds } }, select: { eventId: true, title: true } })
+    : [];
+  const titleById = new Map(events.map((e) => [e.eventId.toString(), e.title]));
+
   res.status(200).json({
     items: memberships.map((m) => ({
       chatRoomId: m.chatRoom.chatRoomId.toString(),
@@ -98,6 +112,7 @@ export async function listMyChatRooms(req: Request, res: Response) {
       status: m.chatRoom.status,
       maxMembers: m.chatRoom.maxMembers,
       eventId: m.chatRoom.eventId?.toString() ?? null,
+      eventTitle: m.chatRoom.eventId ? (titleById.get(m.chatRoom.eventId.toString()) ?? null) : null,
       ownerUserId: m.chatRoom.ownerUserId?.toString() ?? null,
       myRole: m.role,
       lastSeenAt: m.lastSeenAt?.toISOString() ?? null,
@@ -218,21 +233,56 @@ export async function selectEvent(req: Request, res: Response) {
     return;
   }
 
-  // 이벤트 존재 + approved 확인
+  // 이벤트 존재 + approved 확인 (시스템 메시지용 title 포함)
   const event = await prisma.event.findFirst({
     where: { eventId, approvalStatus: 'approved', isDeleted: false },
-    select: { eventId: true },
+    select: { eventId: true, title: true },
   });
   if (!event) {
     res.status(404).json({ error: 'event_not_found' });
     return;
   }
 
+  // 변경 여부 판단 — 같은 축제 재선택이면 시스템 메시지를 다시 올리지 않는다(스레드 노이즈 방지).
+  const before = await prisma.chatRoom.findUnique({
+    where: { chatRoomId },
+    select: { eventId: true },
+  });
+  const changed = (before?.eventId?.toString() ?? null) !== eventId.toString();
+
   const updated = await prisma.chatRoom.update({
     where: { chatRoomId },
     data: { eventId },
     select: { chatRoomId: true, eventId: true, updatedAt: true },
   });
+
+  // GG-ROOM-003/004: 축제가 새로 정해지거나 바뀌면 스레드에 시스템 메시지 + 실시간 브로드캐스트.
+  // (약속 제안과 동일 패턴 — 멤버 전원이 '반응'을 보게 한다. 실패해도 선택 자체는 성공으로 응답.)
+  if (changed) {
+    try {
+      const sysMsg = await prisma.chatRoomMessage.create({
+        data: {
+          chatRoomId,
+          senderUserId: null,
+          messageType: 'system',
+          body: `이 채팅방의 축제가 '${event.title}'(으)로 정해졌어요`,
+        },
+      });
+      const out = {
+        messageId: sysMsg.messageId.toString(),
+        chatRoomId: chatRoomId.toString(),
+        senderUserId: null,
+        messageType: sysMsg.messageType,
+        body: sysMsg.body ?? null,
+        attachmentUrl: null,
+        stickerId: null,
+        createdAt: sysMsg.createdAt.toISOString(),
+      };
+      getSocketServer().to(`room:${chatRoomId.toString()}`).emit('message', out);
+    } catch (err) {
+      logger.warn({ err, chatRoomId: chatRoomId.toString() }, 'event-select system message failed');
+    }
+  }
 
   logger.info(
     { action: 'chat_room_event_select', chatRoomId: chatRoomId.toString(), eventId: eventId.toString(), userId: maskId(auth.userId) },
@@ -242,6 +292,7 @@ export async function selectEvent(req: Request, res: Response) {
   res.status(200).json({
     chatRoomId: updated.chatRoomId.toString(),
     eventId: updated.eventId?.toString() ?? null,
+    eventTitle: event.title,
     updatedAt: updated.updatedAt.toISOString(),
   });
 }

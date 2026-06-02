@@ -28,6 +28,7 @@ export interface ChatRoomSummaryOut {
   status: 'active' | 'ended';
   maxMembers: number;
   eventId: string | null;
+  eventTitle: string | null;
   ownerUserId: string | null;
   myRole: 'owner' | 'member';
   lastSeenAt: string | null;
