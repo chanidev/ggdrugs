@@ -1,167 +1,81 @@
-# Wiki Lint Report
+# Wiki Lint Report — 의미적 점검
 
-**Generated**: 2026-04-26 sprint sweep — chat v3.3 ~ v4 + Sprint A 후속
-**Scope**: `wiki/` 전체 (4 sources + **22 topics** + 5 entities, index/log 제외) + `raw/` 1:1 invariant + GRAPH_REPORT.md cross-check
-**이전 lint**: 2026-04-23 sprint 5 (chat v3 commit + Streaming SSE ship 직후)
+- **생성일**: 2026-06-09
+- **점검 범위**: `wiki/index.md`, `wiki/topics/*.md` (22), `wiki/entities/*.md` (5)
+- **방식**: 구조 lint(`wiki:lint`, 0 drift) 통과 후, LLM 의미적 점검 3축 병렬 — ①내부 모순·용어 ②위키↔실제 코드/ADR/스키마 괴리 ③구현됐으나 누락된 개념
+- **대조 기준(ground truth)**: `apps/bff/prisma/schema.prisma`, `docs/decisions/0001~0010`, `docker-compose.yml`, 각 `package.json`/`requirements.txt`, `CLAUDE.md`
+- **이전 리포트**: 2026-04-26 sprint sweep (구조 중심)
 
 ---
 
-## 요약
+## 한 줄 진단
 
-| 카테고리 | 이전 | 현재 (post P1) | post P2+P3 |
+**위키는 Phase 1(2026-04, 서울 한정, 23테이블)에 동결됨.** 이후 출하된 ADR 0006(전국 확장), ADR 0007(Phase 2 커뮤니티+메이트 매칭, ~20개 신규 테이블), ADR 0008(SEED Design), 0009/0010, PostGIS 마이그레이션이 미반영. 일부 페이지(ingest, semantic-search, ai-enrichment, auth)는 패치됐으나 schema/UI/stack/use-case "척추" 페이지는 그대로.
+
+---
+
+## A. 누락 개념 — Phase 2 전체 미문서화 (가장 큰 구멍)
+
+기존 22토픽은 Phase 0/1만 다룸. 아래 8개 서브시스템은 **코드로 출하됐으나 전용 위키 페이지 0개** (스키마·BFF 라우트의 약 절반).
+
+| # | 심각도 | 기능 | 근거 (실제 파일) | 권장 페이지 |
+|---|---|---|---|---|
+| A1 | HIGH | 메이트 매칭 (일방 점수·메이트지수 0~100·동의 게이팅) | `routes/mate.ts`, `lib/mate-score.ts`, `lib/mate-index-updater.ts`, `jobs/mate-eval.ts`, `MateProfile`/`MateIndex`, ADR 0007 | `mate-matching.md` |
+| A2 | HIGH | 메이트 채팅방 1:1/그룹 (Socket.IO·강퇴투표·타임아웃) — LLM 검색챗과 별개 | `routes/chat-room.ts`, `routes/match-request.ts`, `jobs/chat-room-eval.ts`, `chat-scheduler.ts`, `ChatRoom`/`ChatRoomMessage`/`MatchRequest`/`GroupMembership`, ADR 0007/0010 | `mate-chat-rooms.md` |
+| A3 | HIGH | 커뮤니티 (게시글·댓글·좋아요·TTL) | `routes/posts.ts`, `jobs/community-eval.ts`, `Post`/`Comment`/`PostLike` | `community.md` |
+| A4 | HIGH | 약속·캘린더 (제안/합의/역제안·+36h만료·단일거절 종료) | `routes/appointments.ts`, `Appointment`/`AppointmentVote`, ADR 0009 | `appointments-calendar.md` |
+| A5 | HIGH | 메이트 평가·축제 리뷰/설문 (A_900/901) | `routes/evaluation.ts`, `jobs/slice5-eval.ts`, `MateEvaluation`/`FestivalSurvey`/`FestivalReview` | `mate-evaluation-festival-review.md` |
+| A6 | MED | 크레딧/포인트 원장 (append-only, +10 적립) | `CreditLedger`, `routes/me.ts::listMyCredits`, ADR 0007 결정5 | `credits-ledger.md` |
+| A7 | MED | 신고·차단 + 관리자 제재 (경고/정지) | `routes/reports.ts`, `routes/admin-reports.ts`, `jobs/report-eval.ts`/`notif-eval.ts`, `Report`/`Block` | `reports-blocking-moderation.md` |
+| A8 | MED | i18n 다국어 6개 로케일 | `jobs/generate-i18n-bundles.ts`, `routes/translate.ts`, `lib/translation-cache.ts`, `web/public/locales/{ko,en,vi,zh,ja,fr}` | `i18n-multilingual.md` |
+
+추가: taste-profile 집계(`aggregate-taste-profiles.ts`)는 `recommendations.md` 섹션으로 보강 가능(LOW). ADR 토픽은 0001/0002만 존재 — **0007/0009/0010이 핵심 미문서**(위 A1~A5가 커버).
+
+**역점검(dead doc)**: 없음. 22토픽 전부 실제 코드에 매핑됨. 위키는 "틀린" 게 아니라 "Phase 1에서 멈춘" 것.
+
+---
+
+## B. 위키 ↔ 실제 코드/ADR 괴리 (낡은 사실)
+
+| # | 심각도 | 위키 (낡은 진술) | 실제 (근거) | 조치 |
+|---|---|---|---|---|
+| B1 | HIGH | `db-schema-overview.md` "23 테이블" | `schema.prisma` ~43 모델 (Phase 2 ~20개 추가) | Phase 2 도메인 그룹 추가, 테이블 수 ~43으로 |
+| B2 | HIGH | `events` lat/lng 컬럼 + `idx_events_geo` B-tree (schema/ingest 페이지) | `locationGeom geometry(Point,4326)`, lat/lng DROP (mig `20260426203000`) — semantic-search는 이미 반영 | `location_geom` + GiST 인덱스로, ingest step8을 `ST_SetSRID` 경로로 |
+| B3 | HIGH | 서울 한정 (`main-page-flow.md` "서울시 자치구 지도", "서울 외 확장 대기") | ADR 0006 전국 17시도+~230시군구 | 전국으로, "확장 대기" 미결사항 제거 |
+| B4 | HIGH | `kcisa.md` "Seoul 필터 가드 `isSeoulAddress()`" | ADR 0006으로 제거. 같은 위키 ingest 페이지도 "가드 없음"이라 **자기모순** | Seoul 필터 섹션 삭제 |
+| B5 | HIGH | `tourapi.md` "`areaCode=1`(서울)" 현재 동작 | ADR 0006 Appendix A: 잠재버그로 제거, areaCode 파라미터화·전국 | areaCode 파라미터화(전국 기본)로 정정 |
+| B6 | MED | UI/stack 페이지에 SEED Design·i18n·Socket.IO 누락 | `web/package.json`: `@seed-design/*`, `@karrotmarket/...`, `i18next`, `socket.io-client`; ADR 0008 | SEED Design 행 추가, i18n·Socket.IO 명시 |
+| B7 | MED | Phase 1 상태 표기 (`tech-stack`, `ui-architecture`) | ADR 0007/0008/0009/0010 모두 Phase 2 출하 | Phase 2로 갱신 |
+| B8 | MED | BFF "Express5+pino+Prisma, Node22", 실시간 계층 없음; "큐 BullMQ 유력/세션vsJWT 미결" | `bff/package.json`: `socket.io`+`@socket.io/redis-adapter`+`ioredis`; auth는 opaque-session 출하, BullMQ/TanStack 없음 | Socket.IO+Redis 추가, 해소된 "미결정" 목록 정리 |
+| B9 | MED | `terminology-glossary`/`tech-stack` "LLM = LangChain, Stage2 예정/현재 Stage1 규칙기반" | `requirements.txt`: LangChain 없음, `openai>=2.32`; 직접 작성 체인(`openai_chain.py`); Stage2 출하 완료 | "OpenAI SDK(직접 체인)"으로, Stage2 출하로 |
+| B10 | MED | `db-schema-overview` extensions에 `postgis_topology` | `schema.prisma` `extensions=[postgis,pg_trgm,unaccent,citext]` | `infra/db/init/01-postgis.sql` 확인 후 정합화 |
+| B11 | LOW | `notifications` 구독 fan-out 필드만 | `Notification`에 `readAt`/`notificationType`(match_request|group_invite|appointment|kick_vote|mate_eval|chat_message)/`relatedEntityId/Type` | Phase 2 알림 컬럼 추가 |
+| B12 | LOW | `users` 제재 필드 없음 | `User.sanctionStatus`(none|warned|suspended)/`sanctionExpiresAt`/`sanctionReason` | 제재 컬럼 명시 |
+
+**미드리프트(검증 완료·정상)**: `event-state-machine`, `filters-5-types` enum, `adr-0002-stack-decisions`(MinIO/OpenAI/Qdrant v1.13.0, 포트 9000/9001/6333) — compose와 정확히 일치. `ingest-pipeline`/`news-article-pipeline`/`semantic-search`/`ai-enrichment`/`recommendations`/`auth-flow`/`subscriptions-notifications`는 잘 유지됨.
+
+---
+
+## C. 위키 내부 모순·용어 드리프트 (코드 무관, 페이지 간)
+
+| # | 심각도 | 모순 | 조치 |
 |---|---|---|---|
-| Contradictions | 0 | **0** | 0 |
-| Stale refs | 0 | 0 | 0 |
-| Orphans | 0 | 2 | **0** — 신규 source 페이지 2건 생성 (`2026-04-26_error1`, `2026-04-17_design-system-zip`) + index.md Sources 등재 |
-| Gaps | 0 | 2 | **0** — `log.md` 2026-04-26 entry append (`802d351`) + `ui-architecture.md` 전면 갱신 (P2) |
-| Over-large pages | 0 | 0 | 0 |
-| Index drift | — | 1 | **0** — index.md Meta 섹션에 audit/ 진입점 추가 (I-1 해소) |
-| Implementation status | 미착수 6행 | 미착수 5행 | 미착수 5행 (변동 없음) |
-
-**상태**: chat backend 도메인은 박제 완벽 (semantic-search.md v3.3 → v4 + bench A/B 결과 + redact + GIN 인덱스 모두 반영). UI 도메인 (ui-architecture.md) 은 2026-04-17 부터 정체 — 8 sprint drift. raw/ 와 sources/ 1:1 invariant 가 신규 파일 1건으로 깨짐 — 결정 필요.
-
----
-
-## 1. Contradictions — ✅ 0건
-
-이번 sweep 의 ship 6건 (v3.3, v3.4, v3.5, chat:eval, v4 reply_sealed, bench A/B, Sprint A) 의 wiki drift 점검:
-
-| Commit | Drift 점검 | 박제 상태 |
-|---|---|---|
-| `dced509` chat v3.3 Hybrid (Qdrant + pg_trgm) | semantic-search.md §Hybrid search 박제 | ✅ |
-| `7cef11c` chat v3.4 Prompt injection + AbortController | semantic-search.md §Prompt injection 방어 박제 | ✅ |
-| `e94db57` chat v3.5 Grounded followup | semantic-search.md §Grounded followup 박제 | ✅ |
-| `7097d45` chat:eval harness | semantic-search.md §Chat eval harness 박제 | ✅ |
-| `1da8250` /chat/stream LLM 404 fallback | log.md 2026-04-25T17:00 박제 | ✅ |
-| `99c2cd3` chat v4 reply_sealed + bench harness | semantic-search.md §POST /chat/stream + Hybrid score tuning OQ + audit cross-link 박제 | ✅ |
-| `4ae7df1` Sprint A UI 폴리시 (typing dots / retreat fade / error retry / reduced-motion) | **drift 발견** — `ui-architecture.md` 미반영 (`TypingDots` / `RetreatMeta` / `ErrorRetryButton` / `streamFor` / `handleRetry` 박제 0). Sprint A plan/spec 은 `docs/superpowers/` 에 있으나 wiki 정본 페이지에는 미연결 | **gap** (§4 참조) |
-| `bf5223f` chat:eval golden case +2 | semantic-search.md §Chat eval harness "현재 baseline 22/22" 박제 + redact 2건 추가 명시 | ✅ |
-| `ee63ffc` docs/superpowers + audit + log 갱신 | 본 commit 자체가 박제 — log.md v4 reply_sealed + bench A/B 2 entry, audit/chat-rank-bench-2026-04-25.md 신설 | ✅ |
+| C1 | HIGH | DB 테이블 수가 4가지로 진술됨 — `index.md:29`/`db-schema-overview` 제목 "20", 본문 "23", `adr-0001` "22" | 23으로 통일 (※B1에서 ~43으로 추가 갱신) |
+| C2 | HIGH | A_300 카테고리 버튼 수: `filters-5-types`/`use-cases-index` "9버튼(전체/8종)" vs `ui-architecture:111` "5버튼" | ui-architecture를 "9버튼"으로 |
+| C3 | MED | taste profile 차원: `recommendations`/`db-schema` 3차원 vs `semantic-search:46` 4차원(preferred_companion 포함) | semantic-search에서 preferred_companion 제거 |
+| C4 | MED | `event_type` enum: CLAUDE.md 규칙 4종 vs 위키 전반 8종 — 위키 내부는 일관(8종)이나 `filters-5-types:39`가 8값 필터를 `event_type`으로 라벨 | 필터 계층은 `event_category`로 표기, 4종 규칙과 정합화 |
+| C5 | MED | use-case 수: index/use-cases "13개" vs 표에 14 ID 나열 | 14개로 정정 또는 카운트 명확화 |
+| C6 | LOW | 제품명 "GGdrugs"가 사용자대면 문맥 prose에 잔존 — `roles-and-active-role:22`, `event-detail-review-flow:17` | "Alle"로 교체(내부 코드명 지칭 시만 GGdrugs 유지) |
+| C7 | LOW | chat-eval 케이스 수: `semantic-search` 22 vs `ai-enrichment` 42 (스냅샷 시점 차) | 단일 출처로 정합화 |
+| C8 | LOW | `auth-flow` References "5개 핸들러"라 적고 7개 나열 | 7개로 |
 
 ---
 
-## 2. Stale refs — ✅ 0건
+## 우선순위 권장 (조치 순서)
 
-22 topic + 5 entity + 4 source 의 frontmatter `related:` 모두 resolve. 본 sweep 에서 추가된 cross-link `semantic-search.md → ../audit/chat-rank-bench-2026-04-25.md` 도 정상.
+1. **(최우선) Phase 2 토픽 8종 신설** — A1~A8. 위키 신뢰도 회복의 핵심. 패치가 아니라 신규 페이지 + `index.md`/`use-cases-index` 갱신.
+2. **(HIGH) 척추 페이지 전국화·스키마 갱신** — B1·B2·B3·B4·B5 (서울→전국, lat/lng→PostGIS, 테이블 수).
+3. **(MED) stack 페이지 현행화** — B6·B8·B9 (SEED Design/Socket.IO/i18n, LangChain→OpenAI, Phase 2 상태).
+4. **(LOW) 내부 카운트·용어 정합** — C1·C2·C3·C5·C6 등.
 
----
-
-## 3. Orphans — 🟡 2건
-
-### O-1. `raw/error1.png` (신규 — `ee63ffc` 커밋)
-- 54839 bytes, 2026-04-26 commit 으로 raw/ 진입.
-- `wiki/sources/2026-04-26_error1.md` **부재** — `raw/` ↔ `sources/` 1:1 invariant 위반 (schema.md §Invariants).
-- 추정: 디버깅 스크린샷이 의도와 무관하게 raw/ 에 commit. 본문 확인 후 분류 필요:
-  - (a) ingest 가치 있음 → `sources/2026-04-26_error1.md` 생성 + index.md 등재
-  - (b) 디버깅 잔여물 → 다음 commit 에서 raw/ 에서 제거 (raw/ append-only invariant 가 이미 commit 진입한 파일에 충돌하지만, 의도 외 commit 은 정정 가능)
-
-### O-2. `raw/GGdrugs Design System.zip` (사전 존재)
-- DESIGN.md 자료 묶음. 사전 lint 시점부터 존재.
-- 사용 분기: `raw/design_handoff_alle_brand/` 에 풀린 산출물 README.md 만 존재. zip 자체는 source 페이지 부재.
-- 결정 보류 권장: DESIGN.md 가 사실상 정본 역할이라 zip 의 별도 source 페이지는 가치 낮음. raw/README.md 에 "이 zip 은 DESIGN.md 의 ingredient 로 풀려있고 추가 source 페이지 없음" 한 줄 박제로 해소 권장.
-
----
-
-## 4. Gaps — 🟡 2건
-
-### G-1. `ui-architecture.md` stale (8 sprint drift)
-**최종 갱신**: 2026-04-17. 그 사이 ship 된 미반영 항목:
-- 모바일: `MobileShell.tsx` + `BottomSheet.tsx` + `MobileChatTab` 3 snap 시트 (main-page-flow.md 에는 박제, ui-architecture.md 는 §"확장 패널(accordion)" 데스크톱 가정만 유지)
-- ChatDock 컴포넌트 분해: `TypingDots`, `RetreatMeta`, `ErrorRetryButton`, `FollowupRow`, `SuggestionsRow` 5 sub-component (Sprint A 추가 3건 + 사전 2건)
-- AppShell: `streamFor(history, placeholderIndex)` 헬퍼, `handleRetry`, `chatStreamAbortRef`, `replySealed` 플래그
-- 컴포넌트 디렉터리: `EventSummaryPanel`, `ChatHelpPanel`, `OverlayPanel`, `NotificationBell`, `FilterSearchPanel`/`FullListPanel` 상세 누락
-- v4 transient 필드: `ChatMessage` 인터페이스에 `streaming` / `overriding` / `meta` / `error` 4 필드 추가 — UI 시각 효과 (typing dots / fade / retreat 메타 / retry 버튼) 매핑
-
-**조치 권장**: ui-architecture.md 전면 재작성 1 sprint. AppShell 의 state machine + ChatDock·MobileChatTab 의 v4-A 폴리시 + DESIGN.md 토큰 cross-link 강화. `apps/web/src/styles/index.css` 의 `alle-typing-wave` / `.alle-fade-text` / `prefers-reduced-motion` 분기도 박제.
-
-### G-2. `log.md` Sprint A 2026-04-26 entry 부재
-log.md 마지막 entry: 2026-04-25T19:30 Hybrid combiner A/B. 그 이후 ship:
-- Sprint A 4 commits land (`99c2cd3` v4 + bench, `4ae7df1` Sprint A UI, `bf5223f` eval cases, `ee63ffc` docs)
-- chat:eval 22/22 PASS 재확인 (avg 4622ms)
-- 3-service health 200, manual 4 시나리오 PASS
-
-log.md invariant: "ISO-8601 timestamp + append-only". 2026-04-26 entry 1건 추가로 해소.
-
----
-
-## 5. Implementation Status
-
-### sprint 5 → 본 sweep 변경
-
-| 항목 | 이전 | 현재 | 근거 |
-|---|---|---|---|
-| chat v3 미커밋 | 🟡 코드 ship 완료 (미커밋) | ✅ ship 완료 (v3.3~3.5 모두 commit + main push) | `dced509` `7cef11c` `e94db57` |
-| Streaming SSE | ✅ ship | ✅ + v4 reply_sealed 추가 | `99c2cd3` |
-| Article RAG | ✅ ship (v3.2) | (변경 없음) | — |
-| Hybrid search | ✅ ship (v3.3) | ✅ + GIN 인덱스 + bench A/B negative 결과 | `99c2cd3` 마이그레이션 `20260425085400_chat_keyword_trgm_gin` |
-| Prompt injection 방어 | ✅ ship (v3.4) | ✅ + reply redact 2차 후처리 (`_redact_reply_text`) | `99c2cd3` openai_chain.py |
-| Grounded followup | (sprint 5 직후 ship) | ✅ ship (v3.5) | `e94db57` |
-| chat:eval harness | (없음) | ✅ ship + 22 case (redact 2건 추가) | `7097d45` `bf5223f` |
-| /chat/stream LLM 404 fallback | (없음) | ✅ ship | `1da8250` |
-| chat-rank-bench (combiner A/B) | (없음) | ✅ infra ship — bench 결과 max winner, default 무변경 | `99c2cd3` `chat-rank-bench-2026-04-25.md` |
-| Streaming AbortController | ✅ ship (v3.4) | (변경 없음) | — |
-| Chat UI 폴리시 — 4 항목 + reduced-motion | (없음) | ✅ ship | `4ae7df1` |
-
-### 여전히 🔴 미착수 — Phase 2 또는 트리거 대기
-
-| 항목 | 비고 |
-|---|---|
-| PostGIS geom 전환 | 지도 viewport bbox / 반경 검색 도입 결정 시 |
-| 본인인증 prod (PASS/NICE/카카오) | ADR 0003 §개인 업로더 본인인증 후속 (인터페이스만 분리됨 — Phase 2 swap 1 지점) |
-| 사업자번호 정부 API 검증 | ADR 0003 후속 |
-| 서울 외 지역 확장 | UX 결정 |
-| 클러스터 정렬 기준 (거리/인기/최신) | UX 결정 |
-| Streaming reconnect | 네트워크 blip 시 last reply_delta 이후부터 이어받기 — semantic-search.md OQ |
-| pg_trgm 한국어 recall 개선 | bench 가 노출시킨 인접 문제. word_similarity threshold 낮추거나 token-level 매칭 보강 — semantic-search.md OQ |
-
----
-
-## 6. Over-large / low-confidence — ✅ 해당 없음
-
-| 파일 | 줄 수 | 판정 |
-|---|---|---|
-| log.md | 905 | **분할 면제** — chronological append-only, 분할 비용 > 가치. yearly archive 는 2026-12 후보 |
-| chat-rank-bench-2026-04-25.md | 292 | OK (audit 단일 sweep 산출물) |
-| semantic-search.md | 283 | OK (단일 도메인 — chat 검색 결합) |
-| 기타 topic | < 200 | OK |
-
-graphify INFERRED 비율 6% (75 edges, avg 0.81 confidence) — schema 기준 0.6 미만 0건. clean.
-
----
-
-## 7. Index drift — 🟡 1건
-
-### I-1. `wiki/audit/` 디렉터리 index.md 미언급
-- audit/chat-rank-bench-2026-04-25.md 가 sweep 산출물로 추가되었으나 index.md 의 Meta 섹션 또는 Topics 하위에 진입점 없음.
-- semantic-search.md 가 inline cross-link 하므로 grpah orphan 은 아니나, schema.md §Invariants "index.md 는 single source of truth for top-level navigation" 형식 위배.
-- **조치 권장**: index.md Meta 섹션에 한 줄:
-  - `- [audit/](audit/) — 시간 박제 audit 리포트 (chat-rank-bench, chat-eval 트렌드 등 generated)`
-
----
-
-## 권장 우선순위 (다음 sprint)
-
-이번 sweep 의 P1~P3 모두 본 세션에서 해소:
-
-1. ✅ **P1**: `log.md` 2026-04-26 Sprint A entry append (`802d351`).
-2. ✅ **P2**: `ui-architecture.md` 전면 갱신 (frontmatter `updated: 2026-04-26`, semantic-search.md cross-link 추가, AppShell state machine + ChatMessage 4 transient 필드 + 4 폴리시 매핑 + streamFor/handleRetry + MobileShell + 모션 keyframes 박제). G-1 해소.
-3. ✅ **P3**: `index.md` Meta 섹션에 `audit/` 디렉터리 + Sources 섹션에 `2026-04-26_error1` / `2026-04-17_design-system-zip` 등재 (I-1 + O-1 + O-2 해소).
-4. ✅ **P3**: `wiki/sources/2026-04-26_error1.md` placeholder source 페이지 (raw/error1.png 1:1 매핑).
-5. ✅ **P3**: `wiki/sources/2026-04-17_design-system-zip.md` source 페이지 (raw/GGdrugs Design System.zip + design_handoff_alle_brand/ 묶음, DESIGN.md ingredient 명시).
-
-다음 sprint 후보 (lint 외):
-- `.gitignore` 에 `llm_wiki/raw/error*.png` 추가 — 디버깅 산출물 우발 commit 방지.
-- chat:eval 결과 트렌드를 `wiki/audit/chat-eval-YYYY-MM-DD.md` 로 주기 박제 (semantic-search.md §Chat eval harness "향후 확장" 후보).
-
----
-
-## 향후 자동화 후보 (변동 없음)
-
-- `lint-report.md` 를 CI 에 엮어서 new drift 있으면 PR comment.
-- `auditMappingDistributionQuick` 로그 주기 리포트 → Slack/notion push.
-- graphify `graph.json` 의 node count / edge count 트렌드를 log.md 에 자동 append.
-- `admin_audit_logs` 의 daily summary (action 별 count + 최근 24h reason 샘플) → admin 모니터링.
-- 추천 만족도 측정 (CTR / convert rate) — Qdrant 전환 트리거 신호.
-- chat /chat → /events/rerank → /chat/compose-retreat → /judge/relevance 호출 카운트 + cost 로 LLM 운영 비용 dashboard.
-- chat:eval baseline (22/22 PASS, avg 4622ms) → 주기 실행 + 회귀 PR comment.
-- chat-rank-bench → 데이터 10× 성장 또는 새 신호 (사용자 클릭 로그) 도입 시 재실행 트리거.
+> 참고: 루트 `CLAUDE.md` §2도 "Phase 1 진입 / approved 4,111건"으로 자체 낡음(코드는 Phase 2). 위키 범위 밖이지만 함께 갱신 권장. (`ingest-pipeline`은 4,084행으로 또 다른 수치)

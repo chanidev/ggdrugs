@@ -17,15 +17,15 @@ related:
 
 ## Summary
 
-서울시 자치구 지도를 기반으로 한 이벤트 탐색 진입점. 데스크톱과 모바일이 다른 shell 을 쓰지만 같은 state container (`AppShell`) 를 공유 — breakpoint 전환 / 회전 시에도 선택 이벤트 / chat 메시지 / 적용 필터 보존.
+전국 시/도·시/군/구 지도를 기반으로 한 이벤트 탐색 진입점 (ADR 0006, 2026-05-27 Accepted — Phase 2 에서 서울 전용 → 전국 17 시/도 + 약 230 시/군/구 확장). 데스크톱과 모바일이 다른 shell 을 쓰지만 같은 state container (`AppShell`) 를 공유 — breakpoint 전환 / 회전 시에도 선택 이벤트 / chat 메시지 / 적용 필터 보존.
 
 ## Key points (요구사항 v5)
 
-- **지도 배경**: 서울시 자치구 경계 + Kakao Maps 클러스터 마커.
+- **지도 배경**: 전국 시/도·시/군/구 경계 + Kakao Maps 클러스터 마커 (ADR 0006 으로 전국 확장).
 - **로그인 상태**:
   - 비로그인: 탐색만 가능, 북마크·리뷰 버튼 비활성. /chat 호출은 가능 (개인화 컨텍스트만 빠짐).
   - 로그인: 사용자 nickname header, 북마크 활성, /chat 에 user_taste_profiles 기반 priorityHint 자동 주입.
-- **클러스터 클릭**: 해당 자치구 이벤트 목록 (FullListPanel / 모바일 시트 목록 탭).
+- **클러스터 클릭**: 해당 시/군/구 이벤트 목록 (FullListPanel / 모바일 시트 목록 탭).
 - **뷰 토글**: 데스크톱은 rail+overlay panel, 모바일은 풀스크린 지도 + BottomSheet (peek/full).
 - **필터 해제 ("취소하기")**: 5종 필터 + 폴리곤 하이라이트 모두 초기화 → 메인 지도 복귀.
 
@@ -59,7 +59,7 @@ related:
 ## Open questions
 
 - 클러스터 결과 목록의 정렬 기준 미정 (거리순 / 인기순 / 최신순) — 운영 데이터 쌓인 후 결정.
-- 서울 외 지역 확장 — UX 결정 대기.
+- ~~서울 외 지역 확장 — UX 결정 대기~~ → **해소** (ADR 0006, 2026-05-27): 전국 17 시/도 + 약 230 시/군/구 확장 (Phase 2).
 - 모바일 BottomSheet snap 의 'min' (10vh) 가 실사용자에게 너무 작은지 — telemetry 후 조정.
 
 ## References

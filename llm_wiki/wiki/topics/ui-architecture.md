@@ -2,7 +2,7 @@
 title: UI 아키텍처 (현 구현본)
 type: topic
 created: 2026-04-17
-updated: 2026-04-26
+updated: 2026-06-08
 sources: [2026-04-17_requirements-v5, 2026-04-17_ui-flow-draft]
 related:
   - tech-stack.md
@@ -17,7 +17,7 @@ related:
 
 ## Summary
 
-A_200 메인 페이지 웹 UI 의 **현재 코드 상태**를 정본화. Phase 1 8 sprint 끝에 수렴한 구조: **데스크톱은 rail + overlay panel + 풀 사이즈 지도 + floating ChatDock**, **모바일은 풀스크린 지도 + floating header + BottomSheet 3 snap**. AppShell 이 두 트리를 동시 렌더, CSS 미디어 쿼리로 한쪽만 노출. DESIGN.md 디자인 시스템을 Tailwind v4 `@theme` 블록으로 등록해 사용. 라우트는 단일 `/` (확장 패널이 페이지 전환 대신 overlay 로 동작). chat 결합은 [semantic-search.md §POST /chat/stream](semantic-search.md) 참조 — 본 문서는 UI 측 박제.
+A_200 메인 페이지 웹 UI 의 **현재 코드 상태**를 정본화. Phase 1 8 sprint 끝에 수렴한 구조: **데스크톱은 rail + overlay panel + 풀 사이즈 지도 + floating ChatDock**, **모바일은 풀스크린 지도 + floating header + BottomSheet 3 snap**. (이후 **Phase 2** 소셜 레이어 출하 — 커뮤니티/메이트 화면은 SEED Design 으로 별도 구축, ADR 0007/0008. 본 문서는 A_200 발견 화면 UI 정본.) AppShell 이 두 트리를 동시 렌더, CSS 미디어 쿼리로 한쪽만 노출. DESIGN.md 디자인 시스템을 Tailwind v4 `@theme` 블록으로 등록해 사용. 라우트는 단일 `/` (확장 패널이 페이지 전환 대신 overlay 로 동작). chat 결합은 [semantic-search.md §POST /chat/stream](semantic-search.md) 참조 — 본 문서는 UI 측 박제.
 
 ## 기술 스택 (실제 구현)
 
@@ -27,6 +27,10 @@ A_200 메인 페이지 웹 UI 의 **현재 코드 상태**를 정본화. Phase 1
 | 프레임워크 | React | 19 | `@types/react` 19 |
 | 라우팅 | react-router | 7 | 단일 `/` + `/me` `/uploader` `/admin` `/events/:id` 등 |
 | 스타일 | Tailwind CSS | 4 | `@tailwindcss/vite` 플러그인, `@theme` 블록에 DESIGN.md 토큰 등록 |
+| 디자인 시스템 | SEED Design | `@seed-design/css` ^1.2.12 · `@seed-design/react` ^1.2.10 · `@seed-design/vite-plugin` ^1.1.1 | Phase 2 소셜 화면(커뮤니티/메이트). ADR 0008 Option B — Alle 버밀리언·Pretendard 테마 오버라이드 |
+| 아이콘 | @karrotmarket/react-monochrome-icon | ^1.17.0 | Karrot 모노크롬 아이콘 (SEED 동반) |
+| i18n | i18next + react-i18next | i18next ^26.3.0 · react-i18next ^17.0.8 · -browser-languagedetector ^8.2.1 · -http-backend ^4.0.0 | 다국어 6종(한/영/베/중/일/프), ADR 0007 |
+| 실시간 | socket.io-client | ^4.8.3 | 메이트 채팅방(ADR 0007). Vite `/api` 프록시 `ws:true` |
 | 서체 | Pretendard Variable | 1.3.9 | jsdelivr CDN, `@font-face` 자동 로딩 |
 | 지도 | react-kakao-maps-sdk + Kakao Maps JS SDK | 1.2 | `useKakaoLoader` 로 dynamic load, 클러스터러 + vermilion pulse pin, v4.3 viewport bbox refetch (300ms debounce) |
 | 로깅 (dev) | `HealthBadge` | 자체 | 10초마다 `/api/health` ping |
@@ -108,7 +112,7 @@ apps/web/src/
 │   │                                   #   └── SuggestionsRow     (v3.x)
 │   ├── OverlayPanel.tsx                # 사이드 패널 (380px, slide-in 280ms)
 │   ├── FilterSearchPanel.tsx           # 5축 필터 pill + 적용 + 결과
-│   ├── FullListPanel.tsx               # 카테고리 5버튼 + 리스트
+│   ├── FullListPanel.tsx               # 카테고리 9버튼 (전체/8종) + 리스트
 │   ├── ChatHelpPanel.tsx               # 채팅 가이드 (overlay)
 │   ├── EventSummaryPanel.tsx           # 이벤트 요약 + 북마크 + 리뷰
 │   ├── SeoulMap.tsx                    # Kakao Maps + 클러스터러 + pulse pin
@@ -260,7 +264,7 @@ BFF API 호출은 dev 에서 Vite 프록시로 `/api/*` → `localhost:3000/*`. 
 `main.tsx` 가 BrowserRouter + 다음 라우트 등록:
 - `/` — AppShell (메인)
 - `/me` — 마이페이지 (북마크 + 캘린더 + 추천)
-- `/uploader` — 업로더 콘솔 (Phase 1 dev mock)
+- `/uploader` — 업로더 콘솔 (KYC mock 1지점만 잔존 — `identity-verification.ts`; Phase 2 prod swap)
 - `/admin` — 관리자 콘솔
 - `/events/:eventId` — 이벤트 상세 (직링크용. 메인에서는 Summary panel 로 대체)
 

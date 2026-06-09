@@ -2,7 +2,7 @@
 title: 용어집 (Terminology Glossary)
 type: topic
 created: 2026-04-17
-updated: 2026-04-17
+updated: 2026-06-08
 sources: [2026-04-17_requirements-v5, 2026-04-16_db-design-spec, 2026-04-16_event-curation-ddl]
 related:
   - ../sources/2026-04-17_requirements-v5.md
@@ -60,8 +60,8 @@ related:
 
 ### 6. 기술 용어
 - **BFF**: Node.js + Express + Prisma. 프론트 전용 중계.
-- **LLM 마이크로서비스**: Python FastAPI + LangChain (Stage 2 예정). 현재 Stage 1 은 규칙 기반 키워드 매퍼 (`services/llm/filters.py`).
-- **벡터 검색**: Qdrant (Stage 2).
+- **LLM 마이크로서비스**: Python FastAPI + OpenAI SDK(직접 작성 체인, `services/llm/openai_chain.py`) — LangChain 미사용. Stage 2(라이브 OpenAI + Qdrant 검색) **출하 완료**. 규칙 기반 키워드 매퍼(`services/llm/filters.py`)는 OPENAI_API_KEY 부재 시 stub fallback 으로 잔존.
+- **벡터 검색**: Qdrant (`alle-events` 컬렉션, Stage 2 출하).
 
 ### 7. 인증 (auth_provider)
 | 값 | 용도 | 비고 |

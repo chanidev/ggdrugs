@@ -136,7 +136,7 @@ lookup. 본 ADR 부터 "session invalidation / revocation" 으로 통일.
 
 ## References
 
-- `apps/bff/src/routes/auth.ts` — 5개 핸들러 (devLogin, me, logout, startGoogle, googleCallback, startKakao, kakaoCallback)
+- `apps/bff/src/routes/auth.ts` — 7개 핸들러 (devLogin, me, logout, startGoogle, googleCallback, startKakao, kakaoCallback)
 - `apps/bff/src/middleware/require-auth.ts` — requireAuth / resolveAuth
 - `apps/bff/prisma/migrations/20260419200000_add_auth_sessions/`
 - `apps/bff/prisma/migrations/20260419201000_allow_dev_auth_provider/`

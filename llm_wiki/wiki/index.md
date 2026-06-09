@@ -25,8 +25,8 @@ See [log.md](log.md) for chronological activity.
 - [DESIGN.md](../../DESIGN.md) — 디자인 시스템 정본 (Pretendard / 버밀리언 accent / map-first hybrid layout). UI 결정 시 최우선 참조.
 
 ### 유스케이스·스키마
-- [유스케이스 인덱스](topics/use-cases-index.md) — A_100 ~ A_700 13개
-- [DB 스키마 개요](topics/db-schema-overview.md) — 20 테이블 + ER 요약
+- [유스케이스 인덱스](topics/use-cases-index.md) — A_100 ~ A_700 14개
+- [DB 스키마 개요](topics/db-schema-overview.md) — 43 테이블 + ER 요약
 
 ### UI 플로우
 - [메인 페이지 플로우](topics/main-page-flow.md) — 지도 기반 이벤트 탐색 진입점

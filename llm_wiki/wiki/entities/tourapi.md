@@ -19,7 +19,8 @@ Alle 이벤트 ingest 의 **전국 축제 소스** (카테고리 우선: festiva
 - **주로 사용**: `searchFestival2` (festival 전용, 기간 필터 지원)
   - `serviceKey` (URL-encoded — 공공데이터포털 발급값 그대로 사용)
   - `eventStartDate=YYYYMMDD` (forward floor)
-  - `areaCode=1` (서울), `MobileOS=ETC`, `MobileApp=Alle`
+  - `areaCode` — 파라미터화 (전국이 기본; 생략 시 전국). 과거엔 `areaCode=1` (서울) 하드코드라 비-서울 행이 서울로 잘못 태그되는 latent bug 였으나 ADR 0006 (2026-05-27, Appendix A) 으로 제거 — `--tourapi-backfill` 가 17 시/도 전수 커버.
+  - `MobileOS=ETC`, `MobileApp=Alle`
   - `_type=json` 응답 요청
 
 ## 발급

@@ -2,7 +2,7 @@
 title: 기술 스택 (확정본)
 type: topic
 created: 2026-04-17
-updated: 2026-04-17
+updated: 2026-06-08
 sources: [2026-04-17_requirements-v5]
 related:
   - ../sources/2026-04-17_requirements-v5.md
@@ -26,16 +26,20 @@ GGdrugs의 확정 기술 스택. 요구사항정의서 v5.0 Ⅴ장 6절 "기술 
 | 관계형 DB | PostgreSQL + PostGIS | `postgis/postgis:15-3.4` | docker-compose |
 | PG Extensions | postgis, postgis_topology, pg_trgm, unaccent, citext | — | `infra/db/init/01-postgis.sql` |
 | 벡터 DB | Qdrant | `v1.13.0` | ADR 0002 D-3 |
-| 캐시 / 큐 | Redis | `7-alpine` | docker-compose, BullMQ 큐 공유 |
+| 캐시 / pub-sub | Redis | `7-alpine` | docker-compose · socket.io 채팅 pub/sub(ioredis, ADR 0007). BullMQ 미채택 |
 | 오브젝트 스토리지 | MinIO (S3 호환) | `RELEASE.2024-12-18T13-15-44Z` | ADR 0002 D-1 |
 
 ### 애플리케이션
 
 | 컴포넌트 | 기술 | 근거 |
 |---|---|---|
-| BFF | Node.js + Express + Prisma + TypeScript | 요구사항 v5 Ⅴ-6 |
-| LLM 서비스 | Python + FastAPI + OpenAI SDK | ADR 0002 D-2 |
-| 프론트엔드 | React 19 + Vite + TypeScript | 요구사항 v5 Ⅴ-6 |
+| BFF | Node.js + Express 5 + Prisma + TypeScript (`@types/node` `^24`) | 요구사항 v5 Ⅴ-6 |
+| BFF 실시간 | socket.io `^4.8.3` + @socket.io/redis-adapter `^8.3.0` + ioredis `^5.11.0` | ADR 0007 (메이트 채팅방, Redis pub/sub) |
+| LLM 서비스 | Python + FastAPI + OpenAI SDK (직접 작성 체인) | ADR 0002 D-2 · `services/llm/openai_chain.py` |
+| 프론트엔드 | React 19 + Vite 6 + TypeScript + Tailwind 4 | 요구사항 v5 Ⅴ-6 |
+| 프론트 디자인 시스템 | SEED Design (`@seed-design/css` `^1.2.12` · `@seed-design/react` `^1.2.10` · `@seed-design/vite-plugin` `^1.1.1`) + Karrot 아이콘 (`@karrotmarket/react-monochrome-icon` `^1.17.0`) | ADR 0008 (SEED 채택 Option B) |
+| 프론트 i18n | i18next `^26.3.0` + react-i18next `^17.0.8` + i18next-browser-languagedetector `^8.2.1` + i18next-http-backend `^4.0.0` | ADR 0007 (다국어 6종) |
+| 프론트 실시간 | socket.io-client `^4.8.3` | ADR 0007 (메이트 채팅) |
 | 모노레포 | pnpm workspaces | Phase 0 스켈레톤 |
 
 ### LLM (ADR 0002 D-2)
@@ -51,20 +55,22 @@ GGdrugs의 확정 기술 스택. 요구사항정의서 v5.0 Ⅴ장 6절 "기술 
 - Kakao Maps / Kakao REST API — 지도 + 지역 검색.
 - Google OAuth, Kakao OAuth — 회원가입·로그인.
 
-### 아직 결정되지 않은 항목 (Phase 1~2에서 확정)
+### 확정된 항목 (Phase 1~2에서 확정됨)
 
-- **큐**: BullMQ (Node) 유력 — 이미 Redis 있음. Phase 1 BFF 스캐폴드 시 결정.
-- **프론트 라이브러리**: 서버 상태 (TanStack Query), 폼 (React Hook Form + Zod), CSS (Tailwind 유력), 지도 바인딩 (`react-kakao-maps-sdk`).
-- **품질 도구**: ESLint + Prettier (JS/TS), Ruff + mypy (Python), Vitest + pytest, Playwright (E2E).
-- **로깅**: Pino (Node), structlog (Python) 후보. PII 마스킹 유틸 필요 (CLAUDE.md §6-3).
-- **세션 vs JWT 전략**: `.env.example`에 둘 다 선언 — 역할 확정 필요.
+- **인증**: opaque-session 출하 — `crypto.randomBytes` 기반 세션 토큰(서버 보관). "세션 vs JWT 미결정"은 해소됨(JWT 라이브러리 미사용).
+- **큐 / 백그라운드**: BullMQ는 **채택 안 함**(deps 부재). 메이트 타임아웃·스케줄러는 자체 구현(`apps/bff/src/jobs/scheduler.ts`) + `Notification.scheduledAt` 패턴(ADR 0007 #10).
+- **프론트 라이브러리**: TanStack Query / React Hook Form은 **deps에 없음**(상태·폼은 자체 처리). CSS는 Tailwind 4 확정, 지도 바인딩 `react-kakao-maps-sdk`, 디자인 시스템 SEED(ADR 0008), i18n i18next, 실시간 socket.io-client(ADR 0007).
+- **품질 도구**: Vitest(web) + Playwright(E2E) 확정. MSW(`msw`)로 web 테스트 모킹.
+- **로깅**: Pino (Node, dev `pino-pretty`) 확정. PII 마스킹 (CLAUDE.md §6-3).
 
 ## Phase 1 실구현 상태 (2026-04-17 기준)
+
+> **갱신(Phase 2 출하)**: Phase 2 소셜 레이어(커뮤니티 + 메이트 동행 매칭, ADR 0007)가 출하됨 — BFF socket.io 실시간 채팅방, web SEED Design 소셜 화면(ADR 0008), i18n 6종, opaque-session 인증. 아래 목록은 Phase 1 초기 스냅샷이며 일부 버전은 이후 상향됨(`@types/node` `^24`, Express 5 등).
 
 **구동 중인 것**:
 - Docker Compose 데이터 레이어 4종 (postgres:5433 / qdrant:6333 / redis:6379 / minio:9000-9001) — healthy.
 - `@ggdrugs/config` (zod env 검증) — 빌드·동작 확인.
-- `@ggdrugs/bff` (Express 5 + pino + Prisma 5.22, Node 22) — `GET /health` 정상.
+- `@ggdrugs/bff` (Express 5 + pino + Prisma 5.22, `@types/node` `^24`) — `GET /health` 정상.
 - `@ggdrugs/web` (Vite 6 + React 19 + Tailwind 4 + Pretendard) — 메인 페이지 shell + Kakao Maps 실제 렌더.
 - Prisma 마이그레이션 2건 적용: baseline(22 앱 테이블) + CHECK 제약 26건 + `fn_set_updated_at()` 트리거 8건.
 
@@ -73,7 +79,7 @@ GGdrugs의 확정 기술 스택. 요구사항정의서 v5.0 Ⅴ장 6절 "기술 
 - 환경변수 로딩: `dotenv-cli` 로 BFF 스크립트에서 루트 `.env` 주입. web 은 Vite `envDir: '../..'` 로 동일 루트 읽음.
 - TypeScript 5.9 / tsx 4 (dev watch).
 
-**미결정 유지**: 큐(BullMQ)·품질도구·세션/JWT·TanStack Query·폼 라이브러리.
+**해소됨**: 인증 opaque-session 출하 / BullMQ·TanStack Query·React Hook Form 비채택(deps 부재) / 품질도구 Vitest+Playwright+MSW 확정. (상세는 위 "확정된 항목" 참조)
 
 자세한 UI 구조는 [ui-architecture.md](ui-architecture.md) 참조.
 

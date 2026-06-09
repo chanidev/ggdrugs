@@ -27,9 +27,9 @@ https://www.kcisa.kr → 공공누리 → API → 공연전시정보 (`API_CCA_1
 
 - `KCISA_API_KEY` (encoded 보존)
 
-## Seoul 필터
+## 지역 처리 (전국)
 
-KCISA 응답은 전국 행사. 러너에서 `isSeoulAddress(eventSite)` 가드로 서울만 필터. 주소 필드명: `eventSite` (시설명), `place` (상세) 둘 다 체크.
+KCISA 응답은 전국 행사를 그대로 통과시킨다. 과거 러너에는 `isSeoulAddress(eventSite)` 가드로 서울만 남기는 필터가 있었으나 **ADR 0006 (2026-05-27) 으로 제거** — 현재는 가드 없이 전국 row 가 공통 ingest 경로의 `extractKoreanRegion` → `resolveRegionId` (전국 17 시/도 + 약 230 시/군/구) 를 탄다. 주소 필드명: `eventSite` (시설명), `place` (상세).
 
 ## 장애 시 동작
 

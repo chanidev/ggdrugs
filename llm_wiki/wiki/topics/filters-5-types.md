@@ -36,8 +36,9 @@ A_202(필터 검색)·A_201(채팅 검색)·A_203(예정 이벤트)에서 일관
 - 매칭 대상: 업로더 측 `events.expected_companion_primary` / `_secondary` (← DDL v3: `companion_primary`/`_secondary`, ADR 0001 #4 rename).
 - ⚠ 매칭 규칙 확정 필요 (primary/secondary 중 하나라도 겹치면 매치? 아니면 primary 우선?).
 
-### 4. 이벤트 종류 (event_type)
-- **v5.0 원안 4종** → **현 DB 8종 확장** (마이그레이션 `20260418180000_expand_event_categories`, 2026-04-18).
+### 4. 이벤트 종류 (event_category)
+- 필터는 표시용 8종 `event_category` 위에서 동작한다. CLAUDE.md §5-1 의 `event_type` enum 은 4종 {festival, expo, symposium, conference} 상위 개념으로 그대로 유지되며, 표시 수준의 세분화가 `event_category` 다.
+- **v5.0 원안 4종 (event_type)** → **현 DB 8종 (event_category) 확장** (마이그레이션 `20260418180000_expand_event_categories`, 2026-04-18).
 - 값: `festival` / `expo` / `symposium` / `conference` / `exhibition` / `performance` / `education` / `movie`.
 - 한글 표기: 축제 / 박람회 / 심포지움 / 컨퍼런스 / 전시 / 공연 / 교육 / 영화.
 - DB: `event_categories.category_code` + `events.category_id` FK.

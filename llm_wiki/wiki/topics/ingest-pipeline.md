@@ -44,7 +44,7 @@ Alle 의 이벤트 데이터는 **3개 공공/문화 API 를 forward-looking 일
 5. **중복 방지 (`existsInOtherOrigin`)** — 같은 외부 id 뿐 아니라 **다른 소스의 같은 이벤트** 까지 잡아냄. 현재는 제목·start_date 정확 일치 기준 (향후 pg_trgm similarity 강화 예정). 중복이면 skip, 원본 소스 정보만 유지.
 6. **phase 계산** — `start_date`/`end_date` 기준 upcoming/ongoing/ended. 트리거 없이 매 쿼리·ingest 에서 재계산 안 하고 `events.phase` 컬럼에 저장 (계산 cache).
 7. **approval_status = 'approved' (crawled)** — 수집 소스는 자동 승인 상태로 저장 (업로더 등록만 pending 시작).
-8. **`prisma.event.upsert`** on `(source_type, external_source_id)` → insert or update (`title`, `description`, `start_date`, `end_date`, `poster_image_url`, `lat`, `lng` 등).
+8. **`prisma.event.upsert`** on `(source_type, external_source_id)` → insert or update (`title`, `description`, `start_date`, `end_date`, `poster_image_url` 등). 좌표는 PostGIS `location_geom geometry(Point,4326)` 단일 source — lat/lng 컬럼은 DROP 됨 (마이그레이션 `20260426203000`). Prisma client 에서 `Unsupported` 필드라 upsert 직후 별도 raw `UPDATE events SET location_geom = ST_SetSRID(ST_MakePoint(lng::float, lat::float), 4326)` 로 채운다 (좌표 부재 시 `location_geom = NULL` 명시).
 
 ### `daily-batch` orchestrator (`run-ingest.ts` + `scheduler.ts::runAll`)
 
