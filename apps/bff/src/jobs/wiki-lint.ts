@@ -52,11 +52,28 @@ function listFiles(dir: string, opts: { recurse?: boolean } = {}): string[] {
   }
 }
 
-/** raw/ 의 ingest 대상 파일 (gitkeep / README.md 제외). 폴더 (e.g. design_handoff_alle_brand/) 는 한 단위로 침. */
+/**
+ * raw/ ingest 대상에서 제외할 glob 패턴.
+ * 소비 완료된 인테이크 원본이 orphan lint 를 영구히 빨갛게 만드는 것을 방지한다.
+ * - `_*`              : `_`-프리픽스 추출물·스크래치 인테이크 (위키화 불필요)
+ * - `*.zip` / `*.pdf` : 바이너리 원본 — wiki/sources/ 1:1 텍스트 페이지 대상이 아님
+ */
+const RAW_IGNORE_GLOBS = ['_*', '*.zip', '*.pdf'];
+
+function matchesGlob(name: string, glob: string): boolean {
+  const re = new RegExp(
+    '^' + glob.split('*').map((s) => s.replace(/[.+?^${}()|[\]\\]/g, '\\$&')).join('.*') + '$',
+    'i',
+  );
+  return re.test(name);
+}
+
+/** raw/ 의 ingest 대상 파일 (gitkeep / README.md / 무시 glob 제외). 폴더 (e.g. design_handoff_alle_brand/) 는 한 단위로 침. */
 function rawIngestables(): string[] {
   const out: string[] = [];
   for (const e of readdirSync(RAW)) {
     if (e === '.gitkeep' || e === 'README.md') continue;
+    if (RAW_IGNORE_GLOBS.some((g) => matchesGlob(e, g))) continue;
     out.push(e);
   }
   return out;
