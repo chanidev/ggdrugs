@@ -45,6 +45,16 @@ See [log.md](log.md) for chronological activity.
 - [관리자 계정 관리 + 작업 감사](topics/admin-account-management.md) — promote/demote/scope/soft-delete + uploader_decision audit (ADR 0005)
 - [추천 시스템](topics/recommendations.md) — taste profile 기반 일일 집계 + /me/recommendations + 마이페이지 추천 탭 (G-5)
 
+### Phase 2 — 메이트·커뮤니티 (ADR 0007 / 0009 / 0010)
+- [메이트 매칭](topics/mate-matching.md) — 일방 점수·메이트지수(0~100)·선택 이벤트 경계 + 동의 게이팅
+- [메이트 채팅방 (1:1·그룹)](topics/mate-chat-rooms.md) — Socket.IO 실시간·강퇴투표·라이프사이클 타임아웃 (LLM 검색챗과 별개)
+- [커뮤니티 (게시판)](topics/community.md) — 게시글·댓글·좋아요 + 7일 TTL (읽기시점 필터)
+- [약속·캘린더](topics/appointments-calendar.md) — 제안/합의/역제안 상태머신·단일거절 즉시종료·+36h 만료 (ADR 0009)
+- [메이트 평가·축제 리뷰/설문 (A_900/A_901)](topics/mate-evaluation-festival-review.md) — 참석후 게이팅·5문항 Likert·크레딧 적립 트리거
+- [크레딧·포인트 원장](topics/credits-ledger.md) — append-only 원장·+10 적립 3종(소비처 없음)
+- [신고·차단·관리자 제재 (A_701)](topics/reports-blocking-moderation.md) — 신고/차단 + 경고/정지 제재 트랜잭션
+- [i18n 다국어 (6개 로케일)](topics/i18n-multilingual.md) — ko→en/vi/zh/ja/fr, 빌드타임 UI 번들 + 런타임 LLM 번역 (Redis 캐시)
+
 ## Entities
 <!-- 외부 의존성: API, 서비스, 조직. 각 페이지에 endpoint·키·장애시 동작. -->
 - [Google](entities/google.md) — OAuth (A_100/A_101)

@@ -6,6 +6,8 @@
 - **대조 기준(ground truth)**: `apps/bff/prisma/schema.prisma`, `docs/decisions/0001~0010`, `docker-compose.yml`, 각 `package.json`/`requirements.txt`, `CLAUDE.md`
 - **이전 리포트**: 2026-04-26 sprint sweep (구조 중심)
 
+> **조치 현황 (2026-06-09)**: A(누락 토픽 8종) 신설 완료 · B(괴리 12건)·C(모순 8건) 패치 완료. 구조 lint 0 drift. 남은 권장: 루트 `CLAUDE.md` §2 Phase 상태 갱신(위키 범위 밖).
+
 ---
 
 ## 한 줄 진단
