@@ -21,22 +21,23 @@
 
 ## 2. 현재 단계
 
-**Phase 0 — 환경 셋업 완료 (2026-04-17).** 아직 애플리케이션 코드는 없지만 로컬 인프라는 전부 기동 가능:
+**Phase 2 — 메이트·커뮤니티 소셜 레이어 구축 중 (2026-06 기준).** Phase 0(환경 셋업)·Phase 1(이벤트 탐색 서비스)은 완료. BFF · Web · LLM 모두 구동, 전국 서비스.
 
-- [x] 모노레포 디렉터리 스켈레톤
-- [x] Docker Compose 로컬 오케스트레이션 (postgres+postgis, qdrant v1.13, redis, minio)
-- [x] CLAUDE.md 등재
-- [x] Git 초기화 및 첫 커밋 (main 브랜치, `03579bf`)
-- [x] .env.example 파일 정의 (.env는 .gitignore 처리)
-- [x] MinIO 버킷 4종 생성 (approval-docs, review-photos, event-posters, user-photos)
-- [x] PostgreSQL extensions 활성화 (postgis, pg_trgm, unaccent, citext)
+### Phase 0 — 환경 셋업 (완료, 2026-04-17)
+모노레포 스켈레톤 · Docker Compose (postgres+postgis, qdrant v1.13, redis, minio) · `.env.example` · MinIO 버킷 4종 · PostgreSQL extensions (postgis, pg_trgm, unaccent, citext). 첫 커밋 `03579bf`.
 
-**Phase 1 진입 조건** (완료):
-- [x] 요구사항정의서 v5.0 최종 확정 (ADR 0001로 DDL 정합성 해소)
-- [x] 이벤트 성향 라벨 도메인 확정 (event_vibes 마스터 시드 데이터 — 20260418 seed_master_data 마이그레이션)
-- [x] OpenAI API 키 확보 — 개발용 Project 키 `.env` 반영, 동작 확인. **팀 공용 조직 계정 전환은 프로덕션 배포 전 이관** (ADR 0002 운영 섹션)
+### Phase 1 — 이벤트 탐색 서비스 (완료, 2026-04 진입)
+- 요구사항정의서 v5.0 확정 (ADR 0001로 DDL 정합성 해소)
+- 이벤트 성향 라벨 도메인 확정 (event_vibes 마스터 시드 — 20260418 seed_master_data 마이그레이션)
+- OpenAI Project 키 동작 확인 (**팀 공용 조직 계정 전환은 프로덕션 배포 전 이관** — ADR 0002 운영 섹션)
+- 지도 검색 + 필터 5종 + LLM 채팅 검색(Qdrant kNN) 구동. approved 이벤트 4,000여 건, 뉴스 매핑 ~44% 커버리지.
+- **전국 확장 완료** (ADR 0006 — 서울 한정 → 17 시/도 + 약 230 시/군/구).
 
-Phase 1 은 2026-04 중 진입 완료. 현재 BFF · Web · LLM 모두 구동, approved 이벤트 4,111건 중 1,810건 뉴스 매핑 (44% 커버리지).
+### Phase 2 — 메이트·커뮤니티 (진행 중)
+요구사항정의서 페이즈 2 기반 소셜 레이어. 상세 설계는 `llm_wiki/wiki/index.md` 의 *Phase 2* 섹션 참조.
+- 메이트 매칭(메이트지수 0~100) · 1:1/그룹 채팅방(Socket.IO) · 약속/캘린더 — ADR 0007 / 0009 / 0010
+- 커뮤니티 게시판 · 메이트 평가/축제 리뷰(A_900/901) · 크레딧 원장 · 신고/차단/제재(A_701)
+- i18n 6개 로케일 (ko → en/vi/zh/ja/fr) · SEED Design 도입 (ADR 0008)
 
 ---
 
@@ -56,7 +57,7 @@ Phase 1 은 2026-04 중 진입 완료. 현재 BFF · Web · LLM 모두 구동, a
 |---|---|---|
 | `apps/web/` | React 프론트엔드, Kakao Maps UI, 채팅 UI | Frontend Agent |
 | `apps/bff/` | REST API, 인증, Prisma ORM, 비즈니스 로직 | Backend Agent |
-| `services/llm/` | LangChain 체인, 임베딩, 채팅 검색 | LLM Agent |
+| `services/llm/` | OpenAI SDK 직접 체인(`openai_chain.py`), 임베딩, 채팅 검색 | LLM Agent |
 | `packages/shared-types/` | BFF↔Web 공유 TypeScript 타입 | Backend Agent (주) + Frontend Agent |
 | `infra/` | Docker, DB 마이그레이션, 시드 | Infra Agent |
 | `docs/` | 요구사항, 아키텍처, ADR | Orchestrator Agent |
