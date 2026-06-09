@@ -1507,3 +1507,37 @@ v4.2 sealed-gate auto-retry 보강. blip 후 재연결 시 LLM 재호출 0 (cach
 ### 본 세션 누적
 v4.1 + v4.2 + v4.3 (1+2+3) + v4.4 + v4.5 + v4.6 + v4.7 (4a) + v4.8 (GPS) + v4.9 (Places) +
 v4.10 (4b) + v4.11 (idempotent resume).
+
+## 2026-06-09T14:22  lint+docs  의미적 lint 스윕 + Phase 2 토픽 8종 백필
+04-26 이후 로그 공백. 그동안 출하된 Phase 2(메이트·커뮤니티, 5월) + 전국 확장(ADR 0006)이
+위키에 미반영이던 것을 의미적 lint 로 적발하고 일괄 정합화. 결과 `wiki/lint-report.md` 갱신.
+
+### 의미적 lint (3축 병렬)
+- ①내부 모순·용어 ②위키↔코드/ADR/스키마 괴리 ③누락 개념. 구조 lint(`wiki:lint`)는 0 drift 였으나
+  의미 레이어에서 다수 적발 — 위키가 Phase 1(2026-04, 서울 한정, 23테이블)에 동결돼 있었음.
+
+### A — 누락 토픽 8종 신설 (wiki/topics/)
+- `mate-matching` (메이트지수 0~100·14일 이벤트 경계·동의 게이팅)
+- `mate-chat-rooms` (Socket.IO 1:1/그룹·강퇴투표·타임아웃 24h/6h/36h/48h — LLM 검색챗과 별개)
+- `community` (게시글/댓글/좋아요·7일 TTL 읽기시점 필터 GG-POST-012)
+- `appointments-calendar` (단일거절 즉시종료·+36h — ADR 0009)
+- `mate-evaluation-festival-review` (참석후 게이팅·Likert·크레딧 트리거 — A_900/901)
+- `credits-ledger` (append-only·+10 적립 3종·소비처 없음)
+- `reports-blocking-moderation` (제재 트랜잭션·scope 게이트 — A_701)
+- `i18n-multilingual` (ko→en/vi/zh/ja/fr·빌드 UI번들 + 런타임 LLM번역 Redis캐시)
+- 업데이트: `wiki/index.md` Phase 2 섹션 추가.
+
+### B·C — 낡은 사실/모순 패치 (16개 파일)
+- 서울 한정→전국(ADR 0006): main-page-flow·kcisa·tourapi·ingest-pipeline
+- lat/lng→PostGIS location_geom: db-schema-overview·ingest-pipeline
+- 테이블 수 20/22/23→43 통일 + Phase 2 18개 도메인 섹션 신설
+- LangChain→OpenAI 직접체인·Stage2 출하: tech-stack·terminology-glossary
+- SEED Design/i18n/Socket.IO 스택 추가, 카테고리 버튼 5→9, use-case 13→14, GGdrugs→Alle 등
+
+### 도구·메타
+- `apps/bff/src/jobs/wiki-lint.ts`: raw 무시 glob 추가 (`_*`, `*.zip`, `*.pdf`) — 소비완료 인테이크 13건 orphan 제거.
+- `.claude/CLAUDE.md` §2 현재 단계 Phase 2 현행화 (+ §4 services/llm LangChain→OpenAI).
+- 코드 그래프 재빌드: 1484 nodes · 1866 edges · 257 communities. graph.html 동기화.
+
+### 검증
+- `wiki:lint` 0 drift (orphans 0 · stale refs 0 · index coverage 100%).
