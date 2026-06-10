@@ -153,6 +153,7 @@ export function SeoulMap({
   selectedEventId,
   onSelectEvent,
   onBboxChange,
+  focusPoint,
 }: {
   filter?: EventListQuery | null;
   /** 필터 chip 클릭 즉시 발행되는 지역 id 목록 — 폴리곤 하이라이트용 (mapFilter 와 분리). */
@@ -161,6 +162,8 @@ export function SeoulMap({
   onSelectEvent?: (id: string | null) => void;
   /** v4.5 — 지도 viewport bbox 가 변경될 때 부모로 lift up. distance sort 의 anchor 로 활용. */
   onBboxChange?: ((bbox: string | null) => void) | undefined;
+  /** 빠른검색(헤더 ⌘K) 장소 결과 클릭 시 지도를 해당 좌표로 panTo + 마커. null 이면 무동작. */
+  focusPoint?: { lng: number; lat: number } | null | undefined;
 }) {
   const { t } = useTranslation('navigation');
   const appkey = import.meta.env.VITE_KAKAO_MAP_JS_KEY as string | undefined;
@@ -180,6 +183,8 @@ export function SeoulMap({
   const bboxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // ADR 0006 — 비-서울 region chip 선택 시 지도 panTo anchor. Kakao Map 인스턴스 보관.
   const mapInstanceRef = useRef<kakao.maps.Map | null>(null);
+  // 빠른검색 장소 focus 가 map onCreate 보다 먼저 들어와도 panTo 되도록 ready 플래그를 deps 에 포함.
+  const [mapReady, setMapReady] = useState(false);
 
   // lookups (geojson + regions) — 페이지당 1회. ADR 0006: 전국 시/군/구 GeoJSON (~2.7 MB).
   useEffect(() => {
@@ -241,6 +246,15 @@ export function SeoulMap({
     // 광역 row(sigungu=null) 는 시/도 시야로 줌아웃, 자치구·시 row 는 자치구 시야.
     map.setLevel(region.sigungu === null ? 9 : 7);
   }, [highlightRegionIds, regions]);
+
+  // 빠른검색 장소 focus — 좌표가 들어오면 panTo + 장소 시야로 줌인. mapReady 를 deps 에 포함해
+  // cold load(URL ?focusLng) 에서 map onCreate 이후에도 한 번 실행되게 한다.
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !focusPoint) return;
+    map.panTo(new kakao.maps.LatLng(focusPoint.lat, focusPoint.lng));
+    if (map.getLevel() > 5) map.setLevel(5);
+  }, [focusPoint?.lng, focusPoint?.lat, mapReady]);
 
   // 폴리곤 pulse — Kakao Polygon 은 canvas/svg 라 CSS 애니메이션 불가. React state 로 주기적
   // strokeOpacity / fillOpacity 토글. 하이라이트 있을 때만 interval 돌림.
@@ -341,7 +355,7 @@ export function SeoulMap({
         aria-label={t('map.ariaLabel')}
         onClick={() => onSelectEvent?.(null)}
         onBoundsChanged={handleBoundsChanged}
-        onCreate={(map) => { mapInstanceRef.current = map; }}
+        onCreate={(map) => { mapInstanceRef.current = map; setMapReady(true); }}
       >
         {highlightedGu.map((gu) => (
           <Polygon
@@ -384,6 +398,19 @@ export function SeoulMap({
               <span
                 className="block h-3.5 w-3.5 rounded-full border-2 border-white bg-(--color-accent) shadow-(--shadow-pin) [animation:alle-pulse_1.8s_cubic-bezier(0,0,0.2,1)_infinite]"
               />
+            </div>
+          </CustomOverlayMap>
+        )}
+        {/* 빠른검색 장소 focus 마커 — 이벤트 핀과 구분되는 외곽선 링. */}
+        {focusPoint && (
+          <CustomOverlayMap
+            position={{ lat: focusPoint.lat, lng: focusPoint.lng }}
+            yAnchor={1}
+            xAnchor={0.5}
+            zIndex={60}
+          >
+            <div aria-hidden className="pointer-events-none">
+              <span className="block h-4 w-4 rounded-full border-[3px] border-(--color-accent) bg-(--color-surface) shadow-(--shadow-pin)" />
             </div>
           </CustomOverlayMap>
         )}

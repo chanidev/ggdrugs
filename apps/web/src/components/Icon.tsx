@@ -4,7 +4,7 @@
  * 새 이름은 이 파일에만 추가. 컴포넌트 외부에서 임의 SVG 쓰지 말 것.
  */
 
-type IconName =
+export type IconName =
   | 'filter'
   | 'list'
   | 'chat'
@@ -18,7 +18,9 @@ type IconName =
   | 'sparkles'
   | 'inbox'
   | 'bookmark'
-  | 'chevronDown';
+  | 'chevronDown'
+  | 'calendar'
+  | 'mapPin';
 
 export function Icon({ name, size = 18, className = '' }: { name: IconName; size?: number; className?: string }) {
   const common = {
@@ -120,6 +122,20 @@ export function Icon({ name, size = 18, className = '' }: { name: IconName; size
       return (
         <svg {...common} strokeWidth={1.8}>
           <path d="M6 9l6 6 6-6" />
+        </svg>
+      );
+    case 'calendar':
+      return (
+        <svg {...common}>
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+        </svg>
+      );
+    case 'mapPin':
+      return (
+        <svg {...common}>
+          <path d="M20 10c0 4.4-8 12-8 12s-8-7.6-8-12a8 8 0 0 1 16 0Z" />
+          <circle cx="12" cy="10" r="3" />
         </svg>
       );
   }

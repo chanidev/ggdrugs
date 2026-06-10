@@ -76,6 +76,13 @@ body {
 .dialog-fit.dialog-w320 { width: min(320px, 92vw); }
 .dialog-fit.dialog-w340 { width: min(340px, 92vw); }
 .dialog-fit.dialog-w360 { width: min(360px, 92vw); }
+.dialog-fit.dialog-w560 { width: min(560px, 92vw); }
+
+/* SEED Dialog 는 기본 z-index:2 라 메인(AppShell)의 OverlayPanel(z-20) 등 앱 패널에 가린다.
+ * 앱 모달 레이어(ReportModal z-50)와 동일하게 끌어올려 항상 최상단에 오게 한다.
+ * (unlayered + all.css 후행 로드로 SEED 기본 z-index 를 이김. 모든 seed Dialog 에 공통 적용 — 올바른 동작) */
+.seed-dialog__backdrop,
+.seed-dialog__positioner { z-index: 50; }
 
 /* 연령대 세그먼트(9개 항목: 10~14 … 50~54) — SEED 기본 item min-width:86px 라
  * 9×86=774px > 트랙 폭(약 608px) 으로 항목이 회색 트랙 밖으로 튀어나온다.

@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { LogoLockup } from '../components/brand/Logo';
@@ -6,6 +7,7 @@ import { NotificationBell } from '../components/notifications/NotificationBell';
 import { useCurrentUser } from '../lib/auth-context';
 import { loginUrl } from '../lib/auth-redirect';
 import { LanguageToggle } from '../components/LanguageToggle';
+import { QuickSearch } from '../components/QuickSearch';
 
 /**
  * Header — 상단 바 (60px).
@@ -15,16 +17,32 @@ import { LanguageToggle } from '../components/LanguageToggle';
  * 로그인 시 nickname 표시 + 로그아웃 버튼. Stage 2 에서 Google OAuth 로 swap.
  */
 export function Header() {
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  // ⌘K / Ctrl+K 전역 단축키로 빠른검색 토글. 입력 중(input/textarea)이어도 팔레트는
+  // 의도적 액션이므로 허용. Esc 는 QuickSearch(Dialog) 가 닫는다.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
   return (
     <header className="flex h-[60px] shrink-0 items-center justify-between border-b border-(--color-border) bg-(--color-surface) px-4 md:px-6">
       {/* LogoLockup 내부가 이미 <Link to="/">. 중첩 <a> 방지 위해 여기서는 감싸지 않는다. */}
       <LogoLockup />
 
       <div className="flex items-center gap-3">
-        <SearchMini />
+        <SearchMini onOpen={() => setSearchOpen(true)} />
         <LanguageToggle />
         <AuthArea />
       </div>
+      <QuickSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }
@@ -111,15 +129,14 @@ function AuthArea() {
   );
 }
 
-function SearchMini() {
+function SearchMini({ onOpen }: { onOpen: () => void }) {
   const { t } = useTranslation('common');
   return (
     <button
       type="button"
-      disabled
-      aria-disabled="true"
+      onClick={onOpen}
       title={t('aria.quickSearch')}
-      className="hidden h-[34px] w-[220px] cursor-not-allowed items-center gap-2 rounded-(--radius-md) bg-(--color-surface-alt) px-3 text-[13px] text-(--color-text-subtle) md:flex"
+      className="hidden h-[34px] w-[220px] items-center gap-2 rounded-(--radius-md) bg-(--color-surface-alt) px-3 text-[13px] text-(--color-text-subtle) transition-colors hover:bg-(--color-surface-alt)/70 md:flex"
       aria-label={t('aria.quickSearchLabel')}
     >
       <Icon name="search" size={14} />

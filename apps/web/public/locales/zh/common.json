@@ -58,7 +58,12 @@
     "logoLockup": "Alle，首尔活动地图"
   },
   "search": {
-    "placeholder": "搜索活动和地点"
+    "placeholder": "搜索活动和地点",
+    "events": "活动",
+    "places": "地点",
+    "hint": "输入活动名称或地点",
+    "loading": "搜索中…",
+    "empty": "没有结果"
   },
   "error": {
     "loginRequired": "需要登录。",

@@ -58,7 +58,12 @@
     "logoLockup": "Alle, carte des événements de Séoul"
   },
   "search": {
-    "placeholder": "Rechercher des événements et lieux"
+    "placeholder": "Rechercher des événements et lieux",
+    "events": "Événements",
+    "places": "Lieux",
+    "hint": "Saisissez un titre d'événement ou un lieu",
+    "loading": "Recherche…",
+    "empty": "Aucun résultat"
   },
   "error": {
     "loginRequired": "Connexion requise.",

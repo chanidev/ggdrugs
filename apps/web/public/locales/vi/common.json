@@ -58,7 +58,12 @@
     "logoLockup": "Alle, bản đồ sự kiện Seoul"
   },
   "search": {
-    "placeholder": "Tìm sự kiện & địa điểm"
+    "placeholder": "Tìm sự kiện & địa điểm",
+    "events": "Sự kiện",
+    "places": "Địa điểm",
+    "hint": "Nhập tên sự kiện hoặc địa điểm",
+    "loading": "Đang tìm…",
+    "empty": "Không có kết quả"
   },
   "error": {
     "loginRequired": "Cần đăng nhập.",

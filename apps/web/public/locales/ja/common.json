@@ -58,7 +58,12 @@
     "logoLockup": "Alle、ソウルイベントマップ"
   },
   "search": {
-    "placeholder": "イベント・場所を検索"
+    "placeholder": "イベント・場所を検索",
+    "events": "イベント",
+    "places": "場所",
+    "hint": "イベント名または場所を入力してください",
+    "loading": "検索中…",
+    "empty": "結果がありません"
   },
   "error": {
     "loginRequired": "ログインが必要です。",

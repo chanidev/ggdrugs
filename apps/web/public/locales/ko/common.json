@@ -58,7 +58,12 @@
     "logoLockup": "Alle, 서울 이벤트 지도"
   },
   "search": {
-    "placeholder": "이벤트·장소 검색"
+    "placeholder": "이벤트·장소 검색",
+    "events": "이벤트",
+    "places": "장소",
+    "hint": "이벤트 제목이나 장소를 입력하세요",
+    "loading": "검색 중…",
+    "empty": "검색 결과가 없습니다"
   },
   "error": {
     "loginRequired": "로그인이 필요해요.",

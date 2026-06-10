@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Header } from './Header';
 import { Sidebar, type SidebarSection } from './Sidebar';
@@ -109,6 +110,10 @@ export function AppShell() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   // v4.5 — SeoulMap viewport bbox 를 lift up. FullListPanel 의 distance sort anchor 로 활용.
   const [mapBbox, setMapBbox] = useState<string | null>(null);
+  // 헤더 빠른검색(QuickSearch) 장소 결과 → /?focusLng&focusLat 로 진입. 읽어서 지도 panTo 후
+  // URL 은 정리(다음 선택 재트리거 가능 + 깔끔). Header 가 전역 컴포넌트라 URL 경유가 가장 단순.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [focusPoint, setFocusPoint] = useState<{ lng: number; lat: number } | null>(null);
 
   // v3.4 — 진행 중인 /chat/stream 요청 AbortController. 새 submit 시 이전 stream 취소.
   const chatStreamAbortRef = useRef<AbortController | null>(null);
@@ -121,6 +126,20 @@ export function AppShell() {
       chatStreamAbortRef.current = null;
     };
   }, []);
+
+  // 빠른검색 장소 focus 좌표 수신 → state 반영 후 URL 파라미터 제거.
+  useEffect(() => {
+    const lngS = searchParams.get('focusLng');
+    const latS = searchParams.get('focusLat');
+    if (lngS === null || latS === null) return;
+    const lng = Number(lngS);
+    const lat = Number(latS);
+    if (Number.isFinite(lng) && Number.isFinite(lat)) setFocusPoint({ lng, lat });
+    const next = new URLSearchParams(searchParams);
+    next.delete('focusLng');
+    next.delete('focusLat');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   const toggleSection = (key: SidebarSection) =>
     setOpen((prev) => (prev === key ? null : key));
@@ -369,6 +388,7 @@ export function AppShell() {
                   selectedEventId={selectedEventId}
                   onSelectEvent={setSelectedEventId}
                   onBboxChange={setMapBbox}
+                  focusPoint={focusPoint}
                 />
               </ErrorBoundary>
               <HealthBadge />
@@ -402,6 +422,7 @@ export function AppShell() {
         onChatRetry={handleRetry}
         mapBbox={mapBbox}
         setMapBbox={setMapBbox}
+        focusPoint={focusPoint}
       />
     </>
   );

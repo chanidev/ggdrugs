@@ -50,6 +50,7 @@ export function MobileShell({
   onChatRetry,
   mapBbox,
   setMapBbox,
+  focusPoint,
 }: {
   mapFilter: EventListQuery | null;
   setMapFilter: (q: EventListQuery | null) => void;
@@ -66,6 +67,8 @@ export function MobileShell({
   /** v4.5 — SeoulMap viewport bbox lift. distance sort anchor 로 활용. */
   mapBbox: string | null;
   setMapBbox: (b: string | null) => void;
+  /** 헤더 빠른검색 장소 결과 → 지도 panTo 좌표 (AppShell 이 URL 에서 파싱). */
+  focusPoint?: { lng: number; lat: number } | null;
 }) {
   const [snap, setSnap] = useState<SheetSnap>('peek');
   const [tab, setTab] = useState<MobileTab>('list');
@@ -93,6 +96,7 @@ export function MobileShell({
             selectedEventId={selectedEventId}
             onSelectEvent={handleMapSelectEvent}
             onBboxChange={setMapBbox}
+            focusPoint={focusPoint}
           />
         </ErrorBoundary>
         <HealthBadge />

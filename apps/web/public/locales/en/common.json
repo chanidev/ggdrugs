@@ -58,7 +58,12 @@
     "logoLockup": "Alle, Seoul event map"
   },
   "search": {
-    "placeholder": "Search events & places"
+    "placeholder": "Search events & places",
+    "events": "Events",
+    "places": "Places",
+    "hint": "Type an event title or a place",
+    "loading": "Searching…",
+    "empty": "No results"
   },
   "error": {
     "loginRequired": "Login required.",
