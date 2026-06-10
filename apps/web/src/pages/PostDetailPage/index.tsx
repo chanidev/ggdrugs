@@ -298,7 +298,7 @@ export function PostDetailPage() {
         <Dialog.Root open onOpenChange={(open) => { if (!open) setTranslateOpen(false); }}>
           <Dialog.Backdrop />
           <Dialog.Positioner>
-            <Dialog.Content className="w-[520px] max-w-[92vw]">
+            <Dialog.Content className="dialog-fit dialog-w360">
               <Dialog.Header>
                 <Dialog.Title>
                   {t('post.translateTitle')}
@@ -310,6 +310,8 @@ export function PostDetailPage() {
                   <>
                     <p className="text-[13px] text-(--color-text-muted)">{t('post.translateSelectLang')}</p>
                     <SegmentedControl
+                      className="lang-segmented"
+                      aria-label={t('post.translateSelectLang')}
                       value={translateLang}
                       onValueChange={(v) => setTranslateLang(v as TranslateLang)}
                     >

@@ -82,3 +82,10 @@ body {
  * min-width 를 풀면 grid 1fr 이 9개를 균등 분배(각 ~67px)해 한 줄에 들어간다.
  * .age-segmented 는 연령대/선호연령대 SegmentedControl 에만 부여(2지선다 컨트롤엔 영향 없음). */
 .age-segmented .seed-segmented-control__item { min-width: 0; }
+
+/* 언어 세그먼트(번역 다이얼로그 5개 항목: English/Tiếng Việt/中文/日本語/Français) —
+ * .age-segmented 와 동일 사유. SEED 기본 item min-width:86px 라 5×86=430px 가 grid 트랙(약 232px)
+ * 밖으로 넘쳐 인디케이터(트랙폭/항목수 기준)와 어긋나 thumb 가 깨진다(GG-COMM-013 번역 토글).
+ * min-width:0 으로 grid 1fr 균등 분배 → 인디케이터가 항목과 정렬된다.
+ * (다이얼로그 폭은 PostDetailPage 에서 .dialog-fit.dialog-w360 으로 272px 클램프를 해제) */
+.lang-segmented .seed-segmented-control__item { min-width: 0; }
