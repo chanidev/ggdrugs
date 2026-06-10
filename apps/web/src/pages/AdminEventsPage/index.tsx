@@ -91,10 +91,7 @@ function Shell({
       <Header />
       <main className="mx-auto w-full max-w-[1280px] flex-1 px-4 py-6 md:px-8 md:py-10">
         <header className="mb-6">
-          <p className="m-0 text-[12px] font-semibold uppercase tracking-[0.08em] text-(--color-text-subtle)">
-            Admin · A_700
-          </p>
-          <h1 className="m-0 mt-1 text-[24px] font-bold tracking-[-0.015em]">{t('page.title')}</h1>
+          <h1 className="m-0 text-[24px] font-bold tracking-[-0.015em]">{t('page.title')}</h1>
           {/* Editorial middot 탭 — FullListPanel 과 같은 톤 유지. */}
           <div
             role="tablist"
